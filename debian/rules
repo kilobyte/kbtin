@@ -32,7 +32,7 @@ build: build-stamp check
 
 build-stamp:  config.status
 	dh_testdir
-#Even on uniprocessor make -j is much faster.
+#Even on uniprocessor make -j is much faster.  And we're SMP-clean.
 	$(MAKE) -j 4
 	$(MAKE) manual.html
 
@@ -88,8 +88,8 @@ binary-arch: build install
 	dh_strip
 	dh_compress
 	dh_fixperms
-	dh_installdeb
 	dh_shlibdeps
+	dh_installdeb
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
