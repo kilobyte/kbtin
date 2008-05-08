@@ -25,6 +25,15 @@ endif
 
 config.status: configure
 	dh_testdir
+ifneq "$(wildcard /usr/share/misc/config.sub)" ""
+	cp -f /usr/share/misc/config.sub config.sub
+endif
+ifneq "$(wildcard /usr/share/misc/config.guess)" ""
+	cp -f /usr/share/misc/config.guess config.guess
+endif
+ifneq "$(wildcard /usr/share/gettext/config.rpath)" ""
+	cp -f /usr/share/gettext/config.rpath config.rpath
+endif
 	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
 
 
@@ -45,7 +54,7 @@ ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
 	-sh debian/locale-gen
 	LOCPATH=$(CURDIR)/locales $(MAKE) check || debian/rules testfail
 else
-	@echo Suppress 'make check', because this is cross build
+	@echo Suppressing 'make check', because this is a cross build
 endif
 	touch check-stamp
 
@@ -60,6 +69,7 @@ clean:
 	rm -f build-stamp check-stamp
 	rm -rf locales
 	[ ! -f Makefile ] || $(MAKE) distclean
+	rm -f config.sub config.guess config.rpath
 	dh_clean
 
 install: build

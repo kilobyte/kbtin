@@ -1,8 +1,13 @@
+kbtin (1.0.11-2) unstable; urgency=low
+
+  * tmp version
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sat, 15 Mar 2008 02:34:01 +0100
+
 kbtin (1.0.11-1) unstable; urgency=low
 
   * New upstream release.
   * Man pages are updated.
-  * Initial Debian release (closes: #213361).
 
  -- Adam Borowski <kilobyte@angband.pl>  Tue,  4 Sep 2007 03:16:56 +0200
 
