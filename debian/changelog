@@ -1,0 +1,26 @@
+kbtin (1.0.6-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Adam Borowski <kilobyte@mimuw.edu.pl>  Tue, 22 Mar 2005 21:05:33 +0100
+
+kbtin (1.0.5-2) unstable; urgency=low
+
+  * Tossed in a menu icon.
+
+ -- Adam Borowski <kilobyte@mimuw.edu.pl>  Sun,  1 Feb 2004 01:13:43 +0100
+
+kbtin (1.0.5-1) unstable; urgency=low
+
+  * New upstream release.
+  * Added menu entry.
+  * Included terminfo definition for TERM="KBtin".
+
+ -- Adam Borowski <kilobyte@mimuw.edu.pl>  Mon, 29 Sep 2003 03:15:22 -0400
+
+kbtin (1.0.4-1) unstable; urgency=low
+
+  * Initial SourceForge release.
+
+ -- Adam Borowski <kilobyte@mimuw.edu.pl>  Mon,  5 May 2003 09:31:35 +0200
+

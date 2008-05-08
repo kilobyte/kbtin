@@ -1,0 +1,14 @@
+Source: kbtin
+Section: games
+Priority: optional
+Maintainer: Adam Borowski <kilobyte@mimuw.edu.pl>
+Build-Depends: debhelper (>> 4.0.0)
+Standards-Version: 3.6.1
+
+Package: kbtin
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: A tintin++ style text-based MUD client
+ KBtin is a fullscreen console MUD client based on the once-popular tintin++.
+ It is not limited for mudding, and can be used for running line-based local
+ programs like adventure, wumpus or mysqlclient.

@@ -1,0 +1,2 @@
+?package(kbtin):needs="text" section="Games/Adventure"\
+  title="KBtin" command="/usr/bin/KBtin"
