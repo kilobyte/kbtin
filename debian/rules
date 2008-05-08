@@ -34,7 +34,10 @@ endif
 ifneq "$(wildcard /usr/share/gettext/config.rpath)" ""
 	cp -f /usr/share/gettext/config.rpath config.rpath
 endif
-	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
+	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
+		--prefix=/usr \
+		--mandir=\$${prefix}/share/man \
+		--infodir=\$${prefix}/share/info
 
 
 build: build-stamp check
@@ -79,10 +82,15 @@ install: build
 	dh_installdirs
 
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/kbtin
+	for x in KBtin kbtin; \
+	  do \
+	    mv $(CURDIR)/debian/kbtin/usr/bin/$$x $(CURDIR)/debian/kbtin/usr/games/; \
+	  done
 	$(MAKE) install-terminfo DESTDIR=$(CURDIR)/debian/kbtin TERMINFODIR=/usr/share/terminfo
 	rm debian/kbtin/usr/share/terminfo/k/kbtin
 	ln -s ../K/KBtin debian/kbtin/usr/share/terminfo/k/kbtin
 	cp debian/kbtin.xpm $(CURDIR)/debian/kbtin/usr/share/pixmaps
+	dh_install debian/lintian-overrides/kbtin /usr/share/lintian/overrides/
 
 
 # Build architecture-independent files here.

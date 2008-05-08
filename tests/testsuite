@@ -620,7 +620,7 @@ at_times_file=$at_suite_dir/at-times
 # List of the tested programs.
 at_tested='KBtin'
 # List of the all the test groups.
-at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32'
+at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34'
 # As many question marks as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
@@ -657,7 +657,9 @@ at_help_all="1;version.at:1;#version;;
 29;tests.at:535;#prepad and CJK/combining chars;;
 30;tests.at:565;#time;;
 31;tests.at:579;\"#logtype ttyrec\" and ttyrec2ansi;;
-32;run.at:1;names for -r;;
+32;tests.at:592;#localtime, #gmtime;;
+33;tests.at:602;changing session inside compound commands;;
+34;run.at:1;names for -r;;
 "
 
 at_prev=
@@ -881,7 +883,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF
-KBtin 1.0.11 test suite test groups:
+KBtin 1.0.12 test suite test groups:
 
  NUM: FILE-NAME:LINE     TEST-GROUP-NAME
       KEYWORDS
@@ -905,7 +907,7 @@ _ATEOF
   exit 0
 fi
 if $at_version_p; then
-  echo "$as_me (KBtin 1.0.11)"
+  echo "$as_me (KBtin 1.0.12)"
   cat <<\_ACEOF
 
 Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software
@@ -989,13 +991,13 @@ exec 5>>"$at_suite_log"
 # Banners and logs.
 cat <<\_ASBOX
 ## ------------------------ ##
-## KBtin 1.0.11 test suite. ##
+## KBtin 1.0.12 test suite. ##
 ## ------------------------ ##
 _ASBOX
 {
   cat <<\_ASBOX
 ## ------------------------ ##
-## KBtin 1.0.11 test suite. ##
+## KBtin 1.0.12 test suite. ##
 ## ------------------------ ##
 _ASBOX
   echo
@@ -1249,7 +1251,7 @@ cat >testin <<'_ATEOF'
 _ATEOF
 
 cat >expout <<'_ATEOF'
-#You are using KBtin 1.0.11
+#You are using KBtin 1.0.12
 _ATEOF
 
 $at_traceoff
@@ -3472,14 +3474,173 @@ $at_traceon
     at_status=`cat "$at_status_file"`
     ;;
 
-  32 ) # 32. run.at:1: names for -r
-    at_setup_line='run.at:1'
-    at_desc="names for -r"
-    $at_quiet $ECHO_N " 32: names for -r                                   $ECHO_C"
+  32 ) # 32. tests.at:592: #localtime, #gmtime
+    at_setup_line='tests.at:592'
+    at_desc="#localtime, #gmtime"
+    $at_quiet $ECHO_N " 32: #localtime, #gmtime                            []$ECHO_C"
     at_xfail=no
     echo "#                             -*- compilation -*-" >> "$at_group_log"
     (
-      echo "32. run.at:1: testing ..."
+      echo "32. tests.at:592: testing ..."
+      $at_traceon
+
+cat >testin <<'_ATEOF'
+#localtime foo 1189969300;#showme $foo
+#gmtime foo 1189969300;#showme $foo
+_ATEOF
+
+cat >expout <<'_ATEOF'
+40 01 21  16 08 2007  0 258 1
+40 01 19  16 08 2007  0 258 0
+_ATEOF
+
+$at_traceoff
+echo "$at_srcdir/tests.at:599: runtest.sh"
+echo tests.at:599 >"$at_check_line_file"
+
+at_trace_this=
+if test -n "$at_traceon"; then
+    at_trace_this=yes
+fi
+
+if test -n "$at_trace_this"; then
+    ( $at_traceon; runtest.sh ) >"$at_stdout" 2>"$at_stder1"
+    at_status=$?
+    grep '^ *+' "$at_stder1" >&2
+    grep -v '^ *+' "$at_stder1" >"$at_stderr"
+else
+    ( :; runtest.sh ) >"$at_stdout" 2>"$at_stderr"
+    at_status=$?
+fi
+
+at_failed=false
+$at_diff "$at_devnull" "$at_stderr" || at_failed=:
+$at_diff expout "$at_stdout" || at_failed=:
+case $at_status in
+   77) echo 77 > "$at_status_file"; exit 77;;
+   0) ;;
+   *) echo "$at_srcdir/tests.at:599: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+
+  echo 1 > "$at_status_file"
+  exit 1
+fi
+
+$at_traceon
+
+      $at_traceoff
+      $at_times_p && times >"$at_times_file"
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat "$at_status_file"`
+    ;;
+
+  33 ) # 33. tests.at:602: changing session inside compound commands
+    at_setup_line='tests.at:602'
+    at_desc="changing session inside compound commands"
+    $at_quiet $ECHO_N " 33: changing session inside compound commands      $ECHO_C"
+    at_xfail=no
+    echo "#                             -*- compilation -*-" >> "$at_group_log"
+    (
+      echo "33. tests.at:602: testing ..."
+      $at_traceon
+
+cat >testin <<'_ATEOF'
+#var dummy 0
+#alias s {#a rep $0;#b rep $0}
+#run a cat
+#ali rep #showme $0: This is a.
+#run b cat
+#ali rep #showme $0: This is b.
+s Initial
+#b
+#foreach 1 {#nop;#a}
+s After #foreach
+#b
+#if 1 {#a}
+s After #if
+#b
+#if 0 {#showme BAD} #else {#a}
+s After #if #else
+#b
+#strcmp a a {#a}
+s After #strcmp
+#b
+#ifexists dummy {#a}
+s After #ifexists
+#b
+#ifexists dummy1 {#showme BAD} #else {#a}
+s After #ifexists #else
+#end
+_ATEOF
+
+cat >expout <<'_ATEOF'
+Initial: This is b.
+#SESSION 'b' ACTIVATED.
+After #foreach: This is a.
+After #if: This is a.
+After #if #else: This is a.
+After #strcmp: This is a.
+After #ifexists: This is a.
+After #ifexists #else: This is a.
+#SESSION 'b' DIED.
+
+#SESSION 'a' DIED.
+_ATEOF
+
+$at_traceoff
+echo "$at_srcdir/tests.at:642: runtest.sh"
+echo tests.at:642 >"$at_check_line_file"
+
+at_trace_this=
+if test -n "$at_traceon"; then
+    at_trace_this=yes
+fi
+
+if test -n "$at_trace_this"; then
+    ( $at_traceon; runtest.sh ) >"$at_stdout" 2>"$at_stder1"
+    at_status=$?
+    grep '^ *+' "$at_stder1" >&2
+    grep -v '^ *+' "$at_stder1" >"$at_stderr"
+else
+    ( :; runtest.sh ) >"$at_stdout" 2>"$at_stderr"
+    at_status=$?
+fi
+
+at_failed=false
+$at_diff "$at_devnull" "$at_stderr" || at_failed=:
+$at_diff expout "$at_stdout" || at_failed=:
+case $at_status in
+   77) echo 77 > "$at_status_file"; exit 77;;
+   0) ;;
+   *) echo "$at_srcdir/tests.at:642: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+
+  echo 1 > "$at_status_file"
+  exit 1
+fi
+
+$at_traceon
+
+      $at_traceoff
+      $at_times_p && times >"$at_times_file"
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat "$at_status_file"`
+    ;;
+
+  34 ) # 34. run.at:1: names for -r
+    at_setup_line='run.at:1'
+    at_desc="names for -r"
+    $at_quiet $ECHO_N " 34: names for -r                                   $ECHO_C"
+    at_xfail=no
+    echo "#                             -*- compilation -*-" >> "$at_group_log"
+    (
+      echo "34. run.at:1: testing ..."
       $at_traceon
 
 
@@ -3824,7 +3985,7 @@ _ASBOX
   echo "Please send \`${at_testdir+${at_testdir}/}$as_me.log' and all information you think might help:"
   echo
   echo "   To: <kilobyte@angband.pl>"
-  echo "   Subject: [KBtin 1.0.11] $as_me:$at_fail_list${at_fail_list:+ failed${at_xpass_list:+,}}$at_xpass_list${at_xpass_list:+ passed unexpectedly}"
+  echo "   Subject: [KBtin 1.0.12] $as_me:$at_fail_list${at_fail_list:+ failed${at_xpass_list:+,}}$at_xpass_list${at_xpass_list:+ passed unexpectedly}"
   echo
   if test $at_debug_p = false; then
     echo

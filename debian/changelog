@@ -1,8 +1,11 @@
-kbtin (1.0.11-2) unstable; urgency=low
+kbtin (1.0.12-1) unstable; urgency=low
 
-  * tmp version
+  * New upstream release
+  * Delete config.{guess,sub,rpath}, use them from autotools-dev and gettext.
+  * Move main binaries to /usr/games.
+  * ... but not log converters.  Hush lintian's warning about this.
 
- -- Adam Borowski <kilobyte@angband.pl>  Sat, 15 Mar 2008 02:34:01 +0100
+ -- Adam Borowski <kilobyte@angband.pl>  Sat, 15 Mar 2008 02:52:25 +0100
 
 kbtin (1.0.11-1) unstable; urgency=low
 
