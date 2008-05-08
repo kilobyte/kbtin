@@ -1,3 +1,24 @@
+1.0.10:
+*	more transliterations, mostly for line-drawing characters
+*	support for Form Feed and ANSI CLS
+*	support for CJK double-width chars (TTY driver)
+*	TTY driver: combining chars on output, still buggy on input
+*	CJK and combining chars in #substr, #postpad and #prepad
+*	bugfix: #prepad took the end not start of the string, as opposed to
+	what the documentation said
+*	use glib's g_slice instead of malloc if it's installed, it's
+	insanely faster
+*	allow "weeks" in #time
+*	re-written from scratch ansi2html, using CSS instead of tables
+*	bugfix: input and #logcomment were mangled in ttyrec logs
+*	new #mess type: logging
+
+1.0.9:
+*	#ord as inline
+*	MCCP compression
+*	workaround for a gnome-terminal bug
+*	'make bin' target
+
 1.0.8:
 *	in the dumb terminal mode, "assphrase:" will trigger password
 	protection as well

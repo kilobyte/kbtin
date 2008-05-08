@@ -4,12 +4,10 @@
 #define NDEBUG
 #define UTF8                /* UTF8 support */
 
-#ifndef NDEBUG
-#undef TELNET_DEBUG        /* uncomment to show TELNET negotiations */
-#undef USER_DEBUG          /* debugging of the user interface */
-#undef TERM_DEBUG          /* debugging pseudo-tty stuff */
-#define PROFILING          /* profiling */
-#endif
+#undef TELNET_DEBUG	/* define to show TELNET negotiations */
+#undef USER_DEBUG	/* debugging of the user interface */
+#undef TERM_DEBUG	/* debugging pseudo-tty stuff */
+#undef PROFILING	/* profiling */
 
 /************************/
 /* The meaning of life: */
@@ -118,6 +116,7 @@
 #define DEFAULT_PATH_MESS TRUE
 #define DEFAULT_ERROR_MESS TRUE
 #define DEFAULT_HOOK_MESS TRUE
+#define DEFAULT_LOG_MESS TRUE
 #define DEFAULT_PRETICK 10
 #define DEFAULT_CHARSET "ISO-8859-1"	/* the MUD-side charset */
 #define DEFAULT_LOGCHARSET LOGCS_LOCAL
@@ -186,7 +185,8 @@
 #define MSG_PATH        10
 #define MSG_ERROR       11
 #define MSG_HOOK        12
-#define MAX_MESVAR      13
+#define MSG_LOG         13
+#define MAX_MESVAR      14
 #define HOOK_OPEN       0
 #define HOOK_CLOSE      1
 #define HOOK_ZAP        2
@@ -199,7 +199,19 @@
 /************************ structures *********************/
 #include <stdio.h>
 #include "_stdint.h"
-#include <iconv.h>
+#ifdef HAVE_ICONV_H
+# include <iconv.h>
+#else
+# ifdef HAVE_SYS_ICONV_H
+#  include <sys/iconv.h>
+# else
+#  error No iconv -- no fun.  Grab it and install!
+# endif
+#endif
+#ifdef HAVE_LIBZ
+#include <zlib.h>
+#endif
+#include "malloc.h"
 
 struct listnode {
   struct listnode *next;
@@ -288,6 +300,12 @@ struct session
   char *charset, *logcharset;
   struct charset_conv c_io,c_log;
 #endif
+#ifdef HAVE_LIBZ
+  int can_mccp;
+  z_stream *mccp;
+  int mccp_more;
+  char mccp_buf[INPUT_CHUNK];
+#endif
 };
 
 typedef char pvars_t[10][BUFFER_SIZE];
@@ -335,3 +353,15 @@ struct ttyrec_header
 
 /* Chinese rod numerals are _not_ digits for our purposes. */
 #define isadigit(x) ((x)>='0' && (x)<='9')
+#define iswadigit(x) isadigit(x)
+/* Japanese/Chinese double-width chars.  We can't use wcwidth() as that's
+   a GNU extension.  The code below is buggy as it should return 0 for
+   non-printables, but nyah... */
+#define isw2width(x) ((x)>=0x1100  && ((x)<=0x11ff ||	\
+                      (x)>=0x2e80) && ((x)<=0xd7ff ||	\
+                      (x)>=0xf900) && ((x)<=0xfaff ||	\
+                      (x)>=0xfe30) && ((x)<=0xfe6f ||	\
+                      (x)>=0xff01) && ((x)<=0xff60 ||	\
+                      (x)>=0xffe0) && ((x)<=0xffe6 ||	\
+                      (x)>=0x20000) && (x)<=0x2ffff)
+#define EMPTY_CHAR 0xffff

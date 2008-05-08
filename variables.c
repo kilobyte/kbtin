@@ -69,6 +69,7 @@ extern int utf8_len(char *s);
 extern int utf8_ncpy(char *d, char *s, int n, int maxb);
 extern char* utf8_seek(char *s, int n);
 extern int utf8_to_wc(wchar_t *d, char *s, int n);
+extern int utf8_width(char *s);
 
 extern int varnum;
 extern pvars_t *pvars;
@@ -1345,6 +1346,30 @@ int random_inline(char *arg, struct session *ses)
     return 0;
 }
 
+#ifdef UTF8
+/************************************************************************************/
+/* cut a string to width len, putting the cut point into *rstr and return the width */
+/************************************************************************************/
+int cutws(WC *str, int len, WC **rstr)
+{
+    int w,s;
+    
+    s=0;
+    while(*str)
+    {
+        w=wcwidth(*str);
+        if (w<0)
+            w=0;
+        if (w && s+w>len)
+            break;
+        str++;
+        s+=w;
+    }
+    *rstr=str;
+    return s;
+}
+#endif
+
 /*****************************************************/
 /* Syntax: #postpad {dest var} {length} {text}       */
 /*****************************************************/
@@ -1354,9 +1379,9 @@ int random_inline(char *arg, struct session *ses)
 /*****************************************************/
 void postpad_command(char *arg,struct session *ses)
 {
-    char destvar[BUFFER_SIZE], lengthstr[BUFFER_SIZE], astr[BUFFER_SIZE];
-    char bstr[BUFFER_SIZE];
-    int  i, len, length;
+    char destvar[BUFFER_SIZE], lengthstr[BUFFER_SIZE], astr[BUFFER_SIZE], *aptr;
+    WC bstr[BUFFER_SIZE], *bptr;
+    int len, length;
 
     arg = get_arg(arg, destvar, 0, ses);
     arg = get_arg(arg, lengthstr, 0, ses);
@@ -1371,24 +1396,23 @@ void postpad_command(char *arg,struct session *ses)
         else
         {
 #ifdef UTF8
-            len=utf8_ncpy(bstr, astr, length, BUFFER_SIZE-1);
-            if (len<length)
-            {
-                i=strlen(bstr);
-                while(len++<length && i<BUFFER_SIZE-1)
-                    bstr[i++]=' ';
-                bstr[i]=0;
-            }
+            TO_WC(bstr, astr);
+            len=cutws(bstr, length, &bptr);
+            aptr=astr+wc_to_utf8(astr, bstr, bptr-bstr, BUFFER_SIZE-3);
+            while(len<length)
+                len++, *aptr++=' ';
+            *aptr=0;
+            set_variable(destvar, astr, ses);
 #else
             strncpy(bstr, astr, length);
             bstr[length] = '\0';
             if ((len = strlen(astr)) < length)
             {
-                for(i = len; i < length; i++)
-                    bstr[i] = ' ';
+                for(; len < length; len++)
+                    bstr[len] = ' ';
             }
-#endif
             set_variable(destvar, bstr, ses);
+#endif
         }
     }
 }
@@ -1405,9 +1429,9 @@ void postpad_command(char *arg,struct session *ses)
 /*****************************************************/
 void prepad_command(char *arg,struct session *ses)
 {
-    char destvar[BUFFER_SIZE], astr[BUFFER_SIZE], lengthstr[BUFFER_SIZE];
-    char bstr[BUFFER_SIZE], *bptr;
-    int len_diff, length;
+    char destvar[BUFFER_SIZE], astr[BUFFER_SIZE], lengthstr[BUFFER_SIZE], *aptr;
+    WC bstr[BUFFER_SIZE], *bptr;
+    int len, length;
 
     arg = get_arg(arg, destvar, 0, ses);
     arg = get_arg(arg, lengthstr, 0, ses);
@@ -1422,16 +1446,16 @@ void prepad_command(char *arg,struct session *ses)
         else
         {
 #ifdef UTF8
-            len_diff = utf8_len(astr)-length;
-            bptr=bstr;
-            while(len_diff<0)
-            {
-                *bptr++=' ';
-                len_diff++;
-            }
-            utf8_ncpy(bptr, utf8_seek(astr,len_diff), length, bstr-bptr+BUFFER_SIZE-1);
+            TO_WC(bstr, astr);
+            len=cutws(bstr, length, &bptr);
+            aptr=astr;
+            while(len<length)
+                len++, *aptr++=' ';
+            aptr+=wc_to_utf8(aptr, bstr, bptr-bstr, BUFFER_SIZE-3);
+            *aptr=0;
+            set_variable(destvar, astr, ses);
 #else
-            int i;
+            int i, len_diff;
             len_diff = length - strlen(astr);
 
             for(i = 0; i < len_diff; i++)
@@ -1439,8 +1463,8 @@ void prepad_command(char *arg,struct session *ses)
 
             strncpy(bstr + len_diff, astr, length);
             bstr[length] = 0;
-#endif
             set_variable(destvar, bstr, ses);
+#endif
         }
     }
 }
@@ -1458,7 +1482,7 @@ int time2secs(char *tt,struct session *ses)
     if (!*tt)
     {
 bad:
-        tintin_eprintf(ses,"#time format should be: <#y[ears][,] #d #h #m [and] #[s]> or just <#> of seconds.");
+        tintin_eprintf(ses,"#time format should be: <#y[ears][,] #w #d #h #m [and] #[s]> or just <#> of seconds.");
         tintin_eprintf(ses,"#got: {%s}.",tt);
         return INVALID_TIME;
     };
@@ -1472,8 +1496,12 @@ bad:
             tt++;
         switch (tolower(*tt))
         {
+        case 'w':
+            w*=7;
+            goto day;
         case 'y':
             w*=365;
+        day:
         case 'd':
             w*=24;
         case 'h':
@@ -1564,7 +1592,8 @@ void time_command(char *arg,struct session *ses)
 void substring_command(char *arg,struct session *ses)
 {
     char left[BUFFER_SIZE], mid[BUFFER_SIZE], right[BUFFER_SIZE], *p;
-    int l,r,s;
+    WC buf[BUFFER_SIZE],*lptr,*rptr;
+    int l,r,s,w;
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, mid, 0, ses);
@@ -1582,11 +1611,39 @@ void substring_command(char *arg,struct session *ses)
     else
     {
 #ifdef UTF8
-        s=utf8_len(right);
-        if ((l<=s)&&(l<=r))
-            utf8_ncpy(mid, utf8_seek(right,l-1), r+1-l, BUFFER_SIZE);
-        else
-            *mid=0;
+        p=mid;
+        TO_WC(buf, right);
+        lptr=buf;
+        s=1;
+        while(*lptr)
+        {
+            w=wcwidth(*lptr);
+            if (w<0)
+                w=0;
+            if (w && s>=l)
+                break;	/* skip incomplete CJK chars with all modifiers */
+            lptr++;
+            s+=w;
+        }
+        if (s>l)
+            *p++=' ';	/* the left edge is cut in half */
+        rptr=lptr;
+        while(w=wcwidth(*rptr), *rptr)
+        {
+            if (w<0)
+                w=0;
+            if (w && s+w>r+1)
+                break;	/* skip incomplete CJK chars with all modifiers */
+            rptr++;
+            s+=w;
+        }
+        if (rptr>lptr)
+            p+=wc_to_utf8(p, lptr, rptr-lptr, BUFFER_SIZE-3);
+        if (s==r && w==2)
+            *p++=' ';	/* the right edge is cut */
+        *p=0;
+
+
 #else
         s=strlen(right);
         if ((l<=s)&&(l<=r))

@@ -77,6 +77,7 @@ char *tintin_exec;
 struct session *lastdraft;
 int aborting=0;
 int eofinput=0;
+int any_closed=0;
 extern int recursion;
 char *_; /* incoming line being processed */
 extern int o_lastcolor;
@@ -518,7 +519,7 @@ ever wants to read -- that is what docs are for.
     setup_ulimit();
     time0 = time(NULL);
 
-    nullsession=(struct session *)malloc(sizeof(struct session));
+    nullsession=TALLOC(struct session);
     nullsession->name=mystrdup("main");
     nullsession->address=0;
     nullsession->tickstatus = FALSE;
@@ -547,6 +548,11 @@ ever wants to read -- that is what docs are for.
     nullsession->socket = 0;
     nullsession->issocket = 0;
     nullsession->naws = 0;
+#ifdef HAVE_LIBZ
+    nullsession->can_mccp = 0;
+    nullsession->mccp = 0;
+    nullsession->mccp_more = 0;
+#endif
     nullsession->last_term_type=0;
     nullsession->server_echo = 0;
     nullsession->nagle = 0;
@@ -635,7 +641,7 @@ int check_events(void)
 void tintin(void)
 {
     int i, result, maxfd;
-    struct session *sesptr, *t;
+    struct session *sesptr;
     struct timeval tv;
     fd_set readfdmask;
 #ifdef XTERM_TITLE
@@ -766,15 +772,29 @@ void tintin(void)
             PROFEND(kbd_lag,kbd_cnt);
             PROFPOP;
         }
-        for (sesptr = sessionlist; sesptr; sesptr = t)
+        for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
         {
-            t = sesptr->next;
             if (sesptr->socket && FD_ISSET(sesptr->socket,&readfdmask))
             {
                 aborting=0;
-                read_mud(sesptr);
+                any_closed=0;
+                do
+                {
+                    read_mud(sesptr);
+                    if (any_closed)
+                    {
+                        any_closed=0;
+                        goto after_read;
+                        /* The remaining sessions will be done after select() */
+                    }
+#ifdef HAVE_LIBZ
+                } while (sesptr->mccp_more);
+#else
+                } while (0);
+#endif
             }
         }
+    after_read:
         if (activesession->server_echo
             && (2-activesession->server_echo != gotpassword))
         {

@@ -489,6 +489,7 @@ char *msNAME[]=
         "paths",
         "errors",
         "hooks",
+        "logging",
         "all"
     };
 
@@ -959,6 +960,8 @@ void info_command(char *arg, struct session *ses)
         tintin_printf(ses, "Session : {%s}  Type: %s  %s : {%s}", ses->name,
             ses->issocket?"TCP/IP":"pty", ses->issocket?"Address":
             "Command line", ses->address);
+    if (ses->issocket)
+        tintin_printf(ses, "MCCP compression : %s", ses->mccp?"enabled":"disabled");
     tintin_printf(ses,"You have defined the following:");
     tintin_printf(ses, "Actions : %d  Promptactions: %d", actions,practions);
     tintin_printf(ses, "Aliases : %d", aliases);
@@ -1234,7 +1237,7 @@ void charset_command(char *arg, struct session *ses)
         tintin_eprintf(ses, "#No such charset: {%s}", arg);
         return;
     }
-    free(ses->charset);
+    SFREE(ses->charset);
     ses->charset=mystrdup(arg);
     if (ses!=nullsession)
     {
@@ -1248,6 +1251,9 @@ void charset_command(char *arg, struct session *ses)
 #endif
 
 
+/********************/
+/* the #chr command */
+/********************/
 void chr_command(char *arg, struct session *ses)
 {
     char destvar[BUFFER_SIZE], left[BUFFER_SIZE], *lp;
@@ -1343,6 +1349,9 @@ void chr_command(char *arg, struct session *ses)
 }
 
 
+/********************/
+/* the #ord command */
+/********************/
 void ord_command(char *arg, struct session *ses)
 {
     char destvar[BUFFER_SIZE], left[BUFFER_SIZE], res[BUFFER_SIZE], *r;
@@ -1378,6 +1387,9 @@ end:
 }
 
 
+/***********************/
+/* the #hexord command */
+/***********************/
 void hexord_command(char *arg, struct session *ses)
 {
     char destvar[BUFFER_SIZE], left[BUFFER_SIZE], res[BUFFER_SIZE], *r;
@@ -1410,4 +1422,22 @@ end:
     }
     *r=0;
     set_variable(destvar, res+1, ses);
+}
+
+/*******************/
+/* the #ord inline */
+/*******************/
+int ord_inline(char *arg,struct session *ses)
+{
+    char left[BUFFER_SIZE];
+    WC ch[2];
+
+    get_arg(arg, left, 0, ses);
+    if (!*left)
+    {
+        tintin_eprintf(ses, "#ord: no argument");
+        return 0;
+    }
+    utf8_to_wc(ch, left, 1);
+    return ch[0];
 }
