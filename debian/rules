@@ -59,7 +59,7 @@ clean:
 	dh_testroot
 	rm -f build-stamp check-stamp
 	rm -rf locales
-	-$(MAKE) distclean
+	[ ! -f Makefile ] || $(MAKE) distclean
 	dh_clean
 
 install: build

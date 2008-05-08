@@ -3,7 +3,7 @@ Section: games
 Priority: optional
 Maintainer: Adam Borowski <kilobyte@angband.pl>
 Build-Depends: debhelper (>> 4.0.0), locales, libz-dev, libglib2.0-dev (>= 2.10)
-Standards-Version: 3.7.2
+Standards-Version: 3.7.2.2
 
 Package: kbtin
 Architecture: any

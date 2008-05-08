@@ -71,7 +71,7 @@ Adam Borowski <kilobyte@angband.pl>
 sub die_1($)
 {
     print "1\n" unless -t STDOUT;
-    die "concurrenct-helper: $_[0]";
+    die "concurrency-helper: $_[0]";
 }
 
 if (defined $ENV{'CONCURRENCY_LEVEL'})
@@ -164,4 +164,5 @@ $_=$limit if (defined $limit && $_>$limit);
 #But use at least _one_ job.  We want to get the build done, don't we?
 $_=1 if $_<1;
 
+print STDERR "Using $_ concurrent tasks.\n";
 print "$_\n";
