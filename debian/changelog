@@ -1,5 +1,5 @@
-kbtin (1.0.8-1) unstable; urgency=low
+kbtin (1.0.10-1) unstable; urgency=low
 
   * Initial release (closes: #213361)
 
- -- Adam Borowski <kilobyte@angband.pl>  Sat, 11 Nov 2006 18:52:43 +0100
+ -- Adam Borowski <kilobyte@angband.pl>  Sat, 02 Jun 2007 13:10:45 +0200

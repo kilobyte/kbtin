@@ -32,24 +32,27 @@ build: build-stamp check
 
 build-stamp:  config.status
 	dh_testdir
-#Even on uniprocessor make -j is much faster.  And we're SMP-clean.
-	$(MAKE) -j 4
+	$(MAKE) -j`perl debian/concurrency-helper`
 	$(MAKE) manual.html
 
 	touch build-stamp
 
-PWD     := $(shell pwd)
+CURDIR  := $(shell pwd)
 
 check: check-stamp
 check-stamp: build-stamp
 ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
 	-sh debian/locale-gen
-	LOCPATH=$(PWD)/locales $(MAKE) check
+	LOCPATH=$(CURDIR)/locales $(MAKE) check || debian/rules testfail
 else
 	@echo Suppress 'make check', because this is cross build
 endif
 	touch check-stamp
 
+testfail:
+	@echo "!!!TESTS FAILED!!!"
+	@cat tests/testsuite.log
+	@false
 
 clean:
 	dh_testdir
@@ -95,4 +98,4 @@ binary-arch: build install
 	dh_builddeb
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install check
+.PHONY: build clean binary-indep binary-arch binary install check testfail

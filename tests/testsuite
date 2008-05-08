@@ -880,7 +880,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF
-KBtin 1.0.9 test suite test groups:
+KBtin 1.0.10 test suite test groups:
 
  NUM: FILE-NAME:LINE     TEST-GROUP-NAME
       KEYWORDS
@@ -904,7 +904,7 @@ _ATEOF
   exit 0
 fi
 if $at_version_p; then
-  echo "$as_me (KBtin 1.0.9)"
+  echo "$as_me (KBtin 1.0.10)"
   cat <<\_ACEOF
 
 Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software
@@ -987,15 +987,15 @@ exec 5>>"$at_suite_log"
 
 # Banners and logs.
 cat <<\_ASBOX
-## ----------------------- ##
-## KBtin 1.0.9 test suite. ##
-## ----------------------- ##
+## ------------------------ ##
+## KBtin 1.0.10 test suite. ##
+## ------------------------ ##
 _ASBOX
 {
   cat <<\_ASBOX
-## ----------------------- ##
-## KBtin 1.0.9 test suite. ##
-## ----------------------- ##
+## ------------------------ ##
+## KBtin 1.0.10 test suite. ##
+## ------------------------ ##
 _ASBOX
   echo
 
@@ -1248,7 +1248,7 @@ cat >testin <<'_ATEOF'
 _ATEOF
 
 cat >expout <<'_ATEOF'
-#You are using KBtin 1.0.9
+#You are using KBtin 1.0.10
 _ATEOF
 
 $at_traceoff
@@ -3761,7 +3761,7 @@ _ASBOX
   echo "Please send \`${at_testdir+${at_testdir}/}$as_me.log' and all information you think might help:"
   echo
   echo "   To: <kilobyte@angband.pl>"
-  echo "   Subject: [KBtin 1.0.9] $as_me:$at_fail_list${at_fail_list:+ failed${at_xpass_list:+,}}$at_xpass_list${at_xpass_list:+ passed unexpectedly}"
+  echo "   Subject: [KBtin 1.0.10] $as_me:$at_fail_list${at_fail_list:+ failed${at_xpass_list:+,}}$at_xpass_list${at_xpass_list:+ passed unexpectedly}"
   echo
   if test $at_debug_p = false; then
     echo
