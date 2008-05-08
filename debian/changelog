@@ -1,3 +1,21 @@
+kbtin (1.0.7-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Thu,  6 Apr 2006 01:44:41 +0200
+
+kbtin (1.0.6a-2) unstable; urgency=low
+
+  * Initial Debian release (Closes: #213361)
+
+ -- Adam Borowski <kilobyte@angband.pl>  Wed, 14 Sep 2005 12:35:47 +0200
+
+kbtin (1.0.6a-1) unstable; urgency=low
+
+  * An upstream regression fix.
+
+ -- Adam Borowski <kilobyte@mimuw.edu.pl>  Thu, 24 Mar 2005 18:39:18 +0100
+
 kbtin (1.0.6-1) unstable; urgency=low
 
   * New upstream release.
