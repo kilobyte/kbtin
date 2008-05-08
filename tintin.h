@@ -142,6 +142,7 @@
 /* echo is turned back on the next time the user types a return          */
 /*************************************************************************/
 #define PROMPT_FOR_PW_TEXT "*assword:*"
+#define PROMPT_FOR_PW_TEXT2 "*assphrase:*"
 /*************************************************************************/
 /* Whether the MUD tells us to echo off, let's check whether it's a      */
 /* password input prompt, or a --More-- prompt.  Unfortunately, both     */
@@ -282,6 +283,7 @@ struct session
   char *hooks[NHOOKS];
   int closing;
   int nagle;
+  int halfcr_in, halfcr_log; /* \r at the end of a packet */
 #ifdef UTF8
   char *charset, *logcharset;
   struct charset_conv c_io,c_log;
@@ -330,3 +332,6 @@ struct ttyrec_header
 #define logcs_charset(x) (((x)==LOGCS_LOCAL)?user_charset_name:	\
                           ((x)==LOGCS_REMOTE)?ses->charset:	\
                            (x))
+
+/* Chinese rod numerals are _not_ digits for our purposes. */
+#define isadigit(x) ((x)>='0' && (x)<='9')
