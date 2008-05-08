@@ -20,16 +20,6 @@
 # define memcpy(d, s, n) bcopy ((s), (d), (n))
 # define memmove(d, s, n) bcopy ((s), (d), (n))
 #endif
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
 
 #include <errno.h>
 #include <sys/types.h>
@@ -358,9 +348,12 @@ int read_buffer_mud(char *buffer, struct session *ses)
         {
         case Z_OK:
             didget=INPUT_CHUNK-len-ses->mccp->avail_out;
+            ses->mccp_more = !ses->mccp->avail_out;
             break;
         case Z_STREAM_END:
+#ifdef TELNET_DEBUG
             tintin_printf(ses, "#COMPRESSION END, DISABLING MCCP.");
+#endif
             didget=INPUT_CHUNK-len-ses->mccp->avail_out;
             inflateEnd(ses->mccp);
             TFREE(ses->mccp, z_stream);
@@ -377,7 +370,6 @@ int read_buffer_mud(char *buffer, struct session *ses)
             ses->mccp_more=0;
             return -1;
         }
-        ses->mccp_more = !ses->mccp->avail_out;
     }
     else
 #endif

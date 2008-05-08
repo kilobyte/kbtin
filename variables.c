@@ -19,16 +19,6 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
 #include <wchar.h>
 #include "unicode.h"
 
@@ -63,7 +53,7 @@ extern struct listnode* hash2list(struct hashtable *h, char *pat);
 extern void show_hashlist(struct session *ses, struct hashtable *h, char *pat, const char *msg_all, const char *msg_none);
 extern void delete_hashlist(struct session *ses, struct hashtable *h, char *pat, const char *msg_ok, const char *msg_none);
 extern int is_abrev(char *s1, char *s2);
-extern void if_command(char *line, struct session *ses);
+extern struct session *if_command(char *line, struct session *ses);
 extern int wc_to_utf8(char *d, const wchar_t *s, int n, int maxb);
 extern int utf8_len(char *s);
 extern int utf8_ncpy(char *d, char *s, int n, int maxb);
@@ -759,7 +749,7 @@ void splitlist_command(char *arg,struct session *ses)
 
     if (!*headvar && !*tailvar)
     {
-        tintin_eprintf(ses,"#Error - Syntax: #splitlist {head variable} {tail variable}"
+        tintin_eprintf(ses,"#Error - Syntax: #splitlist {head variable} {tail variable} "
                      "{list} [{head size}]");
         return; /* on ERROR */
     }
@@ -842,7 +832,7 @@ void deleteitems_command(char *arg,struct session *ses)
 /**************************/
 /* the #foreach command   */
 /**************************/
-void foreach_command(char *arg,struct session *ses)
+struct session *foreach_command(char *arg,struct session *ses)
 {
     char *list, temp[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE], *p;
     pvars_t vars,*lastvars;
@@ -853,7 +843,7 @@ void foreach_command(char *arg,struct session *ses)
     if (!*right)
     {
         tintin_eprintf(ses,"#SYNTAX: foreach {list} command");
-        return;
+        return ses;
     }
     lastvars=pvars;
     pvars=&vars;
@@ -865,9 +855,10 @@ void foreach_command(char *arg,struct session *ses)
         for (i=1;i<10;i++)
             p=get_arg_in_braces(p, vars[i], 0);
         in_alias=1;
-        parse_input(right,1,ses);
+        ses=parse_input(right,1,ses);
     }
     pvars=lastvars;
+    return ses;
 }
 
 int compar(const void *a,const void *b)
@@ -1585,6 +1576,68 @@ void time_command(char *arg,struct session *ses)
         set_variable(left,ct,ses);
 }
 
+/**************************/
+/* the #localtime command */
+/**************************/
+void localtime_command(char *arg,struct session *ses)
+{
+    char left[BUFFER_SIZE], ct[BUFFER_SIZE];
+    time_t t;
+    struct tm ts;
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, ct, 1, ses);
+    if (*ct)
+    {
+        t=time2secs(ct,ses);
+        if (t==INVALID_TIME)
+            return;
+        sprintf(ct, "%ld", (long)t);
+    }
+    else
+        t=time(0);
+    localtime_r(&t, &ts);
+    sprintf(ct, "%02d %02d %02d  %02d %02d %04d  %d %d %d",
+                    ts.tm_sec, ts.tm_min, ts.tm_hour,
+                    ts.tm_mday, ts.tm_mon, ts.tm_year+1900,
+                    ts.tm_wday, ts.tm_yday, ts.tm_isdst);
+    if (!*left)
+        tintin_printf(ses, "#%s.", ct);
+    else
+        set_variable(left,ct,ses);
+}
+
+/***********************/
+/* the #gmtime command */
+/***********************/
+void gmtime_command(char *arg,struct session *ses)
+{
+    char left[BUFFER_SIZE], ct[BUFFER_SIZE];
+    time_t t;
+    struct tm ts;
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, ct, 1, ses);
+    if (*ct)
+    {
+        t=time2secs(ct,ses);
+        if (t==INVALID_TIME)
+            return;
+        sprintf(ct, "%ld", (long)t);
+    }
+    else
+        t=time(0);
+    gmtime_r(&t, &ts);
+    sprintf(ct, "%02d %02d %02d  %02d %02d %04d  %d %d %d",
+                    ts.tm_sec, ts.tm_min, ts.tm_hour,
+                    ts.tm_mday, ts.tm_mon, ts.tm_year+1900,
+                    ts.tm_wday, ts.tm_yday, ts.tm_isdst);
+    if (!*left)
+        tintin_printf(ses, "#%s.", ct);
+    else
+        set_variable(left,ct,ses);
+}
+
 
 /**************************/
 /* the #substring command */
@@ -1658,7 +1711,7 @@ void substring_command(char *arg,struct session *ses)
 /***********************/
 /* the #strcmp command */
 /***********************/
-void strcmp_command(char *line, struct session *ses)
+struct session *strcmp_command(char *line, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], cmd[BUFFER_SIZE];
 
@@ -1669,12 +1722,12 @@ void strcmp_command(char *line, struct session *ses)
     if (!*cmd)
     {
         tintin_eprintf(ses, "#Syntax: #strcmp <a> <b> <command> [#else <command>]");
-        return;
+        return ses;
     }
 
     if (!strcmp(left,right))
     {
-        parse_input(cmd,1,ses);
+        ses=parse_input(cmd,1,ses);
     }
     else
     {
@@ -1685,12 +1738,13 @@ void strcmp_command(char *line, struct session *ses)
             if (is_abrev(left + 1, "else"))
             {
                 line = get_arg_in_braces(line, right, 1);
-                parse_input(right,1,ses);
+                ses=parse_input(right,1,ses);
             }
             if (is_abrev(left + 1, "elif"))
-                if_command(line, ses);
+                ses=if_command(line, ses);
         }
     }
+    return ses;
 }
 
 /**********************/
@@ -1711,15 +1765,15 @@ int strcmp_inline(char *line, struct session *ses)
 /***************************************/
 /* (mainstream tintin++ compatibility) */
 /***************************************/
-void ifstrequal_command(char *line, struct session *ses)
+struct session *ifstrequal_command(char *line, struct session *ses)
 {
-    strcmp_command(line,ses);
+    return strcmp_command(line,ses);
 }
 
 /*************************/
 /* the #ifexists command */
 /*************************/
-void ifexists_command(char *line, struct session *ses)
+struct session *ifexists_command(char *line, struct session *ses)
 {
     char left[BUFFER_SIZE],cmd[BUFFER_SIZE];
 
@@ -1729,11 +1783,11 @@ void ifexists_command(char *line, struct session *ses)
     if (!*cmd)
     {
         tintin_eprintf(ses, "#Syntax: #ifexists <varname> <command> [#else <command>]");
-        return;
+        return ses;
     }
 
     if (get_hash(ses->myvars,left))
-        parse_input(cmd,1,ses);
+        ses=parse_input(cmd,1,ses);
     else
     {
         line = get_arg_in_braces(line, left, 0);
@@ -1743,10 +1797,11 @@ void ifexists_command(char *line, struct session *ses)
             if (is_abrev(left + 1, "else"))
             {
                 line = get_arg_in_braces(line, cmd, 1);
-                parse_input(cmd,1,ses);
+                ses=parse_input(cmd,1,ses);
             }
             if (is_abrev(left + 1, "elif"))
-                if_command(line, ses);
+                ses=if_command(line, ses);
         }
     }
+    return ses;
 }
