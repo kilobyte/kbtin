@@ -6,15 +6,32 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
-#include "protos.h"
+#include "protos/colors.h"
+#include "protos/files.h"
+#include "protos/hash.h"
+#include "protos/hooks.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/net.h"
+#include "protos/parse.h"
+#include "protos/routes.h"
+#include "protos/run.h"
+#include "protos/unicode.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
 #include "ui.h"
 
 extern struct session *sessionlist, *activesession, *nullsession;
 extern char *history[HISTORY_SIZE];
 extern char *user_charset_name;
 extern int any_closed;
+#ifdef HAVE_GNUTLS
+static gnutls_certificate_credentials_t ssl_cred=0;
+#else
+# define gnutls_session_t int
+#endif
 
-static struct session *new_session(char *name,char *address,int sock,int issocket,struct session *ses);
+static struct session *new_session(char *name, char *address, int sock, int issocket, gnutls_session_t ssl, struct session *ses);
 static void show_session(struct session *ses);
 
 int session_exists(char *name)
@@ -117,14 +134,18 @@ static int list_sessions(char *arg,struct session *ses,char *left,char *right)
     return 1;
 }
 
-/************************/
-/* the #session command */
-/************************/
-struct session *session_command(char *arg,struct session *ses)
+/*****************************************/
+/* the #session and #sslsession commands */
+/*****************************************/
+static struct session *socket_session(char *arg, struct session *ses, int ssl)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], host[BUFFER_SIZE];
     int sock;
     char *port;
+#ifdef HAVE_GNUTLS
+    gnutls_session_t sslses;
+    int ret;
+#endif
 
     if (list_sessions(arg,ses,left,right))
         return(ses);	/* (!*left)||(!*right) */
@@ -154,7 +175,45 @@ struct session *session_command(char *arg,struct session *ses)
     if (!(sock = connect_mud(host, port, ses)))
         return ses;
 
-    return(new_session(left,right,sock,1,ses));
+#ifdef HAVE_GNUTLS
+    if (ssl)
+    {
+        if (!ssl_cred)
+            gnutls_certificate_allocate_credentials(&ssl_cred);
+        gnutls_init(&sslses, GNUTLS_CLIENT);
+        gnutls_priority_set_direct(sslses, "PERFORMANCE", 0);
+        gnutls_credentials_set(sslses, GNUTLS_CRD_CERTIFICATE, ssl_cred);
+        gnutls_transport_set_ptr(sslses, (gnutls_transport_ptr_t)sock);
+        do 
+        {
+            ret=gnutls_handshake(sslses);
+        } while (ret==GNUTLS_E_AGAIN || ret==GNUTLS_E_INTERRUPTED);
+        if (ret)
+        {
+            tintin_eprintf(ses, "#SSL handshake failed: %s", gnutls_strerror(ret));
+            close(sock);
+            return ses;
+        }
+    }
+    return(new_session(left, right, sock, 1, ssl?sslses:0, ses));
+#else
+    return(new_session(left, right, sock, 1, 0, ses));
+#endif
+}
+
+struct session *session_command(char *arg, struct session *ses)
+{
+    return socket_session(arg, ses, 0);
+}
+
+struct session *sslsession_command(char *arg, struct session *ses)
+{
+#ifdef HAVE_GNUTLS
+    return socket_session(arg, ses, 1);
+#else
+    tintin_eprintf(ses, "#SSLSESSION is not supported.  Please recompile KBtin against GnuTLS.");
+    return ses;
+#endif
 }
 
 
@@ -182,7 +241,7 @@ struct session *run_command(char *arg,struct session *ses)
         return ses;
     }
 
-    return(new_session(left,right,sock,0,ses));
+    return(new_session(left, right, sock, 0, 0, ses));
 }
 
 
@@ -231,7 +290,7 @@ struct session *newactive_session(void)
 /**********************/
 /* open a new session */
 /**********************/
-static struct session *new_session(char *name,char *address,int sock,int issocket,struct session *ses)
+static struct session *new_session(char *name, char *address, int sock, int issocket, gnutls_session_t ssl, struct session *ses)
 {
     struct session *newsession;
     int i;
@@ -261,7 +320,7 @@ static struct session *new_session(char *name,char *address,int sock,int issocke
     newsession->binds = copy_hash(ses->binds);
     newsession->issocket = issocket;
     newsession->naws = !issocket;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
     newsession->can_mccp = 0;
     newsession->mccp = 0;
     newsession->mccp_more = 0;
@@ -311,6 +370,9 @@ static struct session *new_session(char *name,char *address,int sock,int issocke
     if (!new_conv(&newsession->c_io, newsession->charset, 0))
         tintin_eprintf(0, "#Warning: can't open charset: %s", newsession->charset);
     nullify_conv(&newsession->c_log);
+#ifdef HAVE_GNUTLS
+    newsession->ssl=ssl;
+#endif
     sessionlist = newsession;
     activesession = newsession;
 
@@ -366,12 +428,16 @@ void cleanup_session(struct session *ses)
     SFREE(ses->charset);
     if (!logcs_is_special(ses->logcharset))
         SFREE(ses->logcharset);
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
     if (ses->mccp)
     {
         inflateEnd(ses->mccp);
         TFREE(ses->mccp, z_stream);
     }
+#endif
+#ifdef HAVE_GNUTLS
+    if (ses->ssl)
+        gnutls_deinit(ses->ssl);
 #endif
     
     TFREE(ses, struct session);

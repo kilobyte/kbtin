@@ -1,5 +1,8 @@
 #include "tintin.h"
-#include "protos.h"
+#include "protos/print.h"
+#include "protos/misc.h"
+#include "protos/parse.h"
+#include "protos/utils.h"
 
 extern struct session *nullsession;
 

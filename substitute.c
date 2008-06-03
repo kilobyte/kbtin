@@ -6,7 +6,11 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
-#include "protos.h"
+#include "protos/action.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/variables.h"
 
 extern pvars_t *pvars;
 extern int subnum;

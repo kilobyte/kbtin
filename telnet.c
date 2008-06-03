@@ -1,7 +1,10 @@
 /* Do all the telnet protocol stuff */
 
 #include "tintin.h"
-#include "protos.h"
+#include "protos/print.h"
+#include "protos/run.h"
+#include "protos/net.h"
+#include "protos/utils.h"
 
 extern int LINES,COLS,isstatus;
 extern struct session *sessionlist;
@@ -117,7 +120,7 @@ static void telnet_send_naws(struct session *ses)
     PUTBYTE((LINES-1-!!isstatus)%256);
     *np++=IAC;
     *np++=SE;
-    write(ses->socket, nego, np-nego);
+    write_socket(ses, (char*)nego, np-nego);
 #ifdef TELNET_DEBUG
     {
         char buf[BUFFER_SIZE],*b=buf;
@@ -154,7 +157,7 @@ void telnet_send_ttype(struct session *ses)
     case 3:
         ttype="KBtin-"VERSION;
     }
-    write(ses->socket, nego,
+    write_socket(ses, nego,
         sprintf(nego, "%c%c%c%c%s%c%c", IAC, SB,
             TERMINAL_TYPE, IS, ttype, IAC, SE));
 #ifdef TELNET_DEBUG
@@ -244,7 +247,7 @@ int do_telnet_protocol(char *data, int nb, struct session *ses)
             case DONT:  answer[1]=WONT; break;
             };
             break;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
         case COMPRESS2:
             switch(wt)
             {
@@ -264,7 +267,7 @@ int do_telnet_protocol(char *data, int nb, struct session *ses)
             case DONT:  answer[1]=WONT; break;
             };
         }
-        write(ses->socket, answer, 3);
+        write_socket(ses, (char*)answer, 3);
 #ifdef TELNET_DEBUG
         tintin_printf(ses, "~8~[telnet] sent: IAC %s <%u> (%s)~-1~",
                       will_names[answer[1]-251], *cp,
@@ -333,7 +336,7 @@ sbloop:
             if (*(np+1)==SEND)
                 telnet_send_ttype(ses);
             break;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
         case COMPRESS2:
             if (ses->can_mccp)
                 return -4; /* compressed data immediately follows, we need to return */
@@ -379,6 +382,6 @@ void telnet_write_line(char *line, struct session *ses)
     *out++='\n';
     *out=0;
 
-    if (write(ses->socket, outtext, out-outtext) == -1)
+    if (write_socket(ses, outtext, out-outtext) == -1)
         syserr("write in telnet_write_line()");
 }

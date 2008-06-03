@@ -7,7 +7,20 @@
 /*********************************************************************/
 #include "tintin.h"
 #include "ui.h"
-#include "protos.h"
+#include "protos/colors.h"
+#include "protos/highlight.h"
+#include "protos/hooks.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/net.h"
+#include "protos/parse.h"
+#include "protos/routes.h"
+#include "protos/run.h"
+#include "protos/session.h"
+#include "protos/substitute.h"
+#include "protos/unicode.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
 
 
 /* externs */
@@ -885,10 +898,16 @@ void info_command(char *arg, struct session *ses)
         tintin_printf(ses, "Session : {%s}  (null session)", ses->name);
     else
         tintin_printf(ses, "Session : {%s}  Type: %s  %s : {%s}", ses->name,
-            ses->issocket?"TCP/IP":"pty", ses->issocket?"Address":
-            "Command line", ses->address);
+            ses->issocket?
+#ifdef HAVE_GNUTLS
+                ses->ssl?"TCP/IP+SSL" :
+#endif
+                "TCP/IP" : "pty",
+            ses->issocket?"Address":"Command line", ses->address);
+#ifdef HAVE_ZLIB
     if (ses->issocket)
         tintin_printf(ses, "MCCP compression : %s", ses->mccp?"enabled":"disabled");
+#endif
     tintin_printf(ses,"You have defined the following:");
     tintin_printf(ses, "Actions : %d  Promptactions: %d", actions,practions);
     tintin_printf(ses, "Aliases : %d", aliases);

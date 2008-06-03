@@ -5,7 +5,27 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
-#include "protos.h"
+#include "protos/action.h"
+#include "protos/antisub.h"
+#include "protos/bind.h"
+#include "protos/colors.h"
+#include "protos/files.h"
+#include "protos/glob.h"
+#include "protos/hash.h"
+#include "protos/highlight.h"
+#include "protos/history.h"
+#include "protos/hooks.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/misc.h"
+#include "protos/net.h"
+#include "protos/parse.h"
+#include "protos/session.h"
+#include "protos/substitute.h"
+#include "protos/ticks.h"
+#include "protos/unicode.h"
+#include "protos/user.h"
+#include "protos/utils.h"
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -28,7 +48,6 @@ static void echo_input(char *txt);
 int term_echoing = TRUE;
 int keypad= DEFAULT_KEYPAD;
 int retain= DEFAULT_RETAIN;
-int puts_echoing = TRUE;
 int alnum = 0;
 int acnum = 0;
 int subnum = 0;
@@ -259,7 +278,7 @@ static void init_nullses(void)
     nullsession->socket = 0;
     nullsession->issocket = 0;
     nullsession->naws = 0;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
     nullsession->can_mccp = 0;
     nullsession->mccp = 0;
     nullsession->mccp_more = 0;
@@ -311,6 +330,9 @@ static void init_nullses(void)
                               DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
     nullify_conv(&nullsession->c_io);
     nullify_conv(&nullsession->c_log);
+#ifdef HAVE_GNUTLS
+    nullsession->ssl=0;
+#endif
 }
 
 static void opterror(char *msg, ...)
@@ -366,14 +388,14 @@ static void parse_options(int argc, char **argv, char **environ)
                 else
                     addnode_list(options, "r", argv[arg], 0);
             }
-            else if (!strcmp(argv[arg],"-s"))
+            else if (!strcasecmp(argv[arg],"-s"))
             {
                 if (++arg==argc)
-                    opterror("Invalid option: bare -s");
+                    opterror("Invalid option: bare %s", argv[arg]);
                 else if (++arg==argc)
                     opterror("Bad option: -s needs both an address and a port number!");
                 else
-                    addnode_list(options, "s", argv[arg-1], argv[arg]);
+                    addnode_list(options, argv[arg-2]+1, argv[arg-1], argv[arg]);
             }
             else
                 opterror("Invalid option: {%s}",argv[arg]);
@@ -417,6 +439,13 @@ static void apply_options()
             make_name(sname, opt->right, 1);
             snprintf(temp, BUFFER_SIZE,
                 "%cses %s {%s %s}", tintin_char, sname, opt->right, opt->pr);
+            DO_INPUT(temp, 1);
+            break;
+        case 'S':
+            set_magic_hook(activesession);
+            make_name(sname, opt->right, 1);
+            snprintf(temp, BUFFER_SIZE,
+                "%csslses %s {%s %s}", tintin_char, sname, opt->right, opt->pr);
             DO_INPUT(temp, 1);
             break;
         case ' ':
@@ -520,6 +549,9 @@ ever wants to read -- that is what docs are for.
     PROF("initializing");
     setup_ulimit();
     init_nullses();
+#ifdef HAVE_GNUTLS
+    gnutls_global_init();
+#endif
     PROF("other");
     apply_options();
     tintin();
@@ -699,7 +731,7 @@ static void tintin(void)
                         goto after_read;
                         /* The remaining sessions will be done after select() */
                     }
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
                 } while (sesptr->mccp_more);
 #else
                 } while (0);
@@ -918,89 +950,6 @@ static void do_one_line(char *line,int nl,struct session *ses)
 static void snoop(char *buffer, struct session *ses)
 {
     tintin_printf(0,"%s%% %s\n",ses->name,buffer);
-}
-
-/*****************************************************/
-/* output to screen should go throught this function */
-/* text gets checked for actions                     */
-/*****************************************************/
-void tintin_puts(char *cptr, struct session *ses)
-{
-    char line[BUFFER_SIZE];
-    strcpy(line,cptr);
-    if (ses)
-    {
-        _=line;
-        check_all_actions(line, ses);
-        _=0;
-    }
-    tintin_printf(ses,line);
-}
-
-/*****************************************************/
-/* output to screen should go throught this function */
-/* text gets checked for substitutes and actions     */
-/*****************************************************/
-void tintin_puts1(char *cptr, struct session *ses)
-{
-    char line[BUFFER_SIZE];
-
-    strcpy(line,cptr);
-
-    _=line;
-    if (!ses->presub && !ses->ignore)
-        check_all_actions(line, ses);
-    if (!ses->togglesubs)
-        if (!do_one_antisub(line, ses))
-            do_all_sub(line, ses);
-    if (ses->presub && !ses->ignore)
-        check_all_actions(line, ses);
-    if (!ses->togglesubs)
-        do_all_high(line, ses);
-    if (isnotblank(line,ses->blank))
-        if (ses==activesession)
-        {
-            cptr=strchr(line,0);
-            if (cptr-line>=BUFFER_SIZE-2)
-                cptr=line+BUFFER_SIZE-2;
-            cptr[0]='\n';
-            cptr[1]=0;
-            user_textout(line);
-        }
-    _=0;
-}
-
-void tintin_printf(struct session *ses, const char *format, ...)
-{
-    va_list ap;
-    char buf[BUFFER_SIZE];
-
-    if ((ses == activesession || ses == nullsession || !ses) && puts_echoing)
-    {
-        va_start(ap, format);
-        if (vsnprintf(buf, BUFFER_SIZE-1, format, ap)>BUFFER_SIZE-2)
-            buf[BUFFER_SIZE-3]='>';
-        va_end(ap);
-        strcat(buf, "\n");
-        user_textout(buf);
-    }
-}
-
-void tintin_eprintf(struct session *ses, const char *format, ...)
-{
-    va_list ap;
-    char buf[BUFFER_SIZE];
-
-    /* note: the behavior on !ses is wrong */
-    if ((ses == activesession || ses == nullsession || !ses) && (puts_echoing||!ses||ses->mesvar[11]))
-    {
-        va_start(ap, format);
-        if (vsnprintf(buf, BUFFER_SIZE-1, format, ap)>BUFFER_SIZE-2)
-            buf[BUFFER_SIZE-3]='>';
-        va_end(ap);
-        strcat(buf, "\n");
-        user_textout(buf);
-    }
 }
 
 static void echo_input(char *txt)

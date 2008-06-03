@@ -170,8 +170,8 @@
 #define END 1
 #define K_ACTION_MAGIC "#X~4~~2~~12~[This action is being deleted!]~7~X"
 
-#define BUFFER_SIZE 2048
-#define INPUT_CHUNK 768
+#define BUFFER_SIZE 4096
+#define INPUT_CHUNK 1536
 #define MSG_ALIAS       0
 #define MSG_ACTION      1
 #define MSG_SUBSTITUTE  2
@@ -220,7 +220,7 @@
 #  include <time.h>
 # endif
 #endif
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
 # include <zlib.h>
 #endif
 #ifdef HAVE_STRING_H
@@ -236,6 +236,9 @@
 #endif
 #if GWINSZ_IN_SYS_IOCTL
 # include <sys/ioctl.h>
+#endif
+#ifdef HAVE_GNUTLS
+# include <gnutls/gnutls.h>
 #endif
 
 /************************ structures *********************/
@@ -326,11 +329,14 @@ struct session
     int halfcr_in, halfcr_log; /* \r at the end of a packet */
     char *charset, *logcharset;
     struct charset_conv c_io,c_log;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
     int can_mccp;
     z_stream *mccp;
     int mccp_more;
     char mccp_buf[INPUT_CHUNK];
+#endif
+#ifdef HAVE_GNUTLS
+    gnutls_session_t ssl;
 #endif
 };
 
