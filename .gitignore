@@ -30,6 +30,16 @@ load_commands.h
 Makefile
 Makefile.in
 manual.html
+Makefile.protos
+build-stamp
+check-stamp
+debian/files
+debian/kbtin.debhelper.log
+debian/kbtin.postinst.debhelper
+debian/kbtin.postrm.debhelper
+debian/kbtin.substvars
+debian/kbtin/
+locales/
 *.o
 *.orig
 *~
