@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([KBtin], [1.0.12], [kilobyte@angband.pl])
+AC_INIT([KBtin], [1.0.13], [kilobyte@angband.pl])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([action.c])
 AM_CONFIG_HEADER(config.h)
@@ -45,6 +45,7 @@ without support for encryption.
 
 AM_PATH_GLIB_2_0([2.10.0], [AC_DEFINE([HAVE_GLIB], [1], [Define if glib 2.10+ is available.])])
 AM_ICONV
+AM_CONDITIONAL(SANE_MAKE, make -v >/dev/null 2>/dev/null)
 
 AC_PTYRANGES
 AC_DEV_PTMX
