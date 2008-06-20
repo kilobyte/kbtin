@@ -23,6 +23,10 @@ ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 	INSTALL_PROGRAM += -s
 endif
 
+configure:
+	dh_testdir
+	./autogen
+
 config.status: configure
 	dh_testdir
 ifneq "$(wildcard /usr/share/misc/config.sub)" ""
