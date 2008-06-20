@@ -57,3 +57,5 @@ testsuite.dir
 testsuite.log
 ttyrec2ansi
 valgrind.*
+depcomp
+install-sh
