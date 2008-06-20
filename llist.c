@@ -1,4 +1,3 @@
-/* $Id: llist.c,v 2.3 1998/11/25 17:14:00 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: llist.c - linked-list datastructure                         */
@@ -6,32 +5,14 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include "tintin.h"
-#include <stdlib.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext, int mode);
-int match(char *regex, char *string);
-extern void kill_routes(struct session *ses);
-extern void check_all_promptactions(char *line, struct session *ses);
-extern void prompt(struct session *ses);
-extern void tintin_printf(struct session *ses,char *format,...);
-extern void syserr(char *msg, ...);
-extern struct hashtable* init_hash();
-extern void kill_hash(struct hashtable* h);
-extern char* mystrdup(char *s);
+#include "protos/glob.h"
+#include "protos/hash.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/routes.h"
+#include "protos/utils.h"
 
 
 /***************************************/
@@ -390,7 +371,6 @@ void show_list_action(struct listnode *listhead)
 
 struct listnode* search_node_with_wild(struct listnode *listhead, char *cptr)
 {
-    /* int i; */
     while ((listhead = listhead->next))
     {
         /* CHANGED to fix silly globbing behavior
@@ -402,47 +382,6 @@ struct listnode* search_node_with_wild(struct listnode *listhead, char *cptr)
     return NULL;
 }
 
-int check_one_node(char *text, char *action)
-{
-    char *temp, temp2[BUFFER_SIZE], *tptr;
-
-    while (*text && *action)
-    {
-        if (*action == '*')
-        {
-            action++;
-            temp = action;
-            tptr = temp2;
-            while (*temp && *temp != '*')
-                *tptr++ = *temp++;
-            *tptr = '\0';
-            if (strlen(temp2) == 0)
-                return TRUE;
-            while (strncmp(temp2, text, strlen(temp2)) != 0 && *text)
-                text++;
-        }
-        else
-        {
-            temp = action;
-            tptr = temp2;
-            while (*temp && *temp != '*')
-                *tptr++ = *temp++;
-            *tptr = '\0';
-            if (strncmp(temp2, text, strlen(temp2)) != 0)
-                return FALSE;
-            else
-            {
-                text += strlen(temp2);
-                action += strlen(temp2);
-            }
-        }
-    }
-    if (*text)
-        return FALSE;
-    else if ((*action == '*' && !*(action + 1)) || !*action)
-        return TRUE;
-    return FALSE;
-}
 
 /*********************************************************************/
 /* create a node containing the ltext, rtext fields and place at the */

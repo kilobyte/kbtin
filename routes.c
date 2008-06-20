@@ -1,36 +1,20 @@
-#include "config.h"
 #include "tintin.h"
-#include <stdlib.h>
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
+#include "protos/action.h"
+#include "protos/glob.h"
+#include "protos/ivars.h"
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
 
-extern char* mystrdup(char *s);
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern char *get_arg(char *s,char *arg,int flag,struct session *ses);
-extern struct listnode* searchnode_list(struct listnode* list,char* left);
 extern int routnum;
 extern int varnum;
-extern void deletenode_list(struct listnode *listhead, struct listnode *nptr);
-extern int eval_expression(char *arg,struct session *ses);
-extern void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext, int mode);
-extern int match(char *regex, char *string);
-extern struct session *parse_input(char *input,int override_verbatim,struct session *ses);
-extern void substitute_myvars(char *arg,char *result,struct session *ses);
-extern void substitute_vars(char *arg, char *result);
-extern void tintin_printf(struct session *ses,char *format,...);
-extern void tintin_eprintf(struct session *ses,char *format,...);
-extern void set_variable(char *left,char *right,struct session *ses);
 extern char tintin_char;
-extern int is_abrev(char *s1, char *s2);
+
 extern struct session *if_command(char *arg, struct session *ses);
 
 
-void addroute(struct session *ses,int a,int b,char *way,int dist,char *cond)
+static void addroute(struct session *ses,int a,int b,char *way,int dist,char *cond)
 {
 	struct routenode *r;
 	
@@ -119,7 +103,7 @@ int count_routes(struct session *ses)
 	return(num);
 }
 
-void kill_unused_locations(struct session *ses)
+static void kill_unused_locations(struct session *ses)
 {
 	int i;
 	int us[MAX_LOCATIONS];
@@ -142,7 +126,7 @@ void kill_unused_locations(struct session *ses)
 		}
 }
 
-void show_route(struct session *ses,int a,struct routenode *r)
+static void show_route(struct session *ses,int a,struct routenode *r)
 {
 	if (*r->cond)
 		tintin_printf(ses,"~7~{%s~7~}->{%s~7~}: {%s~7~} d=%i if {%s~7~}",

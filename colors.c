@@ -1,25 +1,14 @@
-#include "config.h"
 #include "tintin.h"
-#include <stdlib.h>
-#include <ctype.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
+#include "protos/print.h"
+#include "protos/misc.h"
+#include "protos/parse.h"
+#include "protos/utils.h"
 
-extern int yes_no(char *txt);
 extern struct session *nullsession;
-extern char *mystrdup(char *s);
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern void tintin_printf(struct session *ses,char *format,...);
-extern void tintin_eprintf(struct session *ses,char *format,...);
 
 const int colors[8]={0,4,2,6,1,5,3,7};
-int mudcolors=3;    /* 0=disabled, 1=on, 2=null, 3=null+warning */
-char *MUDcolors[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+static int mudcolors=3;    /* 0=disabled, 1=on, 2=null, 3=null+warning */
+static char *MUDcolors[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 int getcolor(char **ptr,int *color,const int flag)
 {

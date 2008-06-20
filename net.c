@@ -1,4 +1,3 @@
-/* $Id: net.c,v 2.4 1998/11/28 20:22:54 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: net.c - do all the net stuff                                */
@@ -6,22 +5,6 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#include <ctype.h>
-
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
-#ifndef HAVE_MEMCPY
-# define memcpy(d, s, n) bcopy ((s), (d), (n))
-# define memmove(d, s, n) bcopy ((s), (d), (n))
-#endif
-
-#include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in_systm.h>
@@ -29,49 +12,37 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
-#include <signal.h>
-#include <stdlib.h>
 #include "tintin.h"
+#include "protos/files.h"
+#include "protos/hooks.h"
+#include "protos/print.h"
+#include "protos/run.h"
+#include "protos/telnet.h"
+#include "protos/unicode.h"
+#include "protos/utils.h"
 
 #ifndef BADSIG
 #define BADSIG (void (*)())-1
 #endif
-
-/* NOTE!  Some systems might require a #include <net/errno.h>,
- * try adding this if you are really stuck and net.c won't compile.
- * Thanks to Brian Ebersole [Harm@GrimneMUD] for this suggestion.
- */
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #include <arpa/inet.h>
 #endif
 
 
-extern int do_telnet_protocol(char *data,int nb,struct session *ses);
-void alarm_func(int);
+static void alarm_func(int);
 
 extern struct session *sessionlist, *activesession, *nullsession;
-extern int errno;
-extern void syserr(char *msg, ...);
-extern void tintin_printf(struct session *ses, char *format, ...);
-extern void tintin_eprintf(struct session *ses, char *format, ...);
-extern void prompt(struct session *ses);
-extern void telnet_write_line(char *line, struct session *ses);
-extern void pty_write_line(char *line, struct session *ses);
-extern struct session* do_hook(struct session *ses, int t, char *data, int blockzap);
-extern void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir);
 #ifdef PROFILING
 extern char *prof_area;
 #endif
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
 int init_mccp(struct session *ses, int cplen, char *cpsrc);
 #endif
-extern void debuglog(struct session *ses, const char *format, ...);
 
 #ifndef SOL_IP
-int SOL_IP;
-int SOL_TCP;
+static int SOL_IP;
+static int SOL_TCP;
 #endif
 
 static int abort_connect;
@@ -129,13 +100,8 @@ int connect_mud(char *host, char *port, struct session *ses)
     
     for (addr=ai; addr; addr=addr->ai_next)
     {
-#ifdef UTF8
         tintin_printf(ses, "#Trying to connect... (%s) (charset=%s)",
             afstr(addr->ai_family), ses->charset);
-#else
-        tintin_printf(ses, "#Trying to connect... (%s)",
-            afstr(addr->ai_family));
-#endif
         
         if ((sock=socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol))==-1)
         {
@@ -254,7 +220,7 @@ int connect_mud(char *host, char *port, struct session *ses)
 /*****************/
 /* alarm handler */
 /*****************/
-void alarm_func(int k)
+static void alarm_func(int k)
 {
     abort_connect=1;
 }
@@ -276,27 +242,19 @@ void write_line_mud(char *line, struct session *ses)
                 sizeof(ses->nagle));
             ses->nagle=1;
         }
-#ifdef UTF8
         PROFPUSH("conv: utf8->remote");
         convert(&ses->c_io, rstr, line, 1);
         PROFPOP;
         telnet_write_line(rstr, ses);
-#else
-        telnet_write_line(line, ses);
-#endif
     }
     else if (ses==nullsession)
         tintin_eprintf(ses, "#spurious output: %s", line);  /* CHANGE ME */
     else
     {
-#ifdef UTF8
         PROFPUSH("conv: utf8->remote");
         convert(&ses->c_io, rstr, line, 1);
         PROFPOP;
         pty_write_line(rstr, ses);
-#else
-        pty_write_line(line, ses);
-#endif
     }
     do_hook(ses, HOOK_SEND, line, 1);
 }
@@ -308,9 +266,47 @@ void flush_socket(struct session *ses)
     ses->nagle=0;
 }
 
-/*******************************************************************/
-/* read at most BUFFER_SIZE chars from mud - parse protocol stuff  */
-/*******************************************************************/
+/***************************************************/
+/* low-level read/write, includes encryption layer */
+/***************************************************/
+static int read_socket(struct session *ses, char *buffer, int len)
+{
+#ifdef HAVE_GNUTLS
+    int ret;
+    
+    if (ses->ssl)
+    {
+        do
+        {
+            ret=gnutls_record_recv(ses->ssl, buffer, len);
+        } while (ret==GNUTLS_E_INTERRUPTED || ret==GNUTLS_E_AGAIN);
+        return ret;
+    }
+    else
+#endif
+        return read(ses->socket, buffer, len);
+}
+
+int write_socket(struct session *ses, char *buffer, int len)
+{
+#ifdef HAVE_GNUTLS
+    int ret;
+    
+    if (ses->ssl)
+    {
+        ret=gnutls_record_send(ses->ssl, buffer, len);
+        while (ret==GNUTLS_E_INTERRUPTED || ret==GNUTLS_E_AGAIN)
+            ret=gnutls_record_send(ses->ssl, 0, 0);
+        return ret;
+    }
+    else
+#endif
+        return write(ses->socket, buffer, len);
+}
+
+/***********************************************************************/
+/* read at most BUFFER_SIZE chars from mud - do compression and telnet */
+/***********************************************************************/
 int read_buffer_mud(char *buffer, struct session *ses)
 {
     int i, didget, b;
@@ -328,12 +324,12 @@ int read_buffer_mud(char *buffer, struct session *ses)
         return didget;
     }
 
-#ifdef HAVE_LIBZ    
+#ifdef HAVE_ZLIB    
     if (ses->mccp)
     {
         if (!ses->mccp_more)
         {
-            didget = read(ses->socket, ses->mccp_buf, INPUT_CHUNK);
+            didget = read_socket(ses, ses->mccp_buf, INPUT_CHUNK);
             if (didget<=0)
             {
                 ses->mccp_more=0;
@@ -374,7 +370,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
     else
 #endif
     {
-        didget = read(ses->socket, tmpbuf+len, INPUT_CHUNK-len);
+        didget = read_socket(ses, tmpbuf+len, INPUT_CHUNK-len);
         
         if (didget < 0)
             return -1;
@@ -430,7 +426,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
                 *cpdest++=255;
                 cpsource+=2;
                 break;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
             case -4:
                 didget-=i;
                 i-=5;
@@ -467,7 +463,7 @@ void init_net()
 #endif
 }
 
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
 int init_mccp(struct session *ses, int cplen, char *cpsrc)
 {
     if (ses->mccp)

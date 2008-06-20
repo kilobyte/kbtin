@@ -564,8 +564,8 @@ def
 #localtime foo 1189969300;#showme $foo
 #gmtime foo 1189969300;#showme $foo
 >>>
-40 01 21  16 08 2007  0 258 1
-40 01 19  16 08 2007  0 258 0
+40 01 21  16 09 2007  0 259 1
+40 01 19  16 09 2007  0 259 0
 ===
 
 ### changing session inside compound commands
@@ -608,4 +608,61 @@ After #ifexists #else: This is a.
 #SESSION 'b' DIED.
 
 #SESSION 'a' DIED.
+===
+
+### #foreach, #forall
+<<<
+#foreach {a b c} {#showme}
+#foreach {A {1 2} C} {#showme}
+#foreach {a b c} {#showme x$0x}
+#forall 1 {#showme}
+>>>
+a
+b
+c
+A
+1 2
+C
+xax
+xbx
+xcx
+1
+===
+
+### #ctoi
+<<<
+#alias ctoi {#ctoi x $0;#showme $x}
+ctoi 六十
+ctoi 二十
+ctoi 二百
+ctoi 兩百
+ctoi 兩千
+ctoi 四十五
+ctoi 兩千三百六十二
+ctoi 十四
+ctoi 一萬二千
+ctoi 一百一十四
+ctoi 一千一百五十八
+ctoi 零
+>>>
+60
+20
+200
+200
+2000
+45
+2362
+14
+12000
+114
+1158
+0
+===
+
+### infinite recursion
+<<<
+#alias x x
+x
+>>>
+#TOO DEEP RECURSION.
 ===

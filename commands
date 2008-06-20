@@ -7,6 +7,7 @@
 
 *all
 *session
+*sslsession
 *read
 *run
 *zap
@@ -33,6 +34,7 @@ deathlog
 echo
 explode
 *foreach
+*forall
 firstupper
 help
 highlight
@@ -155,10 +157,8 @@ gagthis
 profile
 #endif
 
-#ifdef UTF8
 charset
 logcharset
-#endif
 
 doactions
 dopromptactions
@@ -167,3 +167,4 @@ ord
 hexord
 localtime
 gmtime
+ctoi

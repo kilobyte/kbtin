@@ -1,51 +1,24 @@
-#include "config.h"
 #include "tintin.h"
-#include <signal.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <wctype.h>
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
-#include <stdarg.h>
-#include <wchar.h>
 #include "unicode.h"
 #include "ui.h"
-
-
-extern int wc_to_utf8(char *d, const wchar_t *s, int n, int maxb);
-extern int getcolor(char **ptr,int *color,const int flag);
-extern int one_utf8_to_mb(char **d, char **s, mbstate_t *cs);
-extern void utf8_to_local(char *d, char *s);
-extern char translit(WC ch);
-mbstate_t outstate;
-#define OUTSTATE &outstate
-
+#include "protos/bind.h"
+#include "protos/colors.h"
+#include "protos/misc.h"
+#include "protos/telnet.h"
+#include "protos/unicode.h"
+#include "protos/utils.h"
 #if HAVE_TERMIOS_H
 # include <termios.h>
 #endif
-#if GWINSZ_IN_SYS_IOCTL
-# include <sys/ioctl.h>
-#endif
+
+static mbstate_t outstate;
+#define OUTSTATE &outstate
 
 #define B_LENGTH CONSOLE_LENGTH
 
 extern char status[BUFFER_SIZE];
-extern int find_bind(char *key,int msg,struct session *ses);
 extern int keypad,retain;
-extern int setcolor(char *txt,int c);
-extern struct session *parse_input(char *input,int override_verbatim,struct session *ses);
-extern void syserr(char *msg, ...);
 extern struct session *activesession, *lastdraft;
-extern void telnet_resize_all(void);
-extern struct session *zap_command(char *arg, struct session *ses);
-extern int wc_to_mb(char *d, wchar_t *s, int n, mbstate_t *cs);
-extern int utf8_to_wc(wchar_t *d, char *s, int n);
-extern void utf8_to_mb(char **d, char *s, mbstate_t *cs);
 
 static char out_line[BUFFER_SIZE],b_draft[BUFFER_SIZE];
 static WC k_input[BUFFER_SIZE],kh_input[BUFFER_SIZE],tk_input[BUFFER_SIZE];
@@ -118,9 +91,9 @@ static void term_getsize(void)
 {
     struct winsize ts;
 
-    if (ioctl(1,TIOCGWINSZ,&ts))
+    if (ioctl(1,TIOCGWINSZ,&ts) || ts.ws_row<=0 || ts.ws_col<=0)
 /*        syserr("ioctl(TIOCGWINSZ)");*/
-    {       /* not a terminal, let's quietly assume 80x25 */
+    {       /* not a terminal or a broken one, let's quietly assume 80x25 */
         LINES=25;
         COLS=80;
         return;
@@ -129,7 +102,6 @@ static void term_getsize(void)
     COLS=ts.ws_col;
 }
 
-#ifdef UTF8
 /* len=-1 for infinite */
 static void add_doublewidth(WC *right, WC *left, int len)
 {
@@ -197,7 +169,6 @@ static int out_wc(char *d, WC *s, int n)
 #define WRAP_WC(d,s) wrap_wc(d,s)
 #define OUT_WC(d,s,n) out_wc(d,s,n)
 
-#endif
 
 #ifdef USER_DEBUG
 static void debug_info(void)
@@ -326,11 +297,7 @@ static void redraw_status(void)
             pos++;
         }
         else
-#ifdef UTF8
             one_utf8_to_mb(&tbuf, &pos, &outstate);
-#else
-            *tbuf++=*pos++;
-#endif
     };
 end:
     redraw_cursor();
@@ -360,11 +327,7 @@ static void draw_out(char *pos)
             pos++;
             continue;
         };
-#ifdef UTF8
         one_utf8_to_mb(&tbuf, &pos, &outstate);
-#else
-        *tbuf++=*pos;
-#endif
     };
 }
 
@@ -445,10 +408,8 @@ static inline void print_char(const WC ch)
 {
     int clen, dw;
 
-#ifdef UTF8
     if (ch==EMPTY_CHAR)
         return;
-#endif
     /* wrap prematurely if the double-width char won't fit */
     dw=wcwidth(ch);
     if (dw<0)
@@ -469,17 +430,12 @@ static inline void print_char(const WC ch)
                 tbuf+=sprintf(tbuf,COLORCODE(o_color));
             o_oldcolor=o_color;
         };
-#ifdef UTF8
     clen=wcrtomb(tbuf, ch, &outstate);
     if (clen!=-1)
         tbuf+=clen;
     else
         *tbuf++=translit(ch);
     o_len+=wc_to_utf8(out_line+o_len, &ch, 1, BUFFER_SIZE-8+term_buf-tbuf);
-#else
-    *tbuf++=ch;
-    out_line[o_len++]=ch;
-#endif
     o_pos+=dw;
 }
 
@@ -497,9 +453,7 @@ static void form_feed()
 
 static void b_textout(char *txt)
 {
-#ifdef UTF8
     wchar_t u[2];
-#endif
 
     /* warning! terminal output can get discarded! */
     tbuf+=sprintf(tbuf,"\0338");
@@ -539,12 +493,8 @@ static void b_textout(char *txt)
             };
             /* fall through */
         default:
-#ifdef UTF8
             txt+=utf8_to_wc(u, txt, 1)-1;
             print_char(u[0]);
-#else
-            print_char(*txt);
-#endif
         };
     out_line[o_len]=0;
     tbuf+=sprintf(tbuf,"\0337");
@@ -1431,11 +1381,7 @@ key_alt_tab:
                             *tbuf++='*';
                     }
                     else
-#ifdef UTF8
                         tbuf+=OUT_WC(tbuf, &ch, 1);
-#else
-                        *tbuf+=ch;
-#endif
                     term_commit();
                 }
                 else
@@ -1637,12 +1583,8 @@ static void fwrite_out(FILE *f,char *pos)
             *s++=*pos;
     }
     *s=0;
-#ifdef UTF8
     utf8_to_local(lstr, ustr);
     fputs(lstr, f);
-#else
-    fputs(ustr, f);
-#endif
 }
 
 static void usertty_condump(FILE *f)
@@ -1677,13 +1619,9 @@ static void usertty_title(char *fmt,...)
         buf[BUFFER_SIZE-3]='>';
     va_end(ap);
 
-#ifdef UTF8
     tbuf+=sprintf(tbuf,"\033]0;");
     utf8_to_mb(&tbuf, buf, &outstate);
     *tbuf++='\007';
-#else
-    tbuf+=sprintf(tbuf,"\033]0;%s\007",buf);
-#endif
     term_commit();
 }
 

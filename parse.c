@@ -1,4 +1,3 @@
-/* $Id: parse.c,v 2.8 1999/01/19 08:46:22 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: parse.c - some utility-functions                            */
@@ -6,62 +5,38 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
-#include <ctype.h>
-#include <signal.h>
 #include "tintin.h"
-#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include "protos/action.h"
+#include "protos/colors.h"
+#include "protos/files.h"
+#include "protos/hash.h"
+#include "protos/hooks.h"
+#include "protos/print.h"
+#include "protos/net.h"
+#include "protos/parse.h"
+#include "protos/path.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
 
 #include "commands.h"
 typedef void (*t_command)(char*, struct session*);
 typedef struct session *(*t_c_command)(char*, struct session*);
 
-struct session *parse_tintin_command(char *command, char *arg,struct session *ses);
-void do_speedwalk(char *cp, struct session *ses);
-inline char *get_arg_with_spaces(char *s, char *arg);
-
-extern int is_abrev(char *s1, char *s2);
-inline int is_speedwalk_dirs(char *cp);
-extern void substitute_myvars(char *arg,char *result,struct session *ses);
-extern void substitute_vars(char *arg, char *result);
-extern void tintin_printf(struct session *ses,char *format,...);
-extern void tintin_eprintf(struct session *ses,char *format,...);
-extern void write_line_mud(char *line, struct session *ses);
-extern int do_goto(char *txt,struct session *ses);
-extern void do_out_MUD_colors(char *line);
-char *space_out(char *s);
-char *get_arg_in_braces(char *s,char *arg,int flag);
-void write_com_arg_mud(char *command, char *argument, int nsp, struct session *ses);
-void prompt(struct session *ses);
-extern char* get_hash(struct hashtable *h, char *key);
-extern char* set_hash_nostring(struct hashtable *h, char *key, char *value);
-extern struct hashtable *init_hash();
+static struct session *parse_tintin_command(char *command, char *arg,struct session *ses);
+static void do_speedwalk(char *cp, struct session *ses);
+static inline char *get_arg_with_spaces(char *s, char *arg);
+static void write_com_arg_mud(char *command, char *argument, int nsp, struct session *ses);
 extern void end_command(char *arg, struct session *ses);
 extern void unlink_command(char *arg, struct session *ses);
-extern void check_insert_path(char *command, struct session *ses, int force);
+
+static inline int is_speedwalk_dirs(char *cp);
 
 extern struct session *sessionlist, *activesession, *nullsession;
 extern pvars_t *pvars;	/* the %0, %1, %2,....%9 variables */
 extern char tintin_char, verbatim_char;
 extern int term_echoing;
-inline char *get_arg_stop_spaces(char *s, char *arg);
-extern char *get_command(char *s, char *arg);
-extern char *cryptkey;
-extern char *get_arg_all(char *s, char *arg);
-extern void tstphandler(int sig);
-extern void debuglog(struct session *ses, const char *format, ...);
-extern struct session* do_hook(struct session *ses, int t, char *data, int blockzap);
+static inline char *get_arg_stop_spaces(char *s, char *arg);
+static char *get_arg_all(char *s, char *arg);
 int in_alias=0;
 extern int in_read;
 extern int aborting;
@@ -251,7 +226,7 @@ struct session* parse_input(char *input,int override_verbatim,struct session *se
 /************************************************************************/
 /* return TRUE if commands only consists of lowercase letters N,S,E ... */
 /************************************************************************/
-inline int is_speedwalk_dirs(char *cp)
+static inline int is_speedwalk_dirs(char *cp)
 {
     int flag;
 
@@ -271,7 +246,7 @@ inline int is_speedwalk_dirs(char *cp)
 /**************************/
 /* do the speedwalk thing */
 /**************************/
-void do_speedwalk(char *cp, struct session *ses)
+static void do_speedwalk(char *cp, struct session *ses)
 {
     char sc[2];
     char *loc;
@@ -340,7 +315,7 @@ int do_goto(char *txt,struct session *ses)
 /*************************************/
 /* parse most of the tintin-commands */
 /*************************************/
-struct session* parse_tintin_command(char *command, char *arg,struct session *ses)
+static struct session* parse_tintin_command(char *command, char *arg,struct session *ses)
 {
     struct session *sesptr;
     char *func, *a, *b, cmd[BUFFER_SIZE];
@@ -445,7 +420,7 @@ void init_parse()
 /**********************************************/
 /* get all arguments - don't remove "s and \s */
 /**********************************************/
-char* get_arg_all(char *s, char *arg)
+static char* get_arg_all(char *s, char *arg)
 {
     /* int inside=FALSE; */
     int nest = 0;
@@ -525,7 +500,7 @@ char* get_inline(char *s, char *arg)
 /* In: "this is it" way way hmmm;     */
 /* Out: this is it way way hmmm       */
 /**************************************/
-inline char* get_arg_with_spaces(char *s, char *arg)
+static inline char* get_arg_with_spaces(char *s, char *arg)
 {
     int nest = 0;
 
@@ -599,7 +574,7 @@ char* get_arg_in_braces(char *s,char *arg,int flag)
 /* get one arg, stop at spaces                */
 /* remove quotes                              */
 /**********************************************/
-inline char* get_arg_stop_spaces(char *s, char *arg)
+static inline char* get_arg_stop_spaces(char *s, char *arg)
 {
     int inside = FALSE;
 
@@ -699,7 +674,7 @@ char* space_out(char *s)
 /************************************/
 /* send command+argument to the mud */
 /************************************/
-void write_com_arg_mud(char *command, char *argument, int nsp, struct session *ses)
+static void write_com_arg_mud(char *command, char *argument, int nsp, struct session *ses)
 {
     char outtext[BUFFER_SIZE];
     int i;

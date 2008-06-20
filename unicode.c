@@ -1,21 +1,14 @@
-#include <string.h>
 #include <langinfo.h>
 #include <locale.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <stdlib.h>
-#include <errno.h>
 #include "config.h"
 #include "tintin.h"
 #include "translit.h"
-
-#ifdef UTF8
+#include "protos/utils.h"
+#include "protos/wcwidth.h"
 
 #ifdef PROFILING
 extern char *prof_area;
 #endif
-extern void syserr(char *msg, ...);
-extern int wcswidth(const wchar_t *pwcs, size_t n);
 
 int user_charset;
 char *user_charset_name;
@@ -482,4 +475,3 @@ void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir)
         syserr("unknown conversion mode");
     }
 }
-#endif

@@ -1,35 +1,19 @@
-/* $Id: help.c,v 1.4 1998/11/25 17:14:00 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*****************************************************************/
 /* functions for the #help command                               */
 /* Some small patches by David Hedbor (neotron@lysator.liu.se)   */
 /* to make it work better.                                       */
 /*****************************************************************/
-#include "config.h"
-#include <stdlib.h>
-#include <ctype.h>
 #include "tintin.h"
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/run.h"
+#include "protos/utils.h"
 
 extern char tintin_char;
-extern int is_abrev(char *s1, char *s2);
-extern void check_all_promptactions(char *line, struct session *ses);
-extern void prompt(struct session *ses);
 extern char *tintin_exec;
-extern void tintin_printf(struct session *ses, const char *format, ...);
-extern void tintin_eprintf(struct session *ses, const char *format, ...);
-extern FILE *mypopen(const char *command, int wr);
 
-FILE* check_file(char *filestring)
+static FILE* check_file(char *filestring)
 {
 #if COMPRESSED_HELP
     char sysfile[BUFFER_SIZE];

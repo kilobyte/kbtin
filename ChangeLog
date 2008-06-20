@@ -1,3 +1,18 @@
+1.0.13:
+*	handle broken terminals which report screen size of 0x0 a bit better
+*	increase several fixed limits
+*	bugfix: crash if a session is closed from an event or tick
+*	drop support for single byte only compilation
+*	yTin's pseudovars: _random, _time, _clock, _msec, HOME
+*	#ctoi for Chinese numbers, taken from yTin
+*	start month and yday from 1, not 0 (#localtime, #gmtime)
+*	fix compilation without zlib.  Fail such compilation with a help
+	message if --disable-mccp is not given.
+*	auto-remake function prototypes
+*	bugfix: UTF-8 chars split by a packet boundary were mangled in the
+	log.
+*	SSL support (#sslsession).
+
 1.0.12:
 *	#localtime, #gmtime
 *	bugfix: segfault on MCCP end (not exploitable)

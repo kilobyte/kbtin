@@ -4,32 +4,33 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#include <stdlib.h>
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
-#ifndef HAVE_MEMCPY
-# define memcpy(d, s, n) bcopy ((s), (d), (n))
-# define memmove(d, s, n) bcopy ((s), (d), (n))
-#endif
-
-#include <stdarg.h>
-
-#include <signal.h>
 #include "tintin.h"
+#include "protos/action.h"
+#include "protos/antisub.h"
+#include "protos/bind.h"
+#include "protos/colors.h"
+#include "protos/files.h"
+#include "protos/glob.h"
+#include "protos/hash.h"
+#include "protos/highlight.h"
+#include "protos/history.h"
+#include "protos/hooks.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/misc.h"
+#include "protos/net.h"
+#include "protos/parse.h"
+#include "protos/session.h"
+#include "protos/substitute.h"
+#include "protos/ticks.h"
+#include "protos/unicode.h"
+#include "protos/user.h"
+#include "protos/utils.h"
 #include <fcntl.h>
-#include <errno.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <sys/resource.h>
-#include <wchar.h>
 #include "unicode.h"
 #include "ui.h"
 
@@ -39,11 +40,14 @@
 
 typedef void (*sighandler_t)(int);
 
+extern void end_command(char *arg, struct session *ses);
+
+static void echo_input(char *txt);
+
 /*************** globals ******************/
 int term_echoing = TRUE;
 int keypad= DEFAULT_KEYPAD;
 int retain= DEFAULT_RETAIN;
-int puts_echoing = TRUE;
 int alnum = 0;
 int acnum = 0;
 int subnum = 0;
@@ -75,58 +79,20 @@ char **pvars;	/* the %0, %1, %2,....%9 variables */
 char tintin_char = DEFAULT_TINTIN_CHAR;
 char verbatim_char = DEFAULT_VERBATIM_CHAR;
 char prev_command[BUFFER_SIZE];
-void tintin(void);
-void read_mud(struct session *ses);
-void do_one_line(char *line,int nl,struct session *ses);
-void snoop(char *buffer, struct session *ses);
-void tintin_puts(char *cptr, struct session *ses);
-void tintin_puts1(char *cptr, struct session *ses);
-void tintin_printf(struct session *ses, const char *format, ...);
-void tintin_eprintf(struct session *ses, const char *format, ...);
+static void tintin(void);
+static void read_mud(struct session *ses);
+static void do_one_line(char *line,int nl,struct session *ses);
+static void snoop(char *buffer, struct session *ses);
 char status[BUFFER_SIZE];
 
 /************ externs *************/
 extern char done_input[BUFFER_SIZE];
 
-extern int ticker_interrupted, time0;
-extern int tick_size, sec_to_tick;
+extern time_t time0;
+extern int utime0;
 
 static void myquitsig(int);
-extern struct session *newactive_session(void);
-extern struct session *parse_input(char *input,int override_verbatim,struct session *ses);
 extern struct completenode *complete_head;
-extern struct listnode *init_list(void);
-extern void read_complete(void);
-extern void syserr(char *msg, ...);
-extern char* mystrdup(const char*);
-extern int do_one_antisub(char *line, struct session *ses);
-extern void prompt(struct session *ses);
-extern int check_event(int time, struct session *ses);
-extern void check_all_actions(char *line, struct session *ses);
-extern void check_all_promptactions(char *line, struct session *ses);
-extern void do_all_high(char *line,struct session *ses);
-extern void do_all_sub(char *line, struct session *ses);
-extern void do_in_MUD_colors(char *txt,int quotetype);
-extern void init_bind(void);
-extern int isnotblank(char *line,int flag);
-extern int match(char *regex, char *string);
-extern int iscompleteprompt(char *line);
-void echo_input(char *txt);
-extern struct hashtable* init_hash();
-extern void init_parse();
-extern struct session *do_read(FILE *myfile, char *filename, struct session *ses);
-extern void do_history(char *buffer, struct session *ses);
-extern int read_buffer_mud(char *buffer, struct session *ses);
-extern void cleanup_session(struct session *ses);
-void make_name(char *str, char *basis, int run);
-extern void set_magic_hook(struct session *ses);
-extern struct session* do_hook(struct session *ses, int t, char *data, int blockzap);
-extern void flush_socket(struct session *ses);
-extern void write_logf(struct session *ses, char *txt, char *prefix, char *suffix);
-extern void write_log(struct session *ses, char *txt, int n);
-extern void init_net();
-extern void init_locale();
-extern void end_command(char *arg, struct session *ses);
 #ifdef PROFILING
 extern char *prof_area;
 extern time_t kbd_lag, mud_lag;
@@ -134,13 +100,6 @@ extern int kbd_cnt, mud_cnt;
 extern void setup_prof();
 #endif
 extern int ui_sep_input;
-extern struct listnode *init_list(void);
-extern void addnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext);
-extern void kill_list(struct listnode *nptr);
-extern void user_setdriver(int dr);
-extern void local_to_utf8(char *d, char *s, int maxb, mbstate_t *cs);
-extern void nullify_conv(struct charset_conv *conv);
-extern void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir);
 
 static void tstphandler(int sig)
 {
@@ -195,7 +154,7 @@ static void sigwinch(void)
 }
 
 
-int new_news(void)
+static int new_news(void)
 {
     struct stat KBtin, news;
     
@@ -217,7 +176,7 @@ void suspend_command(char *arg, struct session *ses)
     tstphandler(SIGTSTP);
 }
 
-void setup_signals(void)
+static void setup_signals(void)
 {
     struct sigaction act;
     sigemptyset(&act.sa_mask);
@@ -263,7 +222,7 @@ void setup_signals(void)
 /****************************************/
 /* attempt to assure enough stack space */
 /****************************************/
-void setup_ulimit(void)
+static void setup_ulimit(void)
 {
     struct rlimit rlim;
 
@@ -280,6 +239,102 @@ void setup_ulimit(void)
     setrlimit(RLIMIT_STACK,&rlim);
 }
 
+static void init_nullses(void)
+{
+    int i;
+    struct timeval tv;
+    
+    gettimeofday(&tv, 0);
+    time0 = tv.tv_sec;
+    utime0 = tv.tv_usec;
+
+    nullsession=TALLOC(struct session);
+    nullsession->name=mystrdup("main");
+    nullsession->address=0;
+    nullsession->tickstatus = FALSE;
+    nullsession->tick_size = DEFAULT_TICK_SIZE;
+    nullsession->pretick = DEFAULT_PRETICK;
+    nullsession->time0 = 0;
+    nullsession->snoopstatus = TRUE;
+    nullsession->logfile = 0;
+    nullsession->logname = 0;
+    nullsession->logtype = DEFAULT_LOGTYPE;
+    nullsession->blank = DEFAULT_DISPLAY_BLANK;
+    nullsession->echo = ui_sep_input?DEFAULT_ECHO_SEPINPUT
+                                    :DEFAULT_ECHO_NOSEPINPUT;
+    nullsession->speedwalk = DEFAULT_SPEEDWALK;
+    nullsession->togglesubs = DEFAULT_TOGGLESUBS;
+    nullsession->presub = DEFAULT_PRESUB;
+    nullsession->verbatim = 0;
+    nullsession->ignore = DEFAULT_IGNORE;
+    nullsession->partial_line_marker = mystrdup(DEFAULT_PARTIAL_LINE_MARKER);
+    nullsession->aliases = init_hash();
+    nullsession->actions = init_list();
+    nullsession->prompts = init_list();
+    nullsession->subs = init_list();
+    nullsession->myvars = init_hash();
+    nullsession->highs = init_list();
+    nullsession->pathdirs = init_hash();
+    nullsession->socket = 0;
+    nullsession->issocket = 0;
+    nullsession->naws = 0;
+#ifdef HAVE_ZLIB
+    nullsession->can_mccp = 0;
+    nullsession->mccp = 0;
+    nullsession->mccp_more = 0;
+#endif
+    nullsession->last_term_type=0;
+    nullsession->server_echo = 0;
+    nullsession->nagle = 0;
+    nullsession->antisubs = init_list();
+    nullsession->binds = init_hash();
+    nullsession->next = 0;
+    nullsession->sessionstart=nullsession->idle_since=time(0);
+    nullsession->debuglogfile=0;
+    nullsession->debuglogname=0;
+    for (i=0;i<HISTORY_SIZE;i++)
+        history[i]=0;
+    for (i=0;i<MAX_LOCATIONS;i++)
+    {
+        nullsession->routes[i]=0;
+        nullsession->locations[i]=0;
+    }
+    for(i=0;i<NHOOKS;i++)
+        nullsession->hooks[i]=0;
+    nullsession->path = init_list();
+    nullsession->no_return = 0;
+    nullsession->path_length = 0;
+    nullsession->last_line[0] = 0;
+    nullsession->events = NULL;
+    nullsession->verbose=0;
+    nullsession->closing=0;
+    sessionlist = nullsession;
+    activesession = nullsession;
+    pvars=0;
+
+    nullsession->mesvar[0] = DEFAULT_ALIAS_MESS;
+    nullsession->mesvar[1] = DEFAULT_ACTION_MESS;
+    nullsession->mesvar[2] = DEFAULT_SUB_MESS;
+    nullsession->mesvar[3] = DEFAULT_EVENT_MESS;
+    nullsession->mesvar[4] = DEFAULT_HIGHLIGHT_MESS;
+    nullsession->mesvar[5] = DEFAULT_VARIABLE_MESS;
+    nullsession->mesvar[6] = DEFAULT_ROUTE_MESS;
+    nullsession->mesvar[7] = DEFAULT_GOTO_MESS;
+    nullsession->mesvar[8] = DEFAULT_BIND_MESS;
+    nullsession->mesvar[9] = DEFAULT_SYSTEM_MESS;
+    nullsession->mesvar[10]= DEFAULT_PATH_MESS;
+    nullsession->mesvar[11]= DEFAULT_ERROR_MESS;
+    nullsession->mesvar[12]= DEFAULT_HOOK_MESS;
+    nullsession->charset=mystrdup(DEFAULT_CHARSET);
+    nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
+                              DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
+    nullify_conv(&nullsession->c_io);
+    nullify_conv(&nullsession->c_log);
+#ifdef HAVE_GNUTLS
+    nullsession->ssl=0;
+#endif
+}
+
 static void opterror(char *msg, ...)
 {
     va_list ap;
@@ -293,7 +348,7 @@ static void opterror(char *msg, ...)
 
 static struct listnode *options;
 
-void parse_options(int argc, char **argv, char **environ)
+static void parse_options(int argc, char **argv, char **environ)
 {
     int noargs=0;
     int arg;
@@ -333,14 +388,14 @@ void parse_options(int argc, char **argv, char **environ)
                 else
                     addnode_list(options, "r", argv[arg], 0);
             }
-            else if (!strcmp(argv[arg],"-s"))
+            else if (!strcasecmp(argv[arg],"-s"))
             {
                 if (++arg==argc)
-                    opterror("Invalid option: bare -s");
+                    opterror("Invalid option: bare %s", argv[arg]);
                 else if (++arg==argc)
                     opterror("Bad option: -s needs both an address and a port number!");
                 else
-                    addnode_list(options, "s", argv[arg-1], argv[arg]);
+                    addnode_list(options, argv[arg-2]+1, argv[arg-1], argv[arg]);
             }
             else
                 opterror("Invalid option: {%s}",argv[arg]);
@@ -352,18 +407,14 @@ void parse_options(int argc, char **argv, char **environ)
         addnode_list(options, "-", 0, 0);
 }
 
-void apply_options()
+static void apply_options()
 {
     struct listnode *opt;
     char homepath[BUFFER_SIZE], temp[BUFFER_SIZE], sname[BUFFER_SIZE], *strptr;
     char ustr[BUFFER_SIZE];
     FILE *f;
-#ifdef UTF8
 # define DO_INPUT(str,iv) local_to_utf8(ustr,str,BUFFER_SIZE,0);\
                           activesession=parse_input(str,iv,activesession);
-#else
-# define DO_INPUT(str,iv) activesession=parse_input(str,iv,activesession);
-#endif
 
     for(opt=options->next; opt; opt=opt->next)
     {
@@ -390,12 +441,15 @@ void apply_options()
                 "%cses %s {%s %s}", tintin_char, sname, opt->right, opt->pr);
             DO_INPUT(temp, 1);
             break;
+        case 'S':
+            set_magic_hook(activesession);
+            make_name(sname, opt->right, 1);
+            snprintf(temp, BUFFER_SIZE,
+                "%csslses %s {%s %s}", tintin_char, sname, opt->right, opt->pr);
+            DO_INPUT(temp, 1);
+            break;
         case ' ':
-#ifdef UTF8
             local_to_utf8(ustr, opt->right, BUFFER_SIZE, 0);
-#else
-# define ustr opt->right
-#endif
             if ((f=fopen(opt->right,"r")))
             {
                 if (activesession->verbose || !real_quiet)
@@ -404,7 +458,6 @@ void apply_options()
             }
             else
                 tintin_eprintf(0, "#FILE NOT FOUND: {%s}", ustr);
-#undef ustr
             break;
         case '-':
             *homepath = '\0';
@@ -418,11 +471,7 @@ void apply_options()
             
             strcpy(temp, homepath);
             strcat(temp, "/.tintinrc");
-#ifdef UTF8
             local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
-#else
-# define ustr temp
-#endif
             if ((f=fopen(temp,"r")))
                 activesession = do_read(f, ustr, activesession);
             else
@@ -432,12 +481,9 @@ void apply_options()
                     strcpy(homepath, strptr);
                     strcpy(temp, homepath);
                     strcat(temp, "/.tintinrc");
-#ifdef UTF8
                     local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
-#endif
                     if ((f=fopen(temp,"r")))
                         activesession = do_read(f, ustr, activesession);
-#undef ustr
                 }
             }
         }
@@ -454,9 +500,7 @@ int main(int argc, char **argv, char **environ)
     struct session *ses;
 
     tintin_exec=argv[0];
-#ifdef UTF8
     init_locale();
-#endif
     user_setdriver(isatty(0)?1:0);
     parse_options(argc, argv, environ);
     init_bind();
@@ -466,7 +510,7 @@ int main(int argc, char **argv, char **environ)
     user_init();
     /*  read_complete();		no tab-completion */
     ses = NULL;
-    srand((getpid()*0x10001)^time(0));
+    srand((getpid()*0x10001)^time0);
     lastdraft=0;
 
     if (ui_own_output || tty)
@@ -504,96 +548,7 @@ ever wants to read -- that is what docs are for.
 #endif
     PROF("initializing");
     setup_ulimit();
-    time0 = time(NULL);
-
-    nullsession=TALLOC(struct session);
-    nullsession->name=mystrdup("main");
-    nullsession->address=0;
-    nullsession->tickstatus = FALSE;
-    nullsession->tick_size = DEFAULT_TICK_SIZE;
-    nullsession->pretick = DEFAULT_PRETICK;
-    nullsession->time0 = 0;
-    nullsession->snoopstatus = TRUE;
-    nullsession->logfile = 0;
-    nullsession->logname = 0;
-    nullsession->logtype = DEFAULT_LOGTYPE;
-    nullsession->blank = DEFAULT_DISPLAY_BLANK;
-    nullsession->echo = ui_sep_input?DEFAULT_ECHO_SEPINPUT
-                                    :DEFAULT_ECHO_NOSEPINPUT;
-    nullsession->speedwalk = DEFAULT_SPEEDWALK;
-    nullsession->togglesubs = DEFAULT_TOGGLESUBS;
-    nullsession->presub = DEFAULT_PRESUB;
-    nullsession->verbatim = 0;
-    nullsession->ignore = DEFAULT_IGNORE;
-    nullsession->partial_line_marker = mystrdup(DEFAULT_PARTIAL_LINE_MARKER);
-    nullsession->aliases = init_hash();
-    nullsession->actions = init_list();
-    nullsession->prompts = init_list();
-    nullsession->subs = init_list();
-    nullsession->myvars = init_hash();
-    nullsession->highs = init_list();
-    nullsession->pathdirs = init_hash();
-    nullsession->socket = 0;
-    nullsession->issocket = 0;
-    nullsession->naws = 0;
-#ifdef HAVE_LIBZ
-    nullsession->can_mccp = 0;
-    nullsession->mccp = 0;
-    nullsession->mccp_more = 0;
-#endif
-    nullsession->last_term_type=0;
-    nullsession->server_echo = 0;
-    nullsession->nagle = 0;
-    nullsession->antisubs = init_list();
-    nullsession->binds = init_hash();
-    nullsession->next = 0;
-    nullsession->sessionstart=nullsession->idle_since=time(0);
-    nullsession->debuglogfile=0;
-    nullsession->debuglogname=0;
-    {
-        int i;
-        for (i=0;i<HISTORY_SIZE;i++)
-            history[i]=0;
-        for (i=0;i<MAX_LOCATIONS;i++)
-        {
-            nullsession->routes[i]=0;
-            nullsession->locations[i]=0;
-        }
-        for(i=0;i<NHOOKS;i++)
-            nullsession->hooks[i]=0;
-    };
-    nullsession->path = init_list();
-    nullsession->no_return = 0;
-    nullsession->path_length = 0;
-    nullsession->last_line[0] = 0;
-    nullsession->events = NULL;
-    nullsession->verbose=0;
-    nullsession->closing=0;
-    sessionlist = nullsession;
-    activesession = nullsession;
-    pvars=0;
-
-    nullsession->mesvar[0] = DEFAULT_ALIAS_MESS;
-    nullsession->mesvar[1] = DEFAULT_ACTION_MESS;
-    nullsession->mesvar[2] = DEFAULT_SUB_MESS;
-    nullsession->mesvar[3] = DEFAULT_EVENT_MESS;
-    nullsession->mesvar[4] = DEFAULT_HIGHLIGHT_MESS;
-    nullsession->mesvar[5] = DEFAULT_VARIABLE_MESS;
-    nullsession->mesvar[6] = DEFAULT_ROUTE_MESS;
-    nullsession->mesvar[7] = DEFAULT_GOTO_MESS;
-    nullsession->mesvar[8] = DEFAULT_BIND_MESS;
-    nullsession->mesvar[9] = DEFAULT_SYSTEM_MESS;
-    nullsession->mesvar[10]= DEFAULT_PATH_MESS;
-    nullsession->mesvar[11]= DEFAULT_ERROR_MESS;
-    nullsession->mesvar[12]= DEFAULT_HOOK_MESS;
-#ifdef UTF8
-    nullsession->charset=mystrdup(DEFAULT_CHARSET);
-    nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
-                              DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
-    nullify_conv(&nullsession->c_io);
-    nullify_conv(&nullsession->c_log);
-#endif
-
+    init_nullses();
     PROF("other");
     apply_options();
     tintin();
@@ -604,15 +559,19 @@ ever wants to read -- that is what docs are for.
 /* return seconds to next tick (global, all sessions) */
 /* also display tick messages                         */
 /******************************************************/
-int check_events(void)
+static int check_events(void)
 {
     struct session *sp;
     int tick_time = 0, curr_time, tt;
 
     curr_time = time(NULL);
+restart:
+    any_closed=0;
     for (sp = sessionlist; sp; sp = sp->next)
     {
         tt = check_event(curr_time, sp);
+        if (any_closed)
+            goto restart;
         /* printf("#%s %d(%d)\n", sp->name, tt, curr_time); */
         if (tt > curr_time && (tick_time == 0 || tt < tick_time))
             tick_time = tt;
@@ -626,7 +585,7 @@ int check_events(void)
 /***************************/
 /* the main loop of tintin */
 /***************************/
-void tintin(void)
+static void tintin(void)
 {
     int i, result, maxfd;
     struct session *sesptr;
@@ -638,11 +597,9 @@ void tintin(void)
     char kbdbuf[BUFFER_SIZE];
     WC ch;
     int inbuf=0;
-#ifdef UTF8
     mbstate_t instate;
     
     memset(&instate, 0, sizeof(instate));
-#endif
 
     while (TRUE)
     {
@@ -656,6 +613,10 @@ void tintin(void)
                 user_title(XTERM_TITLE, activesession->name);
         }
 #endif
+
+        tv.tv_sec = check_events();
+        tv.tv_usec = 0;
+
         maxfd=0;
         FD_ZERO(&readfdmask);
         if (!eofinput)
@@ -673,10 +634,6 @@ void tintin(void)
             if (sesptr->socket>maxfd)
                 maxfd=sesptr->socket;
         }
-
-        tv.tv_sec = check_events();
-        tv.tv_usec = 0;
-
         result = select(maxfd+1, &readfdmask, 0, 0, &tv);
 
         if (need_resize)
@@ -709,7 +666,6 @@ void tintin(void)
             i=0;
             while(i<inbuf)
             {
-#ifdef UTF8
                 result=mbrtowc(&ch, kbdbuf+i, inbuf-i, &instate);
                 if (result==-2)		/* incomplete but valid sequence */
                 {
@@ -730,9 +686,6 @@ void tintin(void)
                     i++; /* oops... bad ISO/ANSI, bad */
                 else
                     i+=result;
-#else
-                ch=kbdbuf[i++];
-#endif
                 if (user_process_kbd(activesession, ch))
                 {
                     hist_num=-1;
@@ -775,7 +728,7 @@ void tintin(void)
                         goto after_read;
                         /* The remaining sessions will be done after select() */
                     }
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
                 } while (sesptr->mccp_more);
 #else
                 } while (0);
@@ -799,7 +752,7 @@ void tintin(void)
 /*************************************************************/
 /* read text from mud and test for actions/snoop/substitutes */
 /*************************************************************/
-void read_mud(struct session *ses)
+static void read_mud(struct session *ses)
 {
     char buffer[BUFFER_SIZE], linebuffer[BUFFER_SIZE], *cpsource, *cpdest;
     char temp[BUFFER_SIZE];
@@ -902,22 +855,19 @@ void read_mud(struct session *ses)
             do_one_line(linebuffer,0,ses);
     PROFEND(mud_lag, mud_cnt);
 }
+
 /**********************************************************/
 /* do all of the functions to one line of buffer          */
 /**********************************************************/
-void do_one_line(char *line,int nl,struct session *ses)
+static void do_one_line(char *line,int nl,struct session *ses)
 {
     int isnb;
-#ifdef UTF8
     char ubuf[BUFFER_SIZE];
 
     PROFPUSH("conv: remote->utf8");
     convert(&ses->c_io, ubuf, line, -1);
 # define line ubuf
     PROF("looking for passwords");
-#else
-    PROFPUSH("looking for passwords");
-#endif
     switch (ses->server_echo)
     {
     case 0:
@@ -994,95 +944,12 @@ void do_one_line(char *line,int nl,struct session *ses)
 /**********************************************************/
 /* snoop session ses - chop up lines and put'em in buffer */
 /**********************************************************/
-void snoop(char *buffer, struct session *ses)
+static void snoop(char *buffer, struct session *ses)
 {
     tintin_printf(0,"%s%% %s\n",ses->name,buffer);
 }
 
-/*****************************************************/
-/* output to screen should go throught this function */
-/* text gets checked for actions                     */
-/*****************************************************/
-void tintin_puts(char *cptr, struct session *ses)
-{
-    char line[BUFFER_SIZE];
-    strcpy(line,cptr);
-    if (ses)
-    {
-        _=line;
-        check_all_actions(line, ses);
-        _=0;
-    }
-    tintin_printf(ses,line);
-}
-
-/*****************************************************/
-/* output to screen should go throught this function */
-/* text gets checked for substitutes and actions     */
-/*****************************************************/
-void tintin_puts1(char *cptr, struct session *ses)
-{
-    char line[BUFFER_SIZE];
-
-    strcpy(line,cptr);
-
-    _=line;
-    if (!ses->presub && !ses->ignore)
-        check_all_actions(line, ses);
-    if (!ses->togglesubs)
-        if (!do_one_antisub(line, ses))
-            do_all_sub(line, ses);
-    if (ses->presub && !ses->ignore)
-        check_all_actions(line, ses);
-    if (!ses->togglesubs)
-        do_all_high(line, ses);
-    if (isnotblank(line,ses->blank))
-        if (ses==activesession)
-        {
-            cptr=strchr(line,0);
-            if (cptr-line>=BUFFER_SIZE-2)
-                cptr=line+BUFFER_SIZE-2;
-            cptr[0]='\n';
-            cptr[1]=0;
-            user_textout(line);
-        }
-    _=0;
-}
-
-void tintin_printf(struct session *ses, const char *format, ...)
-{
-    va_list ap;
-    char buf[BUFFER_SIZE];
-
-    if ((ses == activesession || ses == nullsession || !ses) && puts_echoing)
-    {
-        va_start(ap, format);
-        if (vsnprintf(buf, BUFFER_SIZE-1, format, ap)>BUFFER_SIZE-2)
-            buf[BUFFER_SIZE-3]='>';
-        va_end(ap);
-        strcat(buf, "\n");
-        user_textout(buf);
-    }
-}
-
-void tintin_eprintf(struct session *ses, const char *format, ...)
-{
-    va_list ap;
-    char buf[BUFFER_SIZE];
-
-    /* note: the behavior on !ses is wrong */
-    if ((ses == activesession || ses == nullsession || !ses) && (puts_echoing||!ses||ses->mesvar[11]))
-    {
-        va_start(ap, format);
-        if (vsnprintf(buf, BUFFER_SIZE-1, format, ap)>BUFFER_SIZE-2)
-            buf[BUFFER_SIZE-3]='>';
-        va_end(ap);
-        strcat(buf, "\n");
-        user_textout(buf);
-    }
-}
-
-void echo_input(char *txt)
+static void echo_input(char *txt)
 {
     char out[BUFFER_SIZE],*cptr,*optr;
     static int c=7;

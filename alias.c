@@ -1,4 +1,3 @@
-/* $Id: alias.c,v 1.3 1998/10/11 18:36:33 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: alias.c - funtions related the the alias command            */
@@ -6,28 +5,12 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #include "tintin.h"
-
-extern char *get_arg_in_braces();
-extern void show_aliases();
-extern void prompt();
-extern void tintin_printf(struct session *ses,const char *format,...);
-extern void tintin_eprintf(struct session *ses,const char *format,...);
-extern void show_list(struct listnode *listhead);
-extern void set_hash(struct hashtable *h, char *key, char *value);
-extern struct listnode* hash2list(struct hashtable *h, char *pat);
-extern void zap_list(struct listnode *nptr);
-extern int is_literal(char *txt);
-extern int delete_hash(struct hashtable *h, char *key);
+#include "protos/glob.h"
+#include "protos/hash.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/parse.h"
 
 
 extern int alnum;

@@ -1,4 +1,3 @@
-/* $Id: action.c,v 1.4 1998/10/11 18:51:51 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: action.c - funtions related to the action command           */
@@ -6,53 +5,33 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#include <ctype.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include "tintin.h"
-#include <stdlib.h>
+#include "protos/action.h"
+#include "protos/files.h"
+#include "protos/glob.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
+
 
 extern struct session *activesession, *nullsession;
 extern pvars_t *pvars;	/* the %0, %1, %2,....%9 variables */
 extern int term_echoing;
 extern char tintin_char;
 extern int acnum;
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern char *get_arg(char *s,char *arg,int flag,struct session *ses);
-extern struct listnode *search_node_with_wild(struct listnode *listhead, char *cptr);
-extern struct listnode *searchnode_list(struct listnode *listhead, char *cptr);
-void substitute_vars(char *arg, char *result);
-extern void deletenode_list(struct listnode *listhead, struct listnode *nptr);
-extern void show_list_action(struct listnode *listhead);
-extern void prompt(struct session *ses);
-extern void shownode_list_action(struct listnode *nptr);
-extern void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext, int mode);
-extern void substitute_myvars(char *arg,char *result,struct session *ses);
-int check_one_action(char *line, char *action, pvars_t *vars, int inside, struct session *ses);
-int check_a_action(char *line, char *action, int inside, struct session *ses);
-extern struct session *parse_input(char *input,int override_verbatim,struct session *ses);
-extern int is_abrev(char *s1, char *s2);
-extern struct session *if_command(char *arg, struct session *ses);
-extern void tintin_printf(struct session *ses,char *format,...);
-extern void tintin_eprintf(struct session *ses,char *format,...);
 extern int in_alias;
-extern void debuglog(struct session *ses, const char *format, ...);
-extern int match(char *regex, char *string);
 int var_len[10];
 char *var_ptr[10];
 extern int aborting, recursion;
-extern char *space_out(char *s);
-extern char *mystrdup(char *s);
 
 int inActions=0;
 int deletedActions=0;
 char *match_start,*match_end;
+
+extern struct session *if_command(char *arg, struct session *ses);
+static int check_a_action(char *line, char *action, int inside, struct session *ses);
 
 int kill_action(struct listnode *head,struct listnode *nptr)
 {
@@ -568,7 +547,7 @@ int match_inline(char *arg, struct session *ses)
 }
 
 
-int match_a_string(char *line, char *mask)
+static int match_a_string(char *line, char *mask)
 {
     char *lptr, *mptr;
 
@@ -608,7 +587,7 @@ int check_one_action(char *line, char *action, pvars_t *vars, int inside, struct
 /* check if a text triggers an action and fill into the variables */
 /* return TRUE if triggered                                       */
 /******************************************************************/
-int check_a_action(char *line, char *action, int inside, struct session *ses)
+static int check_a_action(char *line, char *action, int inside, struct session *ses)
 {
     char result[BUFFER_SIZE];
     char *temp2, *tptr, *lptr, *lptr2;

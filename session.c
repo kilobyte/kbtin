@@ -1,61 +1,43 @@
-/* $Id: session.c,v 2.3 1998/10/12 09:45:23 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
-/* file: session.c.c - funtions related to sessions                  */
+/* file: session.c - funtions related to sessions                    */
 /*                             TINTIN III                            */
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#include <ctype.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include "tintin.h"
-#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include "protos/colors.h"
+#include "protos/files.h"
+#include "protos/hash.h"
+#include "protos/hooks.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/net.h"
+#include "protos/parse.h"
+#include "protos/routes.h"
+#include "protos/run.h"
+#include "protos/unicode.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
 #include "ui.h"
+#ifdef HAVE_GNUTLS
+#include "protos/ssl.h"
+#else
+# define gnutls_session_t int
+#endif
 
-void show_session(struct session *ses);
-struct session *new_session(char *name,char *address,int sock,int issocket,struct session *ses);
-
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern char *space_out(char *s);
-extern char *mystrdup(char *s);
-extern struct listnode *copy_list(struct listnode *sourcelist,int mode);
-extern struct listnode *init_list(void);
-extern int run(char *command);
-extern void copyroutes(struct session *ses1,struct session *ses2);
-extern int connect_mud(char *host, char *port, struct session *ses);
-extern void kill_all(struct session *ses, int mode);
-extern void prompt(struct session *ses);
-extern void syserr(char *msg, ...);
-extern void tintin_puts(char *cptr, struct session *ses);
-extern void tintin_puts1(char *cptr, struct session *ses);
-extern void tintin_printf(struct session *ses,char *format,...);
-extern void tintin_eprintf(struct session *ses,char *format,...);
-extern struct hashtable* copy_hash(struct hashtable *h);
-extern void do_in_MUD_colors(char *txt,int quotetype);
-extern int isatom(char *arg);
-extern struct session* do_hook(struct session *ses, int t, char *data, int blockzap);
-extern void utf8_to_local(char *d, char *s);
-extern void nullify_conv(struct charset_conv *conv);
-extern void cleanup_conv(struct charset_conv *conv);
-extern int new_conv(struct charset_conv *conv, char *name, int dir);
-extern void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir);
-extern void log_off(struct session *ses);
 
 extern struct session *sessionlist, *activesession, *nullsession;
 extern char *history[HISTORY_SIZE];
 extern char *user_charset_name;
 extern int any_closed;
+#ifdef HAVE_GNUTLS
+#else
+# define gnutls_session_t int
+#endif
 
+static struct session *new_session(char *name, char *address, int sock, int issocket, gnutls_session_t ssl, struct session *ses);
+static void show_session(struct session *ses);
 
 int session_exists(char *name)
 {
@@ -67,8 +49,6 @@ int session_exists(char *name)
     return 0;
 }
 
-#define is7alpha(x) ((((x)>='A')&&((x)<='Z')) || (((x)>='a')&&((x)<='z')))
-#define is7alnum(x) ((((x)>='0')&&((x)<='9')) || is7alpha(x))
 /* FIXME: use non-ascii letters in generated names */
 
 /* NOTE: basis is in the local charset, not UTF-8 */
@@ -116,7 +96,7 @@ noname:
     #session {a}        - print info about session a
   (opposed to #session {a} {mud.address.here 666} - starting a new session)
 */
-int list_sessions(char *arg,struct session *ses,char *left,char *right)
+static int list_sessions(char *arg,struct session *ses,char *left,char *right)
 {
     struct session *sesptr;
     arg = get_arg_in_braces(arg, left, 0);
@@ -157,14 +137,17 @@ int list_sessions(char *arg,struct session *ses,char *left,char *right)
     return 1;
 }
 
-/************************/
-/* the #session command */
-/************************/
-struct session *session_command(char *arg,struct session *ses)
+/*****************************************/
+/* the #session and #sslsession commands */
+/*****************************************/
+static struct session *socket_session(char *arg, struct session *ses, int ssl)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], host[BUFFER_SIZE];
     int sock;
     char *port;
+#ifdef HAVE_GNUTLS
+    gnutls_session_t sslses;
+#endif
 
     if (list_sessions(arg,ses,left,right))
         return(ses);	/* (!*left)||(!*right) */
@@ -194,7 +177,34 @@ struct session *session_command(char *arg,struct session *ses)
     if (!(sock = connect_mud(host, port, ses)))
         return ses;
 
-    return(new_session(left,right,sock,1,ses));
+#ifdef HAVE_GNUTLS
+    if (ssl)
+        if (!(sslses=ssl_negotiate(sock, host, ses)))
+        {
+            close(sock);
+            return ses;
+        }
+    
+    return(new_session(left, right, sock, 1, ssl?sslses:0, ses));
+#else
+    return(new_session(left, right, sock, 1, 0, ses));
+#endif
+}
+
+
+struct session *session_command(char *arg, struct session *ses)
+{
+    return socket_session(arg, ses, 0);
+}
+
+struct session *sslsession_command(char *arg, struct session *ses)
+{
+#ifdef HAVE_GNUTLS
+    return socket_session(arg, ses, 1);
+#else
+    tintin_eprintf(ses, "#SSLSESSION is not supported.  Please recompile KBtin against GnuTLS.");
+    return ses;
+#endif
 }
 
 
@@ -215,25 +225,21 @@ struct session *run_command(char *arg,struct session *ses)
         return(ses);
     };
 
-#ifdef UTF8
     utf8_to_local(ustr, right);
     if (!(sock=run(ustr)))
-#else
-    if (!(sock=run(right)))
-#endif
     {
         tintin_eprintf(ses, "#forkpty() FAILED!");
         return ses;
     }
 
-    return(new_session(left,right,sock,0,ses));
+    return(new_session(left, right, sock, 0, 0, ses));
 }
 
 
 /******************/
 /* show a session */
 /******************/
-void show_session(struct session *ses)
+static void show_session(struct session *ses)
 {
     char temp[BUFFER_SIZE];
 
@@ -275,7 +281,7 @@ struct session *newactive_session(void)
 /**********************/
 /* open a new session */
 /**********************/
-struct session *new_session(char *name,char *address,int sock,int issocket,struct session *ses)
+static struct session *new_session(char *name, char *address, int sock, int issocket, gnutls_session_t ssl, struct session *ses)
 {
     struct session *newsession;
     int i;
@@ -305,7 +311,7 @@ struct session *new_session(char *name,char *address,int sock,int issocket,struc
     newsession->binds = copy_hash(ses->binds);
     newsession->issocket = issocket;
     newsession->naws = !issocket;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
     newsession->can_mccp = 0;
     newsession->mccp = 0;
     newsession->mccp_more = 0;
@@ -349,13 +355,14 @@ struct session *new_session(char *name,char *address,int sock,int issocket,struc
         else
             newsession->hooks[i]=0;
     newsession->closing=0;
-#ifdef UTF8
     newsession->charset = mystrdup(issocket ? ses->charset : user_charset_name);
     newsession->logcharset = logcs_is_special(ses->logcharset) ?
                               ses->logcharset : mystrdup(ses->logcharset);
     if (!new_conv(&newsession->c_io, newsession->charset, 0))
         tintin_eprintf(0, "#Warning: can't open charset: %s", newsession->charset);
     nullify_conv(&newsession->c_log);
+#ifdef HAVE_GNUTLS
+    newsession->ssl=ssl;
 #endif
     sessionlist = newsession;
     activesession = newsession;
@@ -363,20 +370,6 @@ struct session *new_session(char *name,char *address,int sock,int issocket,struc
     return do_hook(newsession, HOOK_OPEN, 0, 0);
 }
 
-/***************************************************************************************/
-/* look for the session on the list.  If it's there, return a pointer to its reference */
-/***************************************************************************************/
-struct session **is_alive(struct session *ses)
-{
-    struct session *sesptr;
-    
-    if (ses==sessionlist)
-        return &sessionlist;
-    for(sesptr = sessionlist; sesptr && sesptr->next!=ses; sesptr=sesptr->next) ;
-    if (sesptr)
-        return &sesptr->next;
-    return 0;
-}
 
 /*****************************************************************************/
 /* cleanup after session died. if session=activesession, try find new active */
@@ -405,14 +398,9 @@ void cleanup_session(struct session *ses)
     {
         user_textout_draft(0, 0);
         sprintf(buf,"%s\n",ses->last_line);
-#ifdef UTF8
         convert(&ses->c_io, ses->last_line, buf, -1);
         do_in_MUD_colors(ses->last_line,0);
         user_textout(ses->last_line);
-#else
-        do_in_MUD_colors(buf,0);
-        user_textout(buf);
-#endif
     };
     sprintf(buf, "#SESSION '%s' DIED.", ses->name);
     tintin_puts(buf, NULL);
@@ -427,18 +415,20 @@ void cleanup_session(struct session *ses)
     SFREE(ses->name);
     SFREE(ses->address);
     SFREE(ses->partial_line_marker);
-#ifdef UTF8
     cleanup_conv(&ses->c_io);
     SFREE(ses->charset);
     if (!logcs_is_special(ses->logcharset))
         SFREE(ses->logcharset);
-#endif
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
     if (ses->mccp)
     {
         inflateEnd(ses->mccp);
         TFREE(ses->mccp, z_stream);
     }
+#endif
+#ifdef HAVE_GNUTLS
+    if (ses->ssl)
+        gnutls_deinit(ses->ssl);
 #endif
     
     TFREE(ses, struct session);

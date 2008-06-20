@@ -1,48 +1,18 @@
-#include "config.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-/* CHANGED to include <ctype.h>, since we use isdigit() etc.
- * Thanks to Brian Ebersole [Harm@GrimneMUD] for the bug report!
- */
-#include <ctype.h>
 #include "tintin.h"
-
-
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern struct listnode *searchnode_list(struct listnode *listhead, char *cptr);
-extern struct listnode *search_node_with_wild(struct listnode *listhead, char *cptr);
-extern void deletenode_list(struct listnode *listhead, struct listnode *nptr);
-extern int find(char *text,char *pat,int *from,int *to,char *fastener);
-extern int finditem_inline(char *arg,struct session *ses);
-extern void finditem_command(char *arg,struct session *ses);
-extern void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext, int mode);
-extern int is_abrev(char *s1, char *s2);
-extern void prompt(struct session *ses);
-extern void show_list(struct listnode *listhead);
-extern void substitute_myvars(char *arg,char *result,struct session *ses);
-extern void substitute_vars(char *arg, char *result);
-extern void tintin_printf(struct session *ses, char *format, ...);
-extern void tintin_eprintf(struct session *ses, char *format, ...);
-extern char* get_fastener(const char*, char*);
+#include "protos/action.h"
+#include "protos/glob.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
 
 extern int hinum;
 extern int getcolor(char **ptr,int *color,const int flag);
 extern int setcolor(char *txt,int c);
 extern int puts_echoing;
 
-struct colordef
+static struct colordef
 {
     int num;
     char *name;
@@ -81,11 +51,11 @@ struct colordef
         {-1,""},
     };
 
-int highpattern[64];
-int nhighpattern;
+static int highpattern[64];
+static int nhighpattern;
 
-int highcolor; /* an ugly kludge... */
-int get_high_num(char *hig)
+static int highcolor; /* an ugly kludge... */
+static int get_high_num(char *hig)
 {
     int code;
     char *sl,tmp[BUFFER_SIZE];
@@ -108,7 +78,7 @@ int get_high_num(char *hig)
     return(-1);
 }
 
-int get_high(char *hig)
+static int get_high(char *hig)
 {
     nhighpattern=0;
     if (!*hig)

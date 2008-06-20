@@ -5,10 +5,10 @@ INCLUDES = -DDATA_PATH=\"$(helpdir)\"
 #"
 man_MANS = ansi2html.1 ansi2txt.1 KBtin.6 ttyrec2ansi.1
 
-BUILT_SOURCES=commands.h load_commands.h profinit.h
-KBtin_C_FILES=tintin.h unicode.h action.c alias.c antisub.c files.c glob.c help.c highlight.c history.c ivars.c llist.c main.c misc.c net.c parse.c path.c session.c substitute.c ticks.c utils.c variables.c events.c user.c run.c colors.c routes.c bind.c telnet.c crc.c hash.c regexp.c prof.c hooks.c unicode.c ui.h user_pipe.c user_tty.c translit.h wcwidth.c malloc.h
-KBtin_SOURCES=$(KBtin_C_FILES) $(BUILT_SOURCES)
-KBtin_LDADD=@GLIB_LIBS@ @ZLIB_LIBS@ @LTLIBICONV@
+KBtin_C_FILES=action.c alias.c antisub.c files.c glob.c help.c highlight.c history.c ivars.c llist.c main.c misc.c net.c parse.c path.c session.c substitute.c ticks.c utils.c variables.c events.c user.c run.c colors.c routes.c bind.c telnet.c crc.c hash.c regexp.c prof.c hooks.c unicode.c user_pipe.c user_tty.c wcwidth.c chinese.c print.c ssl.c
+BUILT_SOURCES=commands.h load_commands.h profinit.h $(KBtin_C_FILES:%.c=protos/%.h)
+KBtin_SOURCES=$(KBtin_C_FILES) tintin.h unicode.h ui.h translit.h malloc.h
+KBtin_LDADD=@GLIB_LIBS@ @ZLIB_LIBS@ @LTLIBICONV@ @GNUTLS_LIBS@
 
 AM_CFLAGS=@GLIB_CFLAGS@
 
@@ -16,13 +16,16 @@ ansi2html_SOURCES=ansi2html.c
 ansi2txt_SOURCES=ansi2txt.c
 
 KBtin_DOCS=BUGS OLDNEWS KEYPAD FAQ
-EXTRA_DIST=KBtin_help.in commands make_commands $(man_MANS) help2ansi fixmanual terminfo.src prof_init kbtin.ico make_protos $(KBtin_DOCS)
-CLEANFILES=commands.h load_commands.h KBtin_help.gz manual.html profinit.h
+EXTRA_DIST=KBtin_help.in commands make_commands $(man_MANS) help2ansi fixmanual terminfo.src prof_init kbtin.ico make_protos $(KBtin_DOCS) autogen
+CLEANFILES=$(BUILT_SOURCES) KBtin_help.gz manual.html
 DISTCLEANFILES=_stdint.h
 
 #kludge to prevent $(BUILT_SOURCES) from being distributed
 dist-hook:
 	for x in $(BUILT_SOURCES);do rm -f "$(distdir)/$$x";done
+
+clean-local:
+	rm -rf protos
 
 #link kbtin to KBtin
 #Don't overwrite it on filesystems that ignore case, though.
@@ -52,8 +55,22 @@ load_commands.h: commands make_commands commands.h
 profinit.h: $(KBtin_C_FILES) prof_init
 	$(srcdir)/prof_init $(srcdir) $(KBtin_C_FILES)
 
-protos.h: $(KBtin_C_FILES) make_protos
-	$(srcdir)/make_protos $(srcdir) $(KBtin_C_FILES)
+if SANE_MAKE
+$(KBtin_C_FILES:%.c=protos/%.h): protos/%.h: %.c make_protos
+	$(srcdir)/make_protos $(srcdir) $*.c
+else
+include $(srcdir)/Makefile.protos
+endif
+
+# For *BSD, Solaris and other necrocomputing pieces of trash.
+Makefile.protos: Makefile.am
+	rm -f Makefile.protos
+	DIR='$$(srcdir)'; \
+	for x in $(KBtin_C_FILES); \
+	  do \
+	    echo "protos/$${x%c}h: $$x make_protos" >>Makefile.protos; \
+	    echo -e "\t$$DIR/make_protos $$DIR $$x" >>Makefile.protos; \
+	  done
 
 KBtin_help.gz: KBtin_help.in
 	gzip -9 <$(srcdir)/KBtin_help.in >KBtin_help.gz

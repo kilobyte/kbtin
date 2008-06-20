@@ -1,4 +1,3 @@
-/* $Id: history.c,v 1.2 1998/10/11 18:36:35 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: history.c - functions for the history stuff                 */
@@ -6,27 +5,12 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include "tintin.h"
-#include <stdlib.h>
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/utils.h"
 
-void insert_history(char *buffer, struct session *ses);
-
-extern char *space_out(char* s);
-extern char *mystrdup(char *s);
-extern struct session *parse_input(char *input,int override_verbatim,struct session *ses);
-extern int is_abrev(char *s1, char *s2);
-extern void check_all_promptactions(char *line, struct session *ses);
-extern void prompt(struct session *ses);
-extern void tintin_printf(struct session *ses,char *format,...);
-extern void tintin_eprintf(struct session *ses,char *format,...);
+static void insert_history(char *buffer, struct session *ses);
 
 extern char *history[HISTORY_SIZE];
 
@@ -94,7 +78,7 @@ void do_history(char *buffer, struct session *ses)
 /***********************************************/
 /* insert buffer into a session`s history list */
 /***********************************************/
-void insert_history(char *buffer, struct session *ses)
+static void insert_history(char *buffer, struct session *ses)
 {
     int i;
 

@@ -1,4 +1,3 @@
-/* $Id: ticks.c,v 2.4 1998/11/25 17:14:01 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: ticks.c - functions for the ticker stuff                    */
@@ -6,37 +5,18 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#include <ctype.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-#include <signal.h>
-#include <assert.h>
 #include "tintin.h"
-#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <assert.h>
+#include "protos/events.h"
+#include "protos/print.h"
+#include "protos/parse.h"
 
 /* externs */
 struct session *sessionlist;
+extern int any_closed;
 
-/* extern functions */
-extern void tintin_puts(char *, struct session *);
-extern void execute_event(struct eventnode *ev, struct session *ses);
-extern void tintin_puts1(char *cptr, struct session *ses);
-extern void tintin_printf(struct session *ses, char *format, ...);
-extern void tintin_eprintf(struct session *ses, char *format, ...);
-extern char *get_arg(char *s,char *arg,int flag,struct session *ses);
-
-/* local globals */
-int sec_to_tick, time0, tick_size = 75;
-int ticker_interrupted;
+time_t time0;
+int utime0;
 
 /*********************/
 /* the #tick command */
@@ -184,6 +164,8 @@ int check_event(int time, struct session *ses)
         ses->events=ev->next;
         execute_event(ev, ses);
         TFREE(ev, struct eventnode);
+        if (any_closed)
+            return -1;
     }
     et = (ses->events) ? ses->events->time : 0;
 
@@ -194,6 +176,8 @@ int check_event(int time, struct session *ses)
     {
         if (ses->tickstatus)
             tintin_puts1("#TICK!!!",ses);
+        if (any_closed)
+            return -1;
         ses->time0 = time - (time - ses->time0) % ses->tick_size;
         tt = ses->time0 + ses->tick_size;
     }
@@ -201,6 +185,8 @@ int check_event(int time, struct session *ses)
             && ses->tick_size>ses->pretick && time!=ses->time10)
     {
         tintin_puts1("#10 SECONDS TO TICK!!!",ses);
+        if (any_closed)
+            return -1;
         ses->time10=time;
     }
 

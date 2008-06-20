@@ -1,21 +1,11 @@
-/* $Id: glob.c,v 1.3 1998/10/11 18:36:34 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*
  * match -- returns 1 if `string' satisfised `regex' and 0 otherwise
  * stolen from Spencer Sun: only recognizes * and \ as special characters
  */
  
-#include "config.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-#include <stdlib.h>
-#include <assert.h>
 #include "tintin.h"
+#include <assert.h>
  
 int match(char *regex, char *string)
 {

@@ -73,14 +73,14 @@
 #define DEFAULT_CLOSE '}' /*character that ends an argument */
 #define HISTORY_SIZE 128                  /* history size */
 #define MAX_PATH_LENGTH 256               /* max path lenght */
-#define MAX_LOCATIONS 512
+#define MAX_LOCATIONS 2048
 #define DEFAULT_TINTIN_CHAR '#'           /* tintin char */
 #define DEFAULT_TICK_SIZE 60
 #define DEFAULT_ROUTE_DISTANCE 10
 #define DEFAULT_VERBATIM_CHAR '\\'        /* if an input starts with this
                                              char, it will be sent 'as is'
                                              to the MUD */
-#define MAX_RECURSION 256
+#define MAX_RECURSION 128
 #ifndef DEFAULT_FILE_DIR
 #define DEFAULT_FILE_DIR "." /* Path to Tintin files, or HOME */
 #endif
@@ -91,6 +91,8 @@
 #define DEFAULT_COMPRESSION_EXT ""
 #endif
 #define NEWS_FILE   "NEWS"
+#define CONFIG_DIR ".tintin"
+#define CERT_DIR   "ssl"
 
 #define DEFAULT_DISPLAY_BLANK TRUE        /* blank lines */
 #define DEFAULT_ECHO_SEPINPUT TRUE        /* echo when there is an input box */
@@ -170,8 +172,8 @@
 #define END 1
 #define K_ACTION_MAGIC "#X~4~~2~~12~[This action is being deleted!]~7~X"
 
-#define BUFFER_SIZE 2048
-#define INPUT_CHUNK 512
+#define BUFFER_SIZE 4096
+#define INPUT_CHUNK 1536
 #define MSG_ALIAS       0
 #define MSG_ACTION      1
 #define MSG_SUBSTITUTE  2
@@ -196,10 +198,20 @@
 #define HOOK_DEACTIVATE	6
 #define NHOOKS          7
 
-/************************ structures *********************/
+/************************ includes *********************/
+#include "config.h"
 #include <stdio.h>
 #include "_stdint.h"
 #include <iconv.h>
+#include <ctype.h>
+#include <wctype.h>
+#include "malloc.h"
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdarg.h>
+#include <wchar.h>
+#include <signal.h>
+#include <errno.h>
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
@@ -210,11 +222,29 @@
 #  include <time.h>
 # endif
 #endif
-#ifdef HAVE_LIBZ
-#include <zlib.h>
+#ifdef HAVE_ZLIB
+# include <zlib.h>
 #endif
-#include "malloc.h"
+#ifdef HAVE_STRING_H
+# include <string.h>
+#else
+# ifdef HAVE_STRINGS_H
+#  include <strings.h>
+# endif
+#endif
+#ifndef HAVE_MEMCPY
+# define memcpy(d, s, n) bcopy ((s), (d), (n))
+# define memmove(d, s, n) bcopy ((s), (d), (n))
+#endif
+#if GWINSZ_IN_SYS_IOCTL
+# include <sys/ioctl.h>
+#endif
+#ifdef HAVE_GNUTLS
+# include <gnutls/gnutls.h>
+# include <gnutls/x509.h>
+#endif
 
+/************************ structures *********************/
 struct listnode
 {
     struct listnode *next;
@@ -300,15 +330,16 @@ struct session
     int closing;
     int nagle;
     int halfcr_in, halfcr_log; /* \r at the end of a packet */
-#ifdef UTF8
     char *charset, *logcharset;
     struct charset_conv c_io,c_log;
-#endif
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
     int can_mccp;
     z_stream *mccp;
     int mccp_more;
     char mccp_buf[INPUT_CHUNK];
+#endif
+#ifdef HAVE_GNUTLS
+    gnutls_session_t ssl;
 #endif
 };
 
@@ -368,4 +399,6 @@ struct ttyrec_header
                       (x)>=0xff01) && ((x)<=0xff60 ||	\
                       (x)>=0xffe0) && ((x)<=0xffe6 ||	\
                       (x)>=0x20000) && (x)<=0x2ffff)
+#define is7alpha(x) ((((x)>='A')&&((x)<='Z')) || (((x)>='a')&&((x)<='z')))
+#define is7alnum(x) ((((x)>='0')&&((x)<='9')) || is7alpha(x))
 #define EMPTY_CHAR 0xffff

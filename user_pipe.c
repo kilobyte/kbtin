@@ -1,18 +1,4 @@
-#include "config.h"
 #include "tintin.h"
-#include <signal.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <wctype.h>
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
-#include <stdarg.h>
-#include <wchar.h>
 #include "unicode.h"
 #include "ui.h"
 
@@ -60,11 +46,7 @@ static void userpipe_textout(char *txt)
         case '\n':
             lastcolor=color;
         default:
-#ifdef UTF8
             one_utf8_to_mb(&b, &a, &outstate);
-#else
-            *b++=*a++;
-#endif
         }
     write(1,buf,b-buf);
 }
@@ -83,15 +65,9 @@ static int userpipe_process_kbd(struct session *ses, WC ch)
             i_pos--;
         return 0;
     default:
-#ifdef UTF8
         if (i_pos-done_input>=BUFFER_SIZE-8)
             return 0;
         i_pos+=wc_to_utf8(i_pos, &ch, 1, BUFFER_SIZE-(i_pos-done_input));
-#else
-        if (i_pos-done_input>=BUFFER_SIZE-2)
-            return 0;
-        *i_pos++=ch;
-#endif
     case 0:
         ;
     }

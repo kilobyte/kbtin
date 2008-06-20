@@ -1,47 +1,18 @@
-/* $Id: ivars.c,v 2.2 1998/11/25 17:14:00 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
-#include "config.h"
 #include "tintin.h"
-#include <ctype.h>
-int stacks[100][4];
+#include "protos/action.h"
+#include "protos/glob.h"
+#include "protos/ivars.h"
+#include "protos/print.h"
+#include "protos/misc.h"
+#include "protos/parse.h"
+#include "protos/regexp.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
 
-#ifdef HAVE_UNISTD_H
-#include <stdlib.h>
-#include <unistd.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern char *space_out(char *s);
-extern char *get_inline(char *s,char *dest);
-extern int conv_to_ints(char *arg,struct session *ses);
-extern int do_one_inside(int begin, int end);
-extern int eval_expression(char *arg,struct session *ses);
-extern int finditem_inline(char *arg,struct session *ses);
-extern int is_abrev(char *s1, char *s2);
-extern int isatom_inline(char *arg,struct session *ses);
-extern int listlength_inline(char *arg,struct session *ses);
-extern int match(char *regex, char *string);
-extern struct session *parse_input(char *input,int override_verbatim,struct session *ses);
-extern int random_inline(char *arg, struct session *ses);
-extern void set_variable(char *left,char *right,struct session *ses);
-extern int strlen_inline(char *arg, struct session *ses);
-extern int grep_inline(char *arg, struct session *ses);
-extern int strcmp_inline(char *arg, struct session *ses);
-extern int match_inline(char *arg, struct session *ses);
-extern int ord_inline(char *arg, struct session *ses);
-extern void substitute_myvars(char *arg,char *result,struct session *ses);
-extern void substitute_vars(char *arg, char *result);
-extern void tintin_printf(struct session *ses,char *format,...);
-extern void tintin_eprintf(struct session *ses,char *format,...);
-extern char *get_arg(char *s,char *arg,int flag,struct session *ses);
-
+static int stacks[100][4];
+static int conv_to_ints(char *arg,struct session *ses);
+static int do_one_inside(int begin, int end);
 
 extern char tintin_char;
 
@@ -50,7 +21,6 @@ extern char tintin_char;
 /*********************/
 void math_command(char *line, struct session *ses)
 {
-    /* char left[BUFFER_SIZE], right[BUFFER_SIZE], arg2[BUFFER_SIZE], */
     char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[BUFFER_SIZE];
     int i;
 
@@ -71,7 +41,6 @@ void math_command(char *line, struct session *ses)
 /*******************/
 struct session *if_command(char *line, struct session *ses)
 {
-    /* char left[BUFFER_SIZE], right[BUFFER_SIZE], arg2[BUFFER_SIZE],  */
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
     /* int i; */
@@ -147,7 +116,6 @@ int do_inline(char *line,int *res,struct session *ses)
 
 int eval_expression(char *arg,struct session *ses)
 {
-    /* int i, begin, end, flag, prev, ptr; */
     int i, begin, end, flag, prev;
 
     i = conv_to_ints(arg,ses);
@@ -198,7 +166,7 @@ int eval_expression(char *arg,struct session *ses)
         return 0;
 }
 
-int conv_to_ints(char *arg,struct session *ses)
+static int conv_to_ints(char *arg,struct session *ses)
 {
     int i, flag, result;
     int m; /* =0 should match, =1 should differ */
@@ -407,9 +375,8 @@ int conv_to_ints(char *arg,struct session *ses)
     return 1;
 }
 
-int do_one_inside(int begin, int end)
+static int do_one_inside(int begin, int end)
 {
-    /* int prev, ptr, highest, loc, ploc, next, nval, flag; */
     int prev, ptr, highest, loc, ploc, next;
 
     while (1)

@@ -1,15 +1,13 @@
 /* Do all the telnet protocol stuff */
 
-#include <unistd.h>
-#include "config.h"
 #include "tintin.h"
+#include "protos/print.h"
+#include "protos/run.h"
+#include "protos/net.h"
+#include "protos/utils.h"
 
-extern void tintin_printf(struct session *ses, char *format, ...);
-extern void tintin_eprintf(struct session *ses, char *format, ...);
 extern int LINES,COLS,isstatus;
 extern struct session *sessionlist;
-extern void pty_resize(int fd,int sx,int sy);
-extern void syserr(char *msg, ...);
 
 #define EOR 239     /* End of Record */
 #define SE  240     /* subnegotiation end */
@@ -45,8 +43,8 @@ extern void syserr(char *msg, ...);
 #define MAX_SUBNEGO_LENGTH 64
 
 #ifdef TELNET_DEBUG
-char *will_names[4]={"WILL", "WONT", "DO", "DONT"};
-char *option_names[]=
+static char *will_names[4]={"WILL", "WONT", "DO", "DONT"};
+static char *option_names[]=
     {
         "Binary Transmission",
         "Echo",
@@ -107,7 +105,7 @@ char *option_names[]=
     };
 #endif
 
-void telnet_send_naws(struct session *ses)
+static void telnet_send_naws(struct session *ses)
 {
     unsigned char nego[128],*np;
 
@@ -122,7 +120,7 @@ void telnet_send_naws(struct session *ses)
     PUTBYTE((LINES-1-!!isstatus)%256);
     *np++=IAC;
     *np++=SE;
-    write(ses->socket, nego, np-nego);
+    write_socket(ses, (char*)nego, np-nego);
 #ifdef TELNET_DEBUG
     {
         char buf[BUFFER_SIZE],*b=buf;
@@ -159,7 +157,7 @@ void telnet_send_ttype(struct session *ses)
     case 3:
         ttype="KBtin-"VERSION;
     }
-    write(ses->socket, nego,
+    write_socket(ses, nego,
         sprintf(nego, "%c%c%c%c%s%c%c", IAC, SB,
             TERMINAL_TYPE, IS, ttype, IAC, SE));
 #ifdef TELNET_DEBUG
@@ -181,15 +179,15 @@ void telnet_resize_all(void)
         }
 }
 
-int do_telnet_protocol(unsigned char *data,int nb,struct session *ses)
+int do_telnet_protocol(char *data, int nb, struct session *ses)
 {
-    unsigned char *cp = data+1;
+    unsigned char *cp = (unsigned char*)data+1;
     unsigned char wt;
     unsigned char answer[3];
     unsigned char nego[128],*np;
 
-#define NEXTCH  cp++;               \
-                if (cp-data>=nb)    \
+#define NEXTCH  cp++;                               \
+                if (cp-(unsigned char*)data>=nb)    \
                     return -1;
 
     if (nb<2)
@@ -249,7 +247,7 @@ int do_telnet_protocol(unsigned char *data,int nb,struct session *ses)
             case DONT:  answer[1]=WONT; break;
             };
             break;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
         case COMPRESS2:
             switch(wt)
             {
@@ -269,7 +267,7 @@ int do_telnet_protocol(unsigned char *data,int nb,struct session *ses)
             case DONT:  answer[1]=WONT; break;
             };
         }
-        write(ses->socket, answer, 3);
+        write_socket(ses, (char*)answer, 3);
 #ifdef TELNET_DEBUG
         tintin_printf(ses, "~8~[telnet] sent: IAC %s <%u> (%s)~-1~",
                       will_names[answer[1]-251], *cp,
@@ -305,7 +303,7 @@ sbloop:
             *np++=*cp;
             goto sbloop;
         }
-        nb=cp-data;
+        nb=cp-(unsigned char*)data;
 #ifdef TELNET_DEBUG
         {
             char buf[BUFFER_SIZE],*b=buf;
@@ -338,7 +336,7 @@ sbloop:
             if (*(np+1)==SEND)
                 telnet_send_ttype(ses);
             break;
-#ifdef HAVE_LIBZ
+#ifdef HAVE_ZLIB
         case COMPRESS2:
             if (ses->can_mccp)
                 return -4; /* compressed data immediately follows, we need to return */
@@ -363,7 +361,7 @@ sbloop:
         return 2;
     }
     /* not reached */
-    return (cp-data);
+    return (cp-(unsigned char*)data);
 nego_too_long:
     tintin_eprintf(ses, "#error: unterminated TELNET subnegotiation received.");
     return 2; /* we leave everything but IAC SB */
@@ -384,6 +382,6 @@ void telnet_write_line(char *line, struct session *ses)
     *out++='\n';
     *out=0;
 
-    if (write(ses->socket, outtext, out-outtext) == -1)
+    if (write_socket(ses, outtext, out-outtext) == -1)
         syserr("write in telnet_write_line()");
 }

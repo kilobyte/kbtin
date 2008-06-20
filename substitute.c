@@ -1,4 +1,3 @@
-/* $Id: substitute.c,v 2.2 1998/10/11 18:36:36 jku Exp $ */
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: substitute.c - functions related to the substitute command  */
@@ -6,31 +5,12 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include "tintin.h"
-
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern struct listnode *search_node_with_wild(struct listnode *listhead, char *cptr);
-extern struct listnode *searchnode_list(struct listnode *listhead, char *cptr);
-extern int check_one_action(char *line, char *action, pvars_t *vars, int inside, struct session *ses);
-extern void deletenode_list(struct listnode *listhead, struct listnode *nptr);
-extern void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext, int mode);
-extern void prepare_actionalias(char *string, char *result, struct session *ses);
-extern void check_all_promptactions(char *line, struct session *ses);
-extern void prompt(struct session *ses);
-extern void show_list(struct listnode *listhead);
-extern void shownode_list(struct listnode *nptr);
-extern void tintin_printf(struct session *ses, char *format, ...);
-extern void tintin_eprintf(struct session *ses, char *format, ...);
-extern void substitute_vars(char *arg, char *result);
-extern void substitute_myvars(char *arg,char *result,struct session *ses);
+#include "protos/action.h"
+#include "protos/llist.h"
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/variables.h"
 
 extern pvars_t *pvars;
 extern int subnum;
@@ -40,7 +20,7 @@ extern char *_;
 /***************************/
 /* the #substitute command */
 /***************************/
-void parse_sub(char *arg,int gag,struct session *ses)
+static void parse_sub(char *arg,int gag,struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     struct listnode *mysubs, *ln;

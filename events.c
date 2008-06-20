@@ -1,29 +1,15 @@
-/* $Id: events.c,v 2.3 1998/11/25 17:14:00 jku Exp $ */
-#include "config.h"
-#include <stdio.h>
-#include <stdlib.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include "tintin.h"
+#include "protos/action.h"
+#include "protos/glob.h"
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/utils.h"
+#include "protos/variables.h"
 
 extern struct session *sessionlist;
 extern struct session *activesession;
-
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern int match(char *regex, char *string);
-extern struct session *parse_input(char *input,int override_verbatim,struct session *ses);
-extern void tintin_printf(struct session *ses, const char *format, ...);
-extern void tintin_eprintf(struct session *ses, const char *format, ...);
 extern struct session *nullsession;
-extern void substitute_myvars(char *arg,char *result,struct session *ses);
-extern void substitute_vars(char *arg, char *result);
 extern int recursion;
-extern char* mystrdup(char *s);
 
 void execute_event(struct eventnode *ev, struct session *ses)
 {
@@ -34,7 +20,7 @@ void execute_event(struct eventnode *ev, struct session *ses)
 }
 
 /* list active events matching regexp arg */
-void list_events(char *arg, struct session *ses)
+static void list_events(char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
     time_t ct; /* current time */
@@ -144,7 +130,7 @@ void event_command(char *arg, struct session *ses)
 }
 
 /* remove ev->next from list */
-void remove_event(struct eventnode **ev)
+static void remove_event(struct eventnode **ev)
 {
     struct eventnode *tmp;
     if(*ev)

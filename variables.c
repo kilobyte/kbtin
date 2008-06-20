@@ -4,62 +4,20 @@
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
-#include "config.h"
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
-#include <ctype.h>
-#include <wctype.h>
 #include "tintin.h"
-#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#include <wchar.h>
 #include "unicode.h"
-
-void substitute_myvars(char *arg,char *result,struct session *ses);
-
-extern char *get_arg_in_braces(char *s,char *arg,int flag);
-extern char *get_arg(char *s,char *arg,int flag,struct session *ses);
-extern struct listnode *search_node_with_wild(struct listnode *listhead, char *cptr);
-extern struct listnode *searchnode_list(struct listnode *listhead, char *cptr);
-extern char* space_out(char* s);
-extern void deletenode_list(struct listnode *listhead, struct listnode *nptr);
-extern void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext, int mode);
-extern int match(char *regex, char *string);
-extern struct session *parse_input(char *input,int override_verbatim,struct session *ses);
-extern void path2var(char *var, struct session *ses);
-extern void seslist(char *var);
-extern void check_all_promptactions(char *line, struct session *ses);
-extern void prompt(struct session *ses);
-extern int random_inline(char *arg, struct session *ses);
-extern void random_command(char *arg,struct session *ses);
-extern void show_list(struct listnode *listhead);
-extern void shownode_list(struct listnode *nptr);
-extern void substitute_vars(char *arg, char *result);
-extern int timetilltick(struct session *ses);
-extern void tintin_printf(struct session *ses, char *format, ...);
-extern void tintin_eprintf(struct session *ses, char *format, ...);
-extern char *mystrdup(char *s);
-extern void zap_list(struct listnode *nptr);
-extern char* get_hash(struct hashtable *h, char *key);
-extern void set_hash(struct hashtable *h, char *key, char *value);
-extern struct listnode* hash2list(struct hashtable *h, char *pat);
-extern void show_hashlist(struct session *ses, struct hashtable *h, char *pat, const char *msg_all, const char *msg_none);
-extern void delete_hashlist(struct session *ses, struct hashtable *h, char *pat, const char *msg_ok, const char *msg_none);
-extern int is_abrev(char *s1, char *s2);
-extern struct session *if_command(char *line, struct session *ses);
-extern int wc_to_utf8(char *d, const wchar_t *s, int n, int maxb);
-extern int utf8_len(char *s);
-extern int utf8_ncpy(char *d, char *s, int n, int maxb);
-extern char* utf8_seek(char *s, int n);
-extern int utf8_to_wc(wchar_t *d, char *s, int n);
-extern int utf8_width(char *s);
+#include "protos/action.h"
+#include "protos/alias.h"
+#include "protos/chinese.h"
+#include "protos/glob.h"
+#include "protos/hash.h"
+#include "protos/print.h"
+#include "protos/parse.h"
+#include "protos/path.h"
+#include "protos/session.h"
+#include "protos/ticks.h"
+#include "protos/unicode.h"
+#include "protos/utils.h"
 
 extern int varnum;
 extern pvars_t *pvars;
@@ -69,6 +27,10 @@ extern int aborting;
 extern char *_;
 extern struct session *activesession;
 extern char tintin_char;
+extern time_t time0;
+extern int utime0;
+
+extern struct session *if_command(char *arg, struct session *ses);
 
 void set_variable(char *left,char *right,struct session *ses)
 {
@@ -186,6 +148,31 @@ void substitute_myvars(char *arg,char *result,struct session *ses)
                     else
                     if (strcmp(varname,"LOGFILE")==0)
                         strcpy(value,ses->logfile?ses->logname:"");
+                    else
+                    if (strcmp(varname,"_random")==0)
+                        sprintf(value,"%d", rand());
+                    else
+                    if (strcmp(varname,"_time")==0 || strcmp(varname,"time")==0)
+                        sprintf(value,"%ld", time0);
+                    else
+                    if (strcmp(varname,"_clock")==0)
+                        sprintf(value,"%ld", time(0));
+                    else
+                    if (strcmp(varname,"_msec")==0)
+                    {
+                        struct timeval tv;
+                        gettimeofday(&tv, 0);
+                        sprintf(value,"%ld", (tv.tv_sec-time0)*1000+(tv.tv_usec-utime0)/1000);
+                    }
+                    else
+                    if (strcmp(varname,"HOME")==0)
+                    {
+                        v=getenv("HOME");
+                        if (v)
+                            snprintf(value, BUFFER_SIZE, "%s", v);
+                        else
+                            *value=0;
+                    }
                     else
                         goto novar;
                     valuelen=strlen(value);
@@ -326,7 +313,7 @@ int listlength_inline(char *arg,struct session *ses)
 }
 
 
-int find_item(char *item,char *list)
+static int find_item(char *item,char *list)
 {
     char temp[BUFFER_SIZE];
     int i;
@@ -529,15 +516,13 @@ int isatom_inline(char *arg,struct session *ses)
 /*        CHANGE: now it's tail-> {bounce a} to allow iterators    */
 /*******************************************************************/
 
-char zerostr[1] = ""; /* empty string */
-
 /* FUNCTION:  get_split_pos - where to split                 */
 /* ARGUMENTS: list - list (after all substitutions done)     */
 /*            head_length - where to split                   */
 /* RESULT:    pointer to elements head_length+1...           */
 /*            or pointer to '\0' or empty string ""          */
 /*            i.e. to character after element No head_length */
-char* get_split_pos(char *list, int head_length)
+static char* get_split_pos(char *list, int head_length)
 {
     int i = 0;
     char temp[BUFFER_SIZE];
@@ -558,44 +543,6 @@ char* get_split_pos(char *list, int head_length)
         return list;
 }
 
-/* FUNCTION:  is_braced_atom                               */
-/* ARGUMENTS: s - list (after all substitutions done)      */
-/*            ses - session; used only for error handling  */
-/* RESULT:    TRUE if s is braced atom e.g. '{atom}'       */
-int is_braced_atom(char *s,struct session *ses)
-{
-    int nest = 0;
-
-    if(*s == '\0')
-        return FALSE;
-
-    while (*s != '\0' && !(*s == DEFAULT_CLOSE && nest == 0))
-    {
-        if (*s=='\\') /* next character is taken verbatim, i.e. \\{ does not open group */
-            s++;
-        else
-            if (*s == DEFAULT_OPEN)
-                nest++;
-            else
-                if (*s == DEFAULT_CLOSE)
-                    nest--;
-
-        if(*s != '\0') /* check in case if '\\' is the last character  */
-            s++;
-
-        if(nest == 0 && *s != '\0') /* we are at outer level and not at end */
-            return FALSE;
-    }
-
-    /* this error occurs when there are to many opening delimiters */
-    if(nest > 0)
-    {
-        tintin_eprintf(ses,"Unmatched braces error - too many opening delimiters");
-        return FALSE;
-    }
-
-    return TRUE;
-}
 
 /* FUNCTION:  is_braced_atom - checks if list is braced atom          */
 /* ARGUMENTS: beg - points to the first character of list             */
@@ -604,7 +551,7 @@ int is_braced_atom(char *s,struct session *ses)
 /* RESULT:    TRUE if list is braced atom e.g. '{atom}'               */
 /*            i.e. whole list begins with DEFAULT_OPEN end ends with  */
 /*            DEFAULT_CLOSE and whole is inside group (inside braces) */
-int is_braced_atom_2(char *beg,char *end,struct session *ses)
+static int is_braced_atom_2(char *beg,char *end,struct session *ses)
 {
     /* we define where list ends */
 #define AT_END(beg,end) (((*beg) == '\0') || (beg >= end))
@@ -661,7 +608,7 @@ int is_braced_atom_2(char *beg,char *end,struct session *ses)
 /*            If you don't like this behavior simply undefine         */
 /*            REMOVE_ONEELEM_BRACES.                                  */
 /*            see also: getitemnr_command, REMOVE_ONEELEM_BRACES      */
-void simplify_list(char **beg, char **end, int flag, struct session *ses)
+static void simplify_list(char **beg, char **end, int flag, struct session *ses)
 {
     /* remember: we do not check arguments (e.g. if they are not NULL) */
 
@@ -687,7 +634,7 @@ void simplify_list(char **beg, char **end, int flag, struct session *ses)
 /*            beg - points to first character to copy    */
 /*            end - points after last character to copy  */
 /* RESULT:    zero-ended string from beg to end          */
-char* copy_part(char *dest,char *beg,char *end)
+static char* copy_part(char *dest,char *beg,char *end)
 {
     strcpy(dest, beg);
     dest[end - beg] = '\0';
@@ -703,7 +650,7 @@ char* copy_part(char *dest,char *beg,char *end)
 /*            if head or/and tail contains only one element                */
 /*            and REMOVE_ONEELEM_BRACES is defined the element is unbraced */
 /*            if necessary                                                 */
-void split_list(char *head,char *tail,char *list,int head_length,struct session *ses)
+static void split_list(char *head,char *tail,char *list,int head_length,struct session *ses)
 {
     /* these are pointers, not strings */
     char *headbeg, *headend;
@@ -861,7 +808,12 @@ struct session *foreach_command(char *arg,struct session *ses)
     return ses;
 }
 
-int compar(const void *a,const void *b)
+struct session *forall_command(char *arg,struct session *ses)
+{
+    return foreach_command(arg, ses);
+}
+
+static int compar(const void *a,const void *b)
 {
     return strcmp(*(char **)a,*(char **)b);
 }
@@ -919,15 +871,10 @@ void tolower_command(char *arg,struct session *ses)
         tintin_eprintf(ses,"#Syntax: #tolower <var> <text>");
     else
     {
-#ifdef UTF8
         TO_WC(txt, right);
         for (p = txt; *p; p++)
             *p = towlower(*p);
         WRAP_WC(right, txt);
-#else
-        for (p = right; *p; p++)
-            *p = tolower(*p);
-#endif
         set_variable(left,right,ses);
     }
 }
@@ -946,15 +893,10 @@ void toupper_command(char *arg,struct session *ses)
         tintin_eprintf(ses,"#Syntax: #toupper <var> <text>");
     else
     {
-#ifdef UTF8
         TO_WC(txt, right);
         for (p = txt; *p; p++)
             *p = towupper(*p);
         WRAP_WC(right, txt);
-#else
-        for (p = right; *p; p++)
-            *p = toupper(*p);
-#endif
         set_variable(left,right,ses);
     }
 }
@@ -973,17 +915,11 @@ void firstupper_command(char *arg,struct session *ses)
         tintin_eprintf(ses,"#Syntax: #firstupper <var> <text>");
     else
     {
-#ifdef UTF8
         TO_WC(txt, right);
         for (p = txt; *p; p++)
             *p = towlower(*p);
         *txt=towupper(*txt);
         WRAP_WC(right, txt);
-#else
-        for (p = right; *p; p++)
-            *p = tolower(*p);
-        *right=toupper(*right);
-#endif
         set_variable(left,right,ses);
     }
 }
@@ -1033,7 +969,7 @@ int strlen_inline(char *arg, struct session *ses)
 /*            dest - destination string    */
 /* RESULT:    reversed string              */
 /* NOTE:      no check                     */
-WC* revstr(WC *dest, WC *src)
+static WC* revstr(WC *dest, WC *src)
 {
     int i;
     int ilast = WClen(src) - 1;
@@ -1060,15 +996,10 @@ void reverse_command(char *arg,struct session *ses)
         tintin_eprintf(ses,"#Error - Syntax: #reverse {destination variable} {string}");
     else
     {
-#ifdef UTF8
         TO_WC(origstring, strvar);
         revstr(revstring, origstring);
         WRAP_WC(strvar, revstring);
         set_variable(destvar, strvar, ses);
-#else
-        revstr(revstring, strvar);
-        set_variable(destvar, revstring, ses);
-#endif
     }
 }
 
@@ -1337,11 +1268,10 @@ int random_inline(char *arg, struct session *ses)
     return 0;
 }
 
-#ifdef UTF8
 /************************************************************************************/
 /* cut a string to width len, putting the cut point into *rstr and return the width */
 /************************************************************************************/
-int cutws(WC *str, int len, WC **rstr)
+static int cutws(WC *str, int len, WC **rstr)
 {
     int w,s;
     
@@ -1359,7 +1289,6 @@ int cutws(WC *str, int len, WC **rstr)
     *rstr=str;
     return s;
 }
-#endif
 
 /*****************************************************/
 /* Syntax: #postpad {dest var} {length} {text}       */
@@ -1386,7 +1315,6 @@ void postpad_command(char *arg,struct session *ses)
             tintin_eprintf(ses,"#Error in #postpad - length has to be a positive number >0, got {%s}.",lengthstr);
         else
         {
-#ifdef UTF8
             TO_WC(bstr, astr);
             len=cutws(bstr, length, &bptr);
             aptr=astr+wc_to_utf8(astr, bstr, bptr-bstr, BUFFER_SIZE-3);
@@ -1394,16 +1322,6 @@ void postpad_command(char *arg,struct session *ses)
                 len++, *aptr++=' ';
             *aptr=0;
             set_variable(destvar, astr, ses);
-#else
-            strncpy(bstr, astr, length);
-            bstr[length] = '\0';
-            if ((len = strlen(astr)) < length)
-            {
-                for(; len < length; len++)
-                    bstr[len] = ' ';
-            }
-            set_variable(destvar, bstr, ses);
-#endif
         }
     }
 }
@@ -1436,7 +1354,6 @@ void prepad_command(char *arg,struct session *ses)
             tintin_eprintf(ses,"#Error in #prepad - length has to be a positive number >0, got {%s}.",lengthstr);
         else
         {
-#ifdef UTF8
             TO_WC(bstr, astr);
             len=cutws(bstr, length, &bptr);
             aptr=astr;
@@ -1445,17 +1362,6 @@ void prepad_command(char *arg,struct session *ses)
             aptr+=wc_to_utf8(aptr, bstr, bptr-bstr, BUFFER_SIZE-3);
             *aptr=0;
             set_variable(destvar, astr, ses);
-#else
-            int i, len_diff;
-            len_diff = length - strlen(astr);
-
-            for(i = 0; i < len_diff; i++)
-                bstr[i] = ' ';
-
-            strncpy(bstr + len_diff, astr, length);
-            bstr[length] = 0;
-            set_variable(destvar, bstr, ses);
-#endif
         }
     }
 }
@@ -1465,7 +1371,7 @@ void prepad_command(char *arg,struct session *ses)
 /************************************************************/
 /* parse time, return # of seconds or INVALID_TIME on error */
 /************************************************************/
-int time2secs(char *tt,struct session *ses)
+static int time2secs(char *tt,struct session *ses)
 {
     char *oldtt;
     int w,t=0;
@@ -1599,8 +1505,8 @@ void localtime_command(char *arg,struct session *ses)
     localtime_r(&t, &ts);
     sprintf(ct, "%02d %02d %02d  %02d %02d %04d  %d %d %d",
                     ts.tm_sec, ts.tm_min, ts.tm_hour,
-                    ts.tm_mday, ts.tm_mon, ts.tm_year+1900,
-                    ts.tm_wday, ts.tm_yday, ts.tm_isdst);
+                    ts.tm_mday, ts.tm_mon+1, ts.tm_year+1900,
+                    ts.tm_wday, ts.tm_yday+1, ts.tm_isdst);
     if (!*left)
         tintin_printf(ses, "#%s.", ct);
     else
@@ -1630,8 +1536,8 @@ void gmtime_command(char *arg,struct session *ses)
     gmtime_r(&t, &ts);
     sprintf(ct, "%02d %02d %02d  %02d %02d %04d  %d %d %d",
                     ts.tm_sec, ts.tm_min, ts.tm_hour,
-                    ts.tm_mday, ts.tm_mon, ts.tm_year+1900,
-                    ts.tm_wday, ts.tm_yday, ts.tm_isdst);
+                    ts.tm_mday, ts.tm_mon+1, ts.tm_year+1900,
+                    ts.tm_wday, ts.tm_yday+1, ts.tm_isdst);
     if (!*left)
         tintin_printf(ses, "#%s.", ct);
     else
@@ -1663,7 +1569,6 @@ void substring_command(char *arg,struct session *ses)
         tintin_eprintf(ses, "#SYNTAX: substr <var> <l>[,<r>] <string>");
     else
     {
-#ifdef UTF8
         p=mid;
         TO_WC(buf, right);
         lptr=buf;
@@ -1695,15 +1600,6 @@ void substring_command(char *arg,struct session *ses)
         if (s==r && w==2)
             *p++=' ';	/* the right edge is cut */
         *p=0;
-
-
-#else
-        s=strlen(right);
-        if ((l<=s)&&(l<=r))
-            sprintf(mid, "%.*s",r+1-l,right+l-1);
-        else
-            *mid=0;
-#endif
         set_variable(left,mid,ses);
     }
 }
@@ -1804,4 +1700,23 @@ struct session *ifexists_command(char *line, struct session *ses)
         }
     }
     return ses;
+}
+
+/*********************/
+/* the #ctoi command */
+/*********************/
+void ctoi_command(char* arg, struct session* ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+    
+    arg=get_arg(arg, left, 0, ses); 
+    arg=get_arg(arg, right, 1, ses); 
+    
+    if (!*left || !*right)
+        tintin_eprintf(ses, "#Syntax: #ctoi <var> <text>");
+    else
+    {
+        ctoi(right);
+        set_variable(left, right, ses);
+    }
 }
