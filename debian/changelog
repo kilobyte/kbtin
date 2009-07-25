@@ -1,3 +1,10 @@
+kbtin (1.0.13.1-1) unstable; urgency=low
+
+  * New upstream release (irrelevant to Debian).
+  * Initial Debian release (closes: #213361).
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sat, 25 Jul 2009 05:19:02 +0200
+
 kbtin (1.0.13-1) unstable; urgency=low
 
   * New upstream release.
