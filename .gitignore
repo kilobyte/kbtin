@@ -29,8 +29,8 @@ KBtin-*.tar.gz
 load_commands.h
 Makefile
 Makefile.in
-manual.html
 Makefile.protos
+manual.html
 build-stamp
 check-stamp
 debian/files
