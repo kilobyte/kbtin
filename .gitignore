@@ -39,6 +39,8 @@ debian/kbtin.postinst.debhelper
 debian/kbtin.postrm.debhelper
 debian/kbtin.substvars
 debian/kbtin/
+.pc/
+debian/patches/
 locales/
 *.o
 *.orig
