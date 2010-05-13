@@ -1,3 +1,9 @@
+kbtin (1.0.13.1-2) unstable; urgency=low
+
+  * Fix testsuite failure on chroots with unset time zone.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Thu, 13 May 2010 23:07:55 +0200
+
 kbtin (1.0.13.1-1) unstable; urgency=low
 
   * New upstream release (irrelevant to Debian).
