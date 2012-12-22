@@ -8,7 +8,7 @@ Standards-Version: 3.8.4
 Package: kbtin
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: A tintin++ style text-based MUD client
- KBtin is a fullscreen console MUD client based on the once-popular tintin++.
+Description: tintin++ style text-based MUD client
+ KBtin is a console MUD client based on the once-popular tintin++.
  It is not limited for mudding, and can be used for running line-based local
  programs like adventure, mysqlclient, dpkg-buildpackage or piuparts.
