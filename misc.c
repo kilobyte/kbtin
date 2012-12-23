@@ -28,7 +28,7 @@ extern struct session *sessionlist,*activesession,*nullsession;
 extern struct completenode *complete_head;
 extern char tintin_char;
 extern int keypad,retain;
-extern pvars_t *pvars;	/* the %0, %1, %2,....%9 variables */
+extern pvars_t *pvars; /* the %0, %1, %2,....%9 variables */
 extern char status[BUFFER_SIZE];
 int margins,marginl,marginr;
 extern int LINES,COLS;
@@ -379,7 +379,7 @@ void margins_command(char *arg,struct session *ses)
 void showme_command(char *arg,struct session *ses)
 {
     get_arg(arg, arg, 1, ses);
-    tintin_printf(ses,"%s",arg);	/* KB: no longer check for actions */
+    tintin_printf(ses,"%s",arg);        /* KB: no longer check for actions */
 }
 
 /***********************/
@@ -406,7 +406,7 @@ void loop_command(char *arg, struct session *ses)
                 strcpy(vars[counter],"");
         lastpvars=pvars;
         pvars=&vars;
-    
+
         flag = 1;
         counter = bound1;
         while (flag == 1)
@@ -508,8 +508,8 @@ void messages_command(char *arg,struct session *ses)
             {
                 b=1;
                 for (mestype=0;mestype<MAX_MESVAR;mestype++)
-                    if (ses->mesvar[mestype])	/* at least one type is ON? */
-                        b=0;			/* disable them all */
+                    if (ses->mesvar[mestype])   /* at least one type is ON? */
+                        b=0;                    /* disable them all */
             };
             for (mestype=0;mestype<MAX_MESVAR;mestype++)
                 ses->mesvar[mestype]=b;
@@ -596,7 +596,7 @@ void system_command(char *arg,struct session *ses)
     FILE *output;
     char buf[BUFFER_SIZE],ustr[BUFFER_SIZE];
     mbstate_t cs;
-    
+
     get_arg(arg, arg, 1, ses);
     if (*arg)
     {
@@ -610,7 +610,7 @@ void system_command(char *arg,struct session *ses)
             return;
         };
         memset(&cs, 0, sizeof(cs));
-        
+
         while (fgets(buf,BUFFER_SIZE,output))
         {
             do_in_MUD_colors(buf,1);
@@ -642,7 +642,10 @@ void shell_command(char *arg,struct session *ses)
         utf8_to_local(cmd, arg);
         if (ui_own_output)
             user_pause();
-        system(cmd);
+        if (system(cmd))
+            ; /* yay source hardening retardness -- not only missing /bin/sh is
+                 illegal on a POSIX system, but also there's no way to check for
+                 that error without false positives */
         if (ui_own_output)
             user_resume();
         if (ses->mesvar[9])
@@ -669,12 +672,12 @@ struct session* zap_command(char *arg, struct session *ses)
     }
     if (ses!=nullsession)
     {
-    	if(ses->closing)
-    	{
-    	    if (ses->closing==-1)
-    	    	tintin_eprintf(ses, "#You can't use #ZAP from here.");
-    	    return ses;
-    	}
+        if(ses->closing)
+        {
+            if (ses->closing==-1)
+                tintin_eprintf(ses, "#You can't use #ZAP from here.");
+            return ses;
+        }
         tintin_puts("#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!", ses);
         ses->closing=1;
         do_hook(ses, HOOK_ZAP, 0, 1);
@@ -737,7 +740,7 @@ void tablist(struct completenode *tcomplete)
 
     /*
        I'll search through the entire list, printing thre names to a line then
-       outputing the line.  Creates a nice 3 column effect.  To increase the # 
+       outputing the line.  Creates a nice 3 column effect.  To increase the #
        if columns, just increase the mod #.  Also.. decrease the # in the %s's
      */
 
@@ -850,7 +853,7 @@ void tab_delete(char *arg, struct session *ses)
     else
     {
         if (strcmp(c_buff, s_buff) == 0)
-        {	/* for the last node to delete */
+        {       /* for the last node to delete */
             tmpold->next = NULL;
             free(tmp);
             tintin_puts("#Tab word deleted.", NULL);
@@ -949,7 +952,7 @@ void info_command(char *arg, struct session *ses)
     if (ses->debuglogfile)
         tintin_printf(ses, "Debuglog: {%s}", ses->debuglogname);
     if (ses->closing)
-    	tintin_printf(ses, "The session has it's closing mark set to %d!", ses->closing);
+        tintin_printf(ses, "The session has it's closing mark set to %d!", ses->closing);
     prompt(ses);
 }
 
@@ -981,7 +984,7 @@ int iscompleteprompt(char *line)
 {
     int c=7;
     char ch=' ';
-    
+
     for (;*line;line++)
         if (*line=='~')
         {
@@ -1123,7 +1126,7 @@ void timecommands_command(char *arg, struct session *ses)
 {
     struct timeval tv1,tv2;
     char sec[BUFFER_SIZE],usec[BUFFER_SIZE],right[BUFFER_SIZE];
-    
+
     arg = get_arg(arg, sec, 0, ses);
     arg = get_arg(arg, usec, 0, ses);
     arg = get_arg(arg, right, 1, ses);
@@ -1167,7 +1170,7 @@ void charset_command(char *arg, struct session *ses)
     struct charset_conv nc;
 
     get_arg(arg, arg, 1, ses);
-    
+
     if (!*arg)
     {
         tintin_printf(ses, "#Remote charset: %s", ses->charset);
@@ -1199,7 +1202,7 @@ void chr_command(char *arg, struct session *ses)
     char destvar[BUFFER_SIZE], left[BUFFER_SIZE], *lp;
     char res[BUFFER_SIZE], *r;
     WC v;
-    
+
     arg=get_arg(arg, destvar, 0, ses);
     if (!*destvar)
     {
@@ -1281,7 +1284,7 @@ void ord_command(char *arg, struct session *ses)
 {
     char destvar[BUFFER_SIZE], left[BUFFER_SIZE], res[BUFFER_SIZE], *r;
     WC right[BUFFER_SIZE], *cptr;
-    
+
     arg=get_arg(arg, destvar, 0, ses);
     if (!*destvar)
     {
@@ -1319,7 +1322,7 @@ void hexord_command(char *arg, struct session *ses)
 {
     char destvar[BUFFER_SIZE], left[BUFFER_SIZE], res[BUFFER_SIZE], *r;
     WC right[BUFFER_SIZE], *cptr;
-    
+
     arg=get_arg(arg, destvar, 0, ses);
     if (!*destvar)
     {

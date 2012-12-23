@@ -1,6 +1,7 @@
 #include "tintin.h"
 #include "unicode.h"
 #include "ui.h"
+#include "protos/utils.h"
 
 
 extern int wc_to_utf8(char *d, const wchar_t *s, int n, int maxb);
@@ -11,7 +12,7 @@ mbstate_t outstate;
 extern void user_illegal();
 extern void user_noop();
 extern int need_resize;
-    
+
 
 static char *i_pos;
 
@@ -48,7 +49,7 @@ static void userpipe_textout(char *txt)
         default:
             one_utf8_to_mb(&b, &a, &outstate);
         }
-    write(1,buf,b-buf);
+    write_stdout(buf,b-buf);
 }
 
 static int userpipe_process_kbd(struct session *ses, WC ch)
@@ -76,7 +77,7 @@ static int userpipe_process_kbd(struct session *ses, WC ch)
 
 static void userpipe_beep(void)
 {
-    write(1,"\007",1);
+    write_stdout("\007",1);
     /* should it beep if we're redirected to a pipe? */
 }
 
@@ -93,20 +94,21 @@ void userpipe_initdriver()
     ui_own_output=0;
     ui_tty=1;
     ui_drafts=0;
-    
+
     user_init           = userpipe_init;
-    user_done		= user_noop;
-    user_pause		= user_illegal;
-    user_resume 	= user_illegal;
-    user_textout 	= userpipe_textout;
-    user_textout_draft 	= user_noop;
-    user_process_kbd	= userpipe_process_kbd;
-    user_beep		= userpipe_beep;
-    user_keypad		= user_illegal;
-    user_retain		= user_illegal;
-    user_passwd		= user_noop;
-    user_condump	= user_illegal;
-    user_title		= (printffunc*)user_illegal;
-    user_resize		= userpipe_resize;
-    user_show_status	= user_illegal;
+    user_done           = user_noop;
+    user_pause          = user_illegal;
+    user_resume         = user_illegal;
+    user_textout        = userpipe_textout;
+    user_textout_draft  = user_noop;
+    user_process_kbd    = userpipe_process_kbd;
+    user_beep           = userpipe_beep;
+    user_keypad         = user_illegal;
+    user_retain         = user_illegal;
+    user_passwd         = user_noop;
+    user_condump        = user_illegal;
+    user_title          = (printffunc*)user_illegal;
+    user_resize         = userpipe_resize;
+    user_show_status    = user_illegal;
+    user_mark_greeting  = user_noop;
 }

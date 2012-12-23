@@ -42,7 +42,7 @@ static void show_session(struct session *ses);
 int session_exists(char *name)
 {
     struct session *sesptr;
-    
+
     for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
         if (!strcmp(sesptr->name, name))
             return 1;
@@ -56,11 +56,11 @@ void make_name(char *str, char *basis, int run)
 {
     char *t;
     int i,j;
-    
+
     if (run)
         for(t=basis; (*t=='/')||is7alnum(*t)||(*t=='_'); t++)
             if (*t=='/')
-                basis=t+1;    
+                basis=t+1;
     if (!is7alpha(*basis))
         goto noname;
     strcpy(str, basis);
@@ -150,7 +150,7 @@ static struct session *socket_session(char *arg, struct session *ses, int ssl)
 #endif
 
     if (list_sessions(arg,ses,left,right))
-        return(ses);	/* (!*left)||(!*right) */
+        return(ses);    /* (!*left)||(!*right) */
 
     strcpy(host, space_out(right));
 
@@ -159,7 +159,7 @@ static struct session *socket_session(char *arg, struct session *ses, int ssl)
         tintin_eprintf(ses,"#session: HEY! SPECIFY AN ADDRESS WILL YOU?");
         return ses;
     }
-    
+
     port=host;
     while (*port && !isspace(*port))
         port++;
@@ -184,7 +184,7 @@ static struct session *socket_session(char *arg, struct session *ses, int ssl)
             close(sock);
             return ses;
         }
-    
+
     return(new_session(left, right, sock, 1, ssl?sslses:0, ses));
 #else
     return(new_session(left, right, sock, 1, 0, ses));
@@ -217,7 +217,7 @@ struct session *run_command(char *arg,struct session *ses)
     int sock;
 
     if (list_sessions(arg,ses,left,right))
-        return(ses);	/* (!*left)||(!*right) */
+        return(ses);    /* (!*left)||(!*right) */
 
     if (!*right)
     {
@@ -379,9 +379,9 @@ void cleanup_session(struct session *ses)
     int i;
     char buf[BUFFER_SIZE];
     struct session *sesptr, *act;
-    
+
     if (ses->closing)
-    	return;
+        return;
     any_closed=1;
     ses->closing=2;
     do_hook(act=ses, HOOK_CLOSE, 0, 1);
@@ -411,7 +411,7 @@ void cleanup_session(struct session *ses)
     if (ses->debuglogfile)
         fclose(ses->debuglogfile);
     for(i=0;i<NHOOKS;i++)
-    	SFREE(ses->hooks[i]);
+        SFREE(ses->hooks[i]);
     SFREE(ses->name);
     SFREE(ses->address);
     SFREE(ses->partial_line_marker);
@@ -430,7 +430,7 @@ void cleanup_session(struct session *ses)
     if (ses->ssl)
         gnutls_deinit(ses->ssl);
 #endif
-    
+
     TFREE(ses, struct session);
 }
 

@@ -10,8 +10,7 @@ gnutls_session_t ssl_negotiate(int sock, char *host, struct session *oldses)
 {
     gnutls_session_t sslses;
     int ret;
-    const int cert_type_priority[3] = { GNUTLS_CRT_X509, GNUTLS_CRT_OPENPGP, 0 };
-    
+
     if (!ssl_cred)
     {
         gnutls_global_init();
@@ -19,10 +18,9 @@ gnutls_session_t ssl_negotiate(int sock, char *host, struct session *oldses)
     }
     gnutls_init(&sslses, GNUTLS_CLIENT);
     gnutls_set_default_priority(sslses);
-    gnutls_certificate_type_set_priority(sslses, cert_type_priority);
     gnutls_credentials_set(sslses, GNUTLS_CRD_CERTIFICATE, ssl_cred);
     gnutls_transport_set_ptr(sslses, (gnutls_transport_ptr_t)(intptr_t)sock);
-    do 
+    do
     {
         ret=gnutls_handshake(sslses);
     } while (ret==GNUTLS_E_AGAIN || ret==GNUTLS_E_INTERRUPTED);
@@ -44,8 +42,8 @@ gnutls_session_t ssl_negotiate(int sock, char *host, struct session *oldses)
 static int cert_file(char *name, char *respath)
 {
     char fname[BUFFER_SIZE], *fn, *home;
-    
-    if (!*name || *name=='.')	// no valid hostname starts with a dot
+
+    if (!*name || *name=='.')   // no valid hostname starts with a dot
         return 0;
     fn=fname;
     while(1)
@@ -64,7 +62,7 @@ static int cert_file(char *name, char *respath)
         else
             return 0;
     }
-    if (*(fn-1)=='.')	// no valid hostname ends with a dot, either
+    if (*(fn-1)=='.')   // no valid hostname ends with a dot, either
         return 0;
     *fn=0;
     if (!(home=getenv("HOME")))
@@ -80,7 +78,7 @@ static void load_cert(gnutls_x509_crt_t *cert, char *name)
     char buf[BIGBUFSIZE];
     FILE *f;
     gnutls_datum_t bptr;
-    
+
     if (!cert_file(name, buf))
         return;
     if (!(f=fopen(buf, "r")))
@@ -88,7 +86,7 @@ static void load_cert(gnutls_x509_crt_t *cert, char *name)
     bptr.size=fread(buf, 1, BIGBUFSIZE, f);
     bptr.data=(unsigned char*)buf;
     fclose(f);
-    
+
     gnutls_x509_crt_init(cert);
     if (gnutls_x509_crt_import(*cert, &bptr, GNUTLS_X509_FMT_PEM))
     {
@@ -103,7 +101,7 @@ static void save_cert(gnutls_x509_crt_t cert, char *name, int new, struct sessio
     char *home, fname[BUFFER_SIZE], buf[BIGBUFSIZE];
     FILE *f;
     size_t len;
-    
+
     len=BIGBUFSIZE;
     if (gnutls_x509_crt_export(cert, GNUTLS_X509_FMT_PEM, buf, &len))
         return;
@@ -148,7 +146,7 @@ static int diff_certs(gnutls_x509_crt_t c1, gnutls_x509_crt_t c2)
 {
     char buf1[BIGBUFSIZE], buf2[BIGBUFSIZE];
     size_t len1, len2;
-    
+
     len1=len2=BIGBUFSIZE;
     if (gnutls_x509_crt_export(c1, GNUTLS_X509_FMT_DER, buf1, &len1))
         return 1;
@@ -168,29 +166,29 @@ static int ssl_check_cert(gnutls_session_t sslses, char *host, struct session *o
     const gnutls_datum_t *cert_list;
     unsigned int cert_list_size;
     char *err=0;
-    
+
     oldcert=0;
     load_cert(&oldcert, host);
-    
+
     if (gnutls_certificate_type_get(sslses)!=GNUTLS_CRT_X509)
     {
         err="server doesn't use x509 -> no key retention.";
         goto nocert;
     }
-    
+
     if (!(cert_list = gnutls_certificate_get_peers(sslses, &cert_list_size)))
     {
         err="server has no x509 certificate -> no key retention.";
         goto nocert;
     }
-    
+
     gnutls_x509_crt_init(&cert);
     if (gnutls_x509_crt_import(cert, &cert_list[0], GNUTLS_X509_FMT_DER)<0)
     {
         err="server's certificate is invalid.";
         goto badcert;
     }
-    
+
     t=time(0);
     if (gnutls_x509_crt_get_activation_time(cert)>t)
     {
@@ -201,7 +199,7 @@ static int ssl_check_cert(gnutls_session_t sslses, char *host, struct session *o
             buf2);
         err=fname;
     }
-    
+
     if (gnutls_x509_crt_get_expiration_time(cert)<t)
     {
         snprintf(buf2, BUFFER_SIZE, "%s", ctime(&t));
@@ -211,7 +209,7 @@ static int ssl_check_cert(gnutls_session_t sslses, char *host, struct session *o
             buf2);
         err=fname;
     }
-    
+
     if (!oldcert)
         save_cert(cert, host, 1, oldses);
     else if (diff_certs(cert, oldcert))
@@ -242,11 +240,11 @@ static int ssl_check_cert(gnutls_session_t sslses, char *host, struct session *o
         gnutls_x509_crt_deinit(oldcert);
         oldcert=0;
     }
-    
-    
+
+
 badcert:
     gnutls_x509_crt_deinit(cert);
-    
+
 nocert:
     if (oldcert)
         gnutls_x509_crt_deinit(oldcert);

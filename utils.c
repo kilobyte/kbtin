@@ -41,10 +41,10 @@ char* mystrdup(char *s)
 void syserr(char *msg, ...)
 {
     va_list ap;
-    
+
     if (ui_own_output)
         user_done();
-    
+
     if (errno)
         fprintf(stderr, "ERROR (%s):  ", strerror(errno));
     else
@@ -61,7 +61,7 @@ void syserr(char *msg, ...)
 /* not for protos.h */ int snprintf(char *str, int len, char *fmt, ...)
 {
     va_list ap;
-    
+
     va_start(ap, fmt);
     vsprintf(str, fmt, ap);
     va_end(ap);
@@ -72,5 +72,28 @@ void syserr(char *msg, ...)
 /* not for protos.h */ int vsnprintf(char *str, int len, char *fmt, va_list ap);
 {
     vsprintf(str, fmt, ap);
+}
+#endif
+
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char *dst, const char *src, size_t n)
+{
+    if (!n)
+        return strlen(src);
+
+    const char *s = src;
+
+    while (--n > 0)
+        if (!(*dst++ = *s++))
+            break;
+
+    if (!n)
+    {
+        *dst++ = 0;
+        while (*s++)
+            ;
+    }
+
+    return s - src - 1;
 }
 #endif

@@ -103,10 +103,9 @@ void alias_command(char *arg, struct session *ses)
 void unalias_command(char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    
+
     arg = get_arg_in_braces(arg, left, 1);
     delete_hashlist(ses, ses->aliases, left,
         ses->mesvar[0]? "#Ok. {%s} is no longer an alias." : 0,
         ses->mesvar[0]? "#No match(es) found for {%s}" : 0);
 }
-

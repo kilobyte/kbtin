@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([KBtin], [1.0.13.1], [kilobyte@angband.pl])
-AM_INIT_AUTOMAKE
+AC_INIT([KBtin], [1.0.14], [kilobyte@angband.pl])
+AM_INIT_AUTOMAKE([-Wall dist-xz no-dist-gzip])
 AC_CONFIG_SRCDIR([action.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -34,7 +34,7 @@ AC_C_BIGENDIAN
 # Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([memcpy getpt ptsname snprintf vsnprintf _getpty grantpt forkpty regcomp getaddrinfo wcwidth posix_openpt])
+AC_CHECK_FUNCS([memcpy getpt ptsname snprintf vsnprintf _getpty grantpt forkpty regcomp getaddrinfo wcwidth posix_openpt strlcpy])
 AC_ARG_LIB(mccp, zlib, ZLIB, zlib.h, z, gzread, [
 Please install zlib and its headers.  On most systems, the package will be named
 zlib-dev or libz-dev.  Or, you can "./configure --disable-mccp" to ignore this
@@ -69,7 +69,6 @@ AC_SOL_PROTOCOLS
 AC_UCS_SIZE
 AC_SCO
 AC_AI_ADDRCONFIG
-CFLAGS=`echo "$CFLAGS"|sed -e 's/-O2/-O3/'`
 
 AC_CONFIG_FILES([Makefile])
 

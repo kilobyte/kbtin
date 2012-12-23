@@ -72,10 +72,10 @@ int any_closed=0;
 extern int recursion;
 char *_; /* incoming line being processed */
 extern int o_lastcolor;
-int real_quiet=0; /* if set, #verbose 0 will be really quiet */ 
+int real_quiet=0; /* if set, #verbose 0 will be really quiet */
 char *history[HISTORY_SIZE];
 struct session *sessionlist, *activesession, *nullsession;
-char **pvars;	/* the %0, %1, %2,....%9 variables */
+pvars_t *pvars; /* the %0, %1, %2,....%9 variables */
 char tintin_char = DEFAULT_TINTIN_CHAR;
 char verbatim_char = DEFAULT_VERBATIM_CHAR;
 char prev_command[BUFFER_SIZE];
@@ -157,7 +157,7 @@ static void sigwinch(void)
 static int new_news(void)
 {
     struct stat KBtin, news;
-    
+
     if (stat(tintin_exec, &KBtin))
         return 0;       /* can't stat the executable??? */
     if (stat(NEWS_FILE, &news))
@@ -193,7 +193,7 @@ static void setup_signals(void)
     act.sa_handler=(sighandler_t)tstphandler;
     if (sigaction(SIGTSTP,&act,0))
         syserr("sigaction SIGTSTP");
-    
+
     if (ui_own_output && ui_tty)
     {
         act.sa_handler=(sighandler_t)sigcont;
@@ -203,7 +203,7 @@ static void setup_signals(void)
         if (sigaction(SIGWINCH,&act,0))
             syserr("sigaction SIGWINCH");
     }
-        
+
     if (ui_own_output)
     {
         if (signal(SIGSEGV,(sighandler_t)sigsegv) == BADSIG)
@@ -211,7 +211,7 @@ static void setup_signals(void)
         if (signal(SIGFPE,(sighandler_t)sigfpe) == BADSIG)
             syserr("signal SIGFPE");
     }
-    
+
     act.sa_handler=(sighandler_t)sigchild;
     if (sigaction(SIGCHLD,&act,0))
         syserr("sigaction SIGCHLD");
@@ -243,7 +243,7 @@ static void init_nullses(void)
 {
     int i;
     struct timeval tv;
-    
+
     gettimeofday(&tv, 0);
     time0 = tv.tv_sec;
     utime0 = tv.tv_usec;
@@ -325,6 +325,7 @@ static void init_nullses(void)
     nullsession->mesvar[10]= DEFAULT_PATH_MESS;
     nullsession->mesvar[11]= DEFAULT_ERROR_MESS;
     nullsession->mesvar[12]= DEFAULT_HOOK_MESS;
+    nullsession->mesvar[13]= DEFAULT_LOG_MESS;
     nullsession->charset=mystrdup(DEFAULT_CHARSET);
     nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
                               DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
@@ -348,11 +349,11 @@ static void opterror(char *msg, ...)
 
 static struct listnode *options;
 
-static void parse_options(int argc, char **argv, char **environ)
+static void parse_options(int argc, char **argv)
 {
     int noargs=0;
     int arg;
-    
+
     options=init_list();
 
     for (arg=1;arg<argc;arg++)
@@ -361,7 +362,7 @@ static void parse_options(int argc, char **argv, char **environ)
         {
             if (!strcmp(argv[arg],"--"))
                 noargs=1;
-            else if (!strcmp(argv[arg],"--version"))	/* make autotest happy */
+            else if (!strcmp(argv[arg],"--version")) /* make autotest happy */
             {
                 printf("KBtin version "VERSION"\n");
                 exit(0);
@@ -468,7 +469,7 @@ static void apply_options()
                     *homepath = '\0';
             else
                 strcpy(homepath, DEFAULT_FILE_DIR);
-            
+
             strcpy(temp, homepath);
             strcat(temp, "/.tintinrc");
             local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
@@ -488,27 +489,27 @@ static void apply_options()
             }
         }
     }
-    
+
     kill_list(options);
 }
 
 /**************************************************************************/
 /* main() - show title - setup signals - init lists - readcoms - tintin() */
 /**************************************************************************/
-int main(int argc, char **argv, char **environ)
+int main(int argc, char **argv)
 {
     struct session *ses;
 
     tintin_exec=argv[0];
     init_locale();
     user_setdriver(isatty(0)?1:0);
-    parse_options(argc, argv, environ);
+    parse_options(argc, argv);
     init_bind();
     hist_num=-1;
     init_parse();
     strcpy(status,EMPTY_LINE);
     user_init();
-    /*  read_complete();		no tab-completion */
+    /*  read_complete();            no tab-completion */
     ses = NULL;
     srand((getpid()*0x10001)^time0);
     lastdraft=0;
@@ -522,24 +523,25 @@ every time.  It is not GNU bc or something similar, we don't want half
 a screenful of all-uppercase (cAPS kEY IS STUCK AGAIN?) text that no one
 ever wants to read -- that is what docs are for.
 */
-    tintin_printf(0,"~2~##################################################");
-    tintin_printf(0, "#~7~                ~12~K B ~3~t i n~7~     v %-15s ~2~#", VERSION);
-    tintin_printf(0,"#~7~ current developer: ~9~Adam Borowski               ~2~#");
-    tintin_printf(0,"#~7~                          (~9~kilobyte@angband.pl~7~) ~2~#");
-    tintin_printf(0,"#~7~ based on ~12~tintin++~7~ v 2.1.9 by Peter Unold,      ~2~#");
-    tintin_printf(0,"#~7~  Bill Reiss, David A. Wagner, Joann Ellsworth, ~2~#");
-    tintin_printf(0,"#~7~     Jeremy C. Jack, Ulan@GrimneMUD and         ~2~#");
-    tintin_printf(0,"#~7~  Jacek Narebski                                ~2~#");
-    tintin_printf(0,"##################################################~7~");
-    tintin_printf(0,"~15~#session <name> <host> <port> ~7~to connect to a remote server");
-    tintin_printf(0,"                              ~8~#ses t2t towers.angband.com 9999");
-    tintin_printf(0,"~15~#run <name> <command>         ~7~to run a local command");
-    tintin_printf(0,"                              ~8~#run advent adventure");
-    tintin_printf(0,"                              ~8~#run sql mysqlclient");
-    tintin_printf(0,"~15~#help                         ~7~to get the help index");
-    if (new_news())
-        tintin_printf(ses,"Check #news now!");
+        tintin_printf(0,"~2~##################################################");
+        tintin_printf(0, "#~7~                ~12~K B ~3~t i n~7~     v %-15s ~2~#", VERSION);
+        tintin_printf(0,"#~7~ current developer: ~9~Adam Borowski               ~2~#");
+        tintin_printf(0,"#~7~                          (~9~kilobyte@angband.pl~7~) ~2~#");
+        tintin_printf(0,"#~7~ based on ~12~tintin++~7~ v 2.1.9 by Peter Unold,      ~2~#");
+        tintin_printf(0,"#~7~  Bill Reiss, David A. Wagner, Joann Ellsworth, ~2~#");
+        tintin_printf(0,"#~7~     Jeremy C. Jack, Ulan@GrimneMUD and         ~2~#");
+        tintin_printf(0,"#~7~  Jacek Narebski                                ~2~#");
+        tintin_printf(0,"##################################################~7~");
+        tintin_printf(0,"~15~#session <name> <host> <port> ~7~to connect to a remote server");
+        tintin_printf(0,"                              ~8~#ses t2t t2tmud.org 9999");
+        tintin_printf(0,"~15~#run <name> <command>         ~7~to run a local command");
+        tintin_printf(0,"                              ~8~#run advent adventure");
+        tintin_printf(0,"                              ~8~#run sql mysqlclient");
+        tintin_printf(0,"~15~#help                         ~7~to get the help index");
+        if (new_news())
+            tintin_printf(ses,"Check #news now!");
     }
+    user_mark_greeting();
 
     init_net();
     setup_signals();
@@ -598,7 +600,7 @@ static void tintin(void)
     WC ch;
     int inbuf=0;
     mbstate_t instate;
-    
+
     memset(&instate, 0, sizeof(instate));
 
     while (TRUE)
@@ -639,7 +641,7 @@ static void tintin(void)
         if (need_resize)
         {
             char buf[BUFFER_SIZE];
-            
+
             user_resize();
             sprintf(buf, "#NEW SCREEN SIZE: %dx%d.", COLS, LINES);
             tintin_puts1(buf, activesession);
@@ -662,18 +664,18 @@ static void tintin(void)
             if (result==0 && !isatty(0))
                 eofinput=1;
             inbuf+=result;
-            
+
             i=0;
             while(i<inbuf)
             {
                 result=mbrtowc(&ch, kbdbuf+i, inbuf-i, &instate);
-                if (result==-2)		/* incomplete but valid sequence */
+                if (result==-2)         /* incomplete but valid sequence */
                 {
                     memmove(kbdbuf, kbdbuf+i, inbuf-i);
                     inbuf-=i;
                     goto partial;
                 }
-                else if (result==-1)	/* invalid sequence */
+                else if (result==-1)    /* invalid sequence */
                 {
                     ch=0xFFFD;
                     i++;
@@ -682,14 +684,14 @@ static void tintin(void)
                      * but staying charset-agnostic makes the code simpler.
                      */
                 }
-                else if (result==0)	/* literal 0 */
+                else if (result==0)     /* literal 0 */
                     i++; /* oops... bad ISO/ANSI, bad */
                 else
                     i+=result;
                 if (user_process_kbd(activesession, ch))
                 {
                     hist_num=-1;
-                    
+
                     if (term_echoing || (got_more_kludge && done_input[0]))
                         /* got_more_kludge: echo any non-empty line */
                     {
@@ -776,14 +778,14 @@ static void read_mud(struct session *ses)
         if (ses->logtype)
         {
             count=0;
-        
+
             if (ses->halfcr_log)
             {
                 ses->halfcr_log=0;
                 if (buffer[0]!='\n')
                     temp[count++]='\r';
             }
-        
+
             for (n = 0; n < didget; n++)
                 if (buffer[n] != '\r')
                     temp[count++] = buffer[n];
@@ -794,7 +796,7 @@ static void read_mud(struct session *ses)
                     else if (buffer[n+1]!='\n')
                         temp[count++]='\r';
                 }
-            temp[count]=0;	/* didget<BUFFER_SIZE, so no overflow */
+            temp[count]=0;      /* didget<BUFFER_SIZE, so no overflow */
             write_log(ses, temp, count);
         }
         else
@@ -814,7 +816,7 @@ static void read_mud(struct session *ses)
         goto halfcr;
     }
     while (*cpsource)
-    {		/*cut out each of the lines and process */
+    {       /*cut out each of the lines and process */
         if (*cpsource == '\n')
         {
             *cpdest = '\0';
@@ -953,13 +955,13 @@ static void echo_input(char *txt)
 {
     char out[BUFFER_SIZE],*cptr,*optr;
     static int c=7;
-    
+
     if (ui_own_output)
     {
         user_textout("");
         c=lastcolor;
     }
-    
+
     optr=out;
     if (ui_own_output)
         optr+=sprintf(optr, ECHO_COLOR);

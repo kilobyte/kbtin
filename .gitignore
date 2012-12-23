@@ -20,12 +20,13 @@ config.sub
 configure
 configure.lineno
 configure.scan
+depcomp
 DEADJOE
 .deps
+install-sh
 KBtin
 KBtin_help.gz
-kbtin-*.tar.gz
-KBtin-*.tar.gz
+kbtin-*.tar.xz
 load_commands.h
 Makefile
 Makefile.in

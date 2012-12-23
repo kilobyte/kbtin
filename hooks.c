@@ -29,12 +29,12 @@ void hooks_command(char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     int t, flag;
-    
+
     arg=get_arg(arg, left, 0, ses);
     arg=space_out(arg);
     if (!*left || !*arg)
     {
-    	flag=1;
+        flag=1;
         for(t=0;t<NHOOKS;t++)
             if (ses->hooks[t] && (!*left || is_abrev(left, hook_names[t])))
             {
@@ -70,11 +70,11 @@ void unhook_command(char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
     int t, flag;
-    
+
     arg=get_arg(arg, left, 1, ses);
     if (!*left)
     {
-    	flag=1;
+        flag=1;
         for(t=0;t<NHOOKS;t++)
             if (ses->hooks[t])
             {
@@ -105,8 +105,8 @@ struct session* do_hook(struct session *ses, int t, char *data, int blockzap)
     int i, oldclos=oldclos;
 
     if (!ses->hooks[t])
-    	return ses;
-    
+        return ses;
+
     if (blockzap)
     {
         oldclos=ses->closing;
@@ -115,11 +115,11 @@ struct session* do_hook(struct session *ses, int t, char *data, int blockzap)
     lastvars=pvars;
     pvars=&vars;
     for(i=0;i<10;i++)
-    	vars[i][0]=0;
+        vars[i][0]=0;
     if (data)
     {
-    	strcpy(vars[0], data);
-    	strcpy(vars[1], data);
+        strcpy(vars[0], data);
+        strcpy(vars[1], data);
     }
     if (ses->mesvar[MSG_HOOK]&&!magic_close_hook)
     {

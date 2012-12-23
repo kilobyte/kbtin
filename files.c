@@ -39,7 +39,9 @@ int in_read=0;
 
 /*******************************/
 /* expand tildes in a filename */
-/*******************************/
+/********************************************/
+/* result must be at least BUFFER_SIZE long */
+/********************************************/
 void expand_filename(char *arg, char *result, char *lstr)
 {
     char *r0=result;
@@ -47,24 +49,24 @@ void expand_filename(char *arg, char *result, char *lstr)
     if (*arg=='~')
     {
         if (*(arg+1)=='/')
-            result+=sprintf(result,"%s",getenv("HOME")), arg++;
+            result+=snprintf(result,BUFFER_SIZE,"%s",getenv("HOME")), arg++;
         else
         {
             char *p;
             char name[BUFFER_SIZE];
             struct passwd *pwd;
-            
+
             p=strchr(arg+1, '/');
             if (p)
             {
                 strncpy(name, arg+1, p-arg-1);
                 pwd=getpwnam(name);
                 if (pwd)
-                    result+=sprintf(result,"%s",pwd->pw_dir), arg=p;
+                    result+=snprintf(result,BUFFER_SIZE,"%s",pwd->pw_dir), arg=p;
             }
         };
     };
-    strcpy(result, arg);
+    strlcpy(result, arg, r0-result+BUFFER_SIZE);
     utf8_to_local(lstr, r0);
 }
 
@@ -74,7 +76,7 @@ void expand_filename(char *arg, char *result, char *lstr)
 static void cfputs(char *s, FILE *f)
 {
     char lstr[BUFFER_SIZE*8];
-    
+
     utf8_to_local(lstr, s);
     fputs(lstr, f);
 }
@@ -87,7 +89,7 @@ static void cfprintf(FILE *f, char *fmt, ...)
     va_start(ap, fmt);
     vsnprintf(buf, BUFFER_SIZE*4, fmt, ap);
     va_end(ap);
-    
+
     utf8_to_local(lstr, buf);
     fputs(lstr, f);
 }
@@ -217,7 +219,7 @@ void log_off(struct session *ses)
 static inline void ttyrec_timestamp(struct ttyrec_header *th)
 {
     struct timeval t;
-    
+
     gettimeofday(&t, 0);
     th->sec=to_little_endian(t.tv_sec);
     th->usec=to_little_endian(t.tv_usec);
@@ -228,7 +230,7 @@ void write_logf(struct session *ses, char *txt, char *prefix, char *suffix)
 {
     char buf[BUFFER_SIZE*2],lbuf[BUFFER_SIZE*2];
     int len;
-    
+
     sprintf(buf, "%s%s%s%s\n", prefix, txt, suffix, ses->logtype?"":"\r");
     if (ses->logtype==2)
     {
@@ -240,10 +242,15 @@ void write_logf(struct session *ses, char *txt, char *prefix, char *suffix)
     convert(&ses->c_log, lbuf+len, buf, 1);
     len+=strlen(lbuf+len);
     if (ses->logtype==2)
-        ((struct ttyrec_header*)lbuf)->len=
-            to_little_endian(len-sizeof(struct ttyrec_header));
-    
-    if (fwrite(lbuf, 1, len, ses->logfile)<len)
+    {
+        uint32_t blen=len-sizeof(struct ttyrec_header);
+        lbuf[ 8]=blen;
+        lbuf[ 9]=blen>>8;
+        lbuf[10]=blen>>16;
+        lbuf[11]=blen>>24;
+    }
+
+    if ((int)fwrite(lbuf, 1, len, ses->logfile)<len)
     {
         log_off(ses);
         tintin_eprintf(ses, "#WRITE ERROR -- LOGGING DISABLED.  Disk full?");
@@ -255,7 +262,7 @@ void write_log(struct session *ses, char *txt, int n)
 {
     struct ttyrec_header th;
     char ubuf[BUFFER_SIZE*2],lbuf[BUFFER_SIZE*2];
-    
+
     if (ses->logcharset!=LOGCS_REMOTE && strcasecmp(user_charset_name, ses->charset))
     {
         convert(&ses->c_io, ubuf, txt, -1);
@@ -276,7 +283,7 @@ void write_log(struct session *ses, char *txt, int n)
         }
     }
 
-    if (fwrite(txt, 1, n, ses->logfile)<n)
+    if ((int)fwrite(txt, 1, n, ses->logfile)<n)
     {
         log_off(ses);
         tintin_eprintf(ses, "#WRITE ERROR -- LOGGING DISABLED.  Disk full?");
@@ -292,8 +299,8 @@ void logcomment_command(char *arg, struct session *ses)
 
     if (!arg)
     {
-    	tintin_eprintf(ses, "#Logcomment what?");
-    	return;
+        tintin_eprintf(ses, "#Logcomment what?");
+        return;
     }
     if (!ses->logfile)
     {
@@ -328,7 +335,7 @@ static FILE* open_logfile(struct session *ses, char *name, const char *filemsg, 
     }
     if (*name=='>')
     {
-        if ((*++name=='>'))
+        if (*++name=='>')
         {
             expand_filename(++name, fname, lfname);
             if ((f=fopen(lfname, "a")))
@@ -368,7 +375,15 @@ static FILE* open_logfile(struct session *ses, char *name, const char *filemsg, 
         }
         else
             tintin_eprintf(ses, "#ERROR: COULDN'T OPEN PIPE: {bzip2 >%s}.", fname);
-    else    
+    else if (len>=4 && !strcmp(fname+len-3,".xz"))
+        if ((f = mypopen(strcat(strcpy(temp,"xz >"),lfname), 1)))
+        {
+            if (ses->mesvar[MSG_LOG])
+                tintin_printf(ses, filemsg, fname);
+        }
+        else
+            tintin_eprintf(ses, "#ERROR: COULDN'T OPEN PIPE: {xz >%s}.", fname);
+    else
         if ((f = fopen(lfname, "w")))
         {
             if (ses->mesvar[MSG_LOG])
@@ -441,7 +456,7 @@ void log_command(char *arg, struct session *ses)
             if (!new_conv(&ses->c_log, logcs_charset(ses->logcharset), 1))
                 tintin_eprintf(ses, "#Warning: can't open charset: %s",
                                     logcs_charset(ses->logcharset));
-                        
+
         }
         else if (ses->logfile)
         {
@@ -508,7 +523,7 @@ void debuglog(struct session *ses, const char *format, ...)
 
     if (!ses->debuglogfile)
         return;
-    
+
     gettimeofday(&tv, 0);
     va_start(ap, format);
     if (vsnprintf(buf, BUFFER_SIZE-1, format, ap)>BUFFER_SIZE-2)
@@ -524,7 +539,7 @@ struct session* do_read(FILE *myfile, char *filename, struct session *ses)
     char line[BUFFER_SIZE], buffer[BUFFER_SIZE], lstr[BUFFER_SIZE], *cptr, *eptr;
     int flag,nl,ignore_lines;
     mbstate_t cs;
-    
+
     memset(&cs, 0, sizeof(cs));
 
     flag = !in_read;
@@ -564,7 +579,7 @@ struct session* do_read(FILE *myfile, char *filename, struct session *ses)
         }
         for (cptr = line; *cptr && *cptr != '\n' && *cptr!='\r'; cptr++) ;
         *cptr = '\0';
-        
+
         if (isspace(*line) && *buffer && (*buffer==tintin_char))
         {
             cptr=space_out(line);
@@ -653,17 +668,17 @@ struct session* read_command(char *filename, struct session *ses)
         prompt(NULL);
         return ses;
     }
-    
+
     return do_read(myfile, filename, ses);
 }
 
 
-#define WFLAG(name,var,org)		if(var!=(org))                                \
-                                    {                                       \
-                                        sprintf(num, "%d", var);            \
-                                        prepare_for_write(name, num, 0, 0, buffer); \
-                                        cfputs(buffer, myfile);             \
-                                    }
+#define WFLAG(name,var,org)     if(var!=(org))                                  \
+                                {                                               \
+                                    sprintf(num, "%d", var);                    \
+                                    prepare_for_write(name, num, 0, 0, buffer); \
+                                    cfputs(buffer, myfile);                     \
+                                }
 #define SFLAG(name,var,org)     WFLAG(name,ses->var,org)
 /**********************/
 /* the #write command */
@@ -763,14 +778,14 @@ void write_command(char *filename, struct session *ses)
         cfputs(buffer, myfile);
     }
     zap_list(templist);
-    
+
     nodeptr = ses->highs;
     while ((nodeptr = nodeptr->next))
     {
         prepare_for_write("highlight", nodeptr->right, nodeptr->left, "\0", buffer);
         cfputs(buffer, myfile);
     }
-    
+
     nodeptr = templist = hash2list(ses->pathdirs, "*");
     while ((nodeptr = nodeptr->next))
     {
@@ -793,7 +808,7 @@ void write_command(char *filename, struct session *ses)
                         rptr->distance,
                         rptr->cond);
             } while((rptr=rptr->next));
-            
+
     nodeptr = templist = hash2list(ses->binds, "*");
     while ((nodeptr = nodeptr->next))
     {
@@ -801,7 +816,7 @@ void write_command(char *filename, struct session *ses)
         cfputs(buffer, myfile);
     }
     zap_list(templist);
-    
+
     for(nr=0;nr<NHOOKS;nr++)
         if (ses->hooks[nr])
         {
@@ -902,7 +917,7 @@ void writesession_command(char *filename, struct session *ses)
         cfprintf(myfile, "%ccharset {%s}\n", tintin_char, ses->charset);
     if (strcmp(logcs_name(nullsession->logcharset), logcs_name(ses->logcharset)))
         cfprintf(myfile, "%clogcharset {%s}\n", tintin_char, logcs_name(ses->logcharset));
-    
+
     nodeptr = onptr = hash2list(ses->aliases,"*");
     while ((nodeptr = nodeptr->next))
     {
@@ -969,7 +984,7 @@ void writesession_command(char *filename, struct session *ses)
         prepare_for_write("highlight", nodeptr->right, nodeptr->left, 0, buffer);
         cfputs(buffer, myfile);
     }
-    
+
     nodeptr = onptr = hash2list(ses->pathdirs,"*");
     while ((nodeptr = nodeptr->next))
     {
@@ -980,7 +995,7 @@ void writesession_command(char *filename, struct session *ses)
         cfputs(buffer, myfile);
     }
     zap_list(onptr);
-    
+
     for (nr=0;nr<MAX_LOCATIONS;nr++)
         if ((rptr=ses->routes[nr]))
             do
@@ -1001,7 +1016,7 @@ void writesession_command(char *filename, struct session *ses)
                             rptr->distance,
                             rptr->cond);
             } while((rptr=rptr->next));
-    
+
     nodeptr = onptr = hash2list(ses->binds,"*");
     while ((nodeptr = nodeptr->next))
     {
@@ -1012,7 +1027,7 @@ void writesession_command(char *filename, struct session *ses)
         cfputs(buffer, myfile);
     }
     zap_list(onptr);
-    
+
     for(nr=0;nr<NHOOKS;nr++)
         if (ses->hooks[nr])
             if (!nullsession->hooks[nr] ||
@@ -1061,7 +1076,7 @@ void textin_command(char *arg, struct session *ses)
     FILE *myfile;
     char buffer[BUFFER_SIZE], filename[BUFFER_SIZE], *cptr, lfname[BUFFER_SIZE];
     mbstate_t cs;
-    
+
     memset(&cs, 0, sizeof(cs));
 
     get_arg_in_braces(arg, buffer, 1);
@@ -1105,7 +1120,7 @@ char *logtypes[]=
 void logtype_command(char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    int t;
+    unsigned t;
 
     arg=get_arg(arg, left, 1, ses);
     if (!*left)

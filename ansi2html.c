@@ -7,15 +7,15 @@
 #define BLINK        0x100000
 #define INVERSE      0x200000
 
-int fg,bg,fl,b,cl;
+static int fg,bg,fl,b,cl;
 
-char *cols[]={"BLK","RED","GRN","YEL","BLU","MAG","CYN","WHI",
-              "HIK","HIR","HIG","HIY","HIB","HIM","HIC","HIW"};
+static char *cols[]={"BLK","RED","GRN","YEL","BLU","MAG","CYN","WHI",
+                     "HIK","HIR","HIG","HIY","HIB","HIM","HIC","HIW"};
 
-int ntok, tok[10];
-int ch;
+static int ntok, tok[10];
+static int ch;
 
-void class()
+static void class()
 {
     if (!cl)
         printf(" class=\"");
@@ -24,10 +24,10 @@ void class()
     cl=1;
 }
 
-void span()
+static void span()
 {
     int tmp, _fg=fg, _bg=bg;
-    
+
     if (fg==-1 && bg==-1 && !fl)
         return;
     printf("<b");
@@ -50,17 +50,17 @@ void span()
     }
     else if (fl&BOLD)
         class(),printf("BOLD");
-    
+
     if (_bg!=-1)
         class(),printf("B%s", cols[_bg]);
-    
+
     if (fl&ITALIC)
         class(),printf("ITA");
     if (fl&UNDERLINE)
         class(),printf((fl&BLINK)?"UNDBLI":"UND");
     else if (fl&BLINK)
         class(),printf("BLI");
-    
+
     if (cl)
         printf("\"");
     printf(">");
@@ -68,7 +68,7 @@ void span()
 }
 
 
-void unspan()
+static void unspan()
 {
     if (b)
         printf("</b>");
@@ -79,23 +79,23 @@ void unspan()
 int main()
 {
     int i;
-    
+
     printf(
 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\n"
-"	\"http://www.w3.org/TR/html4/strict.dtd\">\n"
+"\t\"http://www.w3.org/TR/html4/strict.dtd\">\n"
 "<html>\n"
 "<head>\n"
 "<!--<title></title>-->\n"
 "<style type=\"text/css\">\n"
 "body {background-color: black;}\n"
 "pre {\n"
-"	font-weight: normal;\n"
-"	color: #aaa;\n"
-"	white-space: -moz-pre-wrap;\n"
-"	white-space: -o-pre-wrap;\n"
-"	white-space: -pre-wrap;\n"
-"	white-space: pre-wrap;\n"
-"	word-wrap: break-word;\n"
+"\tfont-weight: normal;\n"
+"\tcolor: #aaa;\n"
+"\twhite-space: -moz-pre-wrap;\n"
+"\twhite-space: -o-pre-wrap;\n"
+"\twhite-space: -pre-wrap;\n"
+"\twhite-space: pre-wrap;\n"
+"\tword-wrap: break-word;\n"
 "}\n"
 "b {font-weight: normal}\n"
 "b.BLK {color: #000}\n"
@@ -148,16 +148,16 @@ normal:
         ch=getchar();
         goto normal;
     case 7:
-        printf("&iexcl;");	/* bell */
+        printf("&iexcl;");      /* bell */
         ch=getchar();
         goto normal;
-    case 12:			/* form feed */
+    case 12:                    /* form feed */
     formfeed:
         ch=getchar();
         unspan();
         printf("\n<hr>\n");
         goto normal;
-    case 27:			/* ESC */
+    case 27:                    /* ESC */
         ch=getchar();
         goto esc;
     case '<':
@@ -190,7 +190,7 @@ csi:
     {
     case ';':
         if (++ntok>=10)
-            goto normal;	/* too many tokens, something is fishy */
+            goto normal;        /* too many tokens, something is fishy */
         tok[ntok]=0;
         ch=getchar();
         goto csi;
@@ -266,7 +266,7 @@ csi:
     case 'J':
         goto formfeed;
     default:
-        ch=getchar();		/* invalid/unimplemented code, ignore */
+        ch=getchar();           /* invalid/unimplemented code, ignore */
     case EOF:
         goto normal;
     }
