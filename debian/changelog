@@ -1,3 +1,13 @@
+kbtin (1.0.14-1) unstable; urgency=low
+
+  * New upstream release.
+  * Convert to dh style debian/rules.
+  * Move the main executable to /usr/bin, as some secondary uses have a valid
+    reason to be run by root.
+  * Initial Debian release (closes: #213361).
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sun, 23 Dec 2012 18:10:01 +0100
+
 kbtin (1.0.13.1-2) unstable; urgency=low
 
   * Fix testsuite failure on chroots with unset time zone.
@@ -7,7 +17,6 @@ kbtin (1.0.13.1-2) unstable; urgency=low
 kbtin (1.0.13.1-1) unstable; urgency=low
 
   * New upstream release (irrelevant to Debian).
-  * Initial Debian release (closes: #213361).
 
  -- Adam Borowski <kilobyte@angband.pl>  Sat, 25 Jul 2009 05:19:02 +0200
 
