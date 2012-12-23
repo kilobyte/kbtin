@@ -1,129 +1,31 @@
 #!/usr/bin/make -f
-# Sample debian/rules that uses debhelper.
-# GNU copyright 1997 to 1999 by Joey Hess.
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+%:
+	dh $@ --parallel
 
-
-# These are used for cross-compiling and for saving the configure script
-# from having to guess our platform (since we know it already)
-DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-
-
-CFLAGS = -Wall -g
-
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
-else
-	CFLAGS += -O3
-endif
-ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
-	INSTALL_PROGRAM += -s
-endif
-ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
-    NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
-    MAKEFLAGS += -j$(NUMJOBS)
-else
-    MAKEFLAGS += -j$(shell perl debian/concurrency-helper)
-endif
-
-configure:
-	dh_testdir
-	./autogen
-
-config.status: configure
-	dh_testdir
-ifneq "$(wildcard /usr/share/misc/config.sub)" ""
-	cp -f /usr/share/misc/config.sub config.sub
-endif
-ifneq "$(wildcard /usr/share/misc/config.guess)" ""
-	cp -f /usr/share/misc/config.guess config.guess
-endif
-ifneq "$(wildcard /usr/share/gettext/config.rpath)" ""
-	cp -f /usr/share/gettext/config.rpath config.rpath
-endif
-	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
-		--prefix=/usr \
-		--mandir=\$${prefix}/share/man \
-		--infodir=\$${prefix}/share/info
-
-
-build: build-stamp check
-
-build-stamp:  config.status
-	dh_testdir
-	$(MAKE)
+override_dh_auto_build:
+	dh_auto_build
 	$(MAKE) manual.html
 
-	touch build-stamp
-
-CURDIR  := $(shell pwd)
-
-check: check-stamp
-check-stamp: build-stamp
+override_dh_auto_test:
 ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
-	-sh debian/locale-gen
+	sh debian/locale-gen
 	LOCPATH=$(CURDIR)/locales $(MAKE) check || debian/rules testfail
 else
 	@echo Suppressing 'make check', because this is a cross build
 endif
-	touch check-stamp
 
 testfail:
 	@echo "!!!TESTS FAILED!!!"
 	@cat tests/testsuite.log
 	@false
 
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp check-stamp
-	rm -rf locales
-	[ ! -f Makefile ] || $(MAKE) distclean
-	rm -f config.sub config.guess config.rpath
-	dh_clean
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k
-	dh_installdirs
-
+override_dh_auto_install:
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/kbtin
-	for x in KBtin kbtin; \
-	  do \
-	    mv $(CURDIR)/debian/kbtin/usr/bin/$$x $(CURDIR)/debian/kbtin/usr/games/; \
-	  done
 	$(MAKE) install-terminfo DESTDIR=$(CURDIR)/debian/kbtin TERMINFODIR=/usr/share/terminfo
-	rm debian/kbtin/usr/share/terminfo/k/kbtin
-	ln -s ../K/KBtin debian/kbtin/usr/share/terminfo/k/kbtin
-	cp debian/kbtin.xpm $(CURDIR)/debian/kbtin/usr/share/pixmaps
-	dh_install debian/lintian-overrides/kbtin /usr/share/lintian/overrides/
+	dh_install debian/kbtin.xpm /usr/share/pixmaps/
 
-
-# Build architecture-independent files here.
-binary-indep: build install
-# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs ChangeLog
-	dh_installdocs
-	dh_installmenu
-	dh_installman
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_shlibdeps
-	dh_installdeb
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install check testfail
+override_dh_auto_clean:
+	rm -rf locales
+	rm -f tests/tests.at
+	dh_auto_clean
