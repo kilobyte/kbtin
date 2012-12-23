@@ -1,5 +1,5 @@
 Source: kbtin
-Section: games
+Section: text
 Priority: optional
 Maintainer: Adam Borowski <kilobyte@angband.pl>
 Build-Depends: debhelper (>> 5.0.0), locales, libz-dev, libglib2.0-dev (>= 2.10), gettext, autotools-dev, libgnutls-dev
