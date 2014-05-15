@@ -11,6 +11,9 @@
 #  include <stropts.h>
 # endif
 #endif
+#ifdef HAVE_PTY_H
+# include <pty.h>
+#endif
 #include "ui.h"
 
 extern char **environ;
@@ -148,8 +151,7 @@ static int forkpty(int *amaster,char *dummy,struct termios *termp, struct winsiz
     }
     master=filedes[0];
     slave=filedes[1];
-#else
-#if defined(HAVE_GRANTPT) && (defined(HAVE_GETPT) || defined(HAVE_DEV_PTMX) || defined(HAVE_POSIX_OPENPT))
+#elif defined(HAVE_GRANTPT) && (defined(HAVE_GETPT) || defined(HAVE_DEV_PTMX) || defined(HAVE_POSIX_OPENPT))
 # ifdef HAVE_PTSNAME
     char *name;
 # else
@@ -158,12 +160,10 @@ static int forkpty(int *amaster,char *dummy,struct termios *termp, struct winsiz
 
 # ifdef HAVE_GETPT
     master=getpt();
-# else
-#  ifdef HAVE_DEV_PTMX
+# elif defined(HAVE_DEV_PTMX)
     master=open("/dev/ptmx", O_RDWR);
-#  else
+# else
     master=posix_openpt(O_RDWR);
-#  endif
 # endif
 
     if (master<0)
@@ -236,7 +236,6 @@ ok:
     return -1;
     ok:
 #endif
-#endif
 
     if (termp)
         tcsetattr(master, TCSANOW, termp);
@@ -299,6 +298,16 @@ int run(char *command)
 {
     int fd;
 
+#if defined(__FreeBSD_kernel__) && defined(__GLIBC__)
+    /* Work around a kfreebsd 9.x bug.  If the handler for SIGCHLD is anything
+       but SIG_DFL, grantpt() and thus forkpty() doesn't work. */
+    struct sigaction act, oldact;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags=SA_RESTART;
+    act.sa_handler=SIG_DFL;
+    sigaction(SIGCHLD, &act, &oldact);
+#endif
+
 #ifndef PTY_ECHO_HACK
     struct termios ta;
     struct winsize ws;
@@ -309,13 +318,21 @@ int run(char *command)
     ws.ws_col=COLS;
     ws.ws_xpixel=0;
     ws.ws_ypixel=0;
-    switch(forkpty(&fd,0,&ta,(LINES>1 && COLS>0)?&ws:0))
+    int res = forkpty(&fd,0,&ta,(LINES>1 && COLS>0)?&ws:0);
 #else
-    switch(forkpty(&fd,0,0,0))
+    int res = forkpty(&fd,0,0,0);
 #endif
+
+#if defined(__FreeBSD_kernel__) && defined(__GLIBC__)
+    int err = errno;
+    sigaction(SIGCHLD, &oldact, 0);
+    errno = err;
+#endif
+
+    switch(res)
     {
     case -1:
-        return(0);
+        return -1;
     case 0:
         {
             char *argv[4];
@@ -332,7 +349,7 @@ int run(char *command)
             exit(127);
         }
     default:
-        return(fd);
+        return fd;
     }
 }
 

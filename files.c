@@ -273,7 +273,7 @@ void write_log(struct session *ses, char *txt, int n)
     if (ses->logtype==2)
     {
         ttyrec_timestamp(&th);
-        th.len=n;
+        th.len=to_little_endian(n);
         if (fwrite(&th, 1, sizeof(struct ttyrec_header), ses->logfile)<
             sizeof(struct ttyrec_header))
         {
@@ -309,6 +309,24 @@ void logcomment_command(char *arg, struct session *ses)
     }
     arg=get_arg(arg, text, 1, ses);
     write_logf(ses, text, "", "");
+}
+
+/*******************************/
+/* the #loginputformat command */
+/*******************************/
+void loginputformat_command(char *arg, struct session *ses)
+{
+    char text[BUFFER_SIZE];
+
+    arg=get_arg(arg, text, 0, ses);
+    SFREE(ses->loginputprefix);
+    ses->loginputprefix = mystrdup(text);
+    arg=get_arg(arg, text, 1, ses);
+    SFREE(ses->loginputsuffix);
+    ses->loginputsuffix = mystrdup(text);
+    if (ses->mesvar[MSG_LOG])
+        tintin_printf(ses, "#OK. INPUT LOG FORMAT NOW: %s%%0%s",
+            ses->loginputprefix, ses->loginputsuffix);
 }
 
 static FILE* open_logfile(struct session *ses, char *name, const char *filemsg, const char *appendmsg, const char *pipemsg)

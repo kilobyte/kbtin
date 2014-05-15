@@ -1,7 +1,6 @@
 /******************************************************************/
 /* file: tintin.h - the include file for KBtin                    */
 /******************************************************************/
-#define NDEBUG
 #define UTF8                /* UTF8 support */
 
 #undef TELNET_DEBUG     /* define to show TELNET negotiations */
@@ -308,6 +307,7 @@ struct session
     int snoopstatus;
     FILE *logfile,*debuglogfile;
     char *logname,*debuglogname;
+    char *loginputprefix, *loginputsuffix;
     int logtype;
     int ignore;
     struct listnode *actions, *prompts, *subs, *highs, *antisubs;
@@ -363,10 +363,10 @@ typedef char pvars_t[10][BUFFER_SIZE];
 
 #ifdef WORDS_BIGENDIAN
 # define to_little_endian(x) ((uint32_t) ( \
-    (((uint32_t)(x) &((uint32_t)0x000000ffU) << 24)) | \
-    (((uint32_t)(x) &((uint32_t)0x0000ff00U) <<  8)) | \
-    (((uint32_t)(x) &((uint32_t)0x00ff0000U) >>  8)) | \
-    (((uint32_t)(x) &((uint32_t)0xff000000U) >> 24))))
+    ((uint32_t)(x) &(uint32_t)0x000000ffU) << 24 | \
+    ((uint32_t)(x) &(uint32_t)0x0000ff00U) <<  8 | \
+    ((uint32_t)(x) &(uint32_t)0x00ff0000U) >>  8 | \
+    ((uint32_t)(x) &(uint32_t)0xff000000U) >> 24))
 #else
 # define to_little_endian(x) ((uint32_t)(x))
 #endif

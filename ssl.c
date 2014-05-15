@@ -213,27 +213,27 @@ static int ssl_check_cert(gnutls_session_t sslses, char *host, struct session *o
     if (!oldcert)
         save_cert(cert, host, 1, oldses);
     else if (diff_certs(cert, oldcert))
+    {
+        t-=gnutls_x509_crt_get_expiration_time(oldcert);
+        if (err)
         {
-            t-=gnutls_x509_crt_get_expiration_time(oldcert);
-            if (err || t<-7*24*3600)
-            {
-                snprintf(buf2, BUFFER_SIZE, err?
-                          "certificate mismatch, and new %s" :
-                          "the server certificate is different from the saved one.",
-                      err);
-                err=buf2;
-            }
-            else
-            {
-                tintin_printf(oldses, (t>0)?
-                    "#SSL notice: server certificate has changed, but the old one was expired.":
-                    "#SSL notice: server certificate has changed, but the old one was about to expire.");
-                /* Replace the old cert */
-                save_cert(cert, host, 0, oldses);
-                gnutls_x509_crt_deinit(oldcert);
-                oldcert=0;
-            }
+            snprintf(buf2, BUFFER_SIZE, "certificate mismatch, and new %s",
+                     err);
+            err=buf2;
         }
+        else if (t<-7*24*3600)
+            err = "the server certificate is different from the saved one.";
+        else
+        {
+            tintin_printf(oldses, (t>0)?
+                "#SSL notice: server certificate has changed, but the old one was expired.":
+                "#SSL notice: server certificate has changed, but the old one was about to expire.");
+            /* Replace the old cert */
+            save_cert(cert, host, 0, oldses);
+            gnutls_x509_crt_deinit(oldcert);
+            oldcert=0;
+        }
+    }
     else
     {
         /* All ok */
@@ -248,35 +248,35 @@ badcert:
 nocert:
     if (oldcert)
         gnutls_x509_crt_deinit(oldcert);
-    if (err)
-        if (oldcert)
-        {
-            tintin_eprintf(oldses, "#SSL error: %s", err);
-            tintin_eprintf(oldses, "############################################################");
-            tintin_eprintf(oldses, "##################### SECURITY ALERT #######################");
-            tintin_eprintf(oldses, "############################################################");
-            tintin_eprintf(oldses, "# It's likely you're under a Man-in-the-Middle attack.     #");
-            tintin_eprintf(oldses, "# Someone may be trying to intercept your connection.      #");
-            tintin_eprintf(oldses, "#                                                          #");
-            tintin_eprintf(oldses, "# Another explanation is that the server's settings were   #");
-            tintin_eprintf(oldses, "# changed in an unexpected way.  You can choose to avoid   #");
-            tintin_eprintf(oldses, "# connecting, investigate this or blindly trust that the   #");
-            tintin_eprintf(oldses, "# server is kosher.  To continue, please delete the file:  #");
-            if (cert_file(host, fname))
-                tintin_eprintf(oldses, "# %-57s#", fname);
-            else /* can't happen */;
-            tintin_eprintf(oldses, "############################################################");
-            tintin_eprintf(oldses, "#Aborting connection!");
-            return 0;
-        }
-        else
-        {
-            tintin_printf(oldses, "#SSL warning: %s", err);
-            tintin_printf(oldses, "#You may be vulnerable to Man-in-the-Middle attacks.");
-            return 2;
-        }
-    else
+    if (!err)
         return 1;
+    if (oldcert)
+    {
+        tintin_eprintf(oldses, "#SSL error: %s", err);
+        tintin_eprintf(oldses, "############################################################");
+        tintin_eprintf(oldses, "##################### SECURITY ALERT #######################");
+        tintin_eprintf(oldses, "############################################################");
+        tintin_eprintf(oldses, "# It's likely you're under a Man-in-the-Middle attack.     #");
+        tintin_eprintf(oldses, "# Someone may be trying to intercept your connection.      #");
+        tintin_eprintf(oldses, "#                                                          #");
+        tintin_eprintf(oldses, "# Another explanation is that the server's settings were   #");
+        tintin_eprintf(oldses, "# changed in an unexpected way.  You can choose to avoid   #");
+        tintin_eprintf(oldses, "# connecting, investigate this or blindly trust that the   #");
+        tintin_eprintf(oldses, "# server is kosher.  To continue, please delete the file:  #");
+        if (cert_file(host, fname))
+            tintin_eprintf(oldses, "# %-57s#", fname);
+        else
+            ; /* can't happen */
+        tintin_eprintf(oldses, "############################################################");
+        tintin_eprintf(oldses, "#Aborting connection!");
+        return 0;
+    }
+    else
+    {
+        tintin_printf(oldses, "#SSL warning: %s", err);
+        tintin_printf(oldses, "#You may be vulnerable to Man-in-the-Middle attacks.");
+        return 2;
+    }
 }
 
 #endif

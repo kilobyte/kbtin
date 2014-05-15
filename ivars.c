@@ -1,5 +1,6 @@
 /* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 #include "tintin.h"
+#include "assert.h"
 #include "protos/action.h"
 #include "protos/glob.h"
 #include "protos/ivars.h"
@@ -108,7 +109,7 @@ int do_inline(char *line,int *res,struct session *ses)
     {
         tintin_eprintf(ses,"#Unknown inline command [%c%s]!",tintin_char,command);
         return 0;
-    };
+    }
 
     return 1;
 }
@@ -116,54 +117,48 @@ int do_inline(char *line,int *res,struct session *ses)
 
 int eval_expression(char *arg,struct session *ses)
 {
-    int i, begin, end, flag, prev;
+    if (!conv_to_ints(arg,ses))
+        return 0;
 
-    i = conv_to_ints(arg,ses);
-    if (i)
+    while (1)
     {
-        while (1)
+        int i = 0;
+        int flag = 1;
+        int begin = -1;
+        int end = -1;
+        int prev = -1;
+        while (stacks[i][0] && flag)
         {
-            i = 0;
-            flag = 1;
-            begin = -1;
-            end = -1;
-            prev = -1;
-            while (stacks[i][0] && flag)
+            if (stacks[i][1] == 0)
             {
-                if (stacks[i][1] == 0)
-                {
-                    begin = i;
-                }
-                else if (stacks[i][1] == 1)
-                {
-                    end = i;
-                    flag = 0;
-                }
-                prev = i;
-                i = stacks[i][0];
+                begin = i;
             }
-            if ((flag && (begin != -1)) || (!flag && (begin == -1)))
+            else if (stacks[i][1] == 1)
             {
-                tintin_eprintf(ses,"#Unmatched parentheses error in {%s}.",arg);
-                return 0;
-            }
-            if (flag)
-            {
-                if (prev == -1)
-                    return (stacks[0][2]);
-                begin = -1;
                 end = i;
+                flag = 0;
             }
-            i = do_one_inside(begin, end);
-            if (!i)
-            {
-                tintin_eprintf(ses, "#Invalid expression to evaluate in {%s}", arg);
-                return 0;
-            }
+            prev = i;
+            i = stacks[i][0];
+        }
+        if ((flag && (begin != -1)) || (!flag && (begin == -1)))
+        {
+            tintin_eprintf(ses,"#Unmatched parentheses error in {%s}.",arg);
+            return 0;
+        }
+        if (flag)
+        {
+            if (prev == -1)
+                return stacks[0][2];
+            begin = -1;
+            end = i;
+        }
+        if (!do_one_inside(begin, end))
+        {
+            tintin_eprintf(ses, "#Invalid expression to evaluate in {%s}", arg);
+            return 0;
         }
     }
-    else
-        return 0;
 }
 
 static int conv_to_ints(char *arg,struct session *ses)
@@ -194,7 +189,8 @@ static int conv_to_ints(char *arg,struct session *ses)
         {
             ptr++;
             tptr=left;
-            while((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!')) {
+            while((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
+            {
                 *tptr = *ptr;
                 ptr++;
                 tptr++;
@@ -280,26 +276,33 @@ static int conv_to_ints(char *arg,struct session *ses)
             ptr--;
         }
         /* jku: end of changes */
-        else if (*ptr == '(') {
+        else if (*ptr == '(')
             stacks[i][1] = 0;
-        } else if (*ptr == ')') {
+        else if (*ptr == ')')
             stacks[i][1] = 1;
-        } else if (*ptr == '!') {
-            if (*(ptr + 1) == '=') {
-                stacks[i][1] = 12;
+        else if (*ptr == '!')
+            if (*(ptr + 1) == '=')
+                stacks[i][1] = 12,
                 ptr++;
-            } else
+            else
                 stacks[i][1] = 2;
-        } else if (*ptr == '*') {
+        else if (*ptr == '*')
+        {
             stacks[i][1] = 3;
             stacks[i][3] = 0;
-        } else if (*ptr == '/') {
+        }
+        else if (*ptr == '/')
+        {
             stacks[i][1] = 3;
             stacks[i][3] = 1;
-        } else if (*ptr == '+') {
+        }
+        else if (*ptr == '+')
+        {
             stacks[i][1] = 5;
             stacks[i][3] = 2;
-        } else if (*ptr == '-') {
+        }
+        else if (*ptr == '-')
+        {
             flag = -1;
             if (i > 0)
                 flag = stacks[i - 1][1];
@@ -308,7 +311,8 @@ static int conv_to_ints(char *arg,struct session *ses)
                 stacks[i][1] = 5;
                 stacks[i][3] = 3;
             }
-            else {
+            else
+            {
                 tptr = ptr;
                 ptr++;
                 while (isdigit(*ptr))
@@ -317,54 +321,79 @@ static int conv_to_ints(char *arg,struct session *ses)
                 stacks[i][1] = 15;
                 ptr--;
             }
-        } else if (*ptr == '>') {
-            if (*(ptr + 1) == '=') {
+        }
+        else if (*ptr == '>')
+        {
+            if (*(ptr + 1) == '=')
+            {
                 stacks[i][1] = 8;
                 stacks[i][3] = 4;
                 ptr++;
-            } else {
+            }
+            else
+            {
                 stacks[i][1] = 8;
                 stacks[i][3] = 5;
             }
-        } else if (*ptr == '<') {
-            if (*(ptr + 1) == '=') {
+        }
+        else if (*ptr == '<')
+        {
+            if (*(ptr + 1) == '=')
+            {
                 ptr++;
                 stacks[i][1] = 8;
                 stacks[i][3] = 6;
-            } else {
+            }
+            else
+            {
                 stacks[i][1] = 8;
                 stacks[i][3] = 7;
             }
-        } else if (*ptr == '=') {
+        }
+        else if (*ptr == '=')
+        {
             stacks[i][1] = 11;
             if (*(ptr + 1) == '=')
                 ptr++;
-        } else if (*ptr == '&') {
+        }
+        else if (*ptr == '&')
+        {
             stacks[i][1] = 13;
             if (*(ptr + 1) == '&')
                 ptr++;
-        } else if (*ptr == '|') {
+        }
+        else if (*ptr == '|')
+        {
             stacks[i][1] = 14;
             if (*(ptr + 1) == '|')
                 ptr++;
-        } else if (isdigit(*ptr)) {
+        }
+        else if (isdigit(*ptr))
+        {
             stacks[i][1] = 15;
             tptr = ptr;
             while (isdigit(*ptr))
                 ptr++;
             sscanf(tptr, "%d", &stacks[i][2]);
             ptr--;
-        } else if (*ptr == 'T') {
+        }
+        else if (*ptr == 'T')
+        {
             stacks[i][1] = 15;
             stacks[i][2] = 1;
-        } else if (*ptr == 'F') {
+        }
+        else if (*ptr == 'F')
+        {
             stacks[i][1] = 15;
             stacks[i][2] = 0;
-        } else {
+        }
+        else
+        {
             tintin_eprintf(ses,"#Error. Invalid expression in #if or #math in {%s}.",arg);
             return 0;
         }
-        if (*ptr != ' ') {
+        if (*ptr != ' ')
+        {
             stacks[i][0] = i + 1;
             i++;
         }
@@ -377,17 +406,13 @@ static int conv_to_ints(char *arg,struct session *ses)
 
 static int do_one_inside(int begin, int end)
 {
-    int prev, ptr, highest, loc, ploc, next;
-
     while (1)
     {
-        ptr = 0;
-        if (begin > -1)
-            ptr = stacks[begin][0];
-        highest = 16;
-        loc = -1;
-        ploc = -1;
-        prev = -1;
+        int ptr = (begin > -1) ? stacks[begin][0] : 0;
+        int highest = 16;
+        int loc = -1;
+        int ploc = -1;
+        int prev = -1;
         while (ptr < end)
         {
             if (stacks[ptr][1] < highest)
@@ -399,33 +424,43 @@ static int do_one_inside(int begin, int end)
             prev = ptr;
             ptr = stacks[ptr][0];
         }
-        if (highest == 15) {
-            if (begin > -1) {
+
+        if (highest == 15)
+        {
+            if (begin > -1)
+            {
                 stacks[begin][1] = 15;
                 stacks[begin][2] = stacks[loc][2];
                 stacks[begin][0] = stacks[end][0];
                 return 1;
-            } else {
+            }
+            else
+            {
                 stacks[0][0] = stacks[end][0];
                 stacks[0][1] = 15;
                 stacks[0][2] = stacks[loc][2];
                 return 1;
             }
-        } else if (highest == 2) {
-            next = stacks[loc][0];
-            if (stacks[next][1] != 15 || stacks[next][0] == 0) {
+        }
+        else if (highest == 2)
+        {
+            int next = stacks[loc][0];
+            if (stacks[next][1] != 15 || stacks[next][0] == 0)
                 return 0;
-            }
             stacks[loc][0] = stacks[next][0];
             stacks[loc][1] = 15;
             stacks[loc][2] = !stacks[next][2];
-        } else {
-            next = stacks[loc][0];
+        }
+        else
+        {
+            assert(loc >= 0);
+            int next = stacks[loc][0];
             if (ploc == -1 || stacks[next][0] == 0 || stacks[next][1] != 15)
                 return 0;
             if (stacks[ploc][1] != 15)
                 return 0;
-            switch (highest) {
+            switch (highest)
+            {
             case 3:            /* highest priority is *,/ */
                 stacks[ploc][0] = stacks[next][0];
                 if (stacks[loc][3]==0)

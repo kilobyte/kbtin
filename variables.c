@@ -502,7 +502,7 @@ int isatom_inline(char *arg,struct session *ses)
 /*        contain elements from element number <head length>+1     */
 /*        to the last element of the list.                         */
 /*        Both <head> and <tail> can be empty after command.       */
-/*        DEFAULT <head lenght> is 1.                              */
+/*        DEFAULT <head length> is 1.                              */
 /*******************************************************************/
 /*    Ex: #splitlist {head} {tail} {smile {say Hi!} flip bounce}   */
 /*        -> head = smile                                          */
@@ -1262,7 +1262,7 @@ int random_inline(char *arg, struct session *ses)
                 tmp = low;
                 low = high, high = tmp;
             };
-            return (low + rand() % (high - low + 1));
+            return low + rand() % (high - low + 1);
         }
     }
     return 0;
@@ -1653,7 +1653,7 @@ int strcmp_inline(char *line, struct session *ses)
     line = get_arg(line, left, 0, ses);
     line = get_arg(line, right, 1, ses);
 
-    return (!strcmp(left,right));
+    return !strcmp(left,right);
 }
 
 /***************************************/

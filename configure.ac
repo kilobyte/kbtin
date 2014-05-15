@@ -1,8 +1,10 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([KBtin], [1.0.14], [kilobyte@angband.pl])
+AC_INIT([KBtin], [1.0.15], [kilobyte@angband.pl])
 AM_INIT_AUTOMAKE([-Wall dist-xz no-dist-gzip])
 AC_CONFIG_SRCDIR([action.c])
 AC_CONFIG_HEADERS([config.h])
+# Use kernel-like CC instead of the usual verbose insanity.
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Checks for programs.
 AC_PROG_AWK
@@ -23,7 +25,7 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CREATE_STDINT_H
 AC_HEADER_TIOCGWINSZ
-AC_CHECK_HEADERS([strings.h string.h sys/time.h termios.h unistd.h stropts.h])
+AC_CHECK_HEADERS([strings.h string.h sys/time.h termios.h unistd.h stropts.h pty.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -34,6 +36,7 @@ AC_C_BIGENDIAN
 # Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_VPRINTF
+AC_SEARCH_LIBS(forkpty, util)
 AC_CHECK_FUNCS([memcpy getpt ptsname snprintf vsnprintf _getpty grantpt forkpty regcomp getaddrinfo wcwidth posix_openpt strlcpy])
 AC_ARG_LIB(mccp, zlib, ZLIB, zlib.h, z, gzread, [
 Please install zlib and its headers.  On most systems, the package will be named
@@ -65,7 +68,6 @@ AM_CONDITIONAL(SANE_MAKE, make -v >/dev/null 2>/dev/null)
 AC_PTYRANGES
 AC_DEV_PTMX
 AC_LBL_LIBRARY_NET
-AC_SOL_PROTOCOLS
 AC_UCS_SIZE
 AC_SCO
 AC_AI_ADDRCONFIG

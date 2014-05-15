@@ -27,6 +27,8 @@ extern struct session *sessionlist;
 #define DONT    254
 #define IAC 255     /* interpret as command */
 
+#undef ECHO
+
 #define ECHO                1
 #define SUPPRESS_GO_AHEAD   3
 #define STATUS              5
@@ -361,7 +363,7 @@ sbloop:
         return 2;
     }
     /* not reached */
-    return (cp-(unsigned char*)data);
+    return cp-(unsigned char*)data;
 nego_too_long:
     tintin_eprintf(ses, "#error: unterminated TELNET subnegotiation received.");
     return 2; /* we leave everything but IAC SB */

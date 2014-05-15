@@ -220,7 +220,7 @@ struct session* parse_input(char *input,int override_verbatim,struct session *se
     aborting=0;
     recursion--;
     PPOP;
-    return (ses);
+    return ses;
 }
 
 /************************************************************************/
@@ -275,7 +275,7 @@ static void do_speedwalk(char *cp, struct session *ses)
             write_com_arg_mud(sc, "", 0, ses);
         }
         /* Added the if to make sure we didn't move the pointer outside the
-           bounds of the origional pointer.  Corrects the bug with speedwalking
+           bounds of the original pointer.  Corrects the bug with speedwalking
            where if you typed "u7" tintin would go apeshit. (JE)
          */
         if (*cp)
@@ -332,7 +332,7 @@ static struct session* parse_tintin_command(char *command, char *arg,struct sess
                 get_arg_in_braces(arg, arg, 1);
                 parse_input(arg,1, sesptr);     /* was: #sessioname commands */
                 PPOP;
-                return (ses);
+                return ses;
             }
             else
             {
@@ -366,7 +366,7 @@ static struct session* parse_tintin_command(char *command, char *arg,struct sess
             prompt(ses);
         }
         PPOP;
-        return (ses);
+        return ses;
     }
 
     else if ((func=get_hash(c_commands, cmd)))
@@ -385,7 +385,7 @@ static struct session* parse_tintin_command(char *command, char *arg,struct sess
         prompt(ses);
     }
     PPOP;
-    return (ses);
+    return ses;
 }
 
 void add_command(struct hashtable *h, char *command, t_command func)

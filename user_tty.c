@@ -124,7 +124,7 @@ static void zap_doublewidth(WC *right, WC *left, int len)
 {
     int norm=0;
 
-    while(*left && len--)
+    while(len-- && *left)
         if (*left==EMPTY_CHAR)
         {
             if (norm)
@@ -312,10 +312,10 @@ end:
 static int b_shorten()
 {
     if (b_first>b_bottom)
-        return(FALSE);
+        return FALSE;
     SFREE(b_output[b_first%B_LENGTH]);
     b_first++;
-    return(TRUE);
+    return TRUE;
 }
 
 /********************************************/
@@ -529,6 +529,7 @@ static void b_canceldraft(void)
         {
             b_current--;
             tbuf+=sprintf(tbuf,"\033[A\033[2K");
+            assert(tbuf-term_buf < sizeof(term_buf));
         };
         tbuf+=sprintf(tbuf,"\r"COLORCODE(o_lastcolor));
         tbuf+=sprintf(tbuf,"\0337");
@@ -1174,7 +1175,7 @@ static int usertty_process_kbd(struct session *ses, WC ch)
             scr_curs=0;
             term_commit();
 #endif
-            return(1);
+            return 1;
         case 1:                 /* ^[A] */
             if (find_bind("^A",0,ses))
                 break;
@@ -1192,7 +1193,7 @@ static int usertty_process_kbd(struct session *ses, WC ch)
                 redraw_in();
             *done_input=0;
             activesession=zap_command("",ses);
-            return(0);
+            return 0;
         case 5:                 /* ^[E] */
             if (find_bind("^E",0,ses))
                 break;
@@ -1405,7 +1406,7 @@ key_alt_tab:
     redraw_cursor();
     term_commit();
 #endif
-    return(0);
+    return 0;
 }
 
 /********************************************/
@@ -1413,7 +1414,7 @@ key_alt_tab:
 /********************************************/
 static void b_resize()
 {
-    char **src;
+    char *src[B_LENGTH];
     int src_lines,i;
     char line[BUFFER_SIZE],*lp;
     int cont;
@@ -1424,10 +1425,8 @@ static void b_resize()
         return;
     term_width=COLS;
 
-    /* FIXME: unlike old code, this will not work with a hard memory cap */
-    if (!(src=CALLOC(src_lines,char*)))
-        syserr("Out of memory");
-    if (b_bottom>b_first)
+    assert(src_lines<=B_LENGTH);
+    if (b_bottom%B_LENGTH > b_first%B_LENGTH)
         memcpy(src,b_output+(b_first%B_LENGTH),src_lines*sizeof(char*));
     else
     {
@@ -1465,8 +1464,13 @@ static void b_resize()
             lp=line;
         }
     }
-    assert(!cont);
-    CFREE(src,src_lines,char*);
+    if (cont)
+    {
+        *lp++='\n';
+        *lp=0;
+        b_textout(line);
+    }
+    b_last=b_current;
     if (o_draftlen)
         b_textout(b_draft); /* restore the draft */
 }

@@ -150,7 +150,7 @@ static struct session *socket_session(char *arg, struct session *ses, int ssl)
 #endif
 
     if (list_sessions(arg,ses,left,right))
-        return(ses);    /* (!*left)||(!*right) */
+        return ses;     /* (!*left)||(!*right) */
 
     strcpy(host, space_out(right));
 
@@ -185,9 +185,9 @@ static struct session *socket_session(char *arg, struct session *ses, int ssl)
             return ses;
         }
 
-    return(new_session(left, right, sock, 1, ssl?sslses:0, ses));
+    return new_session(left, right, sock, 1, ssl?sslses:0, ses);
 #else
-    return(new_session(left, right, sock, 1, 0, ses));
+    return new_session(left, right, sock, 1, 0, ses);
 #endif
 }
 
@@ -217,22 +217,22 @@ struct session *run_command(char *arg,struct session *ses)
     int sock;
 
     if (list_sessions(arg,ses,left,right))
-        return(ses);    /* (!*left)||(!*right) */
+        return ses;     /* (!*left)||(!*right) */
 
     if (!*right)
     {
         tintin_eprintf(ses, "#run: HEY! SPECIFY AN COMMAND, WILL YOU?");
-        return(ses);
+        return ses;
     };
 
     utf8_to_local(ustr, right);
-    if (!(sock=run(ustr)))
+    if ((sock=run(ustr)) == -1)
     {
-        tintin_eprintf(ses, "#forkpty() FAILED!");
+        tintin_eprintf(ses, "#forkpty() FAILED: %s", strerror(errno));
         return ses;
     }
 
-    return(new_session(left, right, sock, 0, 0, ses));
+    return new_session(left, right, sock, 0, 0, ses);
 }
 
 
@@ -298,6 +298,8 @@ static struct session *new_session(char *name, char *address, int sock, int isso
     newsession->logfile = 0;
     newsession->logname = 0;
     newsession->logtype = ses->logtype;
+    newsession->loginputprefix = mystrdup(ses->loginputprefix);
+    newsession->loginputsuffix = mystrdup(ses->loginputsuffix);
     newsession->ignore = ses->ignore;
     newsession->aliases = copy_hash(ses->aliases);
     newsession->actions = copy_list(ses->actions, PRIORITY);
@@ -410,6 +412,8 @@ void cleanup_session(struct session *ses)
         log_off(ses);
     if (ses->debuglogfile)
         fclose(ses->debuglogfile);
+    SFREE(ses->loginputprefix);
+    SFREE(ses->loginputsuffix);
     for(i=0;i<NHOOKS;i++)
         SFREE(ses->hooks[i]);
     SFREE(ses->name);

@@ -259,6 +259,8 @@ static void init_nullses(void)
     nullsession->logfile = 0;
     nullsession->logname = 0;
     nullsession->logtype = DEFAULT_LOGTYPE;
+    nullsession->loginputprefix=mystrdup(LOG_INPUT_PREFIX);
+    nullsession->loginputsuffix=mystrdup(LOG_INPUT_SUFFIX);
     nullsession->blank = DEFAULT_DISPLAY_BLANK;
     nullsession->echo = ui_sep_input?DEFAULT_ECHO_SEPINPUT
                                     :DEFAULT_ECHO_NOSEPINPUT;
@@ -530,7 +532,7 @@ ever wants to read -- that is what docs are for.
         tintin_printf(0,"#~7~ based on ~12~tintin++~7~ v 2.1.9 by Peter Unold,      ~2~#");
         tintin_printf(0,"#~7~  Bill Reiss, David A. Wagner, Joann Ellsworth, ~2~#");
         tintin_printf(0,"#~7~     Jeremy C. Jack, Ulan@GrimneMUD and         ~2~#");
-        tintin_printf(0,"#~7~  Jacek Narebski                                ~2~#");
+        tintin_printf(0,"#~7~  Jakub Narębski                                ~2~#");
         tintin_printf(0,"##################################################~7~");
         tintin_printf(0,"~15~#session <name> <host> <port> ~7~to connect to a remote server");
         tintin_printf(0,"                              ~8~#ses t2t t2tmud.org 9999");
@@ -543,7 +545,6 @@ ever wants to read -- that is what docs are for.
     }
     user_mark_greeting();
 
-    init_net();
     setup_signals();
 #ifdef PROFILING
     setup_prof();
@@ -580,8 +581,8 @@ restart:
     }
 
     if (tick_time > curr_time)
-        return (tick_time - curr_time);
-    return (0);
+        return tick_time - curr_time;
+    return 0;
 }
 
 /***************************/
@@ -701,7 +702,8 @@ static void tintin(void)
                         if (activesession->echo)
                             echo_input(done_input);
                         if (activesession->logfile)
-                            write_logf(activesession, done_input, LOG_INPUT_PREFIX, LOG_INPUT_SUFFIX);
+                            write_logf(activesession, done_input,
+                                activesession->loginputprefix, activesession->loginputsuffix);
                     }
                     if (*done_input)
                         strcpy(prev_command, done_input);

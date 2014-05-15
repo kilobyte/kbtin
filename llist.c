@@ -25,12 +25,12 @@ struct listnode* init_list(void)
     if ((listhead = TALLOC(struct listnode)) == NULL)
         syserr("couldn't alloc listhead");
     listhead->next = NULL;
-    return (listhead);
+    return listhead;
 }
 
-/************************************************/
-/* kill list - run throught list and free nodes */
-/************************************************/
+/***********************************************/
+/* kill list - run through list and free nodes */
+/***********************************************/
 void kill_list(struct listnode *nptr)
 {
     struct listnode *nexttodel;
@@ -142,7 +142,7 @@ struct listnode* copy_list(struct listnode *sourcelist,int mode)
         insertnode_list(resultlist, sourcelist->left, sourcelist->right,
                         sourcelist->pr, mode);
 
-    return (resultlist);
+    return resultlist;
 }
 
 /******************************************************************/
@@ -415,5 +415,5 @@ int count_list(struct listnode *listhead)
     nptr = listhead;
     while ((nptr = nptr->next))
         ++count;
-    return (count);
+    return count;
 }
