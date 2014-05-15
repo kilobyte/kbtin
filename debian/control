@@ -3,7 +3,7 @@ Section: text
 Priority: optional
 Maintainer: Adam Borowski <kilobyte@angband.pl>
 Build-Depends: debhelper (>> 9.0.0), locales, libz-dev, libglib2.0-dev (>= 2.10), gettext, autoconf, autotools-dev, libgnutls-dev
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 Homepage: http://kbtin.sourceforge.net/
 
 Package: kbtin
