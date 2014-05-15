@@ -1,3 +1,11 @@
+kbtin (1.0.15-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Fix FTBFS on big endian (closes: #748228), and on kfreebsd.
+  * Force spammy build output.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Thu, 15 May 2014 23:10:38 +0200
+
 kbtin (1.0.14-1) unstable; urgency=low
 
   * New upstream release.
