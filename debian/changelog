@@ -1,3 +1,14 @@
+kbtin (1.0.16-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Make the build reproducible. Closes: #790387
+  * Use dh-autoreconf.
+  * Drop the debian menu.
+  * Use C.UTF-8 for the testsuite instead of bothering with locale generation.
+  * Add Vcs-{Git,Browser}.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Wed, 09 Dec 2015 17:34:02 +0100
+
 kbtin (1.0.15-1.1) unstable; urgency=medium
 
   * Non-maintainer upload.
