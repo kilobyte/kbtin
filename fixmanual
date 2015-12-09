@@ -19,10 +19,10 @@ while(<STDIN>)
         print "</tt></pre>";
         if($ARGV[0])
         {
-            ($blah,$blah,$blah,$blah,$blah,$blah,$blah,$blah,
-               $blah,$mtime,$blah,$blah,$blah)
-                = stat($ARGV[0]);
-            print "Last modified: ".localtime($mtime) if (defined $mtime && $mtime);
+            my $mtime = (stat($ARGV[0]))[9];
+            # GMT is unfriendly, but we don't know the timezone of last change
+            # vs the timezone of build machine.
+            print "Last modified: ".gmtime($mtime)." GMT" if $mtime;
         }
         print "</body></html>\n";
         exit;

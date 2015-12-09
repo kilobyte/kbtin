@@ -33,7 +33,7 @@ char *match_start,*match_end;
 extern struct session *if_command(char *arg, struct session *ses);
 static int check_a_action(char *line, char *action, int inside, struct session *ses);
 
-int kill_action(struct listnode *head,struct listnode *nptr)
+static int kill_action(struct listnode *head,struct listnode *nptr)
 {
     if (inActions)
     {
@@ -49,7 +49,7 @@ int kill_action(struct listnode *head,struct listnode *nptr)
     return 1;
 }
 
-void zap_actions(struct session *ses)
+static void zap_actions(struct session *ses)
 {
     struct listnode *l,*ln,*ol;
 
@@ -553,7 +553,7 @@ static int match_a_string(char *line, char *mask)
 
     lptr = line;
     mptr = mask;
-    while (*lptr && *mptr && !(*mptr == '%' && isdigit(*(mptr + 1))))
+    while (*lptr && *mptr && !(*mptr == '%' && isadigit(*(mptr + 1))))
         if (*lptr++ != *mptr++)
             return -1;
     if (!*mptr || (*mptr == '%' && isdigit(*(mptr + 1))))

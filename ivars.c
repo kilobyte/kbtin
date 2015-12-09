@@ -75,7 +75,7 @@ struct session *if_command(char *line, struct session *ses)
 }
 
 
-int do_inline(char *line,int *res,struct session *ses)
+static int do_inline(char *line,int *res,struct session *ses)
 {
     char command[BUFFER_SIZE],*ptr;
 
@@ -189,24 +189,24 @@ static int conv_to_ints(char *arg,struct session *ses)
         {
             ptr++;
             tptr=left;
-            while((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
+            while ((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
             {
                 *tptr = *ptr;
                 ptr++;
                 tptr++;
             }
             *tptr='\0';
-            if(!*ptr)
+            if (!*ptr)
                 return 0; /* error */
-            if(*ptr == ']')
+            if (*ptr == ']')
                 tintin_eprintf(ses, "#Compare %s to what ? (only one var between [ ])", left);
             /* fprintf(stderr, "Left argument = '%s'\n", left); */
-            switch(*ptr)
+            switch (*ptr)
             {
             case '!' :
                 ptr++;
                 m=1;
-                switch(*ptr)
+                switch (*ptr)
                 {
                 case '=' : regex=0; ptr++; break;
                 case '~' : regex=1; ptr++; break;
@@ -216,7 +216,7 @@ static int conv_to_ints(char *arg,struct session *ses)
             case '=' :
                 ptr++;
                 m=0;
-                switch(*ptr)
+                switch (*ptr)
                 {
                 case '=' : regex=0; ptr++; break;
                 case '~' : regex=1; ptr++; break;
@@ -229,7 +229,7 @@ static int conv_to_ints(char *arg,struct session *ses)
             /* fprintf(stderr, "%c - %s match\n", (m) ? '=' : '!', (regex) ? "regex" : "string"); */
 
             tptr=right;
-            while((*ptr) && (*ptr != ']'))
+            while ((*ptr) && (*ptr != ']'))
             {
                 *tptr = *ptr;
                 ptr++;
@@ -237,13 +237,13 @@ static int conv_to_ints(char *arg,struct session *ses)
             }
             *tptr='\0';
             /* fprintf(stderr, "Right argument = '%s'\n", right); */
-            if(!*ptr)
+            if (!*ptr)
                 return 0;
-            if(regex)
+            if (regex)
                 result = match(right, left) ? 0 : 1;
             else
                 result = strcmp(left, right);
-            if((result == 0 && m == 0) || (result != 0 && m != 0))
+            if ((result == 0 && m == 0) || (result != 0 && m != 0))
             { /* success */
                 stacks[i][1] = 15;
                 stacks[i][2] = 1;
@@ -453,8 +453,9 @@ static int do_one_inside(int begin, int end)
         }
         else
         {
+            int next;
             assert(loc >= 0);
-            int next = stacks[loc][0];
+            next = stacks[loc][0];
             if (ploc == -1 || stacks[next][0] == 0 || stacks[next][1] != 15)
                 return 0;
             if (stacks[ploc][1] != 15)
@@ -483,7 +484,7 @@ static int do_one_inside(int begin, int end)
                 break;
             case 8:            /* highest priority is >,>=,<,<= */
                 stacks[ploc][0] = stacks[next][0];
-                switch(stacks[loc][3])
+                switch (stacks[loc][3])
                 {
                 case 5:
                     stacks[ploc][2] = (stacks[ploc][2] > stacks[next][2]);

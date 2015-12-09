@@ -69,7 +69,7 @@ static void togglebool(int *b, char *arg, struct session *ses, char *msg1, char 
     get_arg(arg,tmp,1,ses);
     if (*tmp)
     {
-        switch(yes_no(tmp))
+        switch (yes_no(tmp))
         {
         case 0:
             *b=0; break;
@@ -478,7 +478,7 @@ void messages_command(char *arg,struct session *ses)
     {
         if (mestype<MAX_MESVAR)
         {
-            switch(yes_no(onoff))
+            switch (yes_no(onoff))
             {
             case 0:
                 ses->mesvar[mestype]=0;
@@ -643,9 +643,11 @@ void shell_command(char *arg,struct session *ses)
         if (ui_own_output)
             user_pause();
         if (system(cmd))
-            ; /* yay source hardening retardness -- not only missing /bin/sh is
-                 illegal on a POSIX system, but also there's no way to check for
-                 that error without false positives */
+        {
+             /* yay source hardening retardness -- not only missing /bin/sh is
+                illegal on a POSIX system, but also there's no way to check for
+                that error without false positives */
+        }
         if (ui_own_output)
             user_resume();
         if (ses->mesvar[9])
@@ -672,7 +674,7 @@ struct session* zap_command(char *arg, struct session *ses)
     }
     if (ses!=nullsession)
     {
-        if(ses->closing)
+        if (ses->closing)
         {
             if (ses->closing==-1)
                 tintin_eprintf(ses, "#You can't use #ZAP from here.");
@@ -945,12 +947,16 @@ void info_command(char *arg, struct session *ses)
         user_charset_name, ses->charset);
     tintin_printf(ses, "Log type: %s, log charset: %s",
         logtypes[ses->logtype], logcs_name(ses->logcharset));
-    if(ses->logfile)
+    if (ses->logfile)
         tintin_printf(ses, "Logging to: {%s}", ses->logname);
     else
         tintin_printf(ses, "Not logging");
     if (ses->debuglogfile)
         tintin_printf(ses, "Debuglog: {%s}", ses->debuglogname);
+    if (ses->line_time.tv_sec||ses->line_time.tv_usec)
+        tintin_printf(ses, "Line processing time: %d.%06ds (%1.1f per second)",
+            ses->line_time.tv_sec, ses->line_time.tv_usec,
+            1/(ses->line_time.tv_sec+ses->line_time.tv_usec*0.000001));
     if (ses->closing)
         tintin_printf(ses, "The session has it's closing mark set to %d!", ses->closing);
     prompt(ses);
@@ -973,7 +979,7 @@ int isnotblank(char *line,int flag)
             else
                 line++;
         else
-            if (isspace(*line))
+            if (isaspace(*line))
                 line++;
             else
                return 1;
@@ -992,7 +998,7 @@ int iscompleteprompt(char *line)
                 ch='~';
         }
         else
-            if (!isspace(*line))
+            if (!isaspace(*line))
                 ch=*line;
     return strchr("?:>.*$#]&)",ch) && !((c==-1)?0:c&0x70);
 }
@@ -1210,11 +1216,11 @@ void chr_command(char *arg, struct session *ses)
         return;
     }
     r=res;
-    while(*arg)
+    while (*arg)
     {
         arg=get_arg(arg, left, 0, ses);
         lp=left;
-        while(*lp)
+        while (*lp)
         {
             v=0;
             if (*lp=='u' || *lp=='U')
@@ -1223,7 +1229,7 @@ void chr_command(char *arg, struct session *ses)
                 if (*lp=='+')
                     lp++;
             hex:
-                switch(*lp)
+                switch (*lp)
                 {
                 case '0': case '1': case '2': case '3': case '4':
                 case '5': case '6': case '7': case '8': case '9':
@@ -1249,7 +1255,7 @@ void chr_command(char *arg, struct session *ses)
             }
             else
             {
-                while(isadigit(*lp))
+                while (isadigit(*lp))
                     v=v*10 + *lp++-'0';
                 if (*lp!=0 && *lp!=' ' && *lp!='\t')
                 {
@@ -1294,7 +1300,7 @@ void ord_command(char *arg, struct session *ses)
     r=res;
     get_arg(arg, left, 1, ses);
     utf8_to_wc(right, left, BUFFER_SIZE-1);
-    for(cptr=right; *cptr; cptr++)
+    for (cptr=right; *cptr; cptr++)
     {
         if (r-res<BUFFER_SIZE-9)
             r+=sprintf(r, " %u", (unsigned int)*cptr);
@@ -1332,7 +1338,7 @@ void hexord_command(char *arg, struct session *ses)
     r=res;
     get_arg(arg, left, 1, ses);
     utf8_to_wc(right, left, BUFFER_SIZE-1);
-    for(cptr=right; *cptr; cptr++)
+    for (cptr=right; *cptr; cptr++)
     {
         if (r-res<BUFFER_SIZE-9)
             r+=sprintf(r, " U+%04X", (unsigned int)*cptr);

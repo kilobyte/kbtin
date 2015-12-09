@@ -26,12 +26,10 @@
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
-#include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
-#include "unicode.h"
 #include "ui.h"
 
 #ifndef BADSIG
@@ -301,7 +299,7 @@ static void init_nullses(void)
         nullsession->routes[i]=0;
         nullsession->locations[i]=0;
     }
-    for(i=0;i<NHOOKS;i++)
+    for (i=0;i<NHOOKS;i++)
         nullsession->hooks[i]=0;
     nullsession->path = init_list();
     nullsession->no_return = 0;
@@ -333,6 +331,8 @@ static void init_nullses(void)
                               DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
     nullify_conv(&nullsession->c_io);
     nullify_conv(&nullsession->c_log);
+    nullsession->line_time.tv_sec=0;
+    nullsession->line_time.tv_usec=0;
 #ifdef HAVE_GNUTLS
     nullsession->ssl=0;
 #endif
@@ -419,9 +419,9 @@ static void apply_options()
 # define DO_INPUT(str,iv) local_to_utf8(ustr,str,BUFFER_SIZE,0);\
                           activesession=parse_input(str,iv,activesession);
 
-    for(opt=options->next; opt; opt=opt->next)
+    for (opt=options->next; opt; opt=opt->next)
     {
-        switch(*opt->left)
+        switch (*opt->left)
         {
         case '#':
             *opt->left=tintin_char;
@@ -525,15 +525,15 @@ every time.  It is not GNU bc or something similar, we don't want half
 a screenful of all-uppercase (cAPS kEY IS STUCK AGAIN?) text that no one
 ever wants to read -- that is what docs are for.
 */
-        tintin_printf(0,"~2~##################################################");
-        tintin_printf(0, "#~7~                ~12~K B ~3~t i n~7~     v %-15s ~2~#", VERSION);
-        tintin_printf(0,"#~7~ current developer: ~9~Adam Borowski               ~2~#");
-        tintin_printf(0,"#~7~                          (~9~kilobyte@angband.pl~7~) ~2~#");
-        tintin_printf(0,"#~7~ based on ~12~tintin++~7~ v 2.1.9 by Peter Unold,      ~2~#");
-        tintin_printf(0,"#~7~  Bill Reiss, David A. Wagner, Joann Ellsworth, ~2~#");
-        tintin_printf(0,"#~7~     Jeremy C. Jack, Ulan@GrimneMUD and         ~2~#");
-        tintin_printf(0,"#~7~  Jakub Narębski                                ~2~#");
-        tintin_printf(0,"##################################################~7~");
+        tintin_printf(0,"~2~##########################################################");
+        tintin_printf(0, "#~7~                ~12~K B ~3~t i n~7~     v %-23s ~2~#", VERSION);
+        tintin_printf(0,"#                                                        #");
+        tintin_printf(0,"#~7~ current developer: ~9~Adam Borowski (~9~kilobyte@angband.pl~7~) ~2~#");
+        tintin_printf(0,"#                                                        #");
+        tintin_printf(0,"#~7~ based on ~12~tintin++~7~ v 2.1.9 by Peter Unold, Bill Reiss,  ~2~#");
+        tintin_printf(0,"#~7~   David A. Wagner, Joann Ellsworth, Jeremy C. Jack,    ~2~#");
+        tintin_printf(0,"#~7~          Ulan@GrimneMUD and Jakub Narębski             ~2~#");
+        tintin_printf(0,"##########################################################~7~");
         tintin_printf(0,"~15~#session <name> <host> <port> ~7~to connect to a remote server");
         tintin_printf(0,"                              ~8~#ses t2t t2tmud.org 9999");
         tintin_printf(0,"~15~#run <name> <command>         ~7~to run a local command");
@@ -667,7 +667,7 @@ static void tintin(void)
             inbuf+=result;
 
             i=0;
-            while(i<inbuf)
+            while (i<inbuf)
             {
                 result=mbrtowc(&ch, kbdbuf+i, inbuf-i, &instate);
                 if (result==-2)         /* incomplete but valid sequence */
@@ -867,7 +867,10 @@ static void do_one_line(char *line,int nl,struct session *ses)
 {
     int isnb;
     char ubuf[BUFFER_SIZE];
+    struct timeval t1,t2;
 
+    if (nl)
+        gettimeofday(&t1,0);
     PROFPUSH("conv: remote->utf8");
     convert(&ses->c_io, ubuf, line, -1);
 # define line ubuf
@@ -943,6 +946,26 @@ static void do_one_line(char *line,int nl,struct session *ses)
     PROFPOP;
     _=0;
 #undef line
+
+    if (nl)
+    {
+        gettimeofday(&t2,0);
+        t2.tv_sec-=t1.tv_sec;
+        t2.tv_usec-=t1.tv_usec;
+        if (t2.tv_usec<0)
+            t2.tv_usec+=1000000, t2.tv_sec--;
+        if (ses->line_time.tv_sec || ses->line_time.tv_usec)
+        {
+            /* A dragged average: every new line counts for 10% of the value.
+              The weight of any old line decays with half-life around 6.5. */
+            int64_t t=(int64_t)(ses->line_time.tv_sec*9+t2.tv_sec)*100000
+                              +(ses->line_time.tv_usec*9+t2.tv_usec)/10;
+            ses->line_time.tv_sec =t/1000000;
+            ses->line_time.tv_usec=t%1000000;
+        }
+        else
+            ses->line_time=t2;
+    }
 }
 
 /**********************************************************/
@@ -1011,7 +1034,7 @@ static void myquitsig(int sig)
     if (ui_own_output)
     {
         user_textout("~7~\n");
-        switch(sig)
+        switch (sig)
         {
         case SIGTERM:
             user_textout("Terminated\n");

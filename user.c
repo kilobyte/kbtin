@@ -1,6 +1,4 @@
 #include "tintin.h"
-#include "unicode.h"
-#include "ui.h"
 #include "protos/user_pipe.h"
 #include "protos/user_tty.h"
 #include "protos/utils.h"
@@ -35,7 +33,7 @@ int COLS=0;
 
 void user_setdriver(int dr)
 {
-    switch(dr)
+    switch (dr)
     {
     case 0:
         userpipe_initdriver();

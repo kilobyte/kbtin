@@ -95,7 +95,7 @@ void do_in_MUD_colors(char *txt,int quotetype)
     int tok[MAXTOK],nt,i;
 
     for (out=OUT;*txt;txt++)
-        switch(*txt)
+        switch (*txt)
         {
         case 27:
             if (*(txt+1)=='[')
@@ -121,8 +121,8 @@ again:
                         nt++;
                     else
                         ccolor=7;
-                    for(i=0;i<nt;i++)
-                        switch(tok[i])
+                    for (i=0;i<nt;i++)
+                        switch (tok[i])
                         {
                         case 0:
                             ccolor=7;
@@ -184,7 +184,7 @@ again:
                         break;
                     if (out-OUT+tok[0]>INPUT_CHUNK*2)
                         break;       /* something fishy is going on */
-                    for(i=0;i<tok[0];i++)
+                    for (i=0;i<tok[0];i++)
                         *out++=' ';
                     break;
                 case 'D': /* this interpretation is badly invalid... */
@@ -248,7 +248,7 @@ void do_out_MUD_colors(char *line)
         *txt++=*pos;
         continue;
 color:
-        switch(mudcolors)
+        switch (mudcolors)
         {
         case 3:
             tintin_printf(0,"#Warning: no color codes set, use #mudcolors");

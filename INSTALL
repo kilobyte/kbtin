@@ -1,16 +1,16 @@
 Installation
 ============
 
-* as root
+* system-wide
 	+ tar xvfz KBtin-0.4.0.tar.gz
 	  If you have an ancient version of tar, you may need to ungzip
 	  the archive manually first:
 		+ gzip -d KBtin-0.4.0.tar.gz
 		+ tar xvf KBtin-0.4.0.tar
 	+ ./configure
-	+ make install
+	+ make install (as root)
 
-* as ordinary user
+* per-user
 	+ Untar the archive (as above)
 	+ ./configure
 	Then either:
@@ -20,6 +20,19 @@ Installation
 	+ Copy both the KBtin binary and KBtin_help.gz to a directory
 	  of your choice.
 		to install to another place
+
+
+Dependencies
+============
+
+While KBtin will compile with nothing but the compiler and make, there are
+optional libraries that enable certain features:
+* gnutls: SSL connectivity
+* zlib: on-the-wire compression on most MUDs
+* glib: some speed-up
+On Debian systems, the relevant packages are named: libgnutls28-dev,
+libz-dev, libglib2.0-dev.
+
 
 Cross-compiling notes
 =====================

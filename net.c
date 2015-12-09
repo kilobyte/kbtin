@@ -7,7 +7,6 @@
 /*********************************************************************/
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in_systm.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
@@ -37,7 +36,7 @@ extern struct session *sessionlist, *activesession, *nullsession;
 extern char *prof_area;
 #endif
 #ifdef HAVE_ZLIB
-int init_mccp(struct session *ses, int cplen, char *cpsrc);
+static int init_mccp(struct session *ses, int cplen, char *cpsrc);
 #endif
 
 static int abort_connect;
@@ -47,7 +46,7 @@ static char* afstr(int af)
 {
     static char msg[19];
 
-    switch(af)
+    switch (af)
     {
         case AF_INET:
             return "IPv4";
@@ -106,13 +105,15 @@ int connect_mud(char *host, char *port, struct session *ses)
 
         val=IPTOS_LOWDELAY;
         if (setsockopt(sock, IPPROTO_IP, IP_TOS, &val, sizeof(val)))
-            /*tintin_eprintf(ses, "#setsockopt: %s", strerror(errno))*/;
+        {
+            /*tintin_eprintf(ses, "#setsockopt: %s", strerror(errno))*/
             /* FIXME: BSD doesn't like this on IPv6 */
+        }
 
         val=1;
         setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
 #ifdef TCP_KEEPIDLE
-        val=5*60; /* 5 minutes */
+        val=30; /* in seconds */
         setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
 #endif
 
@@ -121,7 +122,7 @@ int connect_mud(char *host, char *port, struct session *ses)
     intr:
         if ((connect(sock, addr->ai_addr, addr->ai_addrlen)))
         {
-            switch(errno)
+            switch (errno)
             {
             case EINTR:
                 if (abort_connect)
@@ -163,7 +164,6 @@ int connect_mud(char *host, char *port, struct session *ses)
         if ((hp = gethostbyname(host)) == NULL)
         {
             tintin_eprintf(ses, "#ERROR - UNKNOWN HOST: {%s}", host);
-            prompt(NULL);
             return 0;
         }
         memcpy((char *)&sockaddr.sin_addr, hp->h_addr, sizeof(sockaddr.sin_addr));
@@ -174,7 +174,6 @@ int connect_mud(char *host, char *port, struct session *ses)
     else
     {
         tintin_eprintf(ses, "#THE PORT SHOULD BE A NUMBER (got {%s}).", port);
-        prompt(NULL);
         return 0;
     }
 
@@ -212,7 +211,6 @@ int connect_mud(char *host, char *port, struct session *ses)
         default:
             tintin_eprintf(ses, "#Couldn't connect to %s:%s",host,port);
         }
-        prompt(NULL);
         return 0;
     }
     return sock;
@@ -342,7 +340,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
         }
         ses->mccp->next_out = (Bytef*)(tmpbuf+len);
         ses->mccp->avail_out = INPUT_CHUNK-len;
-        switch(i=inflate(ses->mccp, Z_SYNC_FLUSH))
+        switch (i=inflate(ses->mccp, Z_SYNC_FLUSH))
         {
         case Z_OK:
             didget=INPUT_CHUNK-len-ses->mccp->avail_out;
@@ -399,7 +397,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
     i = didget;
     while (i > 0)
     {
-        switch(*(unsigned char *)cpsource)
+        switch (*(unsigned char *)cpsource)
         {
         case 0:
             i--;
@@ -408,7 +406,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
             break;
         case 255:
             b=do_telnet_protocol(cpsource, i, ses);
-            switch(b)
+            switch (b)
             {
             case -1:
                 len=i;
@@ -455,7 +453,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
 }
 
 #ifdef HAVE_ZLIB
-int init_mccp(struct session *ses, int cplen, char *cpsrc)
+static int init_mccp(struct session *ses, int cplen, char *cpsrc)
 {
     if (ses->mccp)
         return 0;

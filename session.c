@@ -39,7 +39,7 @@ extern int any_closed;
 static struct session *new_session(char *name, char *address, int sock, int issocket, gnutls_session_t ssl, struct session *ses);
 static void show_session(struct session *ses);
 
-int session_exists(char *name)
+static int session_exists(char *name)
 {
     struct session *sesptr;
 
@@ -58,13 +58,13 @@ void make_name(char *str, char *basis, int run)
     int i,j;
 
     if (run)
-        for(t=basis; (*t=='/')||is7alnum(*t)||(*t=='_'); t++)
+        for (t=basis; (*t=='/')||is7alnum(*t)||(*t=='_'); t++)
             if (*t=='/')
                 basis=t+1;
     if (!is7alpha(*basis))
         goto noname;
     strcpy(str, basis);
-    for(t=str; is7alnum(*t)||(*t=='_'); t++);
+    for (t=str; is7alnum(*t)||(*t=='_'); t++);
     *t=0;
     if (!session_exists(str))
         return;
@@ -72,7 +72,7 @@ void make_name(char *str, char *basis, int run)
     do sprintf(t, "%d", i++); while (session_exists(str));
     return;
 noname:
-    for(i=1; ; i++)
+    for (i=1; ; i++)
     {
         j=i;
         *(t=str+10)=0;
@@ -161,7 +161,7 @@ static struct session *socket_session(char *arg, struct session *ses, int ssl)
     }
 
     port=host;
-    while (*port && !isspace(*port))
+    while (*port && !isaspace(*port))
         port++;
     if (*port)
     {
@@ -179,16 +179,16 @@ static struct session *socket_session(char *arg, struct session *ses, int ssl)
 
 #ifdef HAVE_GNUTLS
     if (ssl)
+    {
         if (!(sslses=ssl_negotiate(sock, host, ses)))
         {
             close(sock);
             return ses;
         }
-
-    return new_session(left, right, sock, 1, ssl?sslses:0, ses);
-#else
-    return new_session(left, right, sock, 1, 0, ses);
+        return new_session(left, right, sock, 1, sslses, ses);
+    }
 #endif
+    return new_session(left, right, sock, 1, 0, ses);
 }
 
 
@@ -352,7 +352,7 @@ static struct session *new_session(char *name, char *address, int sock, int isso
     copyroutes(ses,newsession);
     newsession->last_line[0]=0;
     for (i=0;i<NHOOKS;i++)
-        if(ses->hooks[i])
+        if (ses->hooks[i])
             newsession->hooks[i]=mystrdup(ses->hooks[i]);
         else
             newsession->hooks[i]=0;
@@ -363,6 +363,8 @@ static struct session *new_session(char *name, char *address, int sock, int isso
     if (!new_conv(&newsession->c_io, newsession->charset, 0))
         tintin_eprintf(0, "#Warning: can't open charset: %s", newsession->charset);
     nullify_conv(&newsession->c_log);
+    newsession->line_time.tv_sec=0;
+    newsession->line_time.tv_usec=0;
 #ifdef HAVE_GNUTLS
     newsession->ssl=ssl;
 #endif
@@ -414,7 +416,7 @@ void cleanup_session(struct session *ses)
         fclose(ses->debuglogfile);
     SFREE(ses->loginputprefix);
     SFREE(ses->loginputsuffix);
-    for(i=0;i<NHOOKS;i++)
+    for (i=0;i<NHOOKS;i++)
         SFREE(ses->hooks[i]);
     SFREE(ses->name);
     SFREE(ses->address);

@@ -79,7 +79,11 @@
 #define DEFAULT_VERBATIM_CHAR '\\'        /* if an input starts with this
                                              char, it will be sent 'as is'
                                              to the MUD */
+#ifdef __FreeBSD__
+#define MAX_RECURSION 64
+#else
 #define MAX_RECURSION 128
+#endif
 #ifndef DEFAULT_FILE_DIR
 #define DEFAULT_FILE_DIR "." /* Path to Tintin files, or HOME */
 #endif
@@ -342,6 +346,7 @@ struct session
 #ifdef HAVE_GNUTLS
     gnutls_session_t ssl;
 #endif
+    struct timeval line_time;
 };
 
 typedef char pvars_t[10][BUFFER_SIZE];
@@ -389,6 +394,8 @@ struct ttyrec_header
 
 /* Chinese rod numerals are _not_ digits for our purposes. */
 #define isadigit(x) ((x)>='0' && (x)<='9')
+/* Solaris is buggy for high-bit chars in UTF-8. */
+#define isaspace(x) ((x)==' ' || (x)=='\t' || (x)=='\n' || (x)==12 || (x)=='\v')
 #define iswadigit(x) isadigit(x)
 /* Japanese/Chinese double-width chars.  We can't use wcwidth() as that's
    a GNU extension.  The code below is buggy as it should return 0 for
@@ -405,4 +412,4 @@ struct ttyrec_header
 #define EMPTY_CHAR 0xffff
 
 #define write_stdout(x, len) do if (write(1, (x), (len))!=(len)) \
-                                  syserr("write to stdout failed"); while(0)
+                                  syserr("write to stdout failed"); while (0)

@@ -1,18 +1,24 @@
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
+#define __EXTENSIONS__
 #include "tintin.h"
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #if HAVE_TERMIOS_H
 # include <termios.h>
 #endif
 #ifdef HAVE_GRANTPT
+# include <stdlib.h>
 # ifdef HAVE_STROPTS_H
 #  include <stropts.h>
 # endif
 #endif
 #ifdef HAVE_PTY_H
 # include <pty.h>
+#endif
+#if defined(HAVE_FORKPTY) && defined(HAVE_LIBUTIL_H)
+# include <libutil.h>
 #endif
 #include "ui.h"
 
@@ -225,7 +231,7 @@ ok:
                 close(master);
                 continue;
             }
-            if((slave=open(TtyName, O_RDWR|O_NOCTTY))==-1)
+            if ((slave=open(TtyName, O_RDWR|O_NOCTTY))==-1)
             {
                 close(master);
                 continue;
@@ -244,7 +250,7 @@ ok:
     /* let's ignore errors on this ioctl silently */
 
     pid=fork();
-    switch(pid)
+    switch (pid)
     {
     case -1:
         close(master);
@@ -270,10 +276,10 @@ void pty_resize(int fd,int sx,int sy)
 {
     struct winsize ws;
 
-    if (LINES>1 && COLS>0)
+    if (sx>0 && sy>0)
     {
-        ws.ws_row=LINES-1;
-        ws.ws_col=COLS;
+        ws.ws_row=sy;
+        ws.ws_col=sx;
         ws.ws_xpixel=0;
         ws.ws_ypixel=0;
         ioctl(fd,TIOCSWINSZ,&ws);
@@ -311,6 +317,7 @@ int run(char *command)
 #ifndef PTY_ECHO_HACK
     struct termios ta;
     struct winsize ws;
+    int res;
 
     pty_makeraw(&ta);
 
@@ -318,9 +325,9 @@ int run(char *command)
     ws.ws_col=COLS;
     ws.ws_xpixel=0;
     ws.ws_ypixel=0;
-    int res = forkpty(&fd,0,&ta,(LINES>1 && COLS>0)?&ws:0);
+    res = forkpty(&fd,0,&ta,(LINES>1 && COLS>0)?&ws:0);
 #else
-    int res = forkpty(&fd,0,0,0);
+    res = forkpty(&fd,0,0,0);
 #endif
 
 #if defined(__FreeBSD_kernel__) && defined(__GLIBC__)
@@ -329,7 +336,7 @@ int run(char *command)
     errno = err;
 #endif
 
-    switch(res)
+    switch (res)
     {
     case -1:
         return -1;
@@ -360,7 +367,7 @@ FILE* mypopen(char *command, int wr)
 
     if (pipe(p))
         return 0;
-    switch(fork())
+    switch (fork())
     {
     case -1:
         close(p[0]);
@@ -370,7 +377,7 @@ FILE* mypopen(char *command, int wr)
         {
             char *argv[4], cmd[BUFFER_SIZE+5];
 
-            if(!wr)
+            if (!wr)
             {
                 close(p[0]);
                 close(0);

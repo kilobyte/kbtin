@@ -24,7 +24,9 @@ typedef struct session *(*t_c_command)(char*, struct session*);
 
 static struct session *parse_tintin_command(char *command, char *arg,struct session *ses);
 static void do_speedwalk(char *cp, struct session *ses);
+static int do_goto(char *txt, struct session *ses);
 static inline char *get_arg_with_spaces(char *s, char *arg);
+static char* get_command(char *s, char *arg);
 static void write_com_arg_mud(char *command, char *argument, int nsp, struct session *ses);
 extern void end_command(char *arg, struct session *ses);
 extern void unlink_command(char *arg, struct session *ses);
@@ -61,7 +63,7 @@ struct session* parse_input(char *input,int override_verbatim,struct session *se
 # define PPOP
 #endif
 
-    if(++recursion>=MAX_RECURSION)
+    if (++recursion>=MAX_RECURSION)
     {
         in_alias=0;
         if (recursion==MAX_RECURSION)
@@ -284,7 +286,7 @@ static void do_speedwalk(char *cp, struct session *ses)
 }
 
 
-int do_goto(char *txt,struct session *ses)
+static int do_goto(char *txt, struct session *ses)
 {
     char *ch;
 
@@ -388,7 +390,7 @@ static struct session* parse_tintin_command(char *command, char *arg,struct sess
     return ses;
 }
 
-void add_command(struct hashtable *h, char *command, t_command func)
+static void add_command(struct hashtable *h, char *command, t_command func)
 {
     char cmd[BUFFER_SIZE];
     int n;
@@ -399,7 +401,7 @@ void add_command(struct hashtable *h, char *command, t_command func)
         exit(1);
     }
     strcpy(cmd, command);
-    for(n=strlen(cmd); n; n--)
+    for (n=strlen(cmd); n; n--)
     {
         cmd[n]=0;
         if (!get_hash(c_commands, cmd) && !get_hash(commands, cmd))
@@ -592,13 +594,6 @@ static inline char* get_arg_stop_spaces(char *s, char *arg)
             s++;
             inside = !inside;
         }
-        else if (*s==CHAR_NEWLINE) /* ; */
-        {
-            if (inside)
-                *arg++ = *s++;
-            else
-                break;
-        }
         else if (!inside && *s == ' ')
             break;
         else
@@ -627,7 +622,7 @@ char* get_arg(char *s,char *arg,int flag,struct session *ses)
 /* get the command, stop at spaces            */
 /* remove quotes                              */
 /**********************************************/
-char* get_command(char *s, char *arg)
+static char* get_command(char *s, char *arg)
 {
     int inside = FALSE;
 
@@ -666,7 +661,7 @@ char* get_command(char *s, char *arg)
 /*********************************************/
 char* space_out(char *s)
 {
-    while (isspace(*s))
+    while (isaspace(*s))
         s++;
     return s;
 }

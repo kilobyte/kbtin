@@ -46,7 +46,7 @@ static int cert_file(char *name, char *respath)
     if (!*name || *name=='.')   // no valid hostname starts with a dot
         return 0;
     fn=fname;
-    while(1)
+    while (1)
     {
         if (!*name)
             break;
@@ -266,7 +266,7 @@ nocert:
         if (cert_file(host, fname))
             tintin_eprintf(oldses, "# %-57s#", fname);
         else
-            ; /* can't happen */
+            {} /* can't happen */
         tintin_eprintf(oldses, "############################################################");
         tintin_eprintf(oldses, "#Aborting connection!");
         return 0;

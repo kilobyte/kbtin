@@ -1,5 +1,6 @@
 #include "tintin.h"
 #include "protos/action.h"
+#include "protos/colors.h"
 #include "protos/glob.h"
 #include "protos/llist.h"
 #include "protos/print.h"
@@ -8,8 +9,6 @@
 #include "protos/variables.h"
 
 extern int hinum;
-extern int getcolor(char **ptr,int *color,const int flag);
-extern int setcolor(char *txt,int c);
 extern int puts_echoing;
 
 static struct colordef
@@ -130,7 +129,7 @@ void highlight_command(char *arg, struct session *ses)
             tmp2++;
             while (*tmp2 != ',' && *tmp2 != '\0')
                 tmp2++;
-            while (isspace(*tmp1))
+            while (isaspace(*tmp1))
                 tmp1++;
             strncpy(tmp3, tmp1, tmp2 - tmp1);
             tmp3[tmp2 - tmp1] = '\0';

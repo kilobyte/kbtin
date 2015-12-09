@@ -1,12 +1,10 @@
 #include "tintin.h"
-#include "unicode.h"
 #include "ui.h"
+#include "protos/colors.h"
+#include "protos/unicode.h"
 #include "protos/utils.h"
 
 
-extern int wc_to_utf8(char *d, const wchar_t *s, int n, int maxb);
-extern int getcolor(char **ptr,int *color,const int flag);
-extern int one_utf8_to_mb(char **d, char **s, mbstate_t *cs);
 mbstate_t outstate;
 #define OUTSTATE &outstate
 extern void user_illegal();
@@ -29,15 +27,15 @@ static void userpipe_textout(char *txt)
 {
     char buf[BUFFER_SIZE],*a,*b;
 
-    for(a=txt,b=buf; *a; )
-        switch(*a)
+    for (a=txt,b=buf; *a; )
+        switch (*a)
         {
         case '~':
             if (getcolor(&a,&color,1))
             {
                 if (color==-1)
                     color=lastcolor;
-                if(tty)
+                if (tty)
                     b+=sprintf(b,COLORCODE(color));
             }
             else
@@ -55,7 +53,7 @@ static void userpipe_textout(char *txt)
 static int userpipe_process_kbd(struct session *ses, WC ch)
 {
 
-    switch(ch)
+    switch (ch)
     {
     case '\n':
         *i_pos=0;

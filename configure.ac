@@ -1,5 +1,5 @@
-# Process this file with autoconf to produce a configure script.
-AC_INIT([KBtin], [1.0.15], [kilobyte@angband.pl])
+# When releasing: remember to update ChangeLog and NEWS.
+AC_INIT([KBtin], [1.0.16], [kilobyte@angband.pl])
 AM_INIT_AUTOMAKE([-Wall dist-xz no-dist-gzip])
 AC_CONFIG_SRCDIR([action.c])
 AC_CONFIG_HEADERS([config.h])
@@ -25,7 +25,7 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CREATE_STDINT_H
 AC_HEADER_TIOCGWINSZ
-AC_CHECK_HEADERS([strings.h string.h sys/time.h termios.h unistd.h stropts.h pty.h])
+AC_CHECK_HEADERS([strings.h string.h sys/time.h termios.h unistd.h stropts.h pty.h libutil.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -37,7 +37,8 @@ AC_C_BIGENDIAN
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_VPRINTF
 AC_SEARCH_LIBS(forkpty, util)
-AC_CHECK_FUNCS([memcpy getpt ptsname snprintf vsnprintf _getpty grantpt forkpty regcomp getaddrinfo wcwidth posix_openpt strlcpy])
+AC_CHECK_FUNCS([memcpy getpt ptsname snprintf vsnprintf _getpty grantpt forkpty regcomp getaddrinfo wcwidth posix_openpt])
+AC_FUNC_STRLCPY
 AC_ARG_LIB(mccp, zlib, ZLIB, zlib.h, z, gzread, [
 Please install zlib and its headers.  On most systems, the package will be named
 zlib-dev or libz-dev.  Or, you can "./configure --disable-mccp" to ignore this
@@ -62,8 +63,6 @@ get it is to install GNU libiconv.
 BSD: cd /usr/ports/converters/libiconv && make install
 ])
 fi
-
-AM_CONDITIONAL(SANE_MAKE, make -v >/dev/null 2>/dev/null)
 
 AC_PTYRANGES
 AC_DEV_PTMX

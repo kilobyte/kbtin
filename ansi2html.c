@@ -90,7 +90,7 @@ int main()
 "body {background-color: black;}\n"
 "pre {\n"
 "\tfont-weight: normal;\n"
-"\tcolor: #aaa;\n"
+"\tcolor: #bbb;\n"
 "\twhite-space: -moz-pre-wrap;\n"
 "\twhite-space: -o-pre-wrap;\n"
 "\twhite-space: -pre-wrap;\n"
@@ -105,6 +105,7 @@ int main()
 "b.RED {color: #a00}\n"
 "b.MAG {color: #a0a}\n"
 "b.YEL {color: #aa0}\n"
+"b.WHI {color: #aaa}\n"
 "b.HIK {color: #555}\n"
 "b.HIB {color: #55f}\n"
 "b.HIG {color: #5f5}\n"
@@ -135,7 +136,7 @@ int main()
     b=0;
     ch=getchar();
 normal:
-    switch(ch)
+    switch (ch)
     {
     case EOF:
         unspan();
@@ -186,7 +187,7 @@ esc:
     tok[0]=0;
 /****************************************************************************/
 csi:
-    switch(ch)
+    switch (ch)
     {
     case ';':
         if (++ntok>=10)
@@ -200,8 +201,8 @@ csi:
         ch=getchar();
         goto csi;
     case 'm':
-        for(i=0;i<=ntok;i++)
-            switch(tok[i])
+        for (i=0;i<=ntok;i++)
+            switch (tok[i])
             {
             case 0:
                 fg=bg=-1;
