@@ -63,3 +63,4 @@ ttyrec2ansi
 valgrind.*
 depcomp
 install-sh
+debian/autoreconf.*
