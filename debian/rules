@@ -23,7 +23,6 @@ testfail:
 override_dh_auto_install:
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/kbtin
 	$(MAKE) install-terminfo DESTDIR=$(CURDIR)/debian/kbtin TERMINFODIR=/usr/share/terminfo
-	dh_install debian/kbtin.xpm /usr/share/pixmaps/
 
 override_dh_auto_clean:
 	rm -rf locales
