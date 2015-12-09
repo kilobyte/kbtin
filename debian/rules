@@ -9,8 +9,7 @@ override_dh_auto_build:
 
 override_dh_auto_test:
 ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
-	sh debian/locale-gen
-	LOCPATH=$(CURDIR)/locales $(MAKE) check || debian/rules testfail
+	$(MAKE) check || debian/rules testfail
 else
 	@echo Suppressing 'make check', because this is a cross build
 endif
@@ -25,6 +24,5 @@ override_dh_auto_install:
 	$(MAKE) install-terminfo DESTDIR=$(CURDIR)/debian/kbtin TERMINFODIR=/usr/share/terminfo
 
 override_dh_auto_clean:
-	rm -rf locales
 	rm -f tests/tests.at
 	dh_auto_clean

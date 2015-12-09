@@ -42,7 +42,6 @@ debian/kbtin.substvars
 debian/kbtin/
 .pc/
 debian/patches/
-locales/
 *.o
 *.orig
 *~

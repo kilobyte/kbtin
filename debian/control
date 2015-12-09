@@ -2,7 +2,7 @@ Source: kbtin
 Section: text
 Priority: optional
 Maintainer: Adam Borowski <kilobyte@angband.pl>
-Build-Depends: debhelper (>> 9.0.0), locales, libz-dev, libglib2.0-dev (>= 2.10),
+Build-Depends: debhelper (>> 9.0.0), libz-dev, libglib2.0-dev (>= 2.10),
  gettext, autoconf, autotools-dev, libgnutls28-dev, dh-autoreconf
 Standards-Version: 3.9.6
 Homepage: http://kbtin.sourceforge.net/
