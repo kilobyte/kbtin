@@ -1,3 +1,9 @@
+kbtin (1.0.16-2) unstable; urgency=medium
+
+  * Enable hardening=+all, as we do process untrusted network input.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Wed, 23 Mar 2016 15:53:06 +0100
+
 kbtin (1.0.16-1) unstable; urgency=medium
 
   * New upstream release.
