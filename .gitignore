@@ -47,6 +47,7 @@ debian/patches/
 *.orig
 *~
 package.m4
+pipetty
 profinit.h
 protos
 protos.h

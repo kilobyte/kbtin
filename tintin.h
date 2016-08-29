@@ -199,7 +199,8 @@
 #define HOOK_SEND       4
 #define HOOK_ACTIVATE   5
 #define HOOK_DEACTIVATE 6
-#define NHOOKS          7
+#define HOOK_TITLE      7
+#define NHOOKS          8
 
 /************************ includes *********************/
 #define _GNU_SOURCE
@@ -246,6 +247,15 @@
 #ifdef HAVE_GNUTLS
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
+#endif
+#ifndef HAVE_SNPRINTF
+int snprintf(char *str, int len, char *fmt, ...);
+#endif
+#ifndef HAVE_VSNPRINTF
+int vsnprintf(char *str, int len, char *fmt, va_list ap);
+#endif
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
 
 /************************ structures *********************/
@@ -329,12 +339,13 @@ struct session
     int verbose,blank,echo,speedwalk,togglesubs,presub,verbatim;
     char *partial_line_marker;
     int mesvar[MAX_MESVAR+1];
-    time_t idle_since;
+    time_t idle_since, server_idle_since;
     int sessionstart;
     char *hooks[NHOOKS];
     int closing;
     int nagle;
     int halfcr_in, halfcr_log; /* \r at the end of a packet */
+    int lastintitle;
     char *charset, *logcharset;
     struct charset_conv c_io,c_log;
 #ifdef HAVE_ZLIB

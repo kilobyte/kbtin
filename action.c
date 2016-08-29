@@ -1,4 +1,3 @@
-/* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: action.c - funtions related to the action command           */
 /*                             TINTIN III                            */
@@ -113,7 +112,6 @@ void action_command(char *arg, struct session *ses)
         while ((myactions = search_node_with_wild(myactions, left)) != NULL)
             if (strcmp(myactions->left,K_ACTION_MAGIC))
                 shownode_list_action(myactions), flag++;
-            prompt(ses);
         if (!flag && ses->mesvar[1])
             tintin_printf(ses,"#That action (%s) is not defined.",left);
         prompt(ses);
@@ -157,7 +155,6 @@ void promptaction_command(char *arg, struct session *ses)
         while ((myprompts = search_node_with_wild(myprompts, left)))
             if (strcmp(myprompts->left,K_ACTION_MAGIC))
                 shownode_list_action(myprompts), flag++;
-            prompt(ses);
         if (!flag && ses->mesvar[1])
             tintin_printf(ses,"#That promptaction (%s) is not defined.",left);
         prompt(ses);
@@ -422,8 +419,7 @@ void check_all_actions(char *line, struct session *ses)
                 prepare_actionalias(ln->right, buffer, ses);
                 tintin_printf(ses,"[ACTION: %s]", buffer);
             }
-            if (ses->debuglogfile)
-                debuglog(ses, "ACTION: {%s}->{%s}", line, ln->right);
+            debuglog(ses, "ACTION: {%s}->{%s}", line, ln->right);
             parse_input(ln->right,1,ses);
             recursion=0;
             pvars = lastpvars;
@@ -460,8 +456,7 @@ void check_all_promptactions(char *line, struct session *ses)
                 prepare_actionalias(ln->right, buffer, ses);
                 tintin_printf(ses, "[PROMPT-ACTION: %s]", buffer);
             }
-            if (ses->debuglogfile)
-                debuglog(ses, "PROMPTACTION: {%s}->{%s}", line, ln->right);
+            debuglog(ses, "PROMPTACTION: {%s}->{%s}", line, ln->right);
             parse_input(ln->right,1,ses);
             recursion=0;
             pvars=lastpvars;

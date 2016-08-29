@@ -1,4 +1,5 @@
-EXTRA_DIST = $(TESTSUITE_AT) testsuite.at testsuite package.m4 runtest.sh tests.in make_tests
+EXTRA_DIST = $(TESTSUITE_AT) testsuite.at testsuite package.m4 runtest.sh \
+	tests.in make_tests pingpong
 DISTCLEANFILES       = atconfig $(check_SCRIPTS)
 MAINTAINERCLEANFILES = Makefile.in $(TESTSUITE) package.m4
 check_PROGRAMS = get-utf8
@@ -32,7 +33,8 @@ $(TESTSUITE): package.m4 testsuite.at $(TESTSUITE_AT)
 	$(AUTOTEST) -I $(srcdir) $@.at -o $@.tmp
 	mv $@.tmp $@
 
-TESTSUITE_AT = version.at tests.at run.at
+TESTSUITE_AT = version.at tests.at run.at pipetty.at ansi2txt.at ansi2html.at \
+	unescape htmlpre2txt
 
 tests.at: tests.in make_tests
 	$(srcdir)/make_tests "$(srcdir)/tests.in"

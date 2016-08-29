@@ -1,4 +1,3 @@
-/* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: utils.c - some utility-functions                            */
 /*                             TINTIN III                            */
@@ -76,7 +75,7 @@ void syserr(char *msg, ...)
 #endif
 
 #ifndef HAVE_STRLCPY
-size_t strlcpy(char *dst, const char *src, size_t n)
+/* not for protos.h */ size_t strlcpy(char *dst, const char *src, size_t n)
 {
     if (!n)
         return strlen(src);

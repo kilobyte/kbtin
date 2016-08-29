@@ -1,4 +1,3 @@
-/* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: parse.c - some utility-functions                            */
 /*                             TINTIN III                            */
@@ -73,8 +72,7 @@ struct session* parse_input(char *input,int override_verbatim,struct session *se
         return ses;
     }
 
-    if (ses->debuglogfile)
-        debuglog(ses, "%s", input);
+    debuglog(ses, "%s", input);
     if (!ses->server_echo && activesession == ses)
         term_echoing = 1;
     if (*input == '\0')
@@ -82,8 +80,7 @@ struct session* parse_input(char *input,int override_verbatim,struct session *se
         if (ses!=nullsession)
         {
             write_line_mud("", ses);
-            if (ses->debuglogfile)
-                debuglog(ses, "");
+            debuglog(ses, "");
         }
         else
         {
@@ -96,16 +93,14 @@ struct session* parse_input(char *input,int override_verbatim,struct session *se
     if ((*input==tintin_char) && is_abrev(input + 1, "verbatim"))
     {
         verbatim_command("",ses);
-        if (ses->debuglogfile)
-            debuglog(ses, "%s", input);
+        debuglog(ses, "%s", input);
         PPOP;
         return ses;
     }
     if (ses->verbatim && !override_verbatim && (ses!=nullsession))
     {
         write_line_mud(input, ses);
-        if (ses->debuglogfile)
-            debuglog(ses, "%s", input);
+        debuglog(ses, "%s", input);
         PPOP;
         return ses;
     }
@@ -113,8 +108,7 @@ struct session* parse_input(char *input,int override_verbatim,struct session *se
     {
         input++;
         write_line_mud(input, ses);
-        if (ses->debuglogfile)
-            debuglog(ses, "%s", input-1);
+        debuglog(ses, "%s", input-1);
         PPOP;
         return ses;
     }
@@ -184,8 +178,7 @@ struct session* parse_input(char *input,int override_verbatim,struct session *se
             PPOP;
             return ses;
         }
-        if (ses->debuglogfile)
-            debuglog(ses, "%s", command);
+        debuglog(ses, "%s", command);
 
         if (*command == tintin_char)
             ses = parse_tintin_command(command + 1, arg, ses);

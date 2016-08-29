@@ -180,6 +180,22 @@ abc𠀧𠀀𠀁𠀂
 FIN
 ===
 
+### two-way communication in #run
+<<<
+#hook close {#showme FIN;#end}
+#run a pingpong
+#act {pong %1} {#if {$1>=10} {exit} #else {#math x {$1+1};ping $x}}
+ping 1
+>>>
+pong 2
+pong 4
+pong 6
+pong 8
+pong 10
+Not a ping!
+FIN
+===
+
 ### #goto
 <<<
 #route a b {#showme A>B}
@@ -665,4 +681,16 @@ ctoi 零
 x
 >>>
 #TOO DEEP RECURSION.
+===
+
+### #hook title
+<<<
+#hook close {#showme FIN;#end}
+#hook title {#showme {TITLE: %1}}
+#rem [[[ (m4 quirk)
+#run a {sh -c 'printf "\033]0;good beer is good\033\\\\\033]1;junk\033\\\\\033]0;meow\a"'}
+>>>
+TITLE: good beer is good
+TITLE: meow
+FIN
 ===

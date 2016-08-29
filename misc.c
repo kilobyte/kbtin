@@ -1,4 +1,3 @@
-/* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: misc.c - misc commands                                      */
 /*                             TINTIN III                            */
@@ -131,6 +130,107 @@ void send_command(char *arg,struct session *ses)
     }
     arg = get_arg(arg, temp1, 1, ses);
     write_line_mud(temp1,ses);
+}
+
+/****************************/
+/* the #sendchar command    */
+/****************************/
+void sendchar_command(char *arg,struct session *ses)
+{
+    char chdesc[BUFFER_SIZE], outbuf[BUFFER_SIZE], *chp, *ep, *outp=outbuf;
+    long int ch;
+    if (ses==nullsession)
+    {
+        tintin_eprintf(ses, "#No session -> can't #sendchar anything");
+        return;
+    }
+    if (!*arg)
+    {
+        tintin_eprintf(ses, "#sendchar what?");
+        return;
+    }
+    while (1)
+    {
+        arg=get_arg(arg, chdesc, 0, ses);
+        if (!*arg && !*chdesc)
+            break;
+        for (chp=chdesc; *chp; chp++)
+        {
+            switch (*chp)
+            {
+            case '^':
+                chp++;
+                if (*chp>='@' && *chp<='_')
+                    *outp++=*chp-64;
+                else if (*chp>='a' && *chp<='z')
+                    *outp++=*chp-96;
+                else
+                    tintin_eprintf(ses, "#sendchar: invalid ^ char at {^%s}", chp);
+                break;
+            case '\\':
+                chp++;
+                switch (*chp)
+                {
+                case '"':
+                    *outp++='"'; break;
+                case '\\':
+                    *outp++='\\'; break;
+                case 'a':
+                    *outp++='\a'; break;
+                case 'b':
+                    *outp++='\b'; break;
+                case 'e':
+                    *outp++='\033'; break;
+                case 'f':
+                    *outp++='\f'; break;
+                case 'n':
+                    *outp++='\n'; break;
+                case 'r':
+                    *outp++='\r'; break;
+                case 't':
+                    *outp++='\t'; break;
+                case 'v':
+                    *outp++='\v'; break;
+                case '0':
+                    ch=strtol(chp, &ep, 8);
+                uchar:
+                    if (ch<0 || ch>0x10ffff)
+                        tintin_eprintf(ses, "#sendchar: code %x out of Unicode at {\\%s}", ch, chp);
+                    else
+                    {
+                        wchar_t wch=ch;
+                        outp+=wc_to_utf8(outp, &wch, 1, outbuf-outp+BUFFER_SIZE);
+                    }
+                    chp=ep-1;
+                    break;
+                case 'x':
+                    ch=strtol(chp, &ep, 16);
+                    goto uchar;
+                default:
+                    tintin_eprintf(ses, "#sendchar: unknown escape at {\\%s}", chp);
+                }
+                break;
+            case 'U':
+                chp++;
+                if (*chp=='+')
+                    chp++;
+                ch=strtol(chp, &ep, 16);
+                if (ch<0 || ch>0x10ffff)
+                    tintin_eprintf(ses, "#sendchar: code %x out of Unicode at {U%s}", ch, chp);
+                else
+                {
+                    wchar_t wch=ch;
+                    outp+=wc_to_utf8(outp, &wch, 1, outbuf-outp+BUFFER_SIZE);
+                }
+                chp=ep-1;
+                break;
+            default:
+                *outp++=*chp;
+            }
+        }
+    }
+    *outp=0;
+    write_raw_mud(outbuf, outp-outbuf, ses);
 }
 
 /********************/
@@ -596,6 +696,7 @@ void system_command(char *arg,struct session *ses)
     FILE *output;
     char buf[BUFFER_SIZE],ustr[BUFFER_SIZE];
     mbstate_t cs;
+    int save_lastintitle;
 
     get_arg(arg, arg, 1, ses);
     if (*arg)
@@ -611,12 +712,15 @@ void system_command(char *arg,struct session *ses)
         };
         memset(&cs, 0, sizeof(cs));
 
+        save_lastintitle=ses->lastintitle;
         while (fgets(buf,BUFFER_SIZE,output))
         {
-            do_in_MUD_colors(buf,1);
+            ses->lastintitle=0;
+            do_in_MUD_colors(buf,1,ses);
             local_to_utf8(ustr, buf, BUFFER_SIZE, &cs);
             user_textout(ustr);
         }
+        ses->lastintitle=save_lastintitle;
         fclose(output);
         if (ses->mesvar[9])
             tintin_puts1("#OK COMMAND EXECUTED.", ses);
@@ -1000,7 +1104,7 @@ int iscompleteprompt(char *line)
         else
             if (!isaspace(*line))
                 ch=*line;
-    return strchr("?:>.*$#]&)",ch) && !((c==-1)?0:c&0x70);
+    return strchr("?:>.*$#]&)",ch) && (c==-1||!(c&0x70));
 }
 
 

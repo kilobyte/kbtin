@@ -1,4 +1,3 @@
-/* Autoconf patching by David Hedbor, neotron@lysator.liu.se */
 /*********************************************************************/
 /* file: session.c - funtions related to sessions                    */
 /*                             TINTIN III                            */
@@ -221,12 +220,12 @@ struct session *run_command(char *arg,struct session *ses)
 
     if (!*right)
     {
-        tintin_eprintf(ses, "#run: HEY! SPECIFY AN COMMAND, WILL YOU?");
+        tintin_eprintf(ses, "#run: HEY! SPECIFY A COMMAND, WILL YOU?");
         return ses;
     };
 
     utf8_to_local(ustr, right);
-    if ((sock=run(ustr)) == -1)
+    if ((sock=run(ustr, COLS, LINES-1, TERM)) == -1)
     {
         tintin_eprintf(ses, "#forkpty() FAILED: %s", strerror(errno));
         return ses;
@@ -336,10 +335,12 @@ static struct session *new_session(char *name, char *address, int sock, int isso
     newsession->togglesubs = ses->togglesubs;
     newsession->presub = ses->presub;
     newsession->verbatim = ses->verbatim;
-    newsession->sessionstart=newsession->idle_since=time(0);
+    newsession->sessionstart=newsession->idle_since=
+        newsession->server_idle_since=time(0);
     newsession->nagle=0;
     newsession->halfcr_in=0;
     newsession->halfcr_log=0;
+    newsession->lastintitle=0;
     newsession->debuglogfile=0;
     newsession->debuglogname=0;
     newsession->partial_line_marker = mystrdup(ses->partial_line_marker);
@@ -403,7 +404,7 @@ void cleanup_session(struct session *ses)
         user_textout_draft(0, 0);
         sprintf(buf,"%s\n",ses->last_line);
         convert(&ses->c_io, ses->last_line, buf, -1);
-        do_in_MUD_colors(ses->last_line,0);
+        do_in_MUD_colors(ses->last_line,0,0);
         user_textout(ses->last_line);
     };
     sprintf(buf, "#SESSION '%s' DIED.", ses->name);
