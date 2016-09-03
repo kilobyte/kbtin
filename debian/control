@@ -22,6 +22,7 @@ Package: colorized-logs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Replaces: kbtin (<< 1.0.17)
+Recommends: less
 Suggests: colordiff, colormake, ccze, colortail
 Description: tools for consuming logs with ANSI color
  Some tools like gcc, dmesg, grep --color, colordiff, ccze, etc can enhance
