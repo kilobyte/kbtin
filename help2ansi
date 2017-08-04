@@ -35,6 +35,7 @@ while(<>)
         $col.=";5" if $vcn&0x80;
         $col.=";3" if $vcn&0x100;
         $col.=";4" if $vcn&0x200;
+        $col.=";9" if $vcn&0x400;
         $line.=$col.="m";
     }
     /\G(.*)/;
