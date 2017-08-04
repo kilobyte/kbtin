@@ -1,7 +1,5 @@
 .#*
 aclocal.m4
-ansi2html
-ansi2txt
 atconfig
 atlocal
 autom4te.cache
@@ -24,7 +22,6 @@ configure.scan
 depcomp
 missing
 VERSION
-DEADJOE
 .deps
 install-sh
 KBtin
@@ -38,7 +35,6 @@ manual.html
 *.orig
 *~
 package.m4
-pipetty
 profinit.h
 protos
 protos.h
@@ -51,5 +47,4 @@ tests/get-utf8
 testsuite
 testsuite.dir
 testsuite.log
-ttyrec2ansi
 valgrind.*

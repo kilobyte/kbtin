@@ -1,8 +1,8 @@
-bin_PROGRAMS=KBtin ansi2html ansi2txt ttyrec2ansi pipetty
+bin_PROGRAMS=KBtin
 helpdir = $(pkgdatadir)
 help_DATA= NEWS KBtin_help.gz
 AM_CPPFLAGS = -DDATA_PATH=\"$(helpdir)\"
-man_MANS = ansi2html.1 ansi2txt.1 KBtin.6 ttyrec2ansi.1 pipetty.1
+man_MANS = KBtin.6
 
 KBtin_C_FILES=action.c alias.c antisub.c files.c glob.c help.c highlight.c\
 	history.c ivars.c llist.c main.c misc.c net.c parse.c path.c session.c\
@@ -15,11 +15,6 @@ KBtin_SOURCES=$(KBtin_C_FILES) tintin.h unicode.h translit.h malloc.h
 KBtin_LDADD=@GLIB_LIBS@ @ZLIB_LIBS@ @LIBICONV@ @GNUTLS_LIBS@
 
 AM_CFLAGS=@GLIB_CFLAGS@ -Wall
-
-ansi2html_SOURCES=ansi2html.c
-ansi2txt_SOURCES=ansi2txt.c
-pipetty_SOURCES=pipetty.c
-pipetty_LDADD=pty.o
 
 KBtin_DOCS=BUGS OLDNEWS KEYPAD FAQ
 EXTRA_DIST=KBtin_help.in commands make_commands $(man_MANS) help2ansi \
