@@ -127,4 +127,5 @@
 
 1.0.18:
 * idle/serveridle in #info
-* ansi2html improvements
+* ansi2txt, ansi2html, ttyrec2ansi and pipetty have been moved to a separate
+  package "colorized-logs"
