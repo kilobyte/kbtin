@@ -8,6 +8,5 @@ dnl
 dnl forinclude([version.at])
 
 dnl ===
-m4_include([version.at])
 m4_include([tests.at])
 m4_include([run.at])
