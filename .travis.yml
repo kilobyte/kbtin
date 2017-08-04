@@ -1,0 +1,10 @@
+language: c
+dist: xenial
+addons:
+  apt:
+    packages:
+    - libz-dev
+    - libglib2.0-dev
+    - libgnutls28-dev
+script: ./autogen.sh && ./configure && make check
+after_failure: cat tests/testsuite.log
