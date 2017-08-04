@@ -1,0 +1,89 @@
+#!/usr/bin/env perl
+# A crude ansi2html replacement, unfit for generic use.
+use warnings;
+use strict;
+
+my %esc;
+for (split /\n/, <<ESC)
+1	color: #fff
+2	color: #555
+30;41	background-color: #a00
+30;42	background-color: #0a0
+30;43	background-color: #a50
+30;44	background-color: #00a
+30;45	background-color: #a0a
+30;46	background-color: #0aa
+30;47	background-color: #aaa
+31;1	color: #f55
+31	color: #a00
+32;1	color: #5f5
+32	color: #0a0
+33;1	color: #ff5
+33	color: #a50
+34;1	color: #00f
+34	color: #00a
+35;1	color: #f5f
+35	color: #a0a
+36;1	color: #5ff
+36	color: #0aa
+1;4	color: #fff;text-decoration:underline
+3	font-style: italic
+4	text-decoration:underline
+5;3;4;9	color:#dfdfdf;background-color:#606060;text-decoration:underline line-through
+5	color:#dfdfdf;background-color:#606060
+31;1;5	color:#df6060;background-color:#606060
+9	text-decoration:line-through
+ESC
+{
+    /^([^\t]+)\t([^\t]+)$/ or die;
+    $esc{"0;$1"}=$2;
+}
+
+print <<MEOW, "<pre>";
+<!DOCTYPE html>
+<html>
+<head>
+<title>KBtin</title>
+<style type="text/css">
+body {background-color: black;}
+pre {
+	font-weight: normal;
+	color: #bbb;
+	white-space: -moz-pre-wrap;
+	white-space: -o-pre-wrap;
+	white-space: -pre-wrap;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+b {font-weight: normal}
+</style>
+</head>
+<body>
+MEOW
+
+while (<>)
+{
+    s/&/&amp;/g;
+    s/</&lt;/g;
+    s/>/&gt;/g;
+    (print, next) if !/\e/;
+    /\e\[0m[^\e]*$/ or die "A non-reset line";
+
+    my $in=0;
+    while (s/^([^\e]*)\e\[([0-9;]+)m//)
+    {
+        print "$1";
+        print "</b>" if $in;
+        $in=0;
+        next if $2 eq '0';
+        defined $esc{$2} or die "Unknown escape: '$2'";
+        print "<b style=\"$esc{$2}\">";
+        $in=1;
+    }
+
+    /\e/ and die "Bad esc in '$_'";
+    print;
+}
+
+print "</pre></body></html>\n";

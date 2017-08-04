@@ -69,10 +69,8 @@ KBtin_help.gz: KBtin_help.in
 	gzip -n9 <$(srcdir)/KBtin_help.in >KBtin_help.gz
 
 # convert the help file to html
-manual.html: KBtin_help.in help2ansi ansi2html fixmanual
-	$(srcdir)/help2ansi <$(srcdir)/KBtin_help.in|./ansi2html|$(srcdir)/fixmanual $(srcdir)/KBtin_help.in >manual.html
-#This won't work during a cross-compile, you will have to use a locally
-#built version of ansi2html.
+manual.html: KBtin_help.in help2ansi a2html fixmanual
+	$(srcdir)/help2ansi <$(srcdir)/KBtin_help.in|./a2html|$(srcdir)/fixmanual $(srcdir)/KBtin_help.in >manual.html
 
 # install the terminfo data
 install-terminfo: terminfo.src
