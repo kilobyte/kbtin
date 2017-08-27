@@ -22,7 +22,7 @@
 #include "protos/utils.h"
 
 #ifndef BADSIG
-#define BADSIG (void (*)())-1
+#define BADSIG (void (*)(int))-1
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

@@ -34,7 +34,7 @@
 #include <sys/resource.h>
 
 #ifndef BADSIG
-#define BADSIG (void (*)())-1
+#define BADSIG (void (*)(int))-1
 #endif
 
 typedef void (*sighandler_t)(int);
