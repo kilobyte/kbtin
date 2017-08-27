@@ -459,7 +459,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
             case -3:
                 i -= 2;
                 didget-=1;
-                *cpdest++=255;
+                *cpdest++=(char)255;
                 cpsource+=2;
                 break;
 #ifdef HAVE_ZLIB
