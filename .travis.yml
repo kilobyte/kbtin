@@ -1,10 +1,17 @@
 language: c
-dist: xenial
-addons:
-  apt:
-    packages:
-    - libz-dev
-    - libglib2.0-dev
-    - libgnutls28-dev
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+      addons:
+        apt:
+          packages:
+          - libz-dev
+          - libglib2.0-dev
+          - libgnutls28-dev
+    - os: osx
+      before_install:
+        brew update && brew install libtool && brew install glib && brew install gettext && brew link --force gettext
+
 script: ./autogen.sh && ./configure && make check
 after_failure: cat tests/testsuite.log
