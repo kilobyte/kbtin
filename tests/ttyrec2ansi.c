@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include "tintin.h"
+#include "../tintin.h"
 
 int main(void)
 {
