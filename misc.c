@@ -870,7 +870,7 @@ void tab_add(char *arg, struct session *ses)
     }
     strcpy(newcomp, buff);
     tmp = tcomplete;
-    while (tmp->next != NULL)
+    while (tmp->next)
     {
         tmpold = tmp;
         tmp = tmp->next;
@@ -911,13 +911,13 @@ void tab_delete(char *arg, struct session *ses)
         return;
     }
     strcpy(c_buff, tmp->strng);
-    while ((tmp->next != NULL) && (strcmp(c_buff, s_buff) != 0))
+    while (tmp->next && strcmp(c_buff, s_buff))
     {
         tmpold = tmp;
         tmp = tmp->next;
         strcpy(c_buff, tmp->strng);
     }
-    if (tmp->next != NULL)
+    if (tmp->next)
     {
         tmpnext = tmp->next;
         tmpold->next = tmpnext;

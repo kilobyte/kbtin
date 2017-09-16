@@ -366,8 +366,8 @@ void addnode_list(struct listnode *listhead, const char *ltext, const char *rtex
     else
         newnode->pr = 0;
     newnode->next = NULL;
-    while (listhead->next != NULL)
-        (listhead = listhead->next);
+    while (listhead->next)
+        listhead = listhead->next;
     listhead->next = newnode;
 }
 

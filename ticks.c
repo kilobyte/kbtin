@@ -152,7 +152,7 @@ int check_event(int time, struct session *ses)
     int et; /* event time */
     struct eventnode *ev;
 
-    assert(ses != NULL);
+    assert(ses);
 
     /* events check  - that should be done in #delay */
     while ((ev=ses->events) && (ev->time<=time))
