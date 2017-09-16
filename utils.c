@@ -27,7 +27,7 @@ char* mystrdup(const char *s)
 
     if (!s)
         return 0;
-    if ((dup = MALLOC(strlen(s) + 1)) == NULL)
+    if (!(dup = MALLOC(strlen(s) + 1)))
         syserr("Not enough memory for strdup.");
     strcpy(dup, s);
     return dup;

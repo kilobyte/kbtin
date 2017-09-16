@@ -159,7 +159,7 @@ int connect_mud(const char *host, const char *port, struct session *ses)
     {
         struct hostent *hp;
 
-        if ((hp = gethostbyname(host)) == NULL)
+        if (!(hp = gethostbyname(host)))
         {
             tintin_eprintf(ses, "#ERROR - UNKNOWN HOST: {%s}", host);
             return 0;

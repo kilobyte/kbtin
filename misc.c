@@ -855,14 +855,14 @@ void tab_add(char *arg, struct session *ses)
 
     tcomplete = complete_head;
 
-    if ((arg == NULL) || (strlen(arg) <= 0))
+    if (!arg || !strlen(arg))
     {
         tintin_puts("Sorry, you must have some word to add.", NULL);
         return;
     }
     get_arg(arg, buff, 1, ses);
 
-    if ((newcomp = (char *)(malloc(strlen(buff) + 1))) == NULL)
+    if (!(newcomp = (char *)(malloc(strlen(buff) + 1))))
     {
         user_done();
         fprintf(stderr, "Could not allocate enough memory for that Completion word.\n");
@@ -876,7 +876,7 @@ void tab_add(char *arg, struct session *ses)
         tmp = tmp->next;
     }
 
-    if ((newt = (struct completenode *)(malloc(sizeof(struct completenode)))) == NULL)
+    if (!(newt = (struct completenode *)(malloc(sizeof(struct completenode)))))
     {
         user_done();
         fprintf(stderr, "Could not allocate enough memory for that Completion word.\n");
@@ -897,7 +897,7 @@ void tab_delete(char *arg, struct session *ses)
 
     tcomplete = complete_head;
 
-    if ((arg == NULL) || (strlen(arg) <= 0))
+    if (!arg || !strlen(arg))
     {
         tintin_puts("#Sorry, you must have some word to delete.", NULL);
         return;
@@ -905,7 +905,7 @@ void tab_delete(char *arg, struct session *ses)
     get_arg(arg, s_buff, 1, ses);
     tmp = tcomplete->next;
     tmpold = tcomplete;
-    if (tmpold->strng == NULL)
+    if (!tmpold->strng)
     {                          /* (no list if the second node is null) */
         tintin_puts("#There are no words for you to delete!", NULL);
         return;

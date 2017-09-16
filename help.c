@@ -35,23 +35,23 @@ void help_command(const char *arg, struct session *ses)
         myfile = check_file(filestring);
     }
 #ifdef DATA_PATH
-    if (myfile == NULL)
+    if (!myfile)
     {
         sprintf(filestring, "%s/KBtin_help", DATA_PATH);
         myfile = check_file(filestring);
     }
 #endif
-    if (myfile == NULL)
+    if (!myfile)
     {
         sprintf(filestring, "%s_help", tintin_exec);
         myfile = check_file(filestring);
     }
-    if (myfile == NULL)
+    if (!myfile)
     {
         sprintf(filestring, "%s/KBtin_help", getenv("HOME"));
         myfile = check_file(filestring);
     }
-    if (myfile == NULL)
+    if (!myfile)
     {
         tintin_eprintf(0, "#Help file not found - no help available.");
         tintin_eprintf(0, "#Locations checked:");

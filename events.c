@@ -96,7 +96,7 @@ void delay_command(const char *arg, struct session *ses)
     ev->next = NULL;
     ev->event = mystrdup(right);
 
-    if (ses->events == NULL)
+    if (!ses->events)
         ses->events = ev;
     else if (ses->events->time > ev->time)
     {
