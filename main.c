@@ -861,7 +861,10 @@ static void do_one_line(char *line, int nl, struct session *ses)
             if (nl)
             {
                 if (!activesession->server_echo)
+                {
+                    user_passwd(false);
                     gotpassword=0;
+                }
                 sprintf(strchr(line, 0), "\n");
                 user_textout_draft(0, 0);
                 user_textout(line);
