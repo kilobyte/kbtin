@@ -2,7 +2,7 @@
 *	lots of internal cleanups
 *	idle/serveridle in #info
 *	assorted minor fixes
-*	long-handling tools have been split out
+*	log-handling tools have been split out
 
 1.0.17:
 *	pipetty, a new tool to fool isatty()
