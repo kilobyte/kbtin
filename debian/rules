@@ -23,10 +23,6 @@ testfail:
 override_dh_auto_install:
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/kbtin
 	$(MAKE) install-terminfo DESTDIR=$(CURDIR)/debian/kbtin TERMINFODIR=/usr/share/terminfo
-	for x in ansi2txt ansi2html ttyrec2ansi pipetty;do \
-	  mv $(CURDIR)/debian/kbtin/usr/bin/$$x $(CURDIR)/debian/colorized-logs/usr/bin/; \
-        done
-	mv $(CURDIR)/debian/kbtin/usr/share/man/man1 $(CURDIR)/debian/colorized-logs/usr/share/man/
 
 override_dh_auto_clean:
 	rm -f tests/tests.at
