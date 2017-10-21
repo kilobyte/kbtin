@@ -12,15 +12,17 @@
 #include <netdb.h>
 #include "tintin.h"
 #include "protos/files.h"
+#include "protos/globals.h"
 #include "protos/hooks.h"
 #include "protos/print.h"
+#include "protos/prof.h"
 #include "protos/run.h"
 #include "protos/telnet.h"
 #include "protos/unicode.h"
 #include "protos/utils.h"
 
 #ifndef BADSIG
-#define BADSIG (void (*)())-1
+#define BADSIG (void (*)(int))-1
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -31,18 +33,14 @@
 
 static void alarm_func(int);
 
-extern struct session *sessionlist, *activesession, *nullsession;
-#ifdef PROFILING
-extern char *prof_area;
-#endif
 #ifdef HAVE_ZLIB
-static int init_mccp(struct session *ses, int cplen, char *cpsrc);
+static int init_mccp(struct session *ses, int cplen, const char *cpsrc);
 #endif
 
-static int abort_connect;
+static bool abort_connect;
 
 #ifdef HAVE_GETADDRINFO
-static char* afstr(int af)
+static const char* afstr(int af)
 {
     static char msg[19];
 
@@ -68,10 +66,10 @@ static char* afstr(int af)
 /* try connect to the mud specified by the args   */
 /* return fd on success / 0 on failure            */
 /**************************************************/
-int connect_mud(char *host, char *port, struct session *ses)
+int connect_mud(const char *host, const char *port, struct session *ses)
 {
     int err, val;
-    struct addrinfo *ai, hints, *addr;
+    struct addrinfo *ai, hints;
     int sock;
 
     memset(&hints, 0, sizeof(hints));
@@ -92,7 +90,7 @@ int connect_mud(char *host, char *port, struct session *ses)
     if (signal(SIGALRM, alarm_func) == BADSIG)
         syserr("signal SIGALRM");
 
-    for (addr=ai; addr; addr=addr->ai_next)
+    for (struct addrinfo *addr=ai; addr; addr=addr->ai_next)
     {
         tintin_printf(ses, "#Trying to connect... (%s) (charset=%s)",
             afstr(addr->ai_family), ses->charset);
@@ -117,7 +115,7 @@ int connect_mud(char *host, char *port, struct session *ses)
         setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
 #endif
 
-        abort_connect=0;
+        abort_connect=false;
         alarm(15);
     intr:
         if ((connect(sock, addr->ai_addr, addr->ai_addrlen)))
@@ -150,12 +148,12 @@ int connect_mud(char *host, char *port, struct session *ses)
     return 0;
 }
 #else
-int connect_mud(char *host, char *port, struct session *ses)
+int connect_mud(const char *host, const char *port, struct session *ses)
 {
     int sock, val;
     struct sockaddr_in sockaddr;
 
-    if (isdigit(*host))         /* interpret host part */
+    if (isadigit(*host))         /* interpret host part */
         sockaddr.sin_addr.s_addr = inet_addr(host);
     else
     {
@@ -169,7 +167,7 @@ int connect_mud(char *host, char *port, struct session *ses)
         memcpy((char *)&sockaddr.sin_addr, hp->h_addr, sizeof(sockaddr.sin_addr));
     }
 
-    if (isdigit(*port))
+    if (isadigit(*port))
         sockaddr.sin_port = htons(atoi(port));  /* intepret port part */
     else
     {
@@ -209,7 +207,7 @@ int connect_mud(char *host, char *port, struct session *ses)
             tintin_eprintf(ses, "#ERROR - Network unreachable.");
             break;
         default:
-            tintin_eprintf(ses, "#Couldn't connect to %s:%s",host,port);
+            tintin_eprintf(ses, "#Couldn't connect to %s:%s", host, port);
         }
         return 0;
     }
@@ -222,13 +220,13 @@ int connect_mud(char *host, char *port, struct session *ses)
 /*****************/
 static void alarm_func(int k)
 {
-    abort_connect=1;
+    abort_connect=true;
 }
 
 /********************************************************************/
 /* write line to the mud ses is connected to - add \n or \r\n first */
 /********************************************************************/
-void write_line_mud(char *line, struct session *ses)
+void write_line_mud(const char *line, struct session *ses)
 {
     char rstr[BUFFER_SIZE];
     PROFPUSH("conv: utf8->remote");
@@ -245,21 +243,22 @@ void write_line_mud(char *line, struct session *ses)
                 sizeof(ses->nagle));
             ses->nagle=1;
         }
-        telnet_write_line(rstr, ses, 1);
+        telnet_write_line(rstr, ses, true);
     }
     else if (ses==nullsession)
         tintin_eprintf(ses, "#spurious output: %s", line);  /* CHANGE ME */
     else
         pty_write_line(rstr, ses->socket);
-    do_hook(ses, HOOK_SEND, line, 1);
+    do_hook(ses, HOOK_SEND, line, true);
 }
 
 /******************************************/
 /* write control chars, without a newline */
 /******************************************/
-void write_raw_mud(char *line, int len, struct session *ses)
+void write_raw_mud(const char *line, int len, struct session *ses)
 {
-    char *lp=line, *rp, rstr[BUFFER_SIZE];
+    const char *lp=line;
+    char *rp, rstr[BUFFER_SIZE];
     int ret;
 
     /* not updating $IDLETIME, it's most likely not a command */
@@ -284,7 +283,7 @@ void write_raw_mud(char *line, int len, struct session *ses)
                 rp++;
 
             if (ses->issocket)
-                *rp=ret=0, telnet_write_line(rstr, ses, 0);
+                *rp=ret=0, telnet_write_line(rstr, ses, false);
             else
                 ret=write(ses->socket, rstr, rp-rstr);
         }
@@ -372,7 +371,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
             didget = read_socket(ses, ses->mccp_buf, INPUT_CHUNK);
             if (didget<=0)
             {
-                ses->mccp_more=0;
+                ses->mccp_more=false;
                 return -1;
             }
             ses->mccp->next_in = (Bytef*)ses->mccp_buf;
@@ -420,16 +419,13 @@ int read_buffer_mud(char *buffer, struct session *ses)
 
     *(tmpbuf+len+didget)=0;
 #if 0
-    tintin_printf(ses,"~8~text:[%s]~-1~",tmpbuf);
+    tintin_printf(ses, "~8~text:[%s]~-1~", tmpbuf);
 #endif
 
     ses->server_idle_since=time(0);
-    if ((didget+=len) == INPUT_CHUNK)
-        ses->more_coming = 1;
-    else
-        ses->more_coming = 0;
+    ses->more_coming = (didget+=len) == INPUT_CHUNK;
     len=0;
-    ses->ga=0;
+    ses->ga=false;
 
     tmpbuf[didget]=0;
     cpsource = tmpbuf;
@@ -437,7 +433,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
     i = didget;
     while (i > 0)
     {
-        switch (*(unsigned char *)cpsource)
+        switch (*(const unsigned char *)cpsource)
         {
         case 0:
             i--;
@@ -458,12 +454,12 @@ int read_buffer_mud(char *buffer, struct session *ses)
                 didget-=2;
                 cpsource+=2;
                 if (!i)
-                    ses->ga=1;
+                    ses->ga=true;
                 break;
             case -3:
                 i -= 2;
                 didget-=1;
-                *cpdest++=255;
+                *cpdest++=(char)255;
                 cpsource+=2;
                 break;
 #ifdef HAVE_ZLIB
@@ -493,7 +489,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
 }
 
 #ifdef HAVE_ZLIB
-static int init_mccp(struct session *ses, int cplen, char *cpsrc)
+static int init_mccp(struct session *ses, int cplen, const char *cpsrc)
 {
     if (ses->mccp)
         return 0;

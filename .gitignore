@@ -1,7 +1,5 @@
 .#*
 aclocal.m4
-ansi2html
-ansi2txt
 atconfig
 atlocal
 autom4te.cache
@@ -23,7 +21,7 @@ configure.lineno
 configure.scan
 depcomp
 missing
-DEADJOE
+VERSION
 .deps
 install-sh
 KBtin
@@ -51,7 +49,6 @@ debian/patches/
 *.orig
 *~
 package.m4
-pipetty
 profinit.h
 protos
 protos.h
@@ -61,10 +58,10 @@ _stdint.h
 tests.at
 tests/_be_quiet_
 tests/get-utf8
+tests/ttyrec2ansi
 testsuite
 testsuite.dir
 testsuite.log
-ttyrec2ansi
 valgrind.*
 depcomp
 install-sh

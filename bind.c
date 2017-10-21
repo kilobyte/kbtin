@@ -1,19 +1,16 @@
 #include "tintin.h"
-#include "ui.h"
 #include "protos/action.h"
 #include "protos/alias.h"
+#include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/print.h"
 #include "protos/parse.h"
+#include "protos/user.h"
 #include "protos/variables.h"
-
-
-extern int bindnum;
-extern int recursion;
 
 static struct hashtable *keynames;
 
-static char *KEYNAMES[]=
+static const char *KEYNAMES[]=
 {
     "ESC[[A",       "F1",
     "ESC[[B",       "F2",
@@ -84,7 +81,7 @@ static char *KEYNAMES[]=
     "",             "",
 };
 
-static char *NORMAL_KEYNAMES[]=
+static const char *NORMAL_KEYNAMES[]=
 {
     "ESCOP",        "KpadNumLock",
     "ESCOQ",        "KpadDivide",
@@ -94,7 +91,7 @@ static char *NORMAL_KEYNAMES[]=
     "",             "",
 };
 
-static char *XTERM_KEYNAMES[]=
+static const char *XTERM_KEYNAMES[]=
 {
     "ESCOP",        "F1",
     "ESCOQ",        "F2",
@@ -107,7 +104,7 @@ static char *XTERM_KEYNAMES[]=
 /*********************/
 /* the #bind command */
 /*********************/
-void bind_command(char *arg, struct session *ses)
+void bind_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
@@ -122,8 +119,8 @@ void bind_command(char *arg, struct session *ses)
     if (*left && *right)
     {
         set_hash(ses->binds, left, right);
-        if (ses->mesvar[8])
-            tintin_printf(ses,"#Ok. {%s} is now bound to {%s}.", left, right);
+        if (ses->mesvar[MSG_BIND])
+            tintin_printf(ses, "#Ok. {%s} is now bound to {%s}.", left, right);
         bindnum++;
         return;
     }
@@ -135,7 +132,7 @@ void bind_command(char *arg, struct session *ses)
 /***********************/
 /* the #unbind command */
 /***********************/
-void unbind_command(char *arg, struct session *ses)
+void unbind_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], result[BUFFER_SIZE];
 
@@ -148,58 +145,52 @@ void unbind_command(char *arg, struct session *ses)
     substitute_vars(left, result);
     substitute_myvars(result, left, ses);
     delete_hashlist(ses, ses->binds, left,
-        ses->mesvar[8]? "#Ok. {%s} is no longer bound." : 0,
-        ses->mesvar[8]? "#No match(es) found for {%s}" : 0);
+        ses->mesvar[MSG_BIND]? "#Ok. {%s} is no longer bound." : 0,
+        ses->mesvar[MSG_BIND]? "#No match(es) found for {%s}" : 0);
 }
 
 
-int find_bind(char *key,int msg,struct session *ses)
+bool find_bind(const char *key, int msg, struct session *ses)
 {
     char *val;
 
-    if ((val=get_hash(ses->binds,key)))
+    if ((val=get_hash(ses->binds, key)))
     {          /* search twice, both for raw key code and key name */
-        parse_input(val,1,ses);
+        parse_input(val, true, ses);
         recursion=0;
-        return 1;
-    };
-    if ((val=get_hash(keynames,key)))
+        return true;
+    }
+    if ((val=get_hash(keynames, key)))
     {
         key=val;
-        if ((val=get_hash(ses->binds,key)))
+        if ((val=get_hash(ses->binds, key)))
         {
-            parse_input(val,1,ses);
+            parse_input(val, true, ses);
             recursion=0;
-            return 1;
+            return true;
         }
     }
     if (msg)
-        tintin_printf(ses,"#Unbound keycode: %s",key);
-    return 0;
+        tintin_printf(ses, "#Unbound keycode: %s", key);
+    return false;
 }
 
 
 void init_bind(void)
 {
-    char**n;
     keynames=init_hash();
     if (!ui_keyboard)
         return;
-    for (n=KEYNAMES;**n;n+=2)
-        set_hash(keynames,n[0],n[1]);
+    for (const char**n=KEYNAMES;**n;n+=2)
+        set_hash(keynames, n[0], n[1]);
 }
 
-void bind_xterm(int xterm)
+void bind_xterm(bool xterm)
 {
-    char**n;
-    switch (xterm)
-    {
-    case 1:
-        for (n=XTERM_KEYNAMES;**n;n+=2)
-            set_hash(keynames,n[0],n[1]);
-        break;
-    default:
-        for (n=NORMAL_KEYNAMES;**n;n+=2)
-            set_hash(keynames,n[0],n[1]);
-    }
+    if (xterm)
+        for (const char**n=XTERM_KEYNAMES;**n;n+=2)
+            set_hash(keynames, n[0], n[1]);
+    else
+        for (const char**n=NORMAL_KEYNAMES;**n;n+=2)
+            set_hash(keynames, n[0], n[1]);
 }

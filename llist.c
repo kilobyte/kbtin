@@ -9,7 +9,6 @@
 #include "protos/hash.h"
 #include "protos/llist.h"
 #include "protos/print.h"
-#include "protos/parse.h"
 #include "protos/routes.h"
 #include "protos/utils.h"
 
@@ -73,66 +72,42 @@ void zap_list(struct listnode *nptr)
 /********************************************************************
 **   This function will clear all lists associated with a session  **
 ********************************************************************/
-void kill_all(struct session *ses, int mode)
+void kill_all(struct session *ses, bool no_reinit)
 {
-    switch (mode)
-    {
-    case CLEAN:
-        if (ses != NULL)
-        {
-            kill_hash(ses->aliases);
-            ses->aliases = init_hash();
-            kill_list(ses->actions);
-            ses->actions = init_list();
-            kill_list(ses->prompts);
-            ses->prompts = init_list();
-            kill_hash(ses->myvars);
-            ses->myvars = init_hash();
-            kill_list(ses->highs);
-            ses->highs = init_list();
-            kill_list(ses->subs);
-            ses->subs = init_list();
-            kill_list(ses->antisubs);
-            ses->antisubs = init_list();
-            kill_list(ses->path);
-            ses->path = init_list();
-            kill_hash(ses->binds);
-            ses->binds = init_hash();
-            kill_hash(ses->pathdirs);
-            ses->pathdirs = init_hash();
-            kill_routes(ses);
-            tintin_printf(ses,"#Lists cleared.");
-            prompt(NULL);
-        }
-        else
-        {       /* can't happen */
-            tintin_printf(0,"#Can't clean the common lists (yet).");
-            prompt(NULL);
-        }
-        break;
+    if (!ses) // can't happen
+        return;
 
-    case END:
-        if (ses != NULL)
-        {
-            kill_hash(ses->aliases);
-            kill_list(ses->actions);
-            kill_list(ses->prompts);
-            kill_hash(ses->myvars);
-            kill_list(ses->highs);
-            kill_list(ses->subs);
-            kill_list(ses->antisubs);
-            kill_list(ses->path);
-            kill_hash(ses->pathdirs);
-            kill_hash(ses->binds);
-            kill_routes(ses);
-        }
-        break;
-    }
+    kill_hash(ses->aliases);
+    kill_list(ses->actions);
+    kill_list(ses->prompts);
+    kill_hash(ses->myvars);
+    kill_list(ses->highs);
+    kill_list(ses->subs);
+    kill_list(ses->antisubs);
+    kill_list(ses->path);
+    kill_hash(ses->pathdirs);
+    kill_hash(ses->binds);
+    kill_routes(ses);
+    if (no_reinit)
+        return;
+
+    ses->aliases = init_hash();
+    ses->actions = init_list();
+    ses->prompts = init_list();
+    ses->myvars = init_hash();
+    ses->highs = init_list();
+    ses->subs = init_list();
+    ses->antisubs = init_list();
+    ses->path = init_list();
+    ses->binds = init_hash();
+    ses->pathdirs = init_hash();
+    tintin_printf(ses, "#Lists cleared.");
 }
+
 /***********************************************/
 /* make a copy of a list - return: ptr to copy */
 /***********************************************/
-struct listnode* copy_list(struct listnode *sourcelist,int mode)
+struct listnode* copy_list(struct listnode *sourcelist, int mode)
 {
     struct listnode *resultlist;
 
@@ -149,7 +124,7 @@ struct listnode* copy_list(struct listnode *sourcelist,int mode)
 /* strings generally sort in ASCIIbetical order, however numbers  */
 /* sort according to their numerical values.                      */
 /******************************************************************/
-static int prioritycmp(char *a, char *b)
+static int prioritycmp(const char *a, const char *b)
 {
     int res;
 
@@ -189,10 +164,10 @@ not_numeric:
 /* into the list - in lexicographical order, or by numerical     */
 /* priority (dependent on mode) - Mods by Joann Ellsworth 2/2/94 */
 /*****************************************************************/
-void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext, int mode)
+void insertnode_list(struct listnode *listhead, const char *ltext, const char *rtext, const char *prtext, llist_mode_t mode)
 {
     struct listnode *nptr, *nptrlast, *newnode;
-    int lo,ln;
+    int lo, ln;
 
     if ((newnode = (TALLOC(struct listnode))) == NULL)
         syserr("couldn't malloc listhead");
@@ -240,7 +215,6 @@ void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *
         return;
         break;
 
-
     case LENGTH:
         ln=strlen(ltext);
         while ((nptrlast = nptr) && (nptr = nptr->next))
@@ -275,8 +249,6 @@ void insertnode_list(struct listnode *listhead, char *ltext, char *rtext, char *
         newnode->next = NULL;
         return;
         break;
-
-
 
     case ALPHA:
         while ((nptrlast = nptr) && (nptr = nptr->next))
@@ -330,10 +302,6 @@ struct listnode* searchnode_list(struct listnode *listhead, char *cptr)
     {
         if ((i = strcmp(listhead->left, cptr)) == 0)
             return listhead;
-        /* CHANGED to fix bug when list isn't alphabetically sorted
-           else if (i>0)
-           return NULL;
-         */
     }
     return NULL;
 }
@@ -363,7 +331,7 @@ void show_list(struct listnode *listhead)
 void show_list_action(struct listnode *listhead)
 {
     while ((listhead = listhead->next))
-        if (strcmp(listhead->left,K_ACTION_MAGIC))
+        if (strcmp(listhead->left, K_ACTION_MAGIC))
             shownode_list_action(listhead);
 }
 
@@ -371,9 +339,6 @@ struct listnode* search_node_with_wild(struct listnode *listhead, char *cptr)
 {
     while ((listhead = listhead->next))
     {
-        /* CHANGED to fix silly globbing behavior
-           if (check_one_node(listhead->left, cptr))
-         */
         if (match(cptr, listhead->left))
             return listhead;
     }
@@ -385,7 +350,7 @@ struct listnode* search_node_with_wild(struct listnode *listhead, char *cptr)
 /* create a node containing the ltext, rtext fields and place at the */
 /* end of a list - as insertnode_list(), but not alphabetical        */
 /*********************************************************************/
-void addnode_list(struct listnode *listhead, char *ltext, char *rtext, char *prtext)
+void addnode_list(struct listnode *listhead, const char *ltext, const char *rtext, const char *prtext)
 {
     struct listnode *newnode;
 

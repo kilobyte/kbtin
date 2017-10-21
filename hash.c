@@ -1,16 +1,32 @@
 #include "tintin.h"
-#include "protos/crc.h"
 #include "protos/glob.h"
 #include "protos/llist.h"
 #include "protos/utils.h"
 
 #define DELETED_HASHENTRY ((char*)init_hash)
-#define crc(x) ((unsigned int)crc32s(x))
+
+// Jenkins hash
+static uint32_t hash(const char *key)
+{
+    uint32_t h = 0;
+
+    while (*key)
+    {
+        h += *key++;
+        h += h << 10;
+        h ^= h >> 6;
+    }
+    h += h << 3;
+    h ^= h >> 11;
+    h += h << 15;
+    return h;
+}
+
 
 /**********************************/
 /* initialize an empty hash table */
 /**********************************/
-struct hashtable* init_hash()
+struct hashtable* init_hash(void)
 {
     struct hashtable *h=TALLOC(struct hashtable);
     h->size=8;
@@ -26,17 +42,15 @@ struct hashtable* init_hash()
 /*********************/
 void kill_hash(struct hashtable* h)
 {
-    int i;
-
     if (h->nval)
-        for (i=0; i<h->size; i++)
+        for (int i=0; i<h->size; i++)
         {
             if (h->tab[i].left && (h->tab[i].left!=DELETED_HASHENTRY))
             {
                 SFREE(h->tab[i].left);
                 SFREE(h->tab[i].right);
             }
-        };
+        }
     CFREE(h->tab, h->size, struct hashentry);
     TFREE(h, struct hashtable);
 }
@@ -44,8 +58,7 @@ void kill_hash(struct hashtable* h)
 
 static inline void add_hash_value(struct hashtable *h, char *left, char *right)
 {
-    int i;
-    i=crc(left)%h->size;
+    int i=hash(left)%h->size;
     while (h->tab[i].left)
     {
         if (!i)
@@ -57,18 +70,14 @@ static inline void add_hash_value(struct hashtable *h, char *left, char *right)
 }
 
 
-
 static inline void rehash(struct hashtable *h, int s)
 {
-    int i,gs;
-    struct hashentry *gt;
-
-    gt=h->tab;
-    gs=h->size;
+    struct hashentry *gt=h->tab;
+    int gs=h->size;
     h->tab=CALLOC(s, struct hashentry);
     h->nent=h->nval;
     h->size=s;
-    for (i=0;i<gs;i++)
+    for (int i=0;i<gs;i++)
     {
         if (gt[i].left && gt[i].left!=DELETED_HASHENTRY)
             add_hash_value(h, gt[i].left, gt[i].right);
@@ -77,18 +86,15 @@ static inline void rehash(struct hashtable *h, int s)
 }
 
 
-
 /********************************************************************/
 /* add a (key,value) pair to the hash table, rehashing if necessary */
 /********************************************************************/
-void set_hash(struct hashtable *h, char *key, char *value)
+void set_hash(struct hashtable *h, const char *key, const char *value)
 {
-    int i,j;
-
     if (h->nent*5 > h->size*4)
         rehash(h, h->nval*3);
-    j=-1;
-    i=crc(key)%h->size;
+    int j=-1;
+    int i=hash(key)%h->size;
     while (h->tab[i].left)
     {
         if (h->tab[i].left==DELETED_HASHENTRY)
@@ -114,14 +120,12 @@ void set_hash(struct hashtable *h, char *key, char *value)
 }
 
 
-void set_hash_nostring(struct hashtable *h, char *key, char *value)
+void set_hash_nostring(struct hashtable *h, const char *key, char *value)
 {
-    int i,j;
-
     if (h->nent*5 > h->size*4)
         rehash(h, h->nval*3);
-    j=-1;
-    i=crc(key)%h->size;
+    int j=-1;
+    int i=hash(key)%h->size;
     while (h->tab[i].left)
     {
         if (h->tab[i].left==DELETED_HASHENTRY)
@@ -146,15 +150,12 @@ void set_hash_nostring(struct hashtable *h, char *key, char *value)
 }
 
 
-
 /****************************************************/
 /* get the value for a given key, or 0 if not found */
 /****************************************************/
-char* get_hash(struct hashtable *h, char *key)
+char* get_hash(struct hashtable *h, const char *key)
 {
-    int i;
-
-    i=crc(key)%h->size;
+    int i=hash(key)%h->size;
     while (h->tab[i].left)
     {
         if (h->tab[i].left!=DELETED_HASHENTRY&&(!strcmp(h->tab[i].left, key)))
@@ -169,15 +170,12 @@ char* get_hash(struct hashtable *h, char *key)
 }
 
 
-
 /****************************************************/
 /* delete the key and its value from the hash table */
 /****************************************************/
-int delete_hash(struct hashtable *h, char *key)
+bool delete_hash(struct hashtable *h, const char *key)
 {
-    int i;
-
-    i=crc(key)%h->size;
+    int i=hash(key)%h->size;
     while (h->tab[i].left)
     {
         if (h->tab[i].left!=DELETED_HASHENTRY&&(!strcmp(h->tab[i].left, key)))
@@ -188,15 +186,14 @@ int delete_hash(struct hashtable *h, char *key)
             h->nval--;
             if (h->nval*5<h->size)
                 rehash(h, h->size/2);
-            return 1;
+            return true;
         }
         if (!i)
             i=h->size;
         i--;
     }
-    return 0;
+    return false;
 }
-
 
 
 /*****************************************************/
@@ -210,7 +207,7 @@ static struct listnode* merge_lists(struct listnode* a, struct listnode* b)
         return b;
     if (!b)
         return a;
-    if (strcmp(a->left,b->left)<=0)
+    if (strcmp(a->left, b->left)<=0)
     {
         c0=c=a;
         a=a->next;
@@ -221,7 +218,7 @@ static struct listnode* merge_lists(struct listnode* a, struct listnode* b)
         b=b->next;
     }
     while (a && b)
-        if (strcmp(a->left,b->left)<=0)
+        if (strcmp(a->left, b->left)<=0)
         {
             c->next=a;
             c=a;
@@ -247,16 +244,15 @@ static struct listnode* merge_lists(struct listnode* a, struct listnode* b)
 /* deleting from a list, we should show the entries in a sorted order,    */
 /* however screen output is slow anyways, so we can sort it on the fly.   */
 /**************************************************************************/
-struct listnode* hash2list(struct hashtable *h, char *pat)
+struct listnode* hash2list(struct hashtable *h, const char *pat)
 {
 #define NBITS ((int)sizeof(void*)*8)
     struct listnode *p[NBITS];     /* polynomial sort, O(n*log(n)) */
     struct listnode *l;
-    int i,j;
 
-    for (j=0;j<NBITS;j++)
+    for (int j=0;j<NBITS;j++)
         p[j]=0;
-    for (i=0;i<h->size;i++)
+    for (int i=0;i<h->size;i++)
         if (h->tab[i].left && (h->tab[i].left!=DELETED_HASHENTRY)
             && match(pat, h->tab[i].left))
         {
@@ -266,6 +262,7 @@ struct listnode* hash2list(struct hashtable *h, char *pat)
             l->right= h->tab[i].right;
             l->pr   = 0;
             l->next = 0;
+            int j;
             for (j=0; p[j]; j++)     /* if j>=NBITS, we have a bug anyway */
             {
                 l=merge_lists(p[j], l);
@@ -274,7 +271,7 @@ struct listnode* hash2list(struct hashtable *h, char *pat)
             p[j]=l;
         }
     l=0;
-    for (j=0; j<NBITS; j++)
+    for (int j=0; j<NBITS; j++)
         l=merge_lists(p[j], l);
     p[0]=init_list();
     p[0]->next=l;
@@ -287,13 +284,12 @@ struct listnode* hash2list(struct hashtable *h, char *pat)
 /**************************/
 struct hashtable* copy_hash(struct hashtable *h)
 {
-    int i;
     struct hashtable *g=init_hash();
     CFREE(g->tab, g->size, struct hashentry);
     g->size=(h->nval>4) ? (h->nval*2) : 8;
     g->tab=CALLOC(g->size, struct hashentry);
 
-    for (i=0; i<h->size; i++)
+    for (int i=0; i<h->size; i++)
         if (h->tab[i].left && h->tab[i].left!=DELETED_HASHENTRY)
             set_hash(g, h->tab[i].left, h->tab[i].right);
     return g;

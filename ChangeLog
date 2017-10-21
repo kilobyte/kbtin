@@ -1,3 +1,10 @@
+1.0.18:
+*	lots of internal cleanups
+*	idle/serveridle in #info
+*	assorted minor fixes
+*	password star-out doesn't stay for multiple lines
+*	log-handling tools have been split out
+
 1.0.17:
 *	pipetty, a new tool to fool isatty()
 *	256/24-bit color support, full in ansi2html, shoehorned to 16/8 colors

@@ -2,6 +2,7 @@
 #include "assert.h"
 #include "protos/action.h"
 #include "protos/glob.h"
+#include "protos/globals.h"
 #include "protos/ivars.h"
 #include "protos/print.h"
 #include "protos/misc.h"
@@ -11,15 +12,14 @@
 #include "protos/variables.h"
 
 static int stacks[100][4];
-static int conv_to_ints(char *arg,struct session *ses);
-static int do_one_inside(int begin, int end);
+static bool conv_to_ints(char *arg, struct session *ses);
+static bool do_one_inside(int begin, int end);
 
-extern char tintin_char;
 
 /*********************/
 /* the #math command */
 /*********************/
-void math_command(char *line, struct session *ses)
+void math_command(const char *line, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[BUFFER_SIZE];
     int i;
@@ -28,10 +28,10 @@ void math_command(char *line, struct session *ses)
     line = get_arg(line, right, 1, ses);
     if (!*left||!*right)
     {
-        tintin_eprintf(ses,"#Syntax: #math <variable> <expression>");
+        tintin_eprintf(ses, "#Syntax: #math <variable> <expression>");
         return;
-    };
-    i = eval_expression(right,ses);
+    }
+    i = eval_expression(right, ses);
     sprintf(temp, "%d", i);
     set_variable(left, temp, ses);
 }
@@ -39,22 +39,21 @@ void math_command(char *line, struct session *ses)
 /*******************/
 /* the #if command */
 /*******************/
-struct session *if_command(char *line, struct session *ses)
+struct session *if_command(const char *line, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    /* int i; */
     line = get_arg(line, left, 0, ses);
     line = get_arg_in_braces(line, right, 1);
 
     if (!*left || !*right)
     {
-        tintin_eprintf(ses,"#ERROR: valid syntax is: if <condition> <command> [#elif <condition> <command>] [...] [#else <command>]");
+        tintin_eprintf(ses, "#ERROR: valid syntax is: if <condition> <command> [#elif <condition> <command>] [...] [#else <command>]");
         return ses;
     }
 
-    if (eval_expression(left,ses))
-        ses=parse_input(right,1,ses);
+    if (eval_expression(left, ses))
+        ses=parse_input(right, true, ses);
     else
     {
         line = get_arg_in_braces(line, left, 0);
@@ -64,7 +63,7 @@ struct session *if_command(char *line, struct session *ses)
             if (is_abrev(left + 1, "else"))
             {
                 line = get_arg_in_braces(line, right, 1);
-                ses=parse_input(right,1,ses);
+                ses=parse_input(right, true, ses);
             }
             if (is_abrev(left + 1, "elif"))
                 ses=if_command(line, ses);
@@ -74,9 +73,9 @@ struct session *if_command(char *line, struct session *ses)
 }
 
 
-static int do_inline(char *line,int *res,struct session *ses)
+static bool do_inline(const char *line, int *res, struct session *ses)
 {
-    char command[BUFFER_SIZE],*ptr;
+    char command[BUFFER_SIZE], *ptr;
 
     ptr=command;
     while (*line&&(*line!=' '))
@@ -84,45 +83,45 @@ static int do_inline(char *line,int *res,struct session *ses)
     *ptr=0;
     line=space_out(line);
     /*
-       tintin_printf(ses,"#executing inline command [%c%s] with [%s]",tintin_char,command,line);
+       tintin_printf(ses, "#executing inline command [%c%s] with [%s]", tintin_char, command, line);
     */
-    if (is_abrev(command,"finditem"))
-        *res=finditem_inline(line,ses);
-    else if (is_abrev(command,"isatom"))
-        *res=isatom_inline(line,ses);
-    else if (is_abrev(command,"listlength"))
-        *res=listlength_inline(line,ses);
-    else if (is_abrev(command,"strlen"))
-        *res=strlen_inline(line,ses);
-    else if (is_abrev(command,"random"))
-        *res=random_inline(line,ses);
-    else if (is_abrev(command,"grep"))
-        *res=grep_inline(line,ses);
-    else if (is_abrev(command,"strcmp"))
-        *res=strcmp_inline(line,ses);
-    else if (is_abrev(command,"match"))
-        *res=match_inline(line,ses);
-    else if (is_abrev(command,"ord"))
-        *res=ord_inline(line,ses);
+    if (is_abrev(command, "finditem"))
+        *res=finditem_inline(line, ses);
+    else if (is_abrev(command, "isatom"))
+        *res=isatom_inline(line, ses);
+    else if (is_abrev(command, "listlength"))
+        *res=listlength_inline(line, ses);
+    else if (is_abrev(command, "strlen"))
+        *res=strlen_inline(line, ses);
+    else if (is_abrev(command, "random"))
+        *res=random_inline(line, ses);
+    else if (is_abrev(command, "grep"))
+        *res=grep_inline(line, ses);
+    else if (is_abrev(command, "strcmp"))
+        *res=strcmp_inline(line, ses);
+    else if (is_abrev(command, "match"))
+        *res=match_inline(line, ses);
+    else if (is_abrev(command, "ord"))
+        *res=ord_inline(line, ses);
     else
     {
-        tintin_eprintf(ses,"#Unknown inline command [%c%s]!",tintin_char,command);
-        return 0;
+        tintin_eprintf(ses, "#Unknown inline command [%c%s]!", tintin_char, command);
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
 
-int eval_expression(char *arg,struct session *ses)
+int eval_expression(char *arg, struct session *ses)
 {
-    if (!conv_to_ints(arg,ses))
+    if (!conv_to_ints(arg, ses))
         return 0;
 
     while (1)
     {
         int i = 0;
-        int flag = 1;
+        bool flag = true;
         int begin = -1;
         int end = -1;
         int prev = -1;
@@ -135,14 +134,14 @@ int eval_expression(char *arg,struct session *ses)
             else if (stacks[i][1] == 1)
             {
                 end = i;
-                flag = 0;
+                flag = false;
             }
             prev = i;
             i = stacks[i][0];
         }
         if ((flag && (begin != -1)) || (!flag && (begin == -1)))
         {
-            tintin_eprintf(ses,"#Unmatched parentheses error in {%s}.",arg);
+            tintin_eprintf(ses, "#Unmatched parentheses error in {%s}.", arg);
             return 0;
         }
         if (flag)
@@ -160,16 +159,15 @@ int eval_expression(char *arg,struct session *ses)
     }
 }
 
-static int conv_to_ints(char *arg,struct session *ses)
+static bool conv_to_ints(char *arg, struct session *ses)
 {
-    int i, flag, result;
-    int m; /* =0 should match, =1 should differ */
-    int regex; /* =0 strncmp, =1 regex match */
+    int i, flag;
+    bool result, should_differ;
+    bool regex=false; /* false=strncmp, true=regex match */
     char *ptr, *tptr;
     char temp[BUFFER_SIZE];
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    regex=0; /* die lint die */
     i = 0;
     ptr = arg;
     while (*ptr)
@@ -178,9 +176,9 @@ static int conv_to_ints(char *arg,struct session *ses)
         else if (*ptr == tintin_char)
             /* inline commands */
         {
-            ptr=get_inline(ptr+1,temp)-1;
-            if (!do_inline(temp,&(stacks[i][2]),ses))
-                return 0;
+            ptr=(char*)get_inline(ptr+1, temp)-1;
+            if (!do_inline(temp, &(stacks[i][2]), ses))
+                return false;
             stacks[i][1]=15;
         }
         /* jku: comparing strings with = and != */
@@ -196,7 +194,7 @@ static int conv_to_ints(char *arg,struct session *ses)
             }
             *tptr='\0';
             if (!*ptr)
-                return 0; /* error */
+                return false; /* error */
             if (*ptr == ']')
                 tintin_eprintf(ses, "#Compare %s to what ? (only one var between [ ])", left);
             /* fprintf(stderr, "Left argument = '%s'\n", left); */
@@ -204,25 +202,25 @@ static int conv_to_ints(char *arg,struct session *ses)
             {
             case '!' :
                 ptr++;
-                m=1;
+                should_differ=true;
                 switch (*ptr)
                 {
-                case '=' : regex=0; ptr++; break;
-                case '~' : regex=1; ptr++; break;
-                default : return 0;
+                case '=' : regex=false; ptr++; break;
+                case '~' : regex=true; ptr++; break;
+                default : return false;
                 }
                 break;
             case '=' :
                 ptr++;
-                m=0;
+                should_differ=false;
                 switch (*ptr)
                 {
-                case '=' : regex=0; ptr++; break;
-                case '~' : regex=1; ptr++; break;
+                case '=' : regex=false; ptr++; break;
+                case '~' : regex=true; ptr++; break;
                 default : break;
                 }
                 break;
-            default : return 0;
+            default : return false;
             }
 
             /* fprintf(stderr, "%c - %s match\n", (m) ? '=' : '!', (regex) ? "regex" : "string"); */
@@ -237,12 +235,12 @@ static int conv_to_ints(char *arg,struct session *ses)
             *tptr='\0';
             /* fprintf(stderr, "Right argument = '%s'\n", right); */
             if (!*ptr)
-                return 0;
+                return false;
             if (regex)
-                result = match(right, left) ? 0 : 1;
+                result = !match(right, left);
             else
                 result = strcmp(left, right);
-            if ((result == 0 && m == 0) || (result != 0 && m != 0))
+            if (result == should_differ)
             { /* success */
                 stacks[i][1] = 15;
                 stacks[i][2] = 1;
@@ -259,13 +257,13 @@ static int conv_to_ints(char *arg,struct session *ses)
         /* jku: undefined variables are now assigned value 0 (false) */
         else if (*ptr == '$')
         {
-            if (ses->mesvar[5])
+            if (ses->mesvar[MSG_VARIABLE])
                 tintin_eprintf(ses, "#Undefined variable in {%s}.", arg);
             stacks[i][1] = 15;
             stacks[i][2] = 0;
-            if (*(++ptr)=='{')
+            if (*(++ptr)==BRACE_OPEN)
             {
-                ptr=get_arg_in_braces(ptr,temp,0);
+                ptr=(char*)get_arg_in_braces(ptr, temp, 0);
             }
             else
             {
@@ -314,7 +312,7 @@ static int conv_to_ints(char *arg,struct session *ses)
             {
                 tptr = ptr;
                 ptr++;
-                while (isdigit(*ptr))
+                while (isadigit(*ptr))
                     ptr++;
                 sscanf(tptr, "%d", &stacks[i][2]);
                 stacks[i][1] = 15;
@@ -367,11 +365,11 @@ static int conv_to_ints(char *arg,struct session *ses)
             if (*(ptr + 1) == '|')
                 ptr++;
         }
-        else if (isdigit(*ptr))
+        else if (isadigit(*ptr))
         {
             stacks[i][1] = 15;
             tptr = ptr;
-            while (isdigit(*ptr))
+            while (isadigit(*ptr))
                 ptr++;
             sscanf(tptr, "%d", &stacks[i][2]);
             ptr--;
@@ -388,8 +386,8 @@ static int conv_to_ints(char *arg,struct session *ses)
         }
         else
         {
-            tintin_eprintf(ses,"#Error. Invalid expression in #if or #math in {%s}.",arg);
-            return 0;
+            tintin_eprintf(ses, "#Error. Invalid expression in #if or #math in {%s}.", arg);
+            return false;
         }
         if (*ptr != ' ')
         {
@@ -400,10 +398,10 @@ static int conv_to_ints(char *arg,struct session *ses)
     }
     if (i > 0)
         stacks[i][0] = 0;
-    return 1;
+    return true;
 }
 
-static int do_one_inside(int begin, int end)
+static bool do_one_inside(int begin, int end)
 {
     while (1)
     {
@@ -431,21 +429,21 @@ static int do_one_inside(int begin, int end)
                 stacks[begin][1] = 15;
                 stacks[begin][2] = stacks[loc][2];
                 stacks[begin][0] = stacks[end][0];
-                return 1;
+                return true;
             }
             else
             {
                 stacks[0][0] = stacks[end][0];
                 stacks[0][1] = 15;
                 stacks[0][2] = stacks[loc][2];
-                return 1;
+                return true;
             }
         }
         else if (highest == 2)
         {
             int next = stacks[loc][0];
             if (stacks[next][1] != 15 || stacks[next][0] == 0)
-                return 0;
+                return false;
             stacks[loc][0] = stacks[next][0];
             stacks[loc][1] = 15;
             stacks[loc][2] = !stacks[next][2];
@@ -456,23 +454,22 @@ static int do_one_inside(int begin, int end)
             assert(loc >= 0);
             next = stacks[loc][0];
             if (ploc == -1 || stacks[next][0] == 0 || stacks[next][1] != 15)
-                return 0;
+                return false;
             if (stacks[ploc][1] != 15)
-                return 0;
+                return false;
             switch (highest)
             {
             case 3:            /* highest priority is *,/ */
                 stacks[ploc][0] = stacks[next][0];
                 if (stacks[loc][3]==0)
                     stacks[ploc][2] *= stacks[next][2];
+                else if (stacks[next][2])
+                    stacks[ploc][2] /= stacks[next][2];
                 else
-                    if (stacks[next][2])
-                        stacks[ploc][2] /= stacks[next][2];
-                    else
-                    {
-                        stacks[ploc][2]=0;
-                        tintin_eprintf(0, "#Error: Division by zero.");
-                    }
+                {
+                    stacks[ploc][2]=0;
+                    tintin_eprintf(0, "#Error: Division by zero.");
+                }
                 break;
             case 5:            /* highest priority is +,- */
                 stacks[ploc][0] = stacks[next][0];
@@ -515,8 +512,8 @@ static int do_one_inside(int begin, int end)
                 stacks[ploc][2] = (stacks[ploc][2] || stacks[next][2]);
                 break;
             default:
-                tintin_eprintf(0,"#Programming error *slap Bill*");
-                return 0;
+                tintin_eprintf(0, "#Programming error *slap Bill*");
+                return false;
             }
         }
     }

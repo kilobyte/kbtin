@@ -6,9 +6,10 @@
 #include "tintin.h"
 #include <assert.h>
 
-int match(char *regex, char *string)
+bool match(const char *regex, const char *string)
 {
-    char *rp = regex, *sp = string, ch, *save;
+    const char *rp = regex, *sp = string, *save;
+    char ch;
 
     while (*rp != '\0')
     {
@@ -29,20 +30,20 @@ int match(char *regex, char *string)
              * Backed up all the way to starting location (i.e. `*' matches
              * empty string) and we _still_ can't match here.  Give up.
              */
-            return 0;
+            return false;
             /* break; not reached */
         case '\\':
             if ((ch = *rp++) != '\0')
             {
                 /* if not end of pattern, match next char explicitly */
                 if (ch != *sp++)
-                    return 0;
+                    return false;
                 break;
             }
             /* else FALL THROUGH to match a backslash */
         default:                       /* normal character */
             if (ch != *sp++)
-                return 0;
+                return false;
             break;
         }
     }
@@ -54,67 +55,66 @@ int match(char *regex, char *string)
 }
 
 
-int is_literal(char *txt)
+bool is_literal(const char *txt)
 {
     return !strchr(txt, '*');
 }
 
 
-int find(char *text,char *pat,int *from,int *to,char *fastener)
+bool find(const char *text, const char *pattern, int *from, int *to, const char *fastener)
 {
-    char *a,*b,*txt,m1[BUFFER_SIZE],m2[BUFFER_SIZE];
+    const char *txt;
+    char *a, *b, *pat, m1[BUFFER_SIZE], m2[BUFFER_SIZE];
     int i;
 
     if (fastener)
     {
-        txt=strstr(text,fastener);
+        txt=strstr(text, fastener);
         if (!txt)
-            return 0;
+            return false;
         *from=txt-text;
-        if (strchr(pat,'*'))
+        if (strchr(pattern, '*'))
             *to=strlen(text)-1;
         else
             *to=*from+strlen(fastener)-1;
-        return 1;
+        return true;
     }
 
     txt=text;
-    if (*pat=='^')
+    if (*pattern=='^')
     {
-        for (pat++;(*pat)&&(*pat!='*');)
-            if (*(pat++)!=*(txt++))
-                return 0;
-        if (!*pat)
+        for (pattern++;(*pattern)&&(*pattern!='*');)
+            if (*(pattern++)!=*(txt++))
+                return false;
+        if (!*pattern)
         {
             *from=0;
             *to=txt-text-1;
-            return 1;
-        };
-        strcpy(m1,pat);
+            return true;
+        }
+        strcpy(m1, pattern);
         pat=m1;
         goto start;
-    };
-    if (!(b=strchr(pat,'*')))
+    }
+    if (!(b=strchr(pattern, '*')))
     {
-        a=strstr(txt,pat);
+        a=strstr(txt, pattern);
         if (a)
         {
             *from=a-text;
-            *to=*from+strlen(pat)-1;
-            return 1;
+            *to=*from+strlen(pattern)-1;
+            return true;
         }
         else
-            return 0;
-    };
-    i=b-pat;
-    strcpy(m1,pat);
+            return false;
+    }
+    i=b-pattern;
+    strcpy(m1, pattern);
+    m1[i]=0;
     pat=m1;
-    pat[i]=0;
-    txt=strstr(txt,pat);
+    txt=strstr(txt, pat);
     if (!txt)
-    {
-        return 0;
-    };
+        return false;
     *from=txt-text;
     txt+=i;
     pat+=i+1;
@@ -125,8 +125,8 @@ start:
     if (!*pat)
     {
         *to=strlen(text)-1;
-        return 1;
-    };
+        return true;
+    }
     a=pat;
     b=pat+i-1;
     while (a<b)
@@ -134,7 +134,7 @@ start:
         char c=*a;
         *a++=*b;
         *b--=c;
-    };
+    }
     i=strlen(txt);
     for (a=m2+i-1;*txt;)
         *a--=*txt++;
@@ -143,27 +143,27 @@ start:
     *to=-1;
     do
     {
-        b=strchr(pat,'*');
+        b=strchr(pat, '*');
         if (b)
             *b=0;
-        a=strstr(txt,pat);
+        a=strstr(txt, pat);
         if (!a)
-            return 0;
+            return false;
         if (*to==-1)
             *to=strlen(text)-(a-txt)-1;
         txt=a+strlen(pat);
         if (b)
             pat=b;
         else
-            pat=strchr(pat,0);
+            pat=strchr(pat, 0);
     } while (*pat);
-    return 1;
+    return true;
 }
 
 
-char* get_fastener(char *txt, char *mbl)
+char* get_fastener(const char *txt, char *mbl)
 {
-    char *m;
+    const char *m;
 
     if (*txt=='^')
         return 0;

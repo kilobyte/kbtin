@@ -1,13 +1,12 @@
 /* Do all the telnet protocol stuff */
 
 #include "tintin.h"
+#include "protos/globals.h"
 #include "protos/print.h"
 #include "protos/run.h"
 #include "protos/net.h"
 #include "protos/utils.h"
 
-extern int LINES,COLS,isstatus;
-extern struct session *sessionlist;
 
 #define EOR 239     /* End of Record */
 #define SE  240     /* subnegotiation end */
@@ -45,8 +44,8 @@ extern struct session *sessionlist;
 #define MAX_SUBNEGO_LENGTH 64
 
 #ifdef TELNET_DEBUG
-static char *will_names[4]={"WILL", "WONT", "DO", "DONT"};
-static char *option_names[]=
+static const char *will_names[4]={"WILL", "WONT", "DO", "DONT"};
+static const char *option_names[]=
     {
         "Binary Transmission",
         "Echo",
@@ -109,7 +108,7 @@ static char *option_names[]=
 
 static void telnet_send_naws(struct session *ses)
 {
-    unsigned char nego[128],*np;
+    unsigned char nego[128], *np;
 
 #define PUTBYTE(b)    if ((b)==255) *np++=255;   *np++=(b);
     np=nego;
@@ -125,7 +124,7 @@ static void telnet_send_naws(struct session *ses)
     write_socket(ses, (char*)nego, np-nego);
 #ifdef TELNET_DEBUG
     {
-        char buf[BUFFER_SIZE],*b=buf;
+        char buf[BUFFER_SIZE], *b=buf;
         int neb=np-nego-2;
         np=nego+3;
         b=buf+sprintf(buf, "IAC SB NAWS ");
@@ -139,7 +138,8 @@ static void telnet_send_naws(struct session *ses)
 
 static void telnet_send_ttype(struct session *ses)
 {
-    char nego[128],*ttype;
+    char nego[128];
+    const char *ttype;
 
     switch (ses->last_term_type++)
     {
@@ -169,24 +169,22 @@ static void telnet_send_ttype(struct session *ses)
 
 void telnet_resize_all(void)
 {
-    struct session *sp;
-
-    for (sp=sessionlist; sp; sp=sp->next)
+    for (struct session *sp=sessionlist; sp; sp=sp->next)
         if (sp->naws)
         {
             if (sp->issocket)
                 telnet_send_naws(sp);
             else
-                pty_resize(sp->socket,COLS,LINES-1-!!isstatus);
+                pty_resize(sp->socket, COLS, LINES-1-!!isstatus);
         }
 }
 
-int do_telnet_protocol(char *data, int nb, struct session *ses)
+int do_telnet_protocol(const char *data, int nb, struct session *ses)
 {
-    unsigned char *cp = (unsigned char*)data+1;
+    const unsigned char *cp = (const unsigned char*)data+1;
     unsigned char wt;
     unsigned char answer[3];
-    unsigned char nego[128],*np;
+    unsigned char nego[128], *np;
 
 #define NEXTCH  cp++;                               \
                 if (cp-(unsigned char*)data>=nb)    \
@@ -220,7 +218,7 @@ int do_telnet_protocol(char *data, int nb, struct session *ses)
             case DO:    answer[1]=WONT; break;
             case WONT:  answer[1]=DONT; ses->server_echo=2; break;
             case DONT:  answer[1]=WONT; break;
-            };
+            }
             break;
         case TERMINAL_TYPE:
             switch (wt)
@@ -229,16 +227,16 @@ int do_telnet_protocol(char *data, int nb, struct session *ses)
             case DO:    answer[1]=WILL; break;
             case WONT:  answer[1]=DONT; break;
             case DONT:  answer[1]=WONT; break;
-            };
+            }
             break;
         case NAWS:
             switch (wt)
             {
-            case WILL:  answer[1]=DO;   ses->naws=0; break;
+            case WILL:  answer[1]=DO;   ses->naws=false; break;
             case DO:    answer[1]=WILL; ses->naws=(LINES>1 && COLS>0); break;
-            case WONT:  answer[1]=DONT; ses->naws=0; break;
-            case DONT:  answer[1]=WONT; ses->naws=0; break;
-            };
+            case WONT:  answer[1]=DONT; ses->naws=false; break;
+            case DONT:  answer[1]=WONT; ses->naws=false; break;
+            }
             break;
         case END_OF_RECORD:
             switch (wt)
@@ -247,7 +245,7 @@ int do_telnet_protocol(char *data, int nb, struct session *ses)
             case DO:    answer[1]=WONT; break;
             case WONT:  answer[1]=DONT; break;
             case DONT:  answer[1]=WONT; break;
-            };
+            }
             break;
 #ifdef HAVE_ZLIB
         case COMPRESS2:
@@ -255,9 +253,9 @@ int do_telnet_protocol(char *data, int nb, struct session *ses)
             {
             case WILL:  answer[1]=DO;   ses->can_mccp=time(0)-ses->sessionstart<60; break;
             case DO:    answer[1]=WONT; break;
-            case WONT:  answer[1]=DONT; ses->can_mccp=0; break;
+            case WONT:  answer[1]=DONT; ses->can_mccp=false; break;
             case DONT:  answer[1]=WONT; break;
-            };
+            }
             break;
 #endif
         default:
@@ -267,7 +265,7 @@ int do_telnet_protocol(char *data, int nb, struct session *ses)
             case DO:    answer[1]=WONT; break;
             case WONT:  answer[1]=DONT; break;
             case DONT:  answer[1]=WONT; break;
-            };
+            }
         }
         write_socket(ses, (char*)answer, 3);
 #ifdef TELNET_DEBUG
@@ -308,7 +306,7 @@ sbloop:
         nb=cp-(unsigned char*)data;
 #ifdef TELNET_DEBUG
         {
-            char buf[BUFFER_SIZE],*b=buf;
+            char buf[BUFFER_SIZE], *b=buf;
             unsigned int neb=np-nego;
             np=nego;
             b=buf+sprintf(buf, "IAC SB ");
@@ -351,7 +349,7 @@ sbloop:
         tintin_printf(ses, "~8~[telnet] received: IAC %s~-1~",
             (*cp==GA)?"GA":"EOR");
 #endif
-        ses->gas=1;
+        ses->gas=true;
         return -2;
     case IAC:       /* IAC IAC is the escape for literal 255 byte */
         return -3;
@@ -369,15 +367,15 @@ nego_too_long:
     return 2; /* we leave everything but IAC SB */
 }
 
-void telnet_write_line(char *line, struct session *ses, int nl)
+void telnet_write_line(const char *line, struct session *ses, bool nl)
 {
-    char outtext[6*BUFFER_SIZE + 2],*out;
+    char outtext[6*BUFFER_SIZE + 2], *out;
 
     out=outtext;
     while (*line)
     {
         if ((unsigned char)*line==255)
-            *out++=255;
+            *out++=(char)255;
         *out++=*line++;
     }
     if (nl)

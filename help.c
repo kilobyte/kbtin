@@ -2,34 +2,29 @@
 /* functions for the #help command                               */
 /*****************************************************************/
 #include "tintin.h"
+#include <fcntl.h>
+#include "protos/globals.h"
 #include "protos/print.h"
-#include "protos/parse.h"
 #include "protos/run.h"
 #include "protos/utils.h"
 
-extern char tintin_char;
-extern char *tintin_exec;
 
-static FILE* check_file(char *filestring)
+static FILE* check_file(const char *filestring)
 {
 #if COMPRESSED_HELP
     char sysfile[BUFFER_SIZE];
-    FILE *f;
+    int f;
 
-    sprintf(sysfile, "%s%s", filestring, DEFAULT_COMPRESSION_EXT);
-    if ((f=fopen(sysfile, "r")))
-        fclose(f);
-    else
+    sprintf(sysfile, "%s%s", filestring, COMPRESSION_EXT);
+    if ((f=open(sysfile, O_RDONLY|O_BINARY))==-1)
         return 0;
-    sprintf(sysfile, "%s %s%s", DEFAULT_EXPANSION_STR, filestring,
-        DEFAULT_COMPRESSION_EXT);
-    return mypopen(sysfile,0);
+    return mypopen(UNCOMPRESS_CMD, false, f);
 #else
     return (FILE *) fopen(filestring, "r");
 #endif
 }
 
-void help_command(char *arg,struct session *ses)
+void help_command(const char *arg, struct session *ses)
 {
     FILE *myfile=NULL;
     char text[BUFFER_SIZE], line[BUFFER_SIZE], filestring[BUFFER_SIZE];
@@ -62,16 +57,15 @@ void help_command(char *arg,struct session *ses)
         tintin_eprintf(0, "#Locations checked:");
         if (strcmp(DEFAULT_FILE_DIR, "HOME"))
             tintin_eprintf(0, "#      %s/KBtin_help%s", DEFAULT_FILE_DIR,
-                DEFAULT_COMPRESSION_EXT);
+                COMPRESSION_EXT);
 #ifdef DATA_PATH
         tintin_eprintf(0, "#      %s/KBtin_help%s", DATA_PATH,
-            DEFAULT_COMPRESSION_EXT);
+            COMPRESSION_EXT);
 #endif
-        tintin_eprintf(0, "#      %s_help%s",tintin_exec,
-            DEFAULT_COMPRESSION_EXT);
+        tintin_eprintf(0, "#      %s_help%s", tintin_exec,
+            COMPRESSION_EXT);
         tintin_eprintf(0, "#      %s/KBtin_help%s", getenv("HOME"),
-            DEFAULT_COMPRESSION_EXT);
-        prompt(NULL);
+            COMPRESSION_EXT);
         return;
     }
     if (*arg==tintin_char)
@@ -95,7 +89,7 @@ void help_command(char *arg,struct session *ses)
                         {
                             *(line + strlen(line) - 1) = '\0';
                             if (*line!='~')
-                                tintin_printf(0,"%s",line);
+                                tintin_printf(0, "%s", line);
                         }
                     }
                 }
@@ -112,12 +106,11 @@ void help_command(char *arg,struct session *ses)
             {
                 *(line + strlen(line) - 1) = '\0';
                 if (*line!='~')
-                    tintin_printf(0,"%s",line);
+                    tintin_printf(0, "%s", line);
             }
         }
     }
-   tintin_printf(0,"#Sorry, no help on that word.");
+    tintin_printf(0, "#Sorry, no help on that word.");
 end:
-    prompt(NULL);
     fclose(myfile);
 }

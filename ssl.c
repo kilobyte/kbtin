@@ -4,9 +4,9 @@
 
 #ifdef HAVE_GNUTLS
 static gnutls_certificate_credentials_t ssl_cred=0;
-static int ssl_check_cert(gnutls_session_t sslses, char *host, struct session *oldses);
+static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct session *oldses);
 
-gnutls_session_t ssl_negotiate(int sock, char *host, struct session *oldses)
+gnutls_session_t ssl_negotiate(int sock, const char *host, struct session *oldses)
 {
     gnutls_session_t sslses;
     int ret;
@@ -39,12 +39,13 @@ gnutls_session_t ssl_negotiate(int sock, char *host, struct session *oldses)
 }
 
 
-static int cert_file(char *name, char *respath)
+static bool cert_file(const char *name, char *respath)
 {
-    char fname[BUFFER_SIZE], *fn, *home;
+    char fname[BUFFER_SIZE], *fn;
+    const char *home;
 
     if (!*name || *name=='.')   // no valid hostname starts with a dot
-        return 0;
+        return false;
     fn=fname;
     while (1)
     {
@@ -60,19 +61,19 @@ static int cert_file(char *name, char *respath)
         else if (is7alnum(*name) || *name=='-' || *name=='.' || *name=='_')
             *fn++=*name++;
         else
-            return 0;
+            return false;
     }
     if (*(fn-1)=='.')   // no valid hostname ends with a dot, either
-        return 0;
+        return false;
     *fn=0;
     if (!(home=getenv("HOME")))
         home=".";
     snprintf(respath, BUFFER_SIZE, "%s/%s/%s/%s.crt", home, CONFIG_DIR, CERT_DIR, fname);
-    return 1;
+    return true;
 }
 
 
-static void load_cert(gnutls_x509_crt_t *cert, char *name)
+static void load_cert(gnutls_x509_crt_t *cert, const char *name)
 {
 #   define BIGBUFSIZE 65536
     char buf[BIGBUFSIZE];
@@ -96,9 +97,10 @@ static void load_cert(gnutls_x509_crt_t *cert, char *name)
 }
 
 
-static void save_cert(gnutls_x509_crt_t cert, char *name, int new, struct session *oldses)
+static void save_cert(gnutls_x509_crt_t cert, const char *name, bool new, struct session *oldses)
 {
-    char *home, fname[BUFFER_SIZE], buf[BIGBUFSIZE];
+    char fname[BUFFER_SIZE], buf[BIGBUFSIZE];
+    const char *home;
     FILE *f;
     size_t len;
 
@@ -138,34 +140,37 @@ static void save_cert(gnutls_x509_crt_t cert, char *name, int new, struct sessio
         return;
     }
     if (fclose(f))
+    {
         tintin_eprintf(oldses, "#Save failed: %s", strerror(errno));
+        unlink(fname);
+    }
 }
 
 
-static int diff_certs(gnutls_x509_crt_t c1, gnutls_x509_crt_t c2)
+static bool diff_certs(gnutls_x509_crt_t c1, gnutls_x509_crt_t c2)
 {
     char buf1[BIGBUFSIZE], buf2[BIGBUFSIZE];
     size_t len1, len2;
 
     len1=len2=BIGBUFSIZE;
     if (gnutls_x509_crt_export(c1, GNUTLS_X509_FMT_DER, buf1, &len1))
-        return 1;
+        return true;
     if (gnutls_x509_crt_export(c2, GNUTLS_X509_FMT_DER, buf2, &len2))
-        return 1;
+        return true;
     if (len1!=len2)
-        return 1;
+        return true;
     return memcmp(buf1, buf2, len1);
 }
 
 
-static int ssl_check_cert(gnutls_session_t sslses, char *host, struct session *oldses)
+static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct session *oldses)
 {
     char fname[BUFFER_SIZE], buf2[BUFFER_SIZE], *bptr;
     time_t t;
     gnutls_x509_crt_t cert, oldcert;
     const gnutls_datum_t *cert_list;
     unsigned int cert_list_size;
-    char *err=0;
+    const char *err=0;
 
     oldcert=0;
     load_cert(&oldcert, host);

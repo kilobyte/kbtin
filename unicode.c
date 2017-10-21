@@ -2,69 +2,19 @@
 #include <locale.h>
 #include "tintin.h"
 #include "translit.h"
+#include "protos/prof.h"
 #include "protos/utils.h"
-#include "protos/wcwidth.h"
 
-#ifdef PROFILING
-extern char *prof_area;
-#endif
-
-int user_charset;
 char *user_charset_name;
 
 
-/* get the length of an UTF-8 string */
-int utf8_len(char *s)
-{
-    int l=0;
-
-    while (*s)
-        if ((*s++&0xc0)!=0x80)
-            l++;
-    return l;
-}
-
-/* copy at most n UTF-8 characters, using no more than maxb bytes */
-/* return # of wide chars copied */
-int utf8_ncpy(char *d, char *s, int n, int maxb)
-{
-    int nc=0;
-
-    if (--maxb<0)
-        return 0;
-    while (*s && maxb)
-    {
-        if ((*s&0xc0)!=0x80)
-            if (nc++>=n)
-            {
-                nc--;
-                break;
-            }
-        *d++=*s++;
-    }
-    *d=0;
-    return nc;
-}
-
-/* skip first n UTF-8 characters */
-char* utf8_seek(char *s, int n)
-{
-    if (n<=0)
-        return s;
-    for (; *s; s++)
-        if ((*s&0xc0)!=0x80)
-            if (!n--)
-                return s;
-    return s;
-}
-
 /* copy up to n (no check for 0, -1 = inf) wide chars, return n of bytes consumed */
 /* d must be able to hold at least n+1 WChars */
-int utf8_to_wc(wchar_t *d, char *s, int n)
+int utf8_to_wc(wchar_t *d, const char *s, int n)
 {
-    char *s0;
+    const char *s0;
     unsigned char ic;
-    int tc,c,cnt,surrogate;
+    int tc, c, cnt, surrogate;
 
 
 #define OUTC(x,y) \
@@ -213,10 +163,10 @@ char translit(wchar_t ch)
     return tlits[ch-TRANSLIT_MIN];
 }
 
-int one_utf8_to_mb(char **d, char **s, mbstate_t *cs)
+int one_utf8_to_mb(char **d, const char **s, mbstate_t *cs)
 {
     wchar_t u[2];
-    int len,len2;
+    int len, len2;
 
     len=utf8_to_wc(u, *s, 1);
     if (!len)
@@ -231,12 +181,12 @@ int one_utf8_to_mb(char **d, char **s, mbstate_t *cs)
     return len;
 }
 
-void utf8_to_mb(char **d, char *s, mbstate_t *cs)
+void utf8_to_mb(char **d, const char *s, mbstate_t *cs)
 {
     while (*s && one_utf8_to_mb(d, &s, cs));
 }
 
-int wc_to_mb(char *d, wchar_t *s, int n, mbstate_t *cs)
+int wc_to_mb(char *d, const wchar_t *s, int n, mbstate_t *cs)
 {
     int res, len=0;
 
@@ -254,7 +204,7 @@ int wc_to_mb(char *d, wchar_t *s, int n, mbstate_t *cs)
 
 
 /* do an entire buffer at once */
-void utf8_to_local(char *d, char *s)
+void utf8_to_local(char *d, const char *s)
 {
     mbstate_t cs;
 
@@ -265,10 +215,10 @@ void utf8_to_local(char *d, char *s)
     PROFPOP;
 }
 
-void local_to_utf8(char *d, char *s, int maxb, mbstate_t *cs)
+void local_to_utf8(char *d, const char *s, int maxb, mbstate_t *cs)
 {
     mbstate_t cs0;
-    int len,n;
+    int len, n;
     wchar_t c;
 
     PROFPUSH("conv: local->utf8");
@@ -313,35 +263,33 @@ int utf8_width(char *s)
 }
 
 
-void init_locale()
+void init_locale(void)
 {
     setlocale(LC_CTYPE, "");
     user_charset_name=nl_langinfo(CODESET);
-    if (!strcmp(user_charset_name, "UTF-8"))
-        user_charset=0;
 }
 
-int new_conv(struct charset_conv *conv, char *name, int dir)
+bool new_conv(struct charset_conv *conv, const char *name, int dir)
 {
     memset(conv, 0, sizeof(struct charset_conv));
     conv->name=name;
     conv->dir=dir;
     if (!strcasecmp(name, "UTF-8") || !strcasecmp(name, "UTF8"))
-        conv->mode=1;
+        conv->mode=CM_UTF8;
     else if (!strcasecmp(name, "ANSI_X3.4-1968")
           || !strcasecmp(name, "ISO-8859-1")
           || !strcasecmp(name, "ISO8859-1"))
-        conv->mode=0;
+        conv->mode=CM_ISO8859_1;
     else if (!strcasecmp(name, "ASCII"))
-        conv->mode=3;
+        conv->mode=CM_ASCII;
     else
     {
         if ((dir<=0 && (conv->i_in=iconv_open("UTF-8", name))==(iconv_t)-1) ||
             (dir>=0 && (conv->i_out=iconv_open(name, "UTF-8"))==(iconv_t)-1))
-            return 0;
-        conv->mode=2;
+            return false;
+        conv->mode=CM_ICONV;
     }
-    return 1;
+    return true;
 }
 
 void nullify_conv(struct charset_conv *conv)
@@ -351,20 +299,20 @@ void nullify_conv(struct charset_conv *conv)
 
 void cleanup_conv(struct charset_conv *conv)
 {
-    if (conv->mode==2)
+    if (conv->mode==CM_ICONV)
     {
         if (conv->dir<=0)
             iconv_close(conv->i_in);
         if (conv->dir>=0)
             iconv_close(conv->i_out);
     }
-    conv->mode=-1;
+    conv->mode=CM_ISO8859_1;
 }
 
-void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir)
+void convert(struct charset_conv *conv, char *outbuf, const char *inbuf, int dir)
 {
     wchar_t wbuf[BUFFER_SIZE], *wptr;
-    size_t il,ol;
+    size_t il, ol;
     int cl;
 
 #ifndef NDEBUG
@@ -384,7 +332,7 @@ void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir)
 
     switch (conv->mode)
     {
-    case 3:             /* ASCII => UTF-8 */
+    case CM_ASCII:    /* ASCII => UTF-8 */
         if (dir<0)
         {
             while (*inbuf)
@@ -405,7 +353,7 @@ void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir)
             *outbuf=0;
             return;
         }
-    case 0:
+    case CM_ISO8859_1:
         if (dir<0)      /* ISO-8859-1 => UTF-8 */
         {
             wptr=wbuf;
@@ -431,7 +379,7 @@ void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir)
             *outbuf=0;
             return;
         }
-    case 1:     /* UTF-8 => UTF-8 */
+    case CM_UTF8:       /* UTF-8 => UTF-8 */
         if (dir<0)      /* input: sanitize it */
         {
             utf8_to_wc(wbuf, inbuf, BUFFER_SIZE-1);
@@ -445,13 +393,13 @@ void convert(struct charset_conv *conv, char *outbuf, char *inbuf, int dir)
             *outbuf++=0;
         }
         return;
-    case 2:
+    case CM_ICONV:
         il=strlen(inbuf);
         ol=BUFFER_SIZE-1;
         while (il>0)
         {
             if (iconv((dir<0) ? conv->i_in : conv->i_out,
-                &inbuf, &il, &outbuf, &ol))
+                (char**)&inbuf, &il, &outbuf, &ol))
             {
                 if (errno==E2BIG)
                     break;

@@ -1,5 +1,5 @@
 # When releasing: remember to update ChangeLog and NEWS.
-AC_INIT([KBtin], [1.0.17], [kilobyte@angband.pl])
+AC_INIT([KBtin], m4_esyscmd([./get_version -n]), [kilobyte@angband.pl])
 AM_INIT_AUTOMAKE([-Wall dist-xz no-dist-gzip])
 AC_CONFIG_SRCDIR([action.c])
 AC_CONFIG_HEADERS([config.h])
@@ -8,7 +8,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Checks for programs.
 AC_PROG_AWK
-AC_PROG_CC
+AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_EGREP
@@ -21,7 +21,7 @@ AC_HEADER_SYS_WAIT
 AC_CREATE_STDINT_H
 AC_HEADER_TIOCGWINSZ
 AC_CHECK_HEADERS([strings.h string.h sys/time.h termios.h unistd.h stropts.h \
-    pty.h libutil.h util.h sys/syslimits.h])
+    pty.h libutil.h util.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -33,7 +33,7 @@ AC_C_BIGENDIAN
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_VPRINTF
 AC_SEARCH_LIBS(forkpty, util)
-AC_CHECK_FUNCS([memcpy getpt ptsname snprintf vsnprintf _getpty grantpt \
+AC_CHECK_FUNCS([memcpy getpt ptsname _getpty grantpt \
 	forkpty regcomp getaddrinfo wcwidth posix_openpt cfmakeraw])
 AC_FUNC_STRLCPY
 AC_ARG_LIB(mccp, zlib, ZLIB, zlib.h, z, gzread, [
@@ -69,6 +69,12 @@ AC_SCO
 AC_AI_ADDRCONFIG
 AC_SYS_LARGEFILE
 AC_C_TRY_FLAG([-Wno-unused-parameter])
+AC_C_TRY_FLAG([-Wno-implicit-fallthrough])
+AC_DECL_OR_ZERO([O_BINARY], [fcntl.h])
+
+# Enable some warnings.
+AC_C_TRY_FLAG([-Wwrite-strings])
+AC_C_TRY_FLAG([-Wstrict-prototypes])
 
 AC_CONFIG_FILES([Makefile])
 

@@ -5,71 +5,54 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
+#include "protos/globals.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
 
-static void insert_history(char *buffer);
+static void insert_history(const char *buffer);
 
-extern char *history[HISTORY_SIZE];
 
 /************************/
 /* the #history command */
 /************************/
-void history_command(char *arg, struct session *ses)
+void history_command(const char *arg, struct session *ses)
 {
-    int i;
-
-    for (i = HISTORY_SIZE - 1; i >= 0; i--)
+    for (int i = HISTORY_SIZE - 1; i >= 0; i--)
         if (history[i])
             tintin_printf(ses, "%2d %s ", i, history[i]);
-    prompt(NULL);
 }
-
 
 
 void do_history(char *buffer, struct session *ses)
 {
-    char result[BUFFER_SIZE], *cptr;
+    char temp[BUFFER_SIZE];
+    const char *cptr;
 
-    if (!ses->verbatim && *(cptr=space_out(buffer)))
+    if (!ses->verbatim && *(cptr=space_out(buffer)) && *cptr=='!')
     {
-
-        if (*cptr == '!')
+        if (*(cptr + 1) == '!' && history[0])
         {
-            if (*(cptr + 1) == '!')
-            {
-                if (history[0])
-                {
-                    strcpy(result, history[0]);
-                    strcat(result, cptr + 2);
-                    strcpy(buffer, result);
-                }
-            }
-            else if (isadigit(*(cptr + 1)))
-            {
-                int i = atoi(cptr + 1);
-
-                if (i >= 0 && i < HISTORY_SIZE && history[i])
-                {
-                    strcpy(result, history[i]);
-                    strcat(result, cptr + 2);
-                    strcpy(buffer, result);
-                }
-            }
-            else
-            {
-                int i;
-
-                for (i = 0; i < HISTORY_SIZE && history[i]; i++)
-                    if (is_abrev(cptr + 1, history[i]))
-                    {
-                        strcpy(buffer, history[i]);
-                        break;
-                    }
-            }
-
+            strcpy(temp, cptr+2);
+            snprintf(buffer, BUFFER_SIZE, "%s%s", history[0], temp);
         }
+        else if (isadigit(*(cptr + 1)))
+        {
+            int i = atoi(cptr + 1);
+
+            if (i >= 0 && i < HISTORY_SIZE && history[i])
+            {
+                strcpy(temp, cptr+2);
+                snprintf(buffer, BUFFER_SIZE, "%s%s", history[i], temp);
+            }
+        }
+        else
+            for (int i = 0; i < HISTORY_SIZE && history[i]; i++)
+                if (is_abrev(cptr + 1, history[i]))
+                {
+                    strcpy(buffer, history[i]);
+                    break;
+                }
     }
     insert_history(buffer);
 }
@@ -77,39 +60,13 @@ void do_history(char *buffer, struct session *ses)
 /***********************************************/
 /* insert buffer into a session`s history list */
 /***********************************************/
-static void insert_history(char *buffer)
+static void insert_history(const char *buffer)
 {
-    int i;
-
     if (history[HISTORY_SIZE - 1])
         SFREE(history[HISTORY_SIZE - 1]);
 
-    for (i = HISTORY_SIZE - 1; i > 0; i--)
+    for (int i = HISTORY_SIZE - 1; i > 0; i--)
         history[i] = history[i - 1];
 
     history[0] = mystrdup(buffer);
 }
-
-#if 0
-/************************************************************/
-/* do all the parse stuff for !XXXX history commands        */
-/************************************************************/
-struct session* parse_history(char *command, char *arg, struct session *ses)
-{
-    if ((*(command + 1) == '!' || !*(command + 1)) && history[0])
-        return parse_input(history[0],1,ses); /* we're already not in verbatim */
-
-    else if (isadigit(*(command + 1)))
-    {
-        int i = atoi(command + 1);
-
-        if (i >= 0 && i < HISTORY_SIZE && history[i])
-        {
-            return parse_input(history[i],1,ses);
-        }
-    }
-    tintin_eprintf(ses, "#HISTORY: I DON'T REMEMBER THAT COMMAND.");
-
-    return ses;
-}
-#endif
