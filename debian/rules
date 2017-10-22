@@ -2,7 +2,7 @@
 export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 
 %:
-	dh $@ --parallel --with autoreconf
+	dh $@
 
 override_dh_auto_build:
 	V=y dh_auto_build

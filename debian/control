@@ -2,9 +2,9 @@ Source: kbtin
 Section: text
 Priority: optional
 Maintainer: Adam Borowski <kilobyte@angband.pl>
-Build-Depends: debhelper (>> 9.0.0), libz-dev, libglib2.0-dev (>= 2.10),
- gettext, libgnutls28-dev, dh-autoreconf
-Standards-Version: 3.9.8
+Build-Depends: debhelper (>> 10.0.0), libz-dev, libglib2.0-dev (>= 2.10),
+ gettext, libgnutls28-dev
+Standards-Version: 4.1.1
 Homepage: http://kbtin.sourceforge.net/
 Vcs-Git: https://github.com/kilobyte/kbtin.git -b debian
 Vcs-Browser: https://github.com/kilobyte/kbtin/tree/debian

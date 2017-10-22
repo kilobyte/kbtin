@@ -1,3 +1,11 @@
+kbtin (1.0.18-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Drop colorized-logs, it's a separate source now.
+  * Check the tarball's signature.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sun, 22 Oct 2017 02:15:20 +0200
+
 kbtin (1.0.17-1) unstable; urgency=medium
 
   * New upstream release.
