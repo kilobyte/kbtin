@@ -8,6 +8,8 @@ Standards-Version: 4.1.1
 Homepage: http://kbtin.sourceforge.net/
 Vcs-Git: https://github.com/kilobyte/kbtin.git -b debian
 Vcs-Browser: https://github.com/kilobyte/kbtin/tree/debian
+Rules-Requires-Root: no
+Build-Conflicts: fakeroot
 
 Package: kbtin
 Architecture: any
