@@ -1525,9 +1525,9 @@ static void usertty_keypad(bool k)
     otherwise.  It seems to not hurt any other terminal I checked.
     */
     if (k)
-        tbuf+=sprintf(tbuf, "\033=\033[?1051l\033[?1052l\033[?1060l\e[?1061h");
+        tbuf+=sprintf(tbuf, "\033=\033[?1051l\033[?1052l\033[?1060l\033[?1061h");
     else
-        tbuf+=sprintf(tbuf, "\033>\033[?1051l\033[?1052l\033[?1060l\e[?1061l");
+        tbuf+=sprintf(tbuf, "\033>\033[?1051l\033[?1052l\033[?1060l\033[?1061l");
     term_commit();
 }
 
