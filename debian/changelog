@@ -1,3 +1,11 @@
+kbtin (1.0.18-2) unstable; urgency=medium
+
+  * R³.
+  * Revert correct 256-color palette, makes screen fugly.
+  * dh 11.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Thu, 18 Jan 2018 00:18:48 +0100
+
 kbtin (1.0.18-1) unstable; urgency=medium
 
   * New upstream release.
