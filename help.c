@@ -12,7 +12,7 @@
 static FILE* check_file(const char *filestring)
 {
 #if COMPRESSED_HELP
-    char sysfile[BUFFER_SIZE];
+    char sysfile[BUFFER_SIZE+8];
     int f;
 
     sprintf(sysfile, "%s%s", filestring, COMPRESSION_EXT);
