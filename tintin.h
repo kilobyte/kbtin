@@ -408,6 +408,3 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define EMPTY_CHAR 0xffff
 #define VALID_TIN_CHARS "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 #define is7punct(x) strchr(VALID_TIN_CHARS, (x))
-
-#define write_stdout(x, len) do if (write(1, (x), (len))!=(len)) \
-                                  syserr("write to stdout failed"); while (0)
