@@ -384,21 +384,21 @@ static void apply_options(void)
             set_magic_hook(activesession);
             make_name(sname, opt->right);
             snprintf(temp, BUFFER_SIZE,
-                "%crun %s {%s}", tintin_char, sname, opt->right);
+                "%crun %.*s {%s}", tintin_char, MAX_SESNAME_LENGTH, sname, opt->right);
             DO_INPUT(temp, true);
             break;
         case 's':
             set_magic_hook(activesession);
             make_name(sname, opt->right);
             snprintf(temp, BUFFER_SIZE,
-                "%cses %s {%s %s}", tintin_char, sname, opt->right, opt->pr);
+                "%cses %.*s {%s %s}", tintin_char, MAX_SESNAME_LENGTH, sname, opt->right, opt->pr);
             DO_INPUT(temp, true);
             break;
         case 'S':
             set_magic_hook(activesession);
             make_name(sname, opt->right);
             snprintf(temp, BUFFER_SIZE,
-                "%csslses %s {%s %s}", tintin_char, sname, opt->right, opt->pr);
+                "%csslses %.*s {%s %s}", tintin_char, MAX_SESNAME_LENGTH, sname, opt->right, opt->pr);
             DO_INPUT(temp, true);
             break;
         case ' ':
