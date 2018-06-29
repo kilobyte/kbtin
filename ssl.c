@@ -68,7 +68,7 @@ static bool cert_file(const char *name, char *respath)
     *fn=0;
     if (!(home=getenv("HOME")))
         home=".";
-    snprintf(respath, BUFFER_SIZE, "%s/%s/%s/%s.crt", home, CONFIG_DIR, CERT_DIR, fname);
+    snprintf(respath, BUFFER_SIZE, "%s/%s/%s/%.253s.crt", home, CONFIG_DIR, CERT_DIR, fname);
     return true;
 }
 
