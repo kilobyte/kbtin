@@ -200,7 +200,7 @@ static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct sess
         snprintf(buf2, BUFFER_SIZE, "%s", ctime(&t));
         if ((bptr=strchr(buf2, '\n')))
             *bptr=0;
-        snprintf(fname, BUFFER_SIZE, "certificate activation time is in the future (%s).",
+        snprintf(fname, BUFFER_SIZE, "certificate activation time is in the future (%.128s).",
             buf2);
         err=fname;
     }
@@ -210,7 +210,7 @@ static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct sess
         snprintf(buf2, BUFFER_SIZE, "%s", ctime(&t));
         if ((bptr=strchr(buf2, '\n')))
             *bptr=0;
-        snprintf(fname, BUFFER_SIZE, "certificate has expired (on %s).",
+        snprintf(fname, BUFFER_SIZE, "certificate has expired (on %.128s).",
             buf2);
         err=fname;
     }
@@ -222,7 +222,7 @@ static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct sess
         t-=gnutls_x509_crt_get_expiration_time(oldcert);
         if (err)
         {
-            snprintf(buf2, BUFFER_SIZE, "certificate mismatch, and new %s",
+            snprintf(buf2, BUFFER_SIZE, "certificate mismatch, and new %.128s",
                      err);
             err=buf2;
         }
