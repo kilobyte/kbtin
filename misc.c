@@ -662,7 +662,7 @@ void status_command(const char *arg, struct session *ses)
         return;
     get_arg(arg, what, 1, ses);
     if (*what)
-        strncpy(status, what, BUFFER_SIZE);
+        strlcpy(status, what, BUFFER_SIZE);
     else
         strcpy(status, EMPTY_LINE);
     user_show_status();

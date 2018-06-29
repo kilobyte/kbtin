@@ -645,7 +645,7 @@ static void write_com_arg_mud(const char *command, const char *argument, int nsp
     else
     {
         check_insert_path(command, ses);
-        strncpy(outtext, command, BUFFER_SIZE);
+        strlcpy(outtext, command, BUFFER_SIZE);
         if (*argument)
         {
             if (nsp<1)
