@@ -1028,6 +1028,10 @@ Shows all pending timed events.
 #event <time> <command>
 Adds a timed event to be executed after <time>.
 
+The <time> must be non-negative; using <time> of 0 is an useful idiom that
+allows avoiding doing something in the middle of recursion, or doing long
+work without risk of starving other activity.
+
 Example:
 #action {~~-1~7~%1 starts casting fireball at you} {#delay 4 {counter $1}}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
