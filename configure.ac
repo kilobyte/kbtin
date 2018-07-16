@@ -34,7 +34,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_VPRINTF
 AC_SEARCH_LIBS(forkpty, util)
 AC_CHECK_FUNCS([memcpy getpt ptsname _getpty grantpt \
-	forkpty regcomp getaddrinfo wcwidth posix_openpt cfmakeraw futimens])
+	forkpty regcomp getaddrinfo wcwidth posix_openpt cfmakeraw])
 AC_FUNC_STRLCPY
 AC_ARG_LIB(mccp, zlib, ZLIB, zlib.h, z, gzread, [
 Please install zlib and its headers.  On most systems, the package will be named

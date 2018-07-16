@@ -791,10 +791,6 @@ void news_command(const char *arg, struct session *ses)
             tintin_printf(ses, "%s", line);
         }
         tintin_printf(ses, "~7~");
-#ifdef HAVE_FUTIMENS
-        struct timespec times[2]={{0,UTIME_NOW},{0,UTIME_OMIT}};
-        futimens(fileno(news), times);
-#endif
         fclose(news);
     }
     else

@@ -103,20 +103,6 @@ static void sigwinch(void)
 }
 
 
-static bool new_news(void)
-{
-    struct stat KBtin, news;
-
-    if (stat(tintin_exec, &KBtin))
-        return false;       /* can't stat the executable??? */
-    if (stat(NEWS_FILE, &news))
-#ifdef DATA_PATH
-        if (stat(DATA_PATH "/" NEWS_FILE, &news))
-#endif
-            return false;       /* either no NEWS file, or can't stat it */
-    return (news.st_ctime>=news.st_atime)||(KBtin.st_ctime+10>news.st_atime);
-}
-
 /************************/
 /* the #suspend command */
 /************************/
@@ -444,8 +430,6 @@ static void apply_options(void)
 /**************************************************************************/
 int main(int argc, char **argv)
 {
-    struct session *ses;
-
     tintin_exec=argv[0];
     init_locale();
     user_setdriver(isatty(0)?1:0);
@@ -456,7 +440,6 @@ int main(int argc, char **argv)
     strcpy(status, EMPTY_LINE);
     user_init();
     /*  read_complete();            no tab-completion */
-    ses = NULL;
     srand((getpid()*0x10001)^time0);
     lastdraft=0;
 
@@ -484,8 +467,6 @@ ever wants to read -- that is what docs are for.
         tintin_printf(0, "                              ~8~#run advent adventure");
         tintin_printf(0, "                              ~8~#run sql mysql");
         tintin_printf(0, "~15~#help                         ~7~to get the help index");
-        if (new_news())
-            tintin_printf(ses, "Check #news now!");
     }
     user_mark_greeting();
 
