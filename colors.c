@@ -126,12 +126,12 @@ static int rgb_foreground(struct rgb c)
         max = c.g;
     if (c.b > max)
         max = c.b;
-    fg = (c.r > max/2 ? 4 : 0)
-       | (c.g > max/2 ? 2 : 0)
-       | (c.b > max/2 ? 1 : 0);
-    if (fg == 7 && max <= 0x55)
+    fg = (c.r > max/2 + 32 ? 4 : 0)
+       | (c.g > max/2 + 32 ? 2 : 0)
+       | (c.b > max/2 + 32 ? 1 : 0);
+    if (fg == 7 && max <= 0x70)
         return 8;
-    else if (max > 0xaa)
+    else if (max > 0xc0)
         return fg+8;
     else
         return fg;
