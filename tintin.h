@@ -191,8 +191,6 @@ enum
 #include <iconv.h>
 #include <ctype.h>
 #include <wctype.h>
-#include "malloc.h"
-#include "unicode.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdarg.h>
@@ -230,6 +228,8 @@ enum
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
 #endif
+#include "malloc.h"
+#include "unicode.h"
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
