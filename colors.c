@@ -144,8 +144,7 @@ static int rgb_foreground(struct rgb c)
 
 static int rgb_background(struct rgb c)
 {
-    /* For backgrounds, err on the dark side. */
-    return ((c.r&0x80) >> 5 | (c.g&0x80) >> 6 | (c.b&0x80) >> 7) << 4;
+    return (rgb_foreground(c) & 7) << 4;
 }
 
 #define MAXTOK 16
