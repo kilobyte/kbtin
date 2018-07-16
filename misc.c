@@ -789,6 +789,7 @@ void news_command(const char *arg, struct session *ses)
             tintin_printf(ses, "%s", line);
         }
         tintin_printf(ses, "~7~");
+        fclose(news);
     }
     else
 #ifdef DATA_PATH
