@@ -130,3 +130,7 @@
 * ansi2txt, ansi2html, ttyrec2ansi and pipetty have been moved to a separate
   package "colorized-logs"
 * password star-out doesn't stay too long in some cases
+
+1.0.19:
+* bugfixes
+* fix regressed handling of 256-color codes

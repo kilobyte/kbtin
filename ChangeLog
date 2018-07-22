@@ -1,3 +1,9 @@
+1.0.19:
+*	fix way too bright handling of 256-color codes
+*	fix a crash on interrupted-by-signal writes
+*	don't bother advertising #news
+*	fix building from git on MacOS X
+
 1.0.18:
 *	lots of internal cleanups
 *	idle/serveridle in #info
