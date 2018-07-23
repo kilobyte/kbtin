@@ -152,7 +152,7 @@ int check_event(int time, struct session *ses)
     int et; /* event time */
     struct eventnode *ev;
 
-    assert(ses != NULL);
+    assert(ses);
 
     /* events check  - that should be done in #delay */
     while ((ev=ses->events) && (ev->time<=time))
@@ -189,5 +189,5 @@ int check_event(int time, struct session *ses)
     if (ses->tickstatus && ses->tick_size>ses->pretick && tt-time>ses->pretick)
         tt-=ses->pretick;
 
-    return (et<tt && et!=0) ? et : tt;
+    return (et<tt && et) ? et : tt;
 }

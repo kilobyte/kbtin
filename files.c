@@ -93,7 +93,7 @@ void read_complete(const char *arg, struct session *ses)
     bool flag = true;
     struct completenode *tcomplete, *tcomp2;
 
-    if ((complete_head = (struct completenode *)(malloc(sizeof(struct completenode)))) == NULL)
+    if (!(complete_head = (struct completenode *)(malloc(sizeof(struct completenode)))))
     {
         fprintf(stderr, "couldn't alloc completehead\n");
         user_done();
@@ -101,7 +101,7 @@ void read_complete(const char *arg, struct session *ses)
     }
     tcomplete = complete_head;
 
-    if ((myfile = fopen("tab.txt", "r")) == NULL)
+    if (!(myfile = fopen("tab.txt", "r")))
     {
         if (const char *cptr = getenv("HOME"))
         {
@@ -109,7 +109,7 @@ void read_complete(const char *arg, struct session *ses)
             myfile = fopen(buffer, "r");
         }
     }
-    if (myfile == NULL)
+    if (!myfile)
     {
         tintin_eprintf(0, "no tab.txt file, no completion list");
         return;
@@ -119,13 +119,13 @@ void read_complete(const char *arg, struct session *ses)
         char *cptr;
         for (cptr = buffer; *cptr && *cptr != '\n'; cptr++) ;
         *cptr = '\0';
-        if ((tcomp2 = (struct completenode *)(malloc(sizeof(struct completenode)))) == NULL)
+        if (!(tcomp2 = (struct completenode *)(malloc(sizeof(struct completenode)))))
         {
             fprintf(stderr, "couldn't alloc completehead\n");
             user_done();
             exit(1);
         }
-        if ((cptr = (char *)(malloc(strlen(buffer) + 1))) == NULL)
+        if (!(cptr = (char *)(malloc(strlen(buffer) + 1))))
         {
             fprintf(stderr, "couldn't alloc memory for string in complete\n");
             user_done();
@@ -661,7 +661,7 @@ struct session* read_command(const char *filename, struct session *ses)
         tintin_eprintf(ses, "#Syntax: #read filename");
         return ses;
     }
-    if ((myfile = fopen(lfname, "r")) == NULL)
+    if (!(myfile = fopen(lfname, "r")))
     {
         tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
         return ses;
@@ -697,7 +697,7 @@ void write_command(const char *filename, struct session *ses)
         tintin_eprintf(ses, "#ERROR: syntax is: #write <filename>");
         return;
     }
-    if ((myfile = fopen(lfname, "w")) == NULL)
+    if (!(myfile = fopen(lfname, "w")))
     {
         tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
         return;
@@ -873,7 +873,7 @@ void writesession_command(const char *filename, struct session *ses)
         tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
         return;
     }
-    if ((myfile = fopen(lfname, "w")) == NULL)
+    if (!(myfile = fopen(lfname, "w")))
     {
         tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
         return;
@@ -1067,7 +1067,7 @@ void textin_command(const char *arg, struct session *ses)
         tintin_eprintf(ses, "#You can't read any text in without a session being active.");
         return;
     }
-    if ((myfile = fopen(lfname, "r")) == NULL)
+    if (!(myfile = fopen(lfname, "r")))
     {
         tintin_eprintf(ses, "ERROR: File {%s} doesn't exist.", filename);
         return;

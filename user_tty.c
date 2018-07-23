@@ -1118,7 +1118,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             if (b_bottom!=b_screenb)
                 b_scroll(b_bottom);
             ret(false);
-            if (k_pos!=0)
+            if (k_pos)
             {
                 int i=k_pos-1;
                 while ((i>=0)&&(k_input[i]==EMPTY_CHAR || !iswalnum(k_input[i])))
@@ -1227,7 +1227,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             if (b_bottom!=b_screenb)
                 b_scroll(b_bottom);
             ret(false);
-            if (k_pos!=0)
+            if (k_pos)
             {
                 int dw=(k_input[--k_pos]==EMPTY_CHAR)?2:1;
                 if (dw==2)
@@ -1305,7 +1305,7 @@ key_alt_tab:
             ret(false);
             if (b_bottom!=b_screenb)
                 b_scroll(b_bottom);
-            if (k_pos!=0)
+            if (k_pos)
             {
                 memmove(yank_buffer, k_input, k_pos*WCL);
                 yank_buffer[k_pos]=0;
@@ -1328,7 +1328,7 @@ key_alt_tab:
             ret(false);
             if (b_bottom!=b_screenb)
                 b_scroll(b_bottom);
-            if (k_pos!=0)
+            if (k_pos)
             {
                 int i=k_pos-1;
                 while ((i>=0)&&(k_input[i]==EMPTY_CHAR || iswspace(k_input[i])))
@@ -1525,9 +1525,9 @@ static void usertty_keypad(bool k)
     otherwise.  It seems to not hurt any other terminal I checked.
     */
     if (k)
-        tbuf+=sprintf(tbuf, "\033=\033[?1051l\033[?1052l\033[?1060l\e[?1061h");
+        tbuf+=sprintf(tbuf, "\033=\033[?1051l\033[?1052l\033[?1060l\033[?1061h");
     else
-        tbuf+=sprintf(tbuf, "\033>\033[?1051l\033[?1052l\033[?1060l\e[?1061l");
+        tbuf+=sprintf(tbuf, "\033>\033[?1051l\033[?1052l\033[?1060l\033[?1061l");
     term_commit();
 }
 

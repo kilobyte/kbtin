@@ -19,7 +19,7 @@ AM_CFLAGS=@GLIB_CFLAGS@ -Wall
 KBtin_DOCS=BUGS OLDNEWS KEYPAD FAQ
 EXTRA_DIST=KBtin_help.in commands make_commands $(man_MANS) help2ansi \
 	fixmanual terminfo.src prof_init kbtin.ico make_protos $(KBtin_DOCS) \
-	autogen.sh VERSION get_version
+	autogen.sh VERSION get_version a2html
 CLEANFILES=$(BUILT_SOURCES) KBtin_help.gz manual.html
 DISTCLEANFILES=_stdint.h
 

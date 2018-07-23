@@ -110,7 +110,7 @@ static int list_sessions(const char *arg, struct session *ses, char *left, char 
                 show_session(sesptr);
                 break;
             }
-        if (sesptr == NULL)
+        if (!sesptr)
             tintin_puts("#THAT SESSION IS NOT DEFINED.", ses);
     }
     else

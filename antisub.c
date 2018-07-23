@@ -30,7 +30,7 @@ void antisubstitute_command(const char *arg, struct session *ses)
     }
     else
     {
-        if ((ln = searchnode_list(myantisubs, left)) != NULL)
+        if ((ln = searchnode_list(myantisubs, left)))
             deletenode_list(myantisubs, ln);
         insertnode_list(myantisubs, left, left, 0, ALPHA);
         antisubnum++;
@@ -49,7 +49,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
     myantisubs = ses->antisubs;
     temp = myantisubs;
     arg = get_arg_in_braces(arg, left, 1);
-    while ((ln = search_node_with_wild(temp, left)) != NULL)
+    while ((ln = search_node_with_wild(temp, left)))
     {
         if (ses->mesvar[MSG_SUBSTITUTE])
             tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", ln->left);

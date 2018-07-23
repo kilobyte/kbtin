@@ -191,8 +191,6 @@ enum
 #include <iconv.h>
 #include <ctype.h>
 #include <wctype.h>
-#include "malloc.h"
-#include "unicode.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdarg.h>
@@ -230,6 +228,8 @@ enum
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
 #endif
+#include "malloc.h"
+#include "unicode.h"
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
@@ -408,6 +408,3 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define EMPTY_CHAR 0xffff
 #define VALID_TIN_CHARS "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 #define is7punct(x) strchr(VALID_TIN_CHARS, (x))
-
-#define write_stdout(x, len) do if (write(1, (x), (len))!=(len)) \
-                                  syserr("write to stdout failed"); while (0)

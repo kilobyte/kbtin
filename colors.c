@@ -93,6 +93,11 @@ int setcolor(char *txt, int c)
 typedef unsigned char u8;
 struct rgb { u8 r; u8 g; u8 b; };
 
+static inline u8 ramp256_6(int i)
+{
+    return i ? 55 + i * 40 : 0;
+}
+
 static struct rgb rgb_from_256(int i)
 {
     struct rgb c;
@@ -110,9 +115,9 @@ static struct rgb rgb_from_256(int i)
     }
     else if (i < 232)
     {   /* 6x6x6 colour cube. */
-        c.r = (i - 16) / 36 * 85 / 2;
-        c.g = (i - 16) / 6 % 6 * 85 / 2;
-        c.b = (i - 16) % 6 * 85 / 2;
+        c.r = ramp256_6((i - 16) / 36);
+        c.g = ramp256_6((i - 16) / 6 % 6);
+        c.b = ramp256_6((i - 16) % 6);
     }
     else/* Grayscale ramp. */
         c.r = c.g = c.b = i * 10 - 2312;
@@ -126,12 +131,12 @@ static int rgb_foreground(struct rgb c)
         max = c.g;
     if (c.b > max)
         max = c.b;
-    fg = (c.r > max/2 ? 4 : 0)
-       | (c.g > max/2 ? 2 : 0)
-       | (c.b > max/2 ? 1 : 0);
-    if (fg == 7 && max <= 0x55)
+    fg = (c.r > max/2 + 32 ? 4 : 0)
+       | (c.g > max/2 + 32 ? 2 : 0)
+       | (c.b > max/2 + 32 ? 1 : 0);
+    if (fg == 7 && max <= 0x70)
         return 8;
-    else if (max > 0xaa)
+    else if (max > 0xc0)
         return fg+8;
     else
         return fg;
@@ -139,8 +144,7 @@ static int rgb_foreground(struct rgb c)
 
 static int rgb_background(struct rgb c)
 {
-    /* For backgrounds, err on the dark side. */
-    return ((c.r&0x80) >> 5 | (c.g&0x80) >> 6 | (c.b&0x80) >> 7) << 4;
+    return (rgb_foreground(c) & 7) << 4;
 }
 
 #define MAXTOK 16

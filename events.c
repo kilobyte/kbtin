@@ -37,7 +37,7 @@ static void list_events(const char *arg, struct session *ses)
     if (!*left)
     {
         tintin_printf(ses, "#Defined events:");
-        while (ev != NULL)
+        while (ev)
         {
             tintin_printf(ses, "(%d)\t {%s}", ev->time-ct, ev->event);
             ev = ev->next;
@@ -46,7 +46,7 @@ static void list_events(const char *arg, struct session *ses)
     else
     {
         flag = false;
-        while (ev != NULL)
+        while (ev)
         {
             if (match(left, ev->event))
             {
@@ -96,7 +96,7 @@ void delay_command(const char *arg, struct session *ses)
     ev->next = NULL;
     ev->event = mystrdup(right);
 
-    if (ses->events == NULL)
+    if (!ses->events)
         ses->events = ev;
     else if (ses->events->time > ev->time)
     {

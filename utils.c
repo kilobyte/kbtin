@@ -27,7 +27,7 @@ char* mystrdup(const char *s)
 
     if (!s)
         return 0;
-    if ((dup = MALLOC(strlen(s) + 1)) == NULL)
+    if (!(dup = MALLOC(strlen(s) + 1)))
         syserr("Not enough memory for strdup.");
     strcpy(dup, s);
     return dup;
@@ -77,3 +77,18 @@ void syserr(const char *msg, ...)
     return s - src - 1;
 }
 #endif
+
+void write_stdout(const char *restrict x, int len)
+{
+again:;
+    int r = write(1, x, len);
+    if (r == len)
+        return;
+    if (r > 0)
+    {
+        x+=r;
+        len-=r;
+        goto again;
+    }
+    syserr("write to stdout failed");
+}

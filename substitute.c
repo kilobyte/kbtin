@@ -30,7 +30,7 @@ static void parse_sub(const char *arg, bool gag, struct session *ses)
         strcpy(left, "*");
     if (!*right)
     {
-        while ((mysubs = search_node_with_wild(mysubs, left)) != NULL)
+        while ((mysubs = search_node_with_wild(mysubs, left)))
             if (gag)
             {
                 if (!strcmp(mysubs->right, EMPTY_LINE))
@@ -58,7 +58,7 @@ static void parse_sub(const char *arg, bool gag, struct session *ses)
     }
     else
     {
-        if ((ln = searchnode_list(mysubs, left)) != NULL)
+        if ((ln = searchnode_list(mysubs, left)))
             deletenode_list(mysubs, ln);
         insertnode_list(mysubs, left, right, 0, ALPHA);
         subnum++;
@@ -104,7 +104,7 @@ static void unsub(const char *arg, bool gag, struct session *ses)
     mysubs = ses->subs;
     temp = mysubs;
     arg = get_arg_in_braces(arg, left, 1);
-    while ((ln = search_node_with_wild(temp, left)) != NULL)
+    while ((ln = search_node_with_wild(temp, left)))
     {
         if (gag && strcmp(ln->right, EMPTY_LINE))
         {

@@ -20,7 +20,7 @@ struct listnode* init_list(void)
 {
     struct listnode *listhead;
 
-    if ((listhead = TALLOC(struct listnode)) == NULL)
+    if (!(listhead = TALLOC(struct listnode)))
         syserr("couldn't alloc listhead");
     listhead->next = NULL;
     return listhead;
@@ -33,7 +33,7 @@ void kill_list(struct listnode *nptr)
 {
     struct listnode *nexttodel;
 
-    if (nptr == NULL)
+    if (!nptr)
         syserr("NULL PTR");
     nexttodel = nptr->next;
     LFREE(nptr);
@@ -56,7 +56,7 @@ void zap_list(struct listnode *nptr)
 {
     struct listnode *nexttodel;
 
-    if (nptr == NULL)
+    if (!nptr)
         syserr("NULL PTR");
     nexttodel = nptr->next;
     LFREE(nptr);
@@ -169,7 +169,7 @@ void insertnode_list(struct listnode *listhead, const char *ltext, const char *r
     struct listnode *nptr, *nptrlast, *newnode;
     int lo, ln;
 
-    if ((newnode = (TALLOC(struct listnode))) == NULL)
+    if (!(newnode = (TALLOC(struct listnode))))
         syserr("couldn't malloc listhead");
     newnode->left = (char *)MALLOC(strlen(ltext) + 1);
     newnode->right = (char *)MALLOC(strlen(rtext) + 1);
@@ -354,7 +354,7 @@ void addnode_list(struct listnode *listhead, const char *ltext, const char *rtex
 {
     struct listnode *newnode;
 
-    if ((newnode = TALLOC(struct listnode)) == NULL)
+    if (!(newnode = TALLOC(struct listnode)))
         syserr("couldn't malloc listhead");
     newnode->left = mystrdup(ltext);
     if (rtext)
@@ -366,8 +366,8 @@ void addnode_list(struct listnode *listhead, const char *ltext, const char *rtex
     else
         newnode->pr = 0;
     newnode->next = NULL;
-    while (listhead->next != NULL)
-        (listhead = listhead->next);
+    while (listhead->next)
+        listhead = listhead->next;
     listhead->next = newnode;
 }
 

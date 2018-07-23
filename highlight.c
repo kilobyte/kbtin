@@ -141,7 +141,7 @@ void highlight_command(const char *arg, struct session *ses)
                     tintin_eprintf(ses, "#Highlight WHAT?");
                 return;
             }
-            if ((ln = searchnode_list(myhighs, right)) != NULL)
+            if ((ln = searchnode_list(myhighs, right)))
                 deletenode_list(myhighs, ln);
             insertnode_list(myhighs, right, left, get_fastener(right, tmp1), LENGTH);
             hinum++;
@@ -197,7 +197,7 @@ void unhighlight_command(const char *arg, struct session *ses)
     arg = get_arg_in_braces(arg, left, 1);
     substitute_vars(left, result);
     substitute_myvars(result, left, ses);
-    while ((ln = search_node_with_wild(temp, left)) != NULL)
+    while ((ln = search_node_with_wild(temp, left)))
     {
         if (ses->mesvar[MSG_HIGHLIGHT])
             tintin_printf(ses, "Ok. {%s} is no longer %s.", ln->left, ln->right);

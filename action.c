@@ -101,7 +101,7 @@ void action_command(const char *arg, struct session *ses)
     else if (*left && !*right)
     {
         flag=false;
-        while ((myactions = search_node_with_wild(myactions, left)) != NULL)
+        while ((myactions = search_node_with_wild(myactions, left)))
             if (strcmp(myactions->left, K_ACTION_MAGIC))
                 shownode_list_action(myactions), flag=true;
         if (!flag && ses->mesvar[MSG_ACTION])
@@ -109,7 +109,7 @@ void action_command(const char *arg, struct session *ses)
     }
     else
     {
-        if ((ln = searchnode_list(myactions, left)) != NULL)
+        if ((ln = searchnode_list(myactions, left)))
             kill_action(myactions, ln);
         insertnode_list(myactions, left, right, pr, PRIORITY);
         if (ses->mesvar[MSG_ACTION])
@@ -150,7 +150,7 @@ void promptaction_command(const char *arg, struct session *ses)
     }
     else
     {
-        if ((ln = searchnode_list(myprompts, left)) != NULL)
+        if ((ln = searchnode_list(myprompts, left)))
             kill_action(myprompts, ln);
         insertnode_list(myprompts, left, right, pr, PRIORITY);
         if (ses->mesvar[MSG_ACTION])

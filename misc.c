@@ -5,6 +5,8 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "protos/colors.h"
 #include "protos/files.h"
 #include "protos/globals.h"
@@ -662,7 +664,7 @@ void status_command(const char *arg, struct session *ses)
         return;
     get_arg(arg, what, 1, ses);
     if (*what)
-        strncpy(status, what, BUFFER_SIZE);
+        strlcpy(status, what, BUFFER_SIZE);
     else
         strcpy(status, EMPTY_LINE);
     user_show_status();
@@ -789,6 +791,7 @@ void news_command(const char *arg, struct session *ses)
             tintin_printf(ses, "%s", line);
         }
         tintin_printf(ses, "~7~");
+        fclose(news);
     }
     else
 #ifdef DATA_PATH
@@ -855,14 +858,14 @@ void tab_add(char *arg, struct session *ses)
 
     tcomplete = complete_head;
 
-    if ((arg == NULL) || (strlen(arg) <= 0))
+    if (!arg || !strlen(arg))
     {
         tintin_puts("Sorry, you must have some word to add.", NULL);
         return;
     }
     get_arg(arg, buff, 1, ses);
 
-    if ((newcomp = (char *)(malloc(strlen(buff) + 1))) == NULL)
+    if (!(newcomp = (char *)(malloc(strlen(buff) + 1))))
     {
         user_done();
         fprintf(stderr, "Could not allocate enough memory for that Completion word.\n");
@@ -870,13 +873,13 @@ void tab_add(char *arg, struct session *ses)
     }
     strcpy(newcomp, buff);
     tmp = tcomplete;
-    while (tmp->next != NULL)
+    while (tmp->next)
     {
         tmpold = tmp;
         tmp = tmp->next;
     }
 
-    if ((newt = (struct completenode *)(malloc(sizeof(struct completenode)))) == NULL)
+    if (!(newt = (struct completenode *)(malloc(sizeof(struct completenode)))))
     {
         user_done();
         fprintf(stderr, "Could not allocate enough memory for that Completion word.\n");
@@ -897,7 +900,7 @@ void tab_delete(char *arg, struct session *ses)
 
     tcomplete = complete_head;
 
-    if ((arg == NULL) || (strlen(arg) <= 0))
+    if (!arg || !strlen(arg))
     {
         tintin_puts("#Sorry, you must have some word to delete.", NULL);
         return;
@@ -905,19 +908,19 @@ void tab_delete(char *arg, struct session *ses)
     get_arg(arg, s_buff, 1, ses);
     tmp = tcomplete->next;
     tmpold = tcomplete;
-    if (tmpold->strng == NULL)
+    if (!tmpold->strng)
     {                          /* (no list if the second node is null) */
         tintin_puts("#There are no words for you to delete!", NULL);
         return;
     }
     strcpy(c_buff, tmp->strng);
-    while ((tmp->next != NULL) && (strcmp(c_buff, s_buff) != 0))
+    while (tmp->next && strcmp(c_buff, s_buff))
     {
         tmpold = tmp;
         tmp = tmp->next;
         strcpy(c_buff, tmp->strng);
     }
-    if (tmp->next != NULL)
+    if (tmp->next)
     {
         tmpnext = tmp->next;
         tmpold->next = tmpnext;
@@ -1318,7 +1321,7 @@ void chr_command(const char *arg, struct session *ses)
             {
                 while (isadigit(*lp))
                     v=v*10 + *lp++-'0';
-                if (*lp!=0 && *lp!=' ' && *lp!='\t')
+                if (*lp && *lp!=' ' && *lp!='\t')
                 {
                     tintin_eprintf(ses, "#chr: not a valid number in {%s}", left);
                     return;
