@@ -310,7 +310,7 @@ void substitute_vars(const char *arg, char *result)
             else
             {
 novar1:
-                strncpy(result, arg, numands + 1);
+                memcpy(result, arg, numands + 1);
                 arg += numands + 1;
                 result += numands + 1;
             }
@@ -348,7 +348,7 @@ novar1:
             else
             {
 novar2:
-                strncpy(result, arg, numands);
+                memcpy(result, arg, numands);
                 arg += numands;
                 result += numands;
             }
@@ -552,7 +552,7 @@ bool check_one_action(const char *line, const char *action, pvars_t *vars, bool 
     {
         if (var_len[i] != -1)
         {
-            strncpy((*vars)[i], var_ptr[i], var_len[i]);
+            memcpy((*vars)[i], var_ptr[i], var_len[i]);
             *((*vars)[i] + var_len[i]) = '\0';
         }
         else

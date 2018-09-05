@@ -69,7 +69,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                        isadigit(*(arg+varlen+counter)))
                     varlen++;
                 if (varlen>0)
-                    strncpy(varname, arg+counter, varlen);
+                    memcpy(varname, arg+counter, varlen);
                 *(varname + varlen) = '\0';
             }
             else
@@ -172,7 +172,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
             else
             {
 novar:
-                strncpy(result, arg, counter + varlen);
+                memcpy(result, arg, counter + varlen);
                 result += varlen + counter;
                 arg += varlen + counter;
             }

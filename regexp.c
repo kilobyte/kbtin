@@ -30,8 +30,8 @@ static bool check_regexp(char *line, char *action, pvars_t *vars, struct session
         {
             if (pmatch[i].rm_so != -1)
             {
-                strncpy((*vars)[i], line+pmatch[i].rm_so,
-                                    pmatch[i].rm_eo-pmatch[i].rm_so);
+                memcpy((*vars)[i], line+pmatch[i].rm_so,
+                                   pmatch[i].rm_eo-pmatch[i].rm_so);
                 *((*vars)[i] + pmatch[i].rm_eo-pmatch[i].rm_so) = '\0';
             }
             else
