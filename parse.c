@@ -645,15 +645,12 @@ static void write_com_arg_mud(const char *command, const char *argument, int nsp
     else
     {
         check_insert_path(command, ses);
-        strlcpy(outtext, command, BUFFER_SIZE);
+        i=strlcpy(outtext, command, BUFFER_SIZE);
         if (*argument)
         {
             if (nsp<1)
                 nsp=1;
-            i=BUFFER_SIZE-1-strlen(outtext);
-            while (nsp--)
-                strncat(outtext, " ", i), i--;
-            strncat(outtext, argument, i);
+            snprintf(outtext+i, BUFFER_SIZE-i, "%*s%s", nsp, "", argument);
         }
         do_out_MUD_colors(outtext);
         write_line_mud(outtext, ses);
