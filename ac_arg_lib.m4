@@ -4,9 +4,9 @@ AC_DEFUN([AC_ARG_LIB], [
 AC_ARG_ENABLE([$1], [])
 if [[ "X$enable_$1" != "Xno" ]]
   then
-    # Missing pkg-config is ok.
-    $3_CFLAGS="$(pkg-config 2>/dev/null --cflags $2)"
-    $3_LIBS="$(pkg-config 2>/dev/null --libs $2)"
+    PKG_CHECK_MODULES([$3],[$2],[],[
+      # Missing pkg-config is ok.
+    ])
     ac_save_CFLAGS="$CFLAGS"
     ac_save_LDFLAGS="$LDFLAGS"
     CFLAGS="$CFLAGS ${$3_CFLAGS}"
