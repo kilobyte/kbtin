@@ -1,3 +1,9 @@
+kbtin (1.0.19-2) unstable; urgency=medium
+
+  * Fix cross-building. Closes: #916379
+
+ -- Adam Borowski <kilobyte@angband.pl>  Mon, 04 Feb 2019 18:00:01 +0100
+
 kbtin (1.0.19-1) unstable; urgency=medium
 
   * New upstream release.

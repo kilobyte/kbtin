@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Adam Borowski <kilobyte@angband.pl>
 Build-Depends: debhelper (>= 11~), libz-dev, libglib2.0-dev (>= 2.10),
  gettext, libgnutls28-dev
-Standards-Version: 4.1.5
+Standards-Version: 4.3.0
 Homepage: http://kbtin.sourceforge.net/
 Vcs-Git: https://github.com/kilobyte/kbtin.git -b debian
 Vcs-Browser: https://github.com/kilobyte/kbtin/tree/debian
