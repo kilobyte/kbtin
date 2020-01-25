@@ -1,10 +1,11 @@
 KBtin
 =====
 
-1.0.19
+1.0.20
 ------
 
-1.0.19 is a minor bugfix release: a rare crash, an OS X build problem, an 1.0.18 regression in downconverting colors.
+1.0.20 is another minor bugfix release, biggest fix being MidArrow which
+changed on most modern terminal.
 
 In 1.0.18, log-processing tools: ansi2html, ansi2txt, ttyrec2ansi and
 pipetty have been removed; they are available as a separate package now.
@@ -55,9 +56,9 @@ Installation from sources
 
 To install KBtin, you need to:
 
-* untar it: `tar xvfJ kbtin-1.0.19.tar.xz`
-* On systems where tar doesn't support the J flag, you have to pipe it through xz manually: `xz -d <kbtin-1.0.19.tar.xz|tar xvf -`
-* `cd kbtin-1.0.19`
+* untar it: `tar xvfJ kbtin-1.0.20.tar.xz`
+* On systems where tar doesn't support the J flag, you have to pipe it through xz manually: `xz -d <kbtin-1.0.20.tar.xz|tar xvf -`
+* `cd kbtin-1.0.20`
 * `./configure`
 * `make`
 * as root, `make install`

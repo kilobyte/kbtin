@@ -134,3 +134,6 @@
 1.0.19:
 * bugfixes
 * fix regressed handling of 256-color codes
+
+1.0.20:
+* bugfixes: ~user, MidArrow on some terminals
