@@ -1,3 +1,10 @@
+kbtin (1.0.20-1) unstable; urgency=medium
+
+  * New upstream release.
+  * A simple pkgtest.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sun, 26 Jan 2020 01:16:28 +0100
+
 kbtin (1.0.19-2) unstable; urgency=medium
 
   * Fix cross-building. Closes: #916379
