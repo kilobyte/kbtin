@@ -4,6 +4,10 @@ export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 %:
 	dh $@
 
+override_dh_autoreconf:
+	touch README
+	dh_autoreconf
+
 override_dh_auto_build:
 	V=y dh_auto_build
 	$(MAKE) manual.html
@@ -26,4 +30,5 @@ override_dh_auto_install:
 
 override_dh_auto_clean:
 	rm -f tests/tests.at
+	rm -f README README.md .travis.yml
 	dh_auto_clean
