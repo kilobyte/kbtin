@@ -1,3 +1,10 @@
+1.0.20:
+*	speed up some string operations
+*	fix accessing files via ~user
+*	recognize MidArrow on some terminals
+*	fix cross-building
+*	move the homepage from SourceForge to GitHub
+
 1.0.19:
 *	fix way too bright handling of 256-color codes
 *	fix a crash on interrupted-by-signal writes

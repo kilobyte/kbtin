@@ -47,7 +47,8 @@ static void expand_filename(const char *arg, char *result, char *lstr)
             p=strchr(arg+1, '/');
             if (p)
             {
-                strncpy(name, arg+1, p-arg-1);
+                memcpy(name, arg+1, p-arg-1);
+                name[p-arg-1]=0;
                 pwd=getpwnam(name);
                 if (pwd)
                     result+=snprintf(result, BUFFER_SIZE, "%s", pwd->pw_dir), arg=p;

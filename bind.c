@@ -45,6 +45,7 @@ static const char *KEYNAMES[]=
     "ESC[B",        "DownArrow",
     "ESC[C",        "RightArrow",
     "ESC[D",        "LeftArrow",
+    "ESC[E",        "MidArrow",
     "ESC[G",        "MidArrow",
     "ESC[P",        "Pause",
     "ESC[1~",       "Home",
@@ -57,6 +58,7 @@ static const char *KEYNAMES[]=
     "ESC[OB",       "DownArrow",
     "ESC[OC",       "RightArrow",
     "ESC[OD",       "LeftArrow",
+    "ESC[OE",       "MidArrow",
     "ESCOM",        "KpadEnter",    /* alternate keypad mode */
     "ESCOP",        "KpadNumLock",
     "ESCOQ",        "KpadDivide",

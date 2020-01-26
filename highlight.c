@@ -128,7 +128,7 @@ void highlight_command(const char *arg, struct session *ses)
                 tmp2++;
             while (isaspace(*tmp1))
                 tmp1++;
-            strncpy(tmp3, tmp1, tmp2 - tmp1);
+            memcpy(tmp3, tmp1, tmp2 - tmp1);
             tmp3[tmp2 - tmp1] = '\0';
             colflag = get_high(tmp3);
             tmp1 = tmp2 + 1;
