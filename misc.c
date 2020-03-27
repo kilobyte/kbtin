@@ -822,8 +822,8 @@ void tablist(struct completenode *tcomplete)
     *tbuf = '\0';
 
     /*
-       I'll search through the entire list, printing thre names to a line then
-       outputing the line.  Creates a nice 3 column effect.  To increase the #
+       I'll search through the entire list, printing three names to a line then
+       outputting the line.  Creates a nice 3 column effect.  To increase the #
        if columns, just increase the mod #.  Also.. decrease the # in the %s's
      */
 

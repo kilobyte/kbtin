@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* file: alias.c - funtions related the the alias command            */
+/* file: alias.c - functions related the the alias command           */
 /*                             TINTIN III                            */
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */

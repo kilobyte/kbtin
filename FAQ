@@ -1,6 +1,6 @@
 Q: Is there a Windows version?
-A: Not oficially.  While KBtin is known to work on CygWin, that's not
-   an oficially supported platform, and don't expect KBtin to be as
+A: Not officially.  While KBtin is known to work on CygWin, that's not
+   an officially supported platform, and don't expect KBtin to be as
    functional, fast and stable as on real UNIX systems.
    Your mileage may wary, but executing KBtin from an already running
    CygWin shell tends to give the best effects.

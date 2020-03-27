@@ -1087,7 +1087,7 @@ by KBtin that can be #ACTIONed or #GAGged.
 #pretick
 Toggles between no pre-tick at all and a pre-tick of the value 10.  This
 command had been added only for mainstream tintin++ compatibility, and is
-depreciated -- it's better to say "#pretick 10" explicitely.
+depreciated -- it's better to say "#pretick 10" explicitly.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~end
 
@@ -1384,7 +1384,7 @@ Examples:
 #loop <a>,<b> <command>
 For all numbers from <a> to <b>, executes <command>.  During the execution,
 the current loop index can be accessed as $0 (for the same reason,
-positional paremeter $0 is lost).
+positional parameter $0 is lost).
 If <a> is greater than <b>, the loop iterates with a step of -1.
 
 Example:

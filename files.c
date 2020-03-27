@@ -1,10 +1,10 @@
-/*********************************************************************/
-/* file: files.c - funtions for logfile and reading/writing comfiles */
-/*                             TINTIN + +                            */
-/*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
-/*                     coded by peter unold 1992                     */
-/*                    New code by Bill Reiss 1993                    */
-/*********************************************************************/
+/**********************************************************************/
+/* file: files.c - functions for logfile and reading/writing comfiles */
+/*                             TINTIN + +                             */
+/*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t              */
+/*                     coded by peter unold 1992                      */
+/*                    New code by Bill Reiss 1993                     */
+/**********************************************************************/
 #include "tintin.h"
 #include "protos/action.h"
 #include "protos/globals.h"

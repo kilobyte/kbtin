@@ -393,7 +393,7 @@ void getitem_command(const char *arg, struct session *ses)
 /*        #isatom {log} {{atom}} -> log = 0                  */
 /*        #isatom {log} {a list} -> log = 0                  */
 /*                                                           */
-/* To be substituted by appriopriate #if expression          */
+/* To be substituted by appropriate #if expression           */
 /*************************************************************/
 
 /* First we have function which does necessary stuff */
