@@ -7,7 +7,7 @@ export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 override_dh_autoreconf:
 	touch README
 	dpkg-parsechangelog -SVersion|rev|cut -d- -f2-|rev >VERSION
-	dh_autoreconf
+	dh_autoreconf ./autogen.sh
 
 override_dh_auto_build:
 	V=y dh_auto_build
