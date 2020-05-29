@@ -371,6 +371,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         zip="bzip2";
     else if (len>=4 && !strcmp(fname+len-3, ".xz"))
         zip="xz";
+    else if (len>=5 && !strcmp(fname+len-4, ".zst"))
+        zip="zstd";
     if (zip)
     {
         int fd=open(lfname, O_WRONLY|O_BINARY|O_CREAT|O_TRUNC, 0666);
