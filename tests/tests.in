@@ -1,12 +1,3 @@
-### no profiling
-<<<
-#rem Profiling should be disabled in release versions.
-#profile
->>>
-#UNKNOWN TINTIN-COMMAND: [#profile]
-===
-
-
 ### #showme
 <<<
 #showme abc def ghi
