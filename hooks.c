@@ -18,6 +18,8 @@ const char *hook_names[]=
     "activate",
     "deactivate",
     "title",
+    "tick",
+    "pretick",
 };
 
 /*********************/

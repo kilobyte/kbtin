@@ -180,6 +180,8 @@ enum
     HOOK_ACTIVATE,
     HOOK_DEACTIVATE,
     HOOK_TITLE,
+    HOOK_TICK,
+    HOOK_PRETICK,
     NHOOKS
 };
 

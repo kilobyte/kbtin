@@ -694,3 +694,41 @@ TITLE: good beer is good
 TITLE: meow
 FIN
 ===
+
+### zap in #hook tick
+<<<
+#de 2 #end
+#run a cat
+#hook tick {#showme A;#zap;#showme B}
+#ticksize 1
+#tickon
+#showme _
+>>>
+#OK. NEW TICKSIZE SET
+#TICKER IS NOW ON.
+_
+A
+#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!
+
+#SESSION 'a' DIED.
+#THERE'S NO ACTIVE SESSION NOW.
+===
+
+### zap in #hook pretick
+<<<
+#de 2 #end
+#run a cat
+#hook pretick {#showme A;#zap;#showme B}
+#ticksize 11
+#tickon
+#showme _
+>>>
+#OK. NEW TICKSIZE SET
+#TICKER IS NOW ON.
+_
+A
+#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!
+
+#SESSION 'a' DIED.
+#THERE'S NO ACTIVE SESSION NOW.
+===

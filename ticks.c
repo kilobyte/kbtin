@@ -8,6 +8,7 @@
 #include <assert.h>
 #include "protos/events.h"
 #include "protos/globals.h"
+#include "protos/hooks.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 
@@ -171,7 +172,10 @@ int check_event(int time, struct session *ses)
     if (tt <= time)
     {
         if (ses->tickstatus)
-            tintin_puts1("#TICK!!!", ses);
+        {
+            if (do_hook(ses, HOOK_TICK, 0, false) == ses)
+                tintin_puts1("#TICK!!!", ses);
+        }
         if (any_closed)
             return -1;
         ses->time0 = time - (time - ses->time0) % ses->tick_size;
@@ -180,7 +184,8 @@ int check_event(int time, struct session *ses)
     else if (ses->tickstatus && tt-ses->pretick==time
             && ses->tick_size>ses->pretick && time!=ses->time10)
     {
-        tintin_puts1("#10 SECONDS TO TICK!!!", ses);
+        if (do_hook(ses, HOOK_PRETICK, 0, false) == ses)
+            tintin_puts1("#10 SECONDS TO TICK!!!", ses);
         if (any_closed)
             return -1;
         ses->time10=time;
