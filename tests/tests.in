@@ -741,3 +741,21 @@ aÓw
 ąów
 ąÓw
 ===
+
+### #firstupper
+<<<
+#foreach {abc Abc ąbc Ąbc AOw Aow aOw aOw aów aÓw Ąów ĄÓw} {#firstu res {$0};#show $res}
+>>>
+Abc
+Abc
+Ąbc
+Ąbc
+AOw
+Aow
+AOw
+AOw
+Aów
+AÓw
+Ąów
+ĄÓw
+===

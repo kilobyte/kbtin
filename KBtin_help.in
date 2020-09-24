@@ -1189,20 +1189,20 @@ is lost, as it will be overwritten as soon as the program returns.
 ~firstlower
 
 #firstlower <dest.var> <text>
-Capitalizes the first character of <text> to lowercase, then stores the
-whole string into <dest.var>.
+Converts the first character of <text> to lowercase, then stores the whole
+string into <dest.var>.
 
 Examples:
-#firstu result MEOW       -> result = "mEOW"
+#firstl result MEOW       -> result = "mEOW"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~firstupper
 
 #firstupper <dest.var> <text>
-Converts <text> to lowercase, capitalizes first character, then stores it
-into <dest.var>.
+Capitalizes the first character of <text>, then stores the string into
+<dest.var>.
 
 Examples:
-#firstu result wAreZ D00d       -> result = "Warez d00d"
+#firstu result wAreZ D00d       -> result = "WAreZ D00d"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~tolower
 

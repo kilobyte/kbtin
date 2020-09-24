@@ -850,8 +850,6 @@ void firstupper_command(const char *arg, struct session *ses)
         return tintin_eprintf(ses, "#Syntax: #firstupper <var> <text>");
 
     TO_WC(txt, right);
-    for (WC *p = txt; *p; p++)
-        *p = towlower(*p);
     *txt=towupper(*txt);
     WRAP_WC(right, txt);
     set_variable(left, right, ses);
