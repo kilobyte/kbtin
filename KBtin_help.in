@@ -1184,6 +1184,15 @@ This command is the alternative to #system with support for full-screen
 programs.  Unfortunately, for non-interactive line based ones the output
 is lost, as it will be overwritten as soon as the program returns.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~firstlower
+
+#firstlower <dest.var> <text>
+Capitalizes the first character of <text> to lowercase, then stores the
+whole string into <dest.var>.
+
+Examples:
+#firstu result MEOW       -> result = "mEOW"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~firstupper
 
 #firstupper <dest.var> <text>
