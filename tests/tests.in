@@ -723,3 +723,21 @@ A
 #SESSION 'a' DIED.
 #THERE'S NO ACTIVE SESSION NOW.
 ===
+
+### #firstlower
+<<<
+#foreach {abc Abc ąbc Ąbc AOw Aow aOw aOw aów aÓw Ąów ĄÓw} {#firstlo res {$0};#show $res}
+>>>
+abc
+abc
+ąbc
+ąbc
+aOw
+aow
+aOw
+aOw
+aów
+aÓw
+ąów
+ąÓw
+===
