@@ -857,6 +857,25 @@ void firstupper_command(const char *arg, struct session *ses)
     set_variable(left, right, ses);
 }
 
+/***************************/
+/* the #firstlower command */
+/***************************/
+void firstlower_command(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+    WC txt[BUFFER_SIZE];
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
+    if (!*left)
+        return tintin_eprintf(ses, "#Syntax: #firstlower <var> <text>");
+
+    TO_WC(txt, right);
+    *txt=towlower(*txt);
+    WRAP_WC(right, txt);
+    set_variable(left, right, ses);
+}
+
 /***********************/
 /* the #strlen command */
 /***********************/

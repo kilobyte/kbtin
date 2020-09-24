@@ -36,6 +36,7 @@ explode
 *foreach
 *forall
 firstupper
+firstlower
 help
 highlight
 history

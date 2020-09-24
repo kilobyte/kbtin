@@ -35,8 +35,9 @@ Comments:
 Variables:
    math        random      variable    unvariable  initvariable
 Text variables:
-   firstupper  tolower     toupper     substring   prepad      postpad
-   reverse     strlen      decolorize  atoi    chr    ord      hexord
+   firstupper  firstlower  tolower     toupper     decolorize
+   substring   prepad      postpad     reverse     strlen      atoi
+   chr         ord         hexord
 Time:
    ctime       time        localtime   gmtime
 Lists:
