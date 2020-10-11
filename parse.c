@@ -289,7 +289,7 @@ static bool do_goto(const char *txt, struct session *ses)
             tintin_eprintf(ses, "#Cannot goto from $loc, it is not set!");
             return true; // was syntaxically correct
         }
-        sprintf(tmp, "{%s} {%s}", ch, txt+1);
+        snprintf(tmp, BUFFER_SIZE, "{%s} {%s}", ch, txt+1);
         goto_command(tmp, ses);
     }
     return true;
