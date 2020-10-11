@@ -709,19 +709,15 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         }
         if (b_bottom!=b_screenb)
             b_scroll(b_bottom);
-        {
-            sprintf(txt, "ESCO"WCC, (WCI)ch);
-            find_bind(txt, 1, ses);
-        }
+        sprintf(txt, "ESCO"WCC, (WCI)ch);
+        find_bind(txt, 1, ses);
         break;
     case TS_ESC_S_S:            /* ESC [ [ */
         state=TS_NORMAL;
         if (b_bottom!=b_screenb)
             b_scroll(b_bottom);
-        {
-            sprintf(txt, "ESC[["WCC, (WCI)ch);
-            find_bind(txt, 1, ses);
-        }
+        sprintf(txt, "ESC[["WCC, (WCI)ch);
+        find_bind(txt, 1, ses);
         break;
     case TS_ESC_S:              /* ESC [ */
         state=TS_NORMAL;
@@ -818,11 +814,9 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             default:
                 if (b_bottom!=b_screenb)
                     b_scroll(b_bottom);
-                {
-                    sprintf(txt, "ESC["WCC, (WCI)ch);
-                    find_bind(txt, 1, ses);
-                    break;
-                }
+                sprintf(txt, "ESC["WCC, (WCI)ch);
+                find_bind(txt, 1, ses);
+                break;
             }
         }
         else if (ch=='[')
@@ -898,11 +892,9 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             default:
                 if (b_bottom!=b_screenb)
                     b_scroll(b_bottom);
-                {
-                    sprintf(txt, "ESC[%i~", val[0]);
-                    find_bind(txt, 1, ses);
-                    break;
-                }
+                sprintf(txt, "ESC[%i~", val[0]);
+                find_bind(txt, 1, ses);
+                break;
             }
         else if (ch=='>')
             state=TS_ESC_S_G;
