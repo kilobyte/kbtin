@@ -89,7 +89,7 @@ static const char *NORMAL_KEYNAMES[]=
     "ESCOQ",        "KpadDivide",
     "ESCOR",        "KpadMultiply",
     "ESCOS",        "KpadMinus",
-    "ESCOo",        "KpadMinus",
+    "ESCOo",        "KpadDivide",
     "",             "",
 };
 
