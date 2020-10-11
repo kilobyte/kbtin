@@ -48,8 +48,6 @@
 #define MARGIN_COLOR COLOR_RED
 /* FIXME: neither INPUT_COLOR nor MARGIN_COLOR can be COLOR_WHITE */
 /*#define IGNORE_INT*//* uncomment to disable INT (usually ^C) from keyboard */
-/*#define BARE_ESC*/  /* uncomment to allow use of bare ESC key.  It will
-                         prevent Alt-XXX from being recognized, though. */
 #define XTERM_TITLE "KBtin - %s"
 #undef  PTY_ECHO_HACK   /* not working yet */
 #define ECHO_COLOR "~8~"

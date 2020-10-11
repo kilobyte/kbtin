@@ -938,7 +938,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             state=TS_ESC_O; val[nval=0]=0;
             break;
         }
-#ifndef BARE_ESC
         state=TS_NORMAL;
         if (ch==127)
             sprintf(txt, "Alt-Backspace");
@@ -1139,20 +1138,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             find_bind(txt, 1, ses); /* FIXME: we want just the message */
     }
     break;
-#else
-        /* [Esc] */
-        state=TS_NORMAL;
-        ret(false);
-        tbuf+=sprintf(tbuf, "\0335n");
-        if (b_bottom!=b_screenb)
-            b_scroll(b_bottom);
-        k_pos=0;
-        k_scrl=0;
-        k_len=0;
-        k_input[0]=0;
-        redraw_in();
-        /* fallthrough */
-#endif
     case TS_NORMAL:
         switch (ch)
         {
