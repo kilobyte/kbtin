@@ -398,6 +398,12 @@ static void b_addline(void)
     }
 }
 
+static void touch_bottom(void)
+{
+    if (b_bottom!=b_screenb)
+        b_scroll(b_bottom);
+}
+
 /****************************************************/
 /* textout - write some text into the output window */
 /****************************************************/
@@ -707,15 +713,13 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         case 'F':
             goto key_end;
         }
-        if (b_bottom!=b_screenb)
-            b_scroll(b_bottom);
+        touch_bottom();
         sprintf(txt, "ESCO"WCC, (WCI)ch);
         find_bind(txt, 1, ses);
         break;
     case TS_ESC_S_S:            /* ESC [ [ */
         state=TS_NORMAL;
-        if (b_bottom!=b_screenb)
-            b_scroll(b_bottom);
+        touch_bottom();
         sprintf(txt, "ESC[["WCC, (WCI)ch);
         find_bind(txt, 1, ses);
         break;
@@ -734,8 +738,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             case 'A':       /* up arrow */
                 if (ret(false))
                     redraw_in();
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 if (!ses)
                     break;
                 if (hist_num==HISTORY_SIZE-1)
@@ -752,8 +755,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             case 'B':       /* down arrow */
                 if (ret(false))
                     redraw_in();
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 if (!ses)
                     break;
                 if (hist_num==-1)
@@ -769,8 +771,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 break;
             key_cursor_left:
             case 'D':       /* left arrow */
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 if (ret(true))
                    redraw_in();
                 if (k_pos==0)
@@ -789,8 +790,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 break;
             key_cursor_right:
             case 'C':       /* right arrow */
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 if (ret(true))
                    redraw_in();
                 if (k_pos==k_len)
@@ -812,8 +812,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             case 'F':
                 goto key_end;
             default:
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 sprintf(txt, "ESC["WCC, (WCI)ch);
                 find_bind(txt, 1, ses);
                 break;
@@ -839,8 +838,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             key_home:
             case 1:         /* [Home] */
             case 7:
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 if (ret(true))
                     redraw_in();
                 if (!k_pos)
@@ -858,8 +856,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             key_end:
             case 4:         /* [End] */
             case 8:
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 if (ret(true))
                     redraw_in();
                 if (k_pos==k_len)
@@ -877,8 +874,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             key_del:
             case 3:         /* [Del] */
                 ret(false);
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 if (k_pos!=k_len)
                 {
                     for (int i=k_pos;i<=k_len;++i)
@@ -890,8 +886,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 redraw_in();
                 break;
             default:
-                if (b_bottom!=b_screenb)
-                    b_scroll(b_bottom);
+                touch_bottom();
                 sprintf(txt, "ESC[%i~", val[0]);
                 find_bind(txt, 1, ses);
                 break;
@@ -952,8 +947,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         case 9:         /* Alt-Tab */
             goto key_alt_tab;
         case '<':       /* Alt-< */
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (ret(false))
                 redraw_in();
             if (!ses)
@@ -967,8 +961,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             redraw_in();
             break;
         case '>':       /* Alt-> */
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (ret(false))
                 redraw_in();
             if (!ses)
@@ -982,8 +975,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             break;
         case 'f':   /* Alt-F */
         case 'F':
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (ret(true))
                 redraw_in();
             if (k_pos==k_len)
@@ -1003,8 +995,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             break;
         case 'b':   /* Alt-B */
         case 'B':
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (ret(true))
                 redraw_in();
             if (!k_pos)
@@ -1024,8 +1015,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             break;
         case 'l':   /* Alt-L */
         case 'L':
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             ret(true);
             while (k_pos<k_len && (k_input[k_pos]==EMPTY_CHAR || !iswalnum(k_input[k_pos])))
                 ++k_pos;
@@ -1039,8 +1029,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             break;
         case 'u':   /* Alt-U */
         case 'U':
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (ret(true))
                 redraw_in();
             while (k_pos<k_len && (k_input[k_pos]==EMPTY_CHAR || !iswalnum(k_input[k_pos])))
@@ -1055,8 +1044,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             break;
         case 'c':   /* Alt-C */
         case 'C':
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             ret(true);
             while (k_pos<k_len && (k_input[k_pos]==EMPTY_CHAR || !iswalnum(k_input[k_pos])))
                 ++k_pos;
@@ -1076,8 +1064,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             break;
         case 't':   /* Alt-T */
         case 'T':
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             ret(true);
             transpose_words();
             redraw_in();
@@ -1086,8 +1073,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         case 'D':
             if (ret(false))
                 redraw_in();
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (k_pos==k_len)
                 break;
             {
@@ -1106,8 +1092,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             }
             break;
         case 127:  /* Alt-Backspace */
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             ret(false);
             if (k_pos)
             {
@@ -1136,8 +1121,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         case '\n':
         case '\r':
             ret(true);
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (!activesession->server_echo)
                 in_getpassword=false;
             WRAP_WC(done_input, k_input);
@@ -1201,8 +1185,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             if (find_bind("^H", 0, ses))
                 break;
         case 127:               /* [backspace] */
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             ret(false);
             if (k_pos)
             {
@@ -1235,8 +1218,7 @@ key_alt_tab:
             if (find_bind("^K", 0, ses))
                 break;
             ret(false);
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (k_pos!=k_len)
             {
                 memmove(yank_buffer, k_input+k_pos, (k_len-k_pos)*WCL);
@@ -1265,8 +1247,7 @@ key_alt_tab:
             if (find_bind("^T", 0, ses))
                 break;
             ret(true);
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (k_pos && (k_len>=2))
             {
                 if (k_pos==k_len)
@@ -1280,8 +1261,7 @@ key_alt_tab:
             if (find_bind("^U", 0, ses))
                 break;
             ret(false);
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (k_pos)
             {
                 memmove(yank_buffer, k_input, k_pos*WCL);
@@ -1303,8 +1283,7 @@ key_alt_tab:
             if (find_bind("^W", 0, ses))
                 break;
             ret(false);
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (k_pos)
             {
                 int i=k_pos-1;
@@ -1326,8 +1305,7 @@ key_alt_tab:
             if (find_bind("^Y", 0, ses))
                 break;
             ret(false);
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if (!*yank_buffer)
             {
                 redraw_in();
@@ -1354,8 +1332,7 @@ key_alt_tab:
         default:
             if (ret(false))
                 redraw_in();
-            if (b_bottom!=b_screenb)
-                b_scroll(b_bottom);
+            touch_bottom();
             if ((ch>0)&&(ch<32))
             {
                 sprintf(txt, "^"WCC, (WCI)(ch+64));
