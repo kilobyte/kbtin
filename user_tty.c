@@ -682,6 +682,7 @@ static enum
     TS_VERBATIM,
 #endif
 } state=TS_NORMAL;
+static bool escesc = false;
 #define MAXNVAL 10
 static int val[MAXNVAL], nval;
 static bool usertty_process_kbd(struct session *ses, WC ch)
@@ -698,30 +699,31 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
 #endif
     case TS_ESC_O:              /* ESC O */
         state=TS_NORMAL;
-        switch (ch)
-        {
-        case 'A':
-            goto prev_history;
-        case 'B':
-            goto next_history;
-        case 'C':
-            goto key_cursor_right;
-        case 'D':
-            goto key_cursor_left;
-        case 'H':
-            goto key_home;
-        case 'F':
-            goto key_end;
-        }
+        if (!escesc)
+            switch (ch)
+            {
+            case 'A':
+                goto prev_history;
+            case 'B':
+                goto next_history;
+            case 'C':
+                goto key_cursor_right;
+            case 'D':
+                goto key_cursor_left;
+            case 'H':
+                goto key_home;
+            case 'F':
+                goto key_end;
+            }
         touch_bottom();
         sprintf(txt, "ESCO"WCC, (WCI)ch);
-        find_bind(txt, 1, ses);
+        find_bind(txt, escesc, 1, ses);
         break;
     case TS_ESC_S_S:            /* ESC [ [ */
         state=TS_NORMAL;
         touch_bottom();
         sprintf(txt, "ESC[["WCC, (WCI)ch);
-        find_bind(txt, 1, ses);
+        find_bind(txt, escesc, 1, ses);
         break;
     case TS_ESC_S:              /* ESC [ */
         state=TS_NORMAL;
@@ -730,7 +732,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             val[nval]=val[nval]*10+(ch-'0');
             state=TS_ESC_S;
         }
-        else if (ch>='A' && ch <='Z')
+        else if (ch>='A' && ch <='Z' && !escesc)
         {
             switch (ch)
             {
@@ -814,13 +816,19 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             default:
                 touch_bottom();
                 sprintf(txt, "ESC["WCC, (WCI)ch);
-                find_bind(txt, 1, ses);
+                find_bind(txt, 0, 1, ses);
                 break;
             }
         }
+        else if (ch>='A' && ch <='Z') // && escesc
+        {
+            touch_bottom();
+            sprintf(txt, "ESC["WCC, (WCI)ch);
+            find_bind(txt, 1, 1, ses);
+        }
         else if (ch=='[')
             state=TS_ESC_S_S;
-        else if (ch=='~')
+        else if (ch=='~' && !escesc)
             switch (val[0])
             {
             case 5:         /* [PgUp] */
@@ -888,9 +896,15 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             default:
                 touch_bottom();
                 sprintf(txt, "ESC[%i~", val[0]);
-                find_bind(txt, 1, ses);
+                find_bind(txt, 0, 1, ses);
                 break;
             }
+        else if (ch=='~') // && escesc
+        {
+            touch_bottom();
+            sprintf(txt, "ESC[%i~", val[0]);
+            find_bind(txt, 1, 1, ses);
+        }
         else if (ch=='>')
             state=TS_ESC_S_G;
         break;
@@ -925,6 +939,11 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             state=TS_ESC_O; val[nval=0]=0;
             break;
         }
+        if (ch==27 && !escesc)
+        {
+            escesc = 1;
+            break;
+        }
         state=TS_NORMAL;
         if (ch==127)
             sprintf(txt, "Alt-Backspace");
@@ -932,15 +951,17 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             sprintf(txt, "Alt-"WCC, (WCI)ch);
         else if (ch==32)
             sprintf(txt, "Alt-Space");
+#if 0
         else if (ch==27)
             sprintf(txt, "Alt-Esc");
+#endif
         else if (ch==13)
             sprintf(txt, "Alt-Enter");
         else if (ch==9)
             sprintf(txt, "Alt-Tab");
         else
             sprintf(txt, "Alt-^"WCC, (WCI)(ch+64));
-        if (find_bind(txt, 0, ses))
+        if (find_bind(txt, 0, 0, ses)) // Alt- already included
             break;
         switch (ch)
         {
@@ -1112,10 +1133,11 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             redraw_in();
             break;
         default:
-            find_bind(txt, 1, ses); /* FIXME: we want just the message */
+            find_bind(txt, 0, 1, ses); /* FIXME: we want just the message */
     }
     break;
     case TS_NORMAL:
+        escesc=0;
         switch (ch)
         {
         case '\n':
@@ -1156,15 +1178,15 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
 #endif
             return true;
         case 1:                 /* ^[A] */
-            if (find_bind("^A", 0, ses))
+            if (find_bind("^A", 0, 0, ses))
                 break;
             goto key_home;
         case 2:                 /* ^[B] */
-            if (find_bind("^B", 0, ses))
+            if (find_bind("^B", 0, 0, ses))
                 break;
             goto key_cursor_left;
         case 4:                 /* ^[D] */
-            if (find_bind("^D", 0, ses))
+            if (find_bind("^D", 0, 0, ses))
                 break;
             if (k_pos||k_len)
                 goto key_del;
@@ -1174,15 +1196,15 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             activesession=zap_command("", ses);
             return false;
         case 5:                 /* ^[E] */
-            if (find_bind("^E", 0, ses))
+            if (find_bind("^E", 0, 0, ses))
                 break;
             goto key_end;
         case 6:                 /* ^[F] */
-            if (find_bind("^F", 0, ses))
+            if (find_bind("^F", 0, 0, ses))
                 break;
             goto key_cursor_right;
         case 8:                 /* ^[H] */
-            if (find_bind("^H", 0, ses))
+            if (find_bind("^H", 0, 0, ses))
                 break;
         case 127:               /* [backspace] */
             touch_bottom();
@@ -1199,7 +1221,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             redraw_in();
             break;
         case 9:                 /* [Tab], ^[I] */
-            if (find_bind("Tab", 0, ses)||find_bind("^I", 0, ses))
+            if (find_bind("Tab", 0, 0, ses)||find_bind("^I", 0, 0, ses))
                 break;
             {
                 WC buf[BUFFER_SIZE];
@@ -1215,7 +1237,7 @@ key_alt_tab:
             redraw_in();
             break;
         case 11:                /* ^[K] */
-            if (find_bind("^K", 0, ses))
+            if (find_bind("^K", 0, 0, ses))
                 break;
             ret(false);
             touch_bottom();
@@ -1229,22 +1251,22 @@ key_alt_tab:
             redraw_in();
             break;
         case 14:                /* ^[N] */
-            if (find_bind("^N", 0, ses))
+            if (find_bind("^N", 0, 0, ses))
                 break;
             goto next_history;
         case 16:                /* ^[P] */
-            if (find_bind("^P", 0, ses))
+            if (find_bind("^P", 0, 0, ses))
                 break;
             goto prev_history;
 #if 0
         case 17:                /* ^[Q] */
-            if (find_bind("^Q", 0, ses))
+            if (find_bind("^Q", 0, 0, ses))
                 break;
             state=TS_VERBATIM;
             break;
 #endif
         case 20:                /* ^[T] */
-            if (find_bind("^T", 0, ses))
+            if (find_bind("^T", 0, 0, ses))
                 break;
             ret(true);
             touch_bottom();
@@ -1258,7 +1280,7 @@ key_alt_tab:
             redraw_in();
             break;
         case 21:                /* ^[U] */
-            if (find_bind("^U", 0, ses))
+            if (find_bind("^U", 0, 0, ses))
                 break;
             ret(false);
             touch_bottom();
@@ -1274,13 +1296,13 @@ key_alt_tab:
             break;
 #if 0
         case 22:                /* ^[V] */
-            if (find_bind("^V", 0, ses))
+            if (find_bind("^V", 0, 0, ses))
                 break;
             state=TS_VERBATIM;
             break;
 #endif
         case 23:                /* ^[W] */
-            if (find_bind("^W", 0, ses))
+            if (find_bind("^W", 0, 0, ses))
                 break;
             ret(false);
             touch_bottom();
@@ -1302,7 +1324,7 @@ key_alt_tab:
             redraw_in();
             break;
         case 25:                /* ^[Y] */
-            if (find_bind("^Y", 0, ses))
+            if (find_bind("^Y", 0, 0, ses))
                 break;
             ret(false);
             touch_bottom();
@@ -1336,7 +1358,7 @@ key_alt_tab:
             if ((ch>0)&&(ch<32))
             {
                 sprintf(txt, "^"WCC, (WCI)(ch+64));
-                find_bind(txt, 1, ses);
+                find_bind(txt, 0, 1, ses);
                 break;
             }
 #if 0

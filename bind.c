@@ -152,11 +152,22 @@ void unbind_command(const char *arg, struct session *ses)
 }
 
 
-bool find_bind(const char *key, int msg, struct session *ses)
+static const char *bitted(const char *key, uint8_t bits)
+{
+    if (!bits)
+        return key;
+
+    static char esckey[64];
+    snprintf(esckey, sizeof(esckey), "%s%s", bits&1? "Alt-" : "", key);
+    return esckey;
+}
+
+
+bool find_bind(const char *key, uint8_t bits, int msg, struct session *ses)
 {
     char *val;
 
-    if ((val=get_hash(ses->binds, key)))
+    if ((val=get_hash(ses->binds, bitted(key, bits))))
     {          /* search twice, both for raw key code and key name */
         parse_input(val, true, ses);
         recursion=0;
@@ -165,7 +176,7 @@ bool find_bind(const char *key, int msg, struct session *ses)
     if ((val=get_hash(keynames, key)))
     {
         key=val;
-        if ((val=get_hash(ses->binds, key)))
+        if ((val=get_hash(ses->binds, bitted(key, bits))))
         {
             parse_input(val, true, ses);
             recursion=0;
@@ -173,7 +184,7 @@ bool find_bind(const char *key, int msg, struct session *ses)
         }
     }
     if (msg)
-        tintin_printf(ses, "#Unbound keycode: %s", key);
+        tintin_printf(ses, "#Unbound keycode: %s", bitted(key, bits));
     return false;
 }
 
