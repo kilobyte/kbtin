@@ -2,6 +2,7 @@ language: c
 matrix:
   include:
     - os: linux
+      arch: amd64
       dist: xenial
       addons:
         apt:
@@ -10,6 +11,17 @@ matrix:
           - libglib2.0-dev
           - libgnutls28-dev
     - os: linux
+      arch: ppc64le
+      dist: xenial
+      addons:
+        apt:
+          packages:
+          - libz-dev
+          - libglib2.0-dev
+          - libgnutls28-dev
+      before_install: sudo apt update && sudo apt install -y gettext;
+    - os: linux
+      arch: amd64
       dist: focal
       addons:
         apt:
@@ -17,6 +29,16 @@ matrix:
           - libz-dev
           - libglib2.0-dev
           - libgnutls28-dev
+    - os: linux
+      arch: ppc64le
+      dist: focal
+      addons:
+        apt:
+          packages:
+          - libz-dev
+          - libglib2.0-dev
+          - libgnutls28-dev
+      before_install: sudo apt update && sudo apt install -y gettext;
     - os: osx
       before_install:
         brew update && for pkg in libtool glib gettext;do if ! brew list -1|grep -q "^${pkg}\$";then brew install "$pkg";fi;done && brew link --force gettext
