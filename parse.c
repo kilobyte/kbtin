@@ -282,14 +282,14 @@ static bool do_goto(const char *txt, struct session *ses)
     }
     else
     {
-        char tmp[BUFFER_SIZE];
+        char tmp[BUFFER_SIZE+5]; // immediately cut again
 
         if (!(ch=get_hash(ses->myvars, "loc"))||(!*ch))
         {
             tintin_eprintf(ses, "#Cannot goto from $loc, it is not set!");
             return true; // was syntaxically correct
         }
-        snprintf(tmp, BUFFER_SIZE, "{%s} {%s}", ch, txt+1);
+        snprintf(tmp, sizeof(tmp), "{%s} {%s}", ch, txt+1);
         goto_command(tmp, ses);
     }
     return true;
