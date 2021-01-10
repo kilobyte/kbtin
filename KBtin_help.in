@@ -318,7 +318,7 @@ Notes:
 
 #send <line>
 Passes <line> to the MUD without almost any parsing, with just variables
-subsituted.  Useful for overriding KBtin aliases, like:
+substituted.  Useful for overriding KBtin aliases, like:
 #alias w {#math x {$x-1};#send w}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~sendchar
