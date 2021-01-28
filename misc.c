@@ -663,10 +663,11 @@ void status_command(const char *arg, struct session *ses)
     if (ses!=activesession)
         return;
     get_arg(arg, what, 1, ses);
-    if (*what)
-        strlcpy(status, what, BUFFER_SIZE);
-    else
-        strcpy(status, EMPTY_LINE);
+    if (!*what)
+        strcpy(what, EMPTY_LINE);
+    if (!strcmp(status, what))
+        return; /* avoid no-op redraw */
+    strlcpy(status, what, BUFFER_SIZE);
     user_show_status();
 }
 
