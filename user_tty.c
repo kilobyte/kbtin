@@ -86,7 +86,6 @@ static void term_getsize(void)
     struct winsize ts;
 
     if (ioctl(1, TIOCGWINSZ, &ts) || ts.ws_row<=0 || ts.ws_col<=0)
-/*        syserr("ioctl(TIOCGWINSZ)");*/
     {       /* not a terminal or a broken one, let's quietly assume 80x25 */
         LINES=25;
         COLS=80;
