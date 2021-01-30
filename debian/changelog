@@ -1,3 +1,10 @@
+kbtin (1.0.21-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Move the watch file to GitHub.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sat, 30 Jan 2021 09:50:07 +0100
+
 kbtin (1.0.20-2) unstable; urgency=medium
 
   * Fix wrong version being displayed.
