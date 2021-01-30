@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* file: action.c - funtions related to the action command           */
+/* file: action.c - functions related to the action command          */
 /*                             TINTIN III                            */
 /*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
 /*                     coded by peter unold 1992                     */

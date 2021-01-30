@@ -1,12 +1,3 @@
-### no profiling
-<<<
-#rem Profiling should be disabled in release versions.
-#profile
->>>
-#UNKNOWN TINTIN-COMMAND: [#profile]
-===
-
-
 ### #showme
 <<<
 #showme abc def ghi
@@ -693,4 +684,78 @@ x
 TITLE: good beer is good
 TITLE: meow
 FIN
+===
+
+### zap in #hook tick
+<<<
+#de 2 #end
+#run a cat
+#hook tick {#showme A;#zap;#showme B}
+#ticksize 1
+#tickon
+#showme _
+>>>
+#OK. NEW TICKSIZE SET
+#TICKER IS NOW ON.
+_
+A
+#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!
+
+#SESSION 'a' DIED.
+#THERE'S NO ACTIVE SESSION NOW.
+===
+
+### zap in #hook pretick
+<<<
+#de 2 #end
+#run a cat
+#hook pretick {#showme A;#zap;#showme B}
+#ticksize 11
+#tickon
+#showme _
+>>>
+#OK. NEW TICKSIZE SET
+#TICKER IS NOW ON.
+_
+A
+#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!
+
+#SESSION 'a' DIED.
+#THERE'S NO ACTIVE SESSION NOW.
+===
+
+### #firstlower
+<<<
+#foreach {abc Abc ąbc Ąbc AOw Aow aOw aOw aów aÓw Ąów ĄÓw} {#firstlo res {$0};#show $res}
+>>>
+abc
+abc
+ąbc
+ąbc
+aOw
+aow
+aOw
+aOw
+aów
+aÓw
+ąów
+ąÓw
+===
+
+### #firstupper
+<<<
+#foreach {abc Abc ąbc Ąbc AOw Aow aOw aOw aów aÓw Ąów ĄÓw} {#firstu res {$0};#show $res}
+>>>
+Abc
+Abc
+Ąbc
+Ąbc
+AOw
+Aow
+AOw
+AOw
+Aów
+AÓw
+Ąów
+ĄÓw
 ===

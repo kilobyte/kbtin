@@ -1,10 +1,10 @@
-/*********************************************************************/
-/* file: files.c - funtions for logfile and reading/writing comfiles */
-/*                             TINTIN + +                            */
-/*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t             */
-/*                     coded by peter unold 1992                     */
-/*                    New code by Bill Reiss 1993                    */
-/*********************************************************************/
+/**********************************************************************/
+/* file: files.c - functions for logfile and reading/writing comfiles */
+/*                             TINTIN + +                             */
+/*          (T)he K(I)cki(N) (T)ickin D(I)kumud Clie(N)t              */
+/*                     coded by peter unold 1992                      */
+/*                    New code by Bill Reiss 1993                     */
+/**********************************************************************/
 #include "tintin.h"
 #include "protos/action.h"
 #include "protos/globals.h"
@@ -371,6 +371,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         zip="bzip2";
     else if (len>=4 && !strcmp(fname+len-3, ".xz"))
         zip="xz";
+    else if (len>=5 && !strcmp(fname+len-4, ".zst"))
+        zip="zstd";
     if (zip)
     {
         int fd=open(lfname, O_WRONLY|O_BINARY|O_CREAT|O_TRUNC, 0666);

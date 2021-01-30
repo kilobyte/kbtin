@@ -228,10 +228,13 @@ void unvariable_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
 
-    arg = get_arg(arg, left, 1, ses);
-    delete_hashlist(ses, ses->myvars, left,
-        ses->mesvar[MSG_VARIABLE]? "#Ok. $%s is no longer a variable." : 0,
-        ses->mesvar[MSG_VARIABLE]? "#THAT VARIABLE (%s) IS NOT DEFINED." : 0);
+    do
+    {
+        arg = get_arg(arg, left, 1, ses);
+        delete_hashlist(ses, ses->myvars, left,
+            ses->mesvar[MSG_VARIABLE]? "#Ok. $%s is no longer a variable." : 0,
+            ses->mesvar[MSG_VARIABLE]? "#THAT VARIABLE (%s) IS NOT DEFINED." : 0);
+    } while (*arg);
 }
 
 
@@ -393,7 +396,7 @@ void getitem_command(const char *arg, struct session *ses)
 /*        #isatom {log} {{atom}} -> log = 0                  */
 /*        #isatom {log} {a list} -> log = 0                  */
 /*                                                           */
-/* To be substituted by appriopriate #if expression          */
+/* To be substituted by appropriate #if expression           */
 /*************************************************************/
 
 /* First we have function which does necessary stuff */
@@ -847,9 +850,26 @@ void firstupper_command(const char *arg, struct session *ses)
         return tintin_eprintf(ses, "#Syntax: #firstupper <var> <text>");
 
     TO_WC(txt, right);
-    for (WC *p = txt; *p; p++)
-        *p = towlower(*p);
     *txt=towupper(*txt);
+    WRAP_WC(right, txt);
+    set_variable(left, right, ses);
+}
+
+/***************************/
+/* the #firstlower command */
+/***************************/
+void firstlower_command(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+    WC txt[BUFFER_SIZE];
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
+    if (!*left)
+        return tintin_eprintf(ses, "#Syntax: #firstlower <var> <text>");
+
+    TO_WC(txt, right);
+    *txt=towlower(*txt);
     WRAP_WC(right, txt);
     set_variable(left, right, ses);
 }

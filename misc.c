@@ -663,10 +663,11 @@ void status_command(const char *arg, struct session *ses)
     if (ses!=activesession)
         return;
     get_arg(arg, what, 1, ses);
-    if (*what)
-        strlcpy(status, what, BUFFER_SIZE);
-    else
-        strcpy(status, EMPTY_LINE);
+    if (!*what)
+        strcpy(what, EMPTY_LINE);
+    if (!strcmp(status, what))
+        return; /* avoid no-op redraw */
+    strlcpy(status, what, BUFFER_SIZE);
     user_show_status();
 }
 
@@ -774,34 +775,6 @@ struct session* zap_command(const char *arg, struct session *ses)
     return 0;   /* stupid lint */
 }
 
-void news_command(const char *arg, struct session *ses)
-{
-    char line[BUFFER_SIZE];
-    FILE* news=fopen( NEWS_FILE , "r");
-#ifdef DATA_PATH
-    if (!news)
-        news=fopen( DATA_PATH "/" NEWS_FILE , "r");
-#endif
-    if (news)
-    {
-        tintin_printf(ses, "~2~");
-        while (fgets(line, BUFFER_SIZE, news))
-        {
-            *(char *)strchr(line, '\n')=0;
-            tintin_printf(ses, "%s", line);
-        }
-        tintin_printf(ses, "~7~");
-        fclose(news);
-    }
-    else
-#ifdef DATA_PATH
-        tintin_eprintf(ses, "#'%s' file not found in '%s'",
-            NEWS_FILE, DATA_PATH);
-#else
-        tintin_eprintf(ses, "#'%s' file not found!", NEWS_FILE);
-#endif
-}
-
 
 #if 0
 /*********************************************************************/
@@ -822,8 +795,8 @@ void tablist(struct completenode *tcomplete)
     *tbuf = '\0';
 
     /*
-       I'll search through the entire list, printing thre names to a line then
-       outputing the line.  Creates a nice 3 column effect.  To increase the #
+       I'll search through the entire list, printing three names to a line then
+       outputting the line.  Creates a nice 3 column effect.  To increase the #
        if columns, just increase the mod #.  Also.. decrease the # in the %s's
      */
 

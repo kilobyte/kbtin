@@ -1,3 +1,12 @@
+1.0.21:
+*	logging to .zstd
+*	#hook tick, pretick
+*	#unvar {var1 var2 var3}
+*	#firstlower
+*	more keys recognized by #bind (esp. Alt-key)
+*	skip no-change statusbar updates
+*	drop #news
+
 1.0.20:
 *	speed up some string operations
 *	fix accessing files via ~user
@@ -130,7 +139,7 @@
 
 1.0.6:
 *	made commands case-insensitive, so #ALIAS works
-*	bugfix: the prority of "6a" is supposed to come before "60"
+*	bugfix: the priority of "6a" is supposed to come before "60"
 *	made KBtin a more responsive to keyboard input when under a heavy load
 *	#gagthis
 *	made "#system something &" actually work
@@ -150,7 +159,7 @@
 	name while retaining old name as well
 *	\e[39m, \e[49m
 *	manual.html (just a converted version of the online help)
-*	commands that don't work on an architecture are no longer accesible
+*	commands that don't work on an architecture are no longer accessible
 *	outgoing 0xff bytes are sent as IAC IAC telnet sequences
 *	the terminal string will cycle between "KBtin", "hardcopy",
 	"unknown" and "KBtin-1.0.4" (conforming to RFC 1091)
@@ -193,7 +202,7 @@
 *	#hook/#unhook
 *	all (?) flags are saved by #write and #writesession
 *	You can use #delay with a delay of 0.
-*	log only commands explicitely typed by the player
+*	log only commands explicitly typed by the player
 *	#logcomment
 *	Use exec when invoking something using /bin/sh
 

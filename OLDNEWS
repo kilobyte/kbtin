@@ -93,7 +93,7 @@
 * #promptaction, actions which work for uncompleted lines
 
 0.3.2:                                           Tue Mar 20 20:17:00 CET 2001
-* #index now uses 1-based indices - for consitency with other commands
+* #index now uses 1-based indices - for consistency with other commands
 * #foreach {list} <command>
   Examples:
      #foreach {Omm Consola Murre Aethia} rescue

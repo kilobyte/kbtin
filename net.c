@@ -168,7 +168,7 @@ int connect_mud(const char *host, const char *port, struct session *ses)
     }
 
     if (isadigit(*port))
-        sockaddr.sin_port = htons(atoi(port));  /* intepret port part */
+        sockaddr.sin_port = htons(atoi(port));  /* interpret port part */
     else
     {
         tintin_eprintf(ses, "#THE PORT SHOULD BE A NUMBER (got {%s}).", port);

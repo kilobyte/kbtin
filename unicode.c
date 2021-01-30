@@ -46,7 +46,7 @@ int utf8_to_wc(wchar_t *d, const char *s, int n)
                     continue;
 
                 /* The following code deals with malformed UTF-16 surrogates
-                 * encoded in UTF-8 text.  While the standard explicitely
+                 * encoded in UTF-8 text.  While the standard explicitly
                  * forbids this, some (usually Windows and/or Java) programs
                  * generate them, and thus we'll better support such
                  * encapsulation anyway.  We don't go out of our way to detect

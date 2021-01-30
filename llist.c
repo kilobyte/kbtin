@@ -292,7 +292,7 @@ void deletenode_list(struct listnode *listhead, struct listnode *nptr)
 
 /********************************************************/
 /* search for a node containing the ltext in left-field */
-/* return: ptr to node on succes / NULL on failure      */
+/* return: ptr to node on success / NULL on failure     */
 /********************************************************/
 struct listnode* searchnode_list(struct listnode *listhead, char *cptr)
 {

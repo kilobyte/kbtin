@@ -1,6 +1,6 @@
 bin_PROGRAMS=KBtin
 helpdir = $(pkgdatadir)
-help_DATA= NEWS KBtin_help.gz
+help_DATA= KBtin_help.gz
 AM_CPPFLAGS = -DDATA_PATH=\"$(helpdir)\"
 man_MANS = KBtin.6
 
@@ -16,7 +16,7 @@ KBtin_LDADD=@GLIB_LIBS@ @ZLIB_LIBS@ @LIBICONV@ @GNUTLS_LIBS@
 
 AM_CFLAGS=@GLIB_CFLAGS@ -Wall
 
-KBtin_DOCS=BUGS OLDNEWS KEYPAD FAQ
+KBtin_DOCS=BUGS OLDNEWS NEWS KEYPAD FAQ
 EXTRA_DIST=KBtin_help.in commands make_commands $(man_MANS) help2ansi \
 	fixmanual terminfo.src prof_init kbtin.ico make_protos $(KBtin_DOCS) \
 	autogen.sh VERSION get_version a2html
