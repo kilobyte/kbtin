@@ -1,3 +1,12 @@
+1.0.21:
+*	logging to .zstd
+*	#hook tick, pretick
+*	#unvar {var1 var2 var3}
+*	#firstlower
+*	more keys recognized by #bind (esp. Alt-key)
+*	skip no-change statusbar updates
+*	drop #news
+
 1.0.20:
 *	speed up some string operations
 *	fix accessing files via ~user

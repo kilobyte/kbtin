@@ -1,24 +1,6 @@
 KBtin
 =====
 
-1.0.20
-------
-
-1.0.20 is another minor bugfix release, biggest fix being MidArrow which
-changed on most modern terminal.
-
-In 1.0.18, log-processing tools: ansi2html, ansi2txt, ttyrec2ansi and
-pipetty have been removed; they are available as a separate package now.
-
-Note that since 1.0.16 support for non-GNU make has been dropped, please use
-gmake on systems that use other makes.
-
-Distributions
--------------
-
-Debian and Ubuntu have KBtin in the regular archives.  So do most other
-distributions, although some may haven't been updated in a while.
-
 Overview
 --------
 
@@ -56,10 +38,10 @@ Installation from sources
 
 To install KBtin, you need to:
 
-* untar it: `tar xvfJ kbtin-1.0.20.tar.xz`
+* untar it: `tar xvfJ kbtin-1.0.21.tar.xz`
 * On systems where tar doesn't support the J flag, you have to pipe it through xz manually: `xz -d <kbtin-1.0.20.tar.xz|tar xvf -`
-* `cd kbtin-1.0.20`
+* `cd kbtin-1.0.21`
 * `./configure`
-* `make`
+* `make` (or `gmake` on *BSD)
 * as root, `make install`
 * or as an ordinary user, `make bin`
