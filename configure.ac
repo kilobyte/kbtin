@@ -1,4 +1,4 @@
-# When releasing: remember to update ChangeLog and NEWS.
+# When releasing: remember to update ChangeLog.
 AC_INIT([KBtin], m4_esyscmd([./get_version -n]), [kilobyte@angband.pl])
 AM_INIT_AUTOMAKE([-Wall dist-xz no-dist-gzip])
 AC_CONFIG_SRCDIR([action.c])

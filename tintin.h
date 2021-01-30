@@ -83,7 +83,6 @@
 #else
 #define COMPRESSION_EXT ""
 #endif
-#define NEWS_FILE   "NEWS"
 #define CONFIG_DIR ".tintin"
 #define CERT_DIR   "ssl"
 

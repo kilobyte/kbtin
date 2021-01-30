@@ -775,34 +775,6 @@ struct session* zap_command(const char *arg, struct session *ses)
     return 0;   /* stupid lint */
 }
 
-void news_command(const char *arg, struct session *ses)
-{
-    char line[BUFFER_SIZE];
-    FILE* news=fopen( NEWS_FILE , "r");
-#ifdef DATA_PATH
-    if (!news)
-        news=fopen( DATA_PATH "/" NEWS_FILE , "r");
-#endif
-    if (news)
-    {
-        tintin_printf(ses, "~2~");
-        while (fgets(line, BUFFER_SIZE, news))
-        {
-            *(char *)strchr(line, '\n')=0;
-            tintin_printf(ses, "%s", line);
-        }
-        tintin_printf(ses, "~7~");
-        fclose(news);
-    }
-    else
-#ifdef DATA_PATH
-        tintin_eprintf(ses, "#'%s' file not found in '%s'",
-            NEWS_FILE, DATA_PATH);
-#else
-        tintin_eprintf(ses, "#'%s' file not found!", NEWS_FILE);
-#endif
-}
-
 
 #if 0
 /*********************************************************************/
