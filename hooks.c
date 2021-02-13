@@ -99,6 +99,8 @@ void unhook_command(const char *arg, struct session *ses)
 
 struct session* do_hook(struct session *ses, int t, const char *data, bool blockzap)
 {
+    char hookcmd[BUFFER_SIZE];
+
     pvars_t vars, *lastvars;
     int oldclos=oldclos;
 
@@ -127,7 +129,8 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
         tintin_printf(ses, "[HOOK: %s]", buffer);
     }
     in_alias=true;
-    ses=parse_input(ses->hooks[t], true, ses);
+    strcpy(hookcmd, ses->hooks[t]);
+    ses=parse_input(hookcmd, true, ses);
     if (blockzap)
         ses->closing=oldclos;
     pvars=lastvars;
