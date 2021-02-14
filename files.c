@@ -498,10 +498,10 @@ void debuglog_command(const char *arg, struct session *ses)
         get_arg_in_braces(arg, temp, 1);
         substitute_vars(temp, fname);
         substitute_myvars(fname, temp, ses);
-            ses->debuglogfile=open_logfile(ses, temp,
-                "#OK. DEBUGLOG SET TO {%s} .....",
-                "#OK. DEBUGLOG APPENDING TO {%s} .....",
-                "#OK. DEBUGLOG PIPED TO {%s} .....");
+        ses->debuglogfile=open_logfile(ses, temp,
+            "#OK. DEBUGLOG SET TO {%s} .....",
+            "#OK. DEBUGLOG APPENDING TO {%s} .....",
+            "#OK. DEBUGLOG PIPED TO {%s} .....");
         if (ses->debuglogfile)
             ses->debuglogname=mystrdup(temp);
     }

@@ -703,6 +703,7 @@ A
 
 #SESSION 'a' DIED.
 #THERE'S NO ACTIVE SESSION NOW.
+B
 ===
 
 ### zap in #hook pretick
@@ -722,6 +723,7 @@ A
 
 #SESSION 'a' DIED.
 #THERE'S NO ACTIVE SESSION NOW.
+B
 ===
 
 ### #firstlower

@@ -1,9 +1,6 @@
 KBtin
 =====
 
-Overview
---------
-
 KBtin is a very heavily extended clone of well-known TinTin++.
 
 The features include:
@@ -32,16 +29,3 @@ KBtin has been ported to the following systems:
 * IRIX<sup>long untested</sup>
 * SCO OpenServer<sup>long untested</sup>
 * Solaris<sup>long untested</sup>
-
-Installation from sources
--------------------------
-
-To install KBtin, you need to:
-
-* untar it: `tar xvfJ kbtin-1.0.21.tar.xz`
-* On systems where tar doesn't support the J flag, you have to pipe it through xz manually: `xz -d <kbtin-1.0.20.tar.xz|tar xvf -`
-* `cd kbtin-1.0.21`
-* `./configure`
-* `make` (or `gmake` on *BSD)
-* as root, `make install`
-* or as an ordinary user, `make bin`
