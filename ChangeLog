@@ -1,3 +1,7 @@
+1.0.22:
+*	bugfix: user-after-free after #zap inside a hook
+*	bugfix: positional %vars were broken
+
 1.0.21:
 *	logging to .zstd
 *	#hook tick, pretick
