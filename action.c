@@ -316,7 +316,7 @@ novar1:
             }
             in_alias=false; /* not a simple alias */
         }
-        if (*arg == '$')
+        else if (*arg == '$')
         {               /* substitute variable */
             numands = 1;        /* at least one */
             while (*(arg + numands) == '$')
@@ -372,7 +372,8 @@ novar2:
             {
                 result--;
                 *result++ = *arg++;
-                *result++ = *arg++;
+                if (*arg)
+                    *result++ = *arg++;
             }
         }
         else
