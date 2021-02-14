@@ -1,3 +1,9 @@
+kbtin (1.0.22-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Mon, 15 Feb 2021 00:33:20 +0100
+
 kbtin (1.0.21-1) unstable; urgency=medium
 
   * New upstream release.
