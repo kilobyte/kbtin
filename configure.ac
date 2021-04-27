@@ -14,22 +14,17 @@ AC_PROG_EGREP
 
 # Checks for libraries.
 
-AC_HEADER_SYS_WAIT
 AC_HEADER_TIOCGWINSZ
-AC_CHECK_HEADERS([strings.h string.h sys/time.h termios.h unistd.h stropts.h \
+AC_CHECK_HEADERS([strings.h string.h termios.h unistd.h stropts.h \
     pty.h libutil.h util.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
-AC_C_INLINE
 AC_C_BIGENDIAN
 
 # Checks for library functions.
-AC_PROG_GCC_TRADITIONAL
-AC_FUNC_VPRINTF
 AC_SEARCH_LIBS(forkpty, util)
-AC_CHECK_FUNCS([memcpy getpt ptsname _getpty grantpt \
-	forkpty regcomp getaddrinfo wcwidth posix_openpt cfmakeraw])
+AC_CHECK_FUNCS([getpt ptsname _getpty grantpt \
+	forkpty regcomp wcwidth posix_openpt cfmakeraw])
 AC_FUNC_STRLCPY
 AC_ARG_LIB(mccp, zlib, ZLIB, zlib.h, z, gzread, [
 Please install zlib and its headers.  On most systems, the package will be named
