@@ -1410,7 +1410,7 @@ invis players;#loop 1,10 {^:$0: there is more than one of me!}
 If <act. pattern> can be found in the <line>, <command> is executed.  Both
 <act. pattern> and <command> can contain positional variables %0..%9, which
 will be filled according to the text in <line> which matched a given variable
-in <act. pattern.
+in <act. pattern>.
 It is usually safer to use $0..$9 instead of %0..%9 as $ removes all
 semicolons from the variables. In case of no match, the #elif/#else part
 is executed.
