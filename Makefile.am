@@ -17,7 +17,7 @@ KBtin_LDADD=@GLIB_LIBS@ @ZLIB_LIBS@ @LIBICONV@ @GNUTLS_LIBS@
 AM_CFLAGS=@GLIB_CFLAGS@ -Wall
 
 KBtin_DOCS=BUGS OLDNEWS NEWS KEYPAD FAQ
-EXTRA_DIST=KBtin_help.in commands make_commands $(man_MANS) help2ansi \
+EXTRA_DIST=KBtin_help commands make_commands $(man_MANS) help2ansi \
 	fixmanual terminfo.src prof_init kbtin.ico make_protos $(KBtin_DOCS) \
 	autogen.sh VERSION get_version a2html
 CLEANFILES=$(BUILT_SOURCES) KBtin_help.gz manual.html
@@ -65,12 +65,12 @@ profinit.h: $(KBtin_C_FILES) prof_init
 $(KBtin_C_FILES:%.c=protos/%.h): protos/%.h: %.c make_protos
 	$(QUIET_PROTO)$(srcdir)/make_protos $(srcdir) $*.c
 
-KBtin_help.gz: KBtin_help.in
-	gzip -n9 <$(srcdir)/KBtin_help.in >KBtin_help.gz
+KBtin_help.gz: KBtin_help
+	gzip -n9 <$(srcdir)/KBtin_help >KBtin_help.gz
 
 # convert the help file to html
-manual.html: KBtin_help.in help2ansi a2html fixmanual
-	$(srcdir)/help2ansi <$(srcdir)/KBtin_help.in|./a2html|$(srcdir)/fixmanual $(srcdir)/KBtin_help.in >manual.html
+manual.html: KBtin_help help2ansi a2html fixmanual
+	$(srcdir)/help2ansi <$(srcdir)/KBtin_help|./a2html|$(srcdir)/fixmanual $(srcdir)/KBtin_help >manual.html
 
 # install the terminfo data
 install-terminfo: terminfo.src
