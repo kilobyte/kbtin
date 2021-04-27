@@ -1,4 +1,3 @@
-m4_include([ac_compile_check_sizeof.m4])
 m4_include([ac_ptyranges.m4])
 m4_include([ac_ucs_size.m4])
 m4_include([ac_sco.m4])
