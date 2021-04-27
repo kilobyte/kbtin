@@ -1,5 +1,6 @@
 #include "config.h"
-#ifdef HAVE_GLIB
+// g_slice loses to stock glibc's malloc these days.
+#ifdef disabled_HAVE_GLIB
 # include <glib.h>
 # define MALLOC(s)      g_slice_alloc(s)
 # define TALLOC(t)      ((t*)g_slice_new(t))

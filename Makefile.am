@@ -12,9 +12,9 @@ KBtin_C_FILES=action.c alias.c antisub.c files.c glob.c help.c highlight.c\
 
 BUILT_SOURCES=commands.h load_commands.h profinit.h $(KBtin_C_FILES:%.c=protos/%.h)
 KBtin_SOURCES=$(KBtin_C_FILES) tintin.h unicode.h translit.h malloc.h
-KBtin_LDADD=@GLIB_LIBS@ @ZLIB_LIBS@ @LIBICONV@ @GNUTLS_LIBS@
+KBtin_LDADD=@ZLIB_LIBS@ @LIBICONV@ @GNUTLS_LIBS@
 
-AM_CFLAGS=@GLIB_CFLAGS@ -Wall
+AM_CFLAGS=-Wall
 
 KBtin_DOCS=BUGS OLDNEWS NEWS KEYPAD FAQ
 EXTRA_DIST=KBtin_help commands make_commands $(man_MANS) help2ansi \

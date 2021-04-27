@@ -46,7 +46,6 @@ without support for encryption.
 Debian/Ubuntu: apt-get install libgnutls-dev
 BSD: cd /usr/ports/security/gnutls && make install
 ])
-AM_PATH_GLIB_2_0([2.10.0], [AC_DEFINE([HAVE_GLIB], [1], [Define if glib 2.10+ is available.])])
 AM_ICONV
 if [[ "x$am_cv_func_iconv" != "xyes" ]]
   then AC_MSG_ERROR([
