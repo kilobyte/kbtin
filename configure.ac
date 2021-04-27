@@ -25,7 +25,6 @@ AC_CHECK_HEADERS([strings.h string.h sys/time.h termios.h unistd.h stropts.h \
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
-AC_HEADER_TIME
 AC_C_BIGENDIAN
 
 # Checks for library functions.
