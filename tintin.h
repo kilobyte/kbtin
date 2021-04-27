@@ -201,13 +201,7 @@ enum
 #ifdef HAVE_ZLIB
 # include <zlib.h>
 #endif
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
+#include <string.h>
 #if GWINSZ_IN_SYS_IOCTL
 # include <sys/ioctl.h>
 #endif

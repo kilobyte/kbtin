@@ -15,8 +15,7 @@ AC_PROG_EGREP
 # Checks for libraries.
 
 AC_HEADER_TIOCGWINSZ
-AC_CHECK_HEADERS([strings.h string.h termios.h unistd.h stropts.h \
-    pty.h libutil.h util.h])
+AC_CHECK_HEADERS([termios.h unistd.h stropts.h pty.h libutil.h util.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN
