@@ -1,5 +1,5 @@
 # When releasing: remember to update ChangeLog.
-AC_INIT([KBtin], m4_esyscmd([./get_version -n]), [kilobyte@angband.pl])
+AC_INIT([KBtin],[m4_esyscmd(./get_version -n)],[kilobyte@angband.pl])
 AM_INIT_AUTOMAKE([-Wall dist-xz no-dist-gzip])
 AC_CONFIG_SRCDIR([action.c])
 AC_CONFIG_HEADERS([config.h])
@@ -8,15 +8,13 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Checks for programs.
 AC_PROG_AWK
-AC_PROG_CC_C99
+AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_EGREP
 
 # Checks for libraries.
 
-# Checks for header files.
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_TIOCGWINSZ
 AC_CHECK_HEADERS([strings.h string.h sys/time.h termios.h unistd.h stropts.h \
