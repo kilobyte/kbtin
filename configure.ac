@@ -62,10 +62,8 @@ fi
 
 AC_PTYRANGES
 AC_DEV_PTMX
-AC_LBL_LIBRARY_NET
 AC_UCS_SIZE
 AC_SCO
-AC_AI_ADDRCONFIG
 AC_SYS_LARGEFILE
 AC_C_TRY_FLAG([-Wno-unused-parameter])
 AC_C_TRY_FLAG([-Wno-implicit-fallthrough])

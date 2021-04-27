@@ -39,7 +39,6 @@ static int init_mccp(struct session *ses, int cplen, const char *cpsrc);
 
 static bool abort_connect;
 
-#ifdef HAVE_GETADDRINFO
 static const char* afstr(int af)
 {
     static char msg[19];
@@ -147,73 +146,6 @@ int connect_mud(const char *host, const char *port, struct session *ses)
     freeaddrinfo(ai);
     return 0;
 }
-#else
-int connect_mud(const char *host, const char *port, struct session *ses)
-{
-    int sock, val;
-    struct sockaddr_in sockaddr;
-
-    if (isadigit(*host))         /* interpret host part */
-        sockaddr.sin_addr.s_addr = inet_addr(host);
-    else
-    {
-        struct hostent *hp;
-
-        if (!(hp = gethostbyname(host)))
-        {
-            tintin_eprintf(ses, "#ERROR - UNKNOWN HOST: {%s}", host);
-            return 0;
-        }
-        memcpy((char *)&sockaddr.sin_addr, hp->h_addr, sizeof(sockaddr.sin_addr));
-    }
-
-    if (isadigit(*port))
-        sockaddr.sin_port = htons(atoi(port));  /* interpret port part */
-    else
-    {
-        tintin_eprintf(ses, "#THE PORT SHOULD BE A NUMBER (got {%s}).", port);
-        return 0;
-    }
-
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        syserr("socket");
-
-    sockaddr.sin_family = AF_INET;
-
-    val=IPTOS_LOWDELAY;
-    setsockopt(sock, IPPROTO_IP, IP_TOS, &val, sizeof(val));
-
-    tintin_printf(ses, "#Trying to connect...");
-
-    if (signal(SIGALRM, alarm_func) == BADSIG)
-        syserr("signal SIGALRM");
-
-    alarm(15);                  /* We'll allow connect to hang in 15seconds! NO MORE! */
-    val = connect(sock, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
-    alarm(0);
-
-    if (val)
-    {
-        close(sock);
-        switch (errno)
-        {
-        case EINTR:
-            tintin_eprintf(ses, "#CONNECTION TIMED OUT.");
-            break;
-        case ECONNREFUSED:
-            tintin_eprintf(ses, "#ERROR - Connection refused.");
-            break;
-        case ENETUNREACH:
-            tintin_eprintf(ses, "#ERROR - Network unreachable.");
-            break;
-        default:
-            tintin_eprintf(ses, "#Couldn't connect to %s:%s", host, port);
-        }
-        return 0;
-    }
-    return sock;
-}
-#endif
 
 /*****************/
 /* alarm handler */
