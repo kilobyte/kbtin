@@ -21,7 +21,6 @@ EXTRA_DIST=KBtin_help commands make_commands $(man_MANS) help2ansi \
 	fixmanual terminfo.src prof_init kbtin.ico make_protos $(KBtin_DOCS) \
 	autogen.sh VERSION get_version a2html
 CLEANFILES=$(BUILT_SOURCES) KBtin_help.gz manual.html
-DISTCLEANFILES=_stdint.h
 
 QUIET_PROTO = $(QUIET_PROTO_@AM_V@)
 QUIET_PROTO_ = $(QUIET_PROTO_@AM_DEFAULT_V@)
