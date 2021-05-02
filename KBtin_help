@@ -1449,7 +1449,7 @@ matched subexpression, like in Perl, sed and the like.
 $0 will be assigned the whole part of the line that matched the regexp.
 
 Example:
- #grep {__h_abc(.)def(.+)ghijkl} {abc1def12345ghi} {whatever}
+ #grep {abc(.)def(.+)ghijk} {__h_abc1def12345ghijkl} {#showme {[$0] [$1] [$2]}}
         $0 = "abc1def12345ghi"
         $1 = "1"
         $2 = "12345"
