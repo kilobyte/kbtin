@@ -241,8 +241,8 @@ void flush_socket(struct session *ses)
 /***************************************************/
 static int read_socket(struct session *ses, char *buffer, int len)
 {
-#ifdef HAVE_GNUTLS
     int ret;
+#ifdef HAVE_GNUTLS
 
     if (ses->ssl)
     {
@@ -250,28 +250,41 @@ static int read_socket(struct session *ses, char *buffer, int len)
         {
             ret=gnutls_record_recv(ses->ssl, buffer, len);
         } while (ret==GNUTLS_E_INTERRUPTED || ret==GNUTLS_E_AGAIN);
+
+        if (ret < 0)
+            tintin_eprintf(ses, "#%s", gnutls_strerror(ret));
         return ret;
     }
-    else
 #endif
-        return read(ses->socket, buffer, len);
+    ret = read(ses->socket, buffer, len);
+
+    if (ret < 0)
+        tintin_eprintf(ses, "#%s", strerror(errno));
+    return ret;
 }
 
 int write_socket(struct session *ses, char *buffer, int len)
 {
-#ifdef HAVE_GNUTLS
     int ret;
+#ifdef HAVE_GNUTLS
 
     if (ses->ssl)
     {
         ret=gnutls_record_send(ses->ssl, buffer, len);
         while (ret==GNUTLS_E_INTERRUPTED || ret==GNUTLS_E_AGAIN)
             ret=gnutls_record_send(ses->ssl, 0, 0);
+
+        if (ret < 0)
+            tintin_eprintf(ses, "#%s", gnutls_strerror(ret));
         return ret;
     }
-    else
 #endif
-        return write(ses->socket, buffer, len);
+
+    ret = write(ses->socket, buffer, len);
+
+    if (ret < 0)
+        tintin_eprintf(ses, "#%s", strerror(errno));
+    return ret;
 }
 
 /***********************************************************************/
@@ -342,10 +355,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
     {
         didget = read_socket(ses, tmpbuf+len, INPUT_CHUNK-len);
 
-        if (didget < 0)
-            return -1;
-
-        else if (didget == 0)
+        if (didget <= 0)
             return -1;
     }
 
