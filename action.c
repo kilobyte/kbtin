@@ -539,6 +539,8 @@ static int match_a_string(const char *line, const char *mask)
     while (*lptr && *mptr && !(*mptr == '%' && isadigit(*(mptr + 1))))
         if (*lptr++ != *mptr++)
             return -1;
+    if (!*lptr && *mptr == '$' && !mptr[1])
+        return (int)(lptr - line);
     if (!*mptr || (*mptr == '%' && isadigit(*(mptr + 1))))
         return (int)(lptr - line);
     return -1;
@@ -646,6 +648,8 @@ static bool check_a_action(const char *line, const char *action, bool inside, st
         var_ptr[*(tptr+1)-48]=lptr;
         tptr+=2;
     }
+    if (!*lptr && *tptr == '$' && !tptr[1])
+        tptr++;
     match_end=lptr;
     return !*tptr;
 }
