@@ -465,7 +465,7 @@ a while you will realize this a very powerful feature, allowing you to
 completely ignore people emoting things to fool your triggers.
 
 If "^" is the first character of <text>, the action will trigger only if the
-text is found on the beginning of a line.
+text is found on the beginning of a line.  Likewise, use "$" for the end.
 Example:
 #action {^Your studies are complete.} {stand}
 Your studies are complete.                           -> match
@@ -594,7 +594,7 @@ Lists all substitutes and gags matching the pattern.
 Defines a substitution for text incoming from the MUD.  It can be used to
 highlight stuff, remind you about items stats, etc.
 <pattern> can include positional variables %0..%9, which can be used in <new
-text> as well.
+text> as well.  Use ^ and $ to anchor to the beginning or end of a line.
 Note:
 subsitutions, similarly to actions, do NOT ignore color codes.
 
