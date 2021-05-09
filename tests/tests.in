@@ -761,3 +761,51 @@ AÓw
 Ąów
 ĄÓw
 ===
+
+### anchors in #action
+<<<
+#act {^foo}  {#showme Ab}
+#act {^foo$} {#showme AB}
+#act {foo}   {#showme ab}
+#act {foo$}  {#showme aB}
+#run a {sh -c 'for x in foobar xfoo foo xfoobar;do echo "$x";done'}
+>>>
+Ab
+ab
+foobar
+ab
+aB
+xfoo
+Ab
+AB
+ab
+aB
+foo
+ab
+xfoobar
+
+#SESSION 'a' DIED.
+#THERE'S NO ACTIVE SESSION NOW.
+===
+
+### anchors in #substitute
+<<<
+#sub foo FOO
+#sub ^bar BAR
+#sub ^baz$ BAZ
+#sub quux$ QUUX
+#run a {sh -c 'for x in foobarbazquux foo bar baz quux xfoo fbar xbaz xquux;do echo "$x";done'}
+>>>
+FOObarbazQUUX
+FOO
+BAR
+BAZ
+QUUX
+xFOO
+fbar
+xbaz
+xQUUX
+
+#SESSION 'a' DIED.
+#THERE'S NO ACTIVE SESSION NOW.
+===
