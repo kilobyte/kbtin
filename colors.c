@@ -28,12 +28,12 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
     {
         char *err;
         fg=strtol(txt, &err, 10);
-        if (fg>0x7ff)
+        if (fg > C_MASK)
             return 0;
         txt=err;
     }
     else if (*txt==':')
-        fg=(*color==-1)? 7 : ((*color)&0xf);
+        fg=(*color==-1)? 7 : ((*color)&CFG_MASK);
     else
         return 0;
     if (*txt=='~')
@@ -48,15 +48,15 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
     {
         char *err;
         bg=strtol(txt, &err, 10);
-        if (bg>7)
+        if (bg > CBG_MAX)
             return 0;
         txt=err;
     }
     else
-        bg=(*color==-1)? 0 : ((*color&0x70)>>4);
+        bg=(*color==-1)? 0 : ((*color&CBG_MASK)>>CBG_AT);
     if (*txt=='~')
     {
-        *color=bg<<4|fg;
+        *color=bg << CFG_BITS | fg;
         *ptr=txt;
         return 1;
     }
@@ -66,15 +66,15 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
     {
         char *err;
         blink=strtol(txt, &err, 10);
-        if (blink>15)
+        if (blink > CFL_MAX)
             return 0;
         txt=err;
     }
     else
-        blink=(*color==-1)? 0 : (*color>>7);
+        blink=(*color==-1)? 0 : (*color >> CFL_AT);
     if (*txt!='~')
         return 0;
-    *color=blink<<7|bg<<4|fg;
+    *color=blink << CFL_AT | bg << CBG_AT | fg;
     *ptr=txt;
     return 1;
 }
@@ -83,11 +83,11 @@ int setcolor(char *txt, int c)
 {
     if (c==-1)
         return sprintf(txt, "~-1~");
-    if (c<16)
+    if (c < 1<<CBG_AT)
         return sprintf(txt, "~%d~", c);
-    if (c<0x80)
-        return sprintf(txt, "~%d:%d~", c&0xf, (c&0x70)>>4);
-    return sprintf(txt, "~%d:%d:%d~", c&0xf, (c&0x70)>>4, c>>7);
+    if (c < 1<<CFL_AT)
+        return sprintf(txt, "~%d:%d~", c&CFG_MASK, (c&CBG_MASK)>>CBG_AT);
+    return sprintf(txt, "~%d:%d:%d~", c&CFG_MASK, (c&CBG_MASK)>>CBG_AT, c>>CFL_AT);
 }
 
 typedef unsigned char u8;
@@ -144,7 +144,7 @@ static int rgb_foreground(struct rgb c)
 
 static int rgb_background(struct rgb c)
 {
-    return (rgb_foreground(c) & 7) << 4;
+    return (rgb_foreground(c) & 7) << CBG_AT;
 }
 
 #define MAXTOK 16
@@ -204,43 +204,43 @@ again:
                             ccolor|=8;
                             break;
                         case 2:
-                            ccolor=(ccolor&~0x0f)|8;
+                            ccolor=(ccolor&~CFG_MASK)|8;
                             break;
                         case 3:
-                            ccolor|=0x100;
+                            ccolor|=CFL_ITALIC;
                             break;
                         case 4:
-                            ccolor|=0x200;
+                            ccolor|=CFL_UNDERLINE;
                             break;
                         case 5:
-                            ccolor|=0x80;
+                            ccolor|=CFL_BLINK;
                             break;
                         case 7:
                             ccolor=(ccolor&~0x77)|(ccolor&0x70>>4)|(ccolor&7);
                             /* inverse should propagate... oh well */
                             break;
                         case 9:
-                            ccolor|=0x400;
+                            ccolor|=CFL_STRIKETHRU;
                             break;
                         case 21:
                             ccolor&=~8;
                             break;
                         case 22:
                             ccolor&=~8;
-                            if (!(ccolor&0xf))
+                            if (!(ccolor&CBG_MASK))
                                 ccolor|=7;
                             break;
                         case 23:
-                            ccolor&=~0x100;
+                            ccolor&=~CFL_ITALIC;
                             break;
                         case 24:
-                            ccolor&=~0x200;
+                            ccolor&=~CFL_UNDERLINE;
                             break;
                         case 25:
-                            ccolor&=~0x80;
+                            ccolor&=~CFL_BLINK;
                             break;
                         case 29:
-                            ccolor&=~0x400;
+                            ccolor&=~CFL_STRIKETHRU;
                             break;
                         case 38:
                             i++;
@@ -249,7 +249,8 @@ again:
                             if (tok[i]==5 && i+1<nt)
                             {   /* 256 colours */
                                 i++;
-                                ccolor=(ccolor&~0xf)|rgb_foreground(rgb_from_256(tok[i]));
+                                ccolor=(ccolor&~CFG_MASK)
+                                    | rgb_foreground(rgb_from_256(tok[i]));
                             }
                             else if (tok[i]==2 && i+3<nt)
                             {   /* 24 bit */
@@ -259,7 +260,8 @@ again:
                                     .g = tok[i+2],
                                     .b = tok[i+3],
                                 };
-                                ccolor=(ccolor&~0xf)|rgb_foreground(c);
+                                ccolor=(ccolor&~CFG_MASK)
+                                    | rgb_foreground(c);
                                 i+=3;
                             }
                             /* Subcommands 3 (CMY) and 4 (CMYK) are so insane
@@ -273,7 +275,8 @@ again:
                             if (tok[i]==5 && i+1<nt)
                             {   /* 256 colours */
                                 i++;
-                                ccolor=(ccolor&~0x70)|rgb_background(rgb_from_256(tok[i]));
+                                ccolor=(ccolor&~CBG_MASK)
+                                    | rgb_background(rgb_from_256(tok[i]));
                             }
                             else if (tok[i]==2 && i+3<nt)
                             {   /* 24 bit */
@@ -283,26 +286,27 @@ again:
                                     .g = tok[i+2],
                                     .b = tok[i+3],
                                 };
-                                ccolor=(ccolor&~0x70)|rgb_background(c);
+                                ccolor=(ccolor&~CBG_MASK)
+                                    | rgb_background(c);
                                 i+=3;
                             }
                             break;
                         case 39:
-                            ccolor&=~0xf;
+                            ccolor&=~CFG_MASK;
                             ccolor|=7;
                             break;
                         case 49:
-                            ccolor&=~0x70;
+                            ccolor&=~CBG_MASK;
                             break;
                         default:
                             if (tok[i]>=30 && tok[i]<38)
                                 ccolor=(ccolor&~0x07)|rgbbgr[tok[i]-30];
                             else if (tok[i]>=40 && tok[i]<48)
-                                ccolor=(ccolor&~0x70)|(rgbbgr[tok[i]-40]<<4);
+                                ccolor=(ccolor&~CBG_MASK)|(rgbbgr[tok[i]-40]<<CBG_AT);
                             else if (tok[i]>=90 && tok[i]<98)
                                 ccolor=(ccolor&~0x07)|8|rgbbgr[tok[i]-90];
                             else if (tok[i]>=100 && tok[i]<108) /* not bright */
-                                ccolor=(ccolor&~0x70)|(rgbbgr[tok[i]-100]<<4);
+                                ccolor=(ccolor&~CBG_MASK)|(rgbbgr[tok[i]-100]<<CBG_AT);
                             /* ignore unknown attributes */
                         }
                     out+=setcolor(out, ccolor);
@@ -482,16 +486,16 @@ char *ansicolor(char *s, int c)
     *s++=';', *s++='3';
     *s++='0'+rgbbgr[c&7];
     *s++=';', *s++='4';
-    *s++='0'+rgbbgr[(c>>4)&7];
-    if (c>>=7)
+    *s++='0'+rgbbgr[(c>>CBG_AT)&7];
+    if (c>>=CFL_AT)
     {
-        if (c&1)
+        if (c&C_BLINK)
             *s++=';', *s++='5';
-        if (c&2)
+        if (c&C_ITALIC)
             *s++=';', *s++='3';
-        if (c&4)
+        if (c&C_UNDERLINE)
             *s++=';', *s++='4';
-        if (c&8)
+        if (c&C_STRIKETHRU)
             *s++=';', *s++='9';
     }
     *s++='m';
