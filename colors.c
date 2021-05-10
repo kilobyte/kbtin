@@ -144,7 +144,7 @@ static int rgb_foreground(struct rgb c)
 
 static int rgb_background(struct rgb c)
 {
-    return (rgb_foreground(c) & 7) << CBG_AT;
+    return rgb_foreground(c) << CBG_AT;
 }
 
 #define MAXTOK 16
@@ -216,7 +216,9 @@ again:
                             ccolor|=CFL_BLINK;
                             break;
                         case 7:
-                            ccolor=(ccolor&~0x77)|(ccolor&0x70>>4)|(ccolor&7);
+                            ccolor=(ccolor&~(CFG_MASK|CBG_MASK))
+                                | (ccolor&CBG_MASK)>>CBG_AT
+                                | (ccolor&CFG_MASK)<<CBG_AT;
                             /* inverse should propagate... oh well */
                             break;
                         case 9:
@@ -302,11 +304,11 @@ again:
                             if (tok[i]>=30 && tok[i]<38)
                                 ccolor=(ccolor&~0x07)|rgbbgr[tok[i]-30];
                             else if (tok[i]>=40 && tok[i]<48)
-                                ccolor=(ccolor&~CBG_MASK)|(rgbbgr[tok[i]-40]<<CBG_AT);
+                                ccolor=(ccolor&~CBG_MASK)|rgbbgr[tok[i]-40]<<CBG_AT;
                             else if (tok[i]>=90 && tok[i]<98)
                                 ccolor=(ccolor&~0x07)|8|rgbbgr[tok[i]-90];
-                            else if (tok[i]>=100 && tok[i]<108) /* not bright */
-                                ccolor=(ccolor&~CBG_MASK)|(rgbbgr[tok[i]-100]<<CBG_AT);
+                            else if (tok[i]>=100 && tok[i]<108)
+                                ccolor=(ccolor&~CBG_MASK)|(rgbbgr[tok[i]-100]|8)<<CBG_AT;
                             /* ignore unknown attributes */
                         }
                     out+=setcolor(out, ccolor);
@@ -485,7 +487,10 @@ char *ansicolor(char *s, int c)
         *s++=';', *s++='1';
     *s++=';', *s++='3';
     *s++='0'+rgbbgr[c&7];
-    *s++=';', *s++='4';
+    if (c&(8<<CBG_AT))
+        *s++=';', *s++='1', *s++='0';
+    else
+        *s++=';', *s++='4';
     *s++='0'+rgbbgr[(c>>CBG_AT)&7];
     if (c>>=CFL_AT)
     {

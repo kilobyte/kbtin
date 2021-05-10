@@ -24,7 +24,7 @@
 #define LOGCS_REMOTE    ((char*)2)
 
 #define CFG_BITS	4
-#define CBG_BITS	3
+#define CBG_BITS	4
 #define CFL_BITS	4
 
 #define C_BLINK		1
