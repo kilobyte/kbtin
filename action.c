@@ -265,6 +265,49 @@ void prepare_actionalias(const char *string, char *result, struct session *ses)
     substitute_myvars(arg, result, ses);
 }
 
+/*****************************************/
+/* delete ; and unpaired/underflowing {} */
+/*****************************************/
+static int defang_var(char *result, const char *var)
+{
+    int obraces=0, level=0;
+
+    for (const char *p=var; *p; p++)
+    {
+        if (*p == '{')
+            obraces++, level++;
+        else if (*p == '}')
+            if (level>0)
+                level--;
+    }
+
+    obraces -= level; /* # of unpaired */
+    level = 0;
+
+    char *r = result;
+    for (const char *p=var; *p; p++)
+    {
+        if (*p == ';')
+            ; /* no replacement */
+        else if (*p == '{')
+        {
+            *r++ = (obraces-->0)? '{' : '(';
+            level++;
+        }
+        else if (*p == '}')
+        {
+            if (level > 0)
+                *r++ = '}', level--;
+            else
+                *r++ = ')';
+        }
+        else
+            *r++ = *p;
+    }
+
+    return r - result;
+}
+
 /*************************************************************************/
 /* copy the arg text into the result-space, but substitute the variables */
 /* %0..%9 with the real variables                                        */
@@ -273,7 +316,6 @@ void substitute_vars(const char *arg, char *result)
 {
     int nest = 0;
     int numands, n;
-    char *ptr;
     const char *ARG=arg;
     int valuelen, len=strlen(arg);
 
@@ -335,14 +377,7 @@ novar1:
                     }
                     goto novar2;
                 }
-                ptr = (*pvars)[n];
-                while (*ptr)
-                {
-                    if (*ptr == ';')
-                        ptr++;      /* we don't care if len is too small */
-                    else
-                        *result++ = *ptr++;
-                }
+                result += defang_var(result, (*pvars)[n]);
                 arg = arg + numands + 1;
             }
             else
