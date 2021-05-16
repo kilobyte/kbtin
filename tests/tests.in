@@ -809,3 +809,34 @@ xQUUX
 #SESSION 'a' DIED.
 #THERE'S NO ACTIVE SESSION NOW.
 ===
+
+### censoring positional vars
+<<<
+#act {%1} {#showme {% %1};#showme {$ $1}}
+#gag {%1}
+#run a cat
+#de 2 #end
+#
+a;b
+{{{{
+{}{}{
+{}}}
+{}{}{}
+{{{}}}
+>>>
+#All text is now sent 'as is'.
+% a;b
+$ ab
+% {{{{
+$ ((((
+% {}{}{
+$ {}{}(
+% {}}}
+$ {}))
+% {}{}{}
+$ {}{}{}
+% {{{}}}
+$ {{{}}}
+
+#SESSION 'a' DIED.
+===
