@@ -1,3 +1,11 @@
+kbtin (1.0.23-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Drop B-Dep on glib.
+  * Drop upstream signing key.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Tue, 18 May 2021 00:22:39 +0200
+
 kbtin (1.0.22-1) unstable; urgency=medium
 
   * New upstream bugfix release.
