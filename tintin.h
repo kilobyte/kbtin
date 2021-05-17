@@ -23,6 +23,14 @@
 #define LOGCS_LOCAL     ((char*)1)
 #define LOGCS_REMOTE    ((char*)2)
 
+#define CFG_BITS	4
+#define CBG_BITS	4
+#define CFL_BITS	4
+
+#define C_BLINK		1
+#define C_ITALIC	2
+#define C_UNDERLINE	4
+#define C_STRIKETHRU	8
 
 /*************************/
 /* telnet protocol stuff */
@@ -149,6 +157,22 @@ typedef enum {PRIORITY, ALPHA, LENGTH} llist_mode_t;
 
 #define BUFFER_SIZE 4096
 #define INPUT_CHUNK 1536
+
+#define C_BITS (CFG_BITS+CBG_BITS+CFL_BITS)
+#define C_MASK (~(-1U<<C_BITS))
+#define CFG_MAX (~(-1U<<CFG_BITS))
+#define CFG_MASK CFG_MAX
+#define CBG_AT CFG_BITS
+#define CBG_MAX (~(-1U<<CBG_BITS))
+#define CBG_MASK (CBG_MAX<<CBG_AT)
+#define CFL_AT (CFG_BITS+CBG_BITS)
+#define CFL_MAX (~(-1U<<CFL_BITS))
+#define CFL_MASK (CFL_MAX<<CFL_AT)
+#define CFL_BLINK (C_BLINK<<CFL_AT)
+#define CFL_ITALIC (C_ITALIC<<CFL_AT)
+#define CFL_UNDERLINE (C_UNDERLINE<<CFL_AT)
+#define CFL_STRIKETHRU (C_STRIKETHRU<<CFL_AT)
+
 enum
 {
     MSG_ALIAS,
@@ -186,7 +210,7 @@ enum
 #define _GNU_SOURCE
 #include "config.h"
 #include <stdio.h>
-#include "_stdint.h"
+#include <stdint.h>
 #include <iconv.h>
 #include <ctype.h>
 #include <wctype.h>
@@ -196,30 +220,12 @@ enum
 #include <wchar.h>
 #include <signal.h>
 #include <errno.h>
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
+#include <sys/time.h>
+#include <time.h>
 #ifdef HAVE_ZLIB
 # include <zlib.h>
 #endif
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# ifdef HAVE_STRINGS_H
-#  include <strings.h>
-# endif
-#endif
-#ifndef HAVE_MEMCPY
-# define memcpy(d, s, n) bcopy ((s), (d), (n))
-# define memmove(d, s, n) bcopy ((s), (d), (n))
-#endif
+#include <string.h>
 #if GWINSZ_IN_SYS_IOCTL
 # include <sys/ioctl.h>
 #endif

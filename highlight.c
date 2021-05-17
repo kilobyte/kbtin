@@ -226,15 +226,12 @@ void do_all_high(char *line, struct session *ses)
     for (pos=line;*pos;pos++)
     {
         if (getcolor((const char**)&pos, &d, 1))
-        {
             c=d;
-            goto color;
+        else
+        {
+            *txt++=*pos;
+            *atr++=c;
         }
-        *txt++=*pos;
-        *atr++=c;
-        continue;
-color:
-        ; /* Why the lack of a semicolon here causes a warning is beyond me. */
     };
     *txt=0;
     *atr=c;

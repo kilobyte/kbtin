@@ -1,3 +1,12 @@
+1.0.23:
+*	display error message for why a connection was dropped
+*	support bright background colors user-side
+*	protect against unpaired/underflowing {} in $1 type variables
+*	allow anchoring the end of an action/substitute match (^foo$)
+*	documentation improvements
+*	internal: don't replace malloc anymore (glib is actually slower now)
+*	internal: drop a lot of obsolete autoconfage
+
 1.0.22:
 *	bugfix: user-after-free after #zap inside a hook
 *	bugfix: positional %vars were broken

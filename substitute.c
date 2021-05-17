@@ -155,6 +155,7 @@ void do_all_sub(char *line, struct session *ses)
     ln = ses->subs;
 
     while ((ln = ln->next))
+    {
         if (check_one_action(line, ln->left, &vars, false, ses))
         {
             if (!strcmp(ln->right, EMPTY_LINE))
@@ -188,6 +189,7 @@ void do_all_sub(char *line, struct session *ses)
             memcpy(line, result, rlen);
             line[rlen]=0;
         }
+    }
 
     pvars=lastpvars;
 }

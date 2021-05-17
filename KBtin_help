@@ -81,6 +81,8 @@ Special characters:
 ""                 - prevents spaces from working as separators. Doesn't
                      prevent ;s and $s from working - use \; and \$.
 {}                 - the best way to enclose arguments and list items
+%1 .. %9           - raw positional variables (arguments to an alias/match)
+$1 .. $9           - positional vars with ; and unpaired {} censored
 
 Note: use #verbatim to turn all parsing off.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,14 +90,11 @@ Note: use #verbatim to turn all parsing off.
 ~colorcodes
 The color codes for KBtin are enclosed by tilde (~) chars.  The general
 syntax is: ~foreground[:background[:attr]]~
-Foreground colors:
+Foreground and ~0:7~background~-1~ colors:
  0 - ~0~black~-1~       4 - ~4~red~-1~         8 - ~8~dark gray~-1~  12 - ~12~lt. red~-1~
  1 - ~1~blue~-1~        5 - ~5~magenta~-1~     9 - ~9~lt. blue~-1~   13 - ~13~pink~-1~
  2 - ~2~green~-1~       6 - ~6~brown~-1~      10 - ~10~lt. green~-1~  14 - ~14~yellow~-1~
  3 - ~3~cyan~-1~        7 - ~7~lt. gray~-1~   11 - ~11~aqua~-1~       15 - ~15~white~-1~
-Background colors:
- 0 - ~0:0~black~-1~       2 - ~0:2~green~-1~       4 - ~0:4~red~-1~         6 - ~0:6~brown~-1~
- 1 - ~0:1~blue~-1~        3 - ~0:3~cyan~-1~        5 - ~0:5~magenta~-1~     7 - ~0:7~lt. gray~-1~
 Attributes:
  0 - normal text 1 - ~::1~blinking~-1~  2 - ~::2~italic~-1~        4 - ~::4~underline~-1~   8 - ~::8~overstrike~-1~
  or a sum of the above: 15 for ~::15~blinking, italic, underlined and overstruck~7~ text
@@ -465,7 +464,7 @@ a while you will realize this a very powerful feature, allowing you to
 completely ignore people emoting things to fool your triggers.
 
 If "^" is the first character of <text>, the action will trigger only if the
-text is found on the beginning of a line.
+text is found on the beginning of a line.  Likewise, use "$" for the end.
 Example:
 #action {^Your studies are complete.} {stand}
 Your studies are complete.                           -> match
@@ -579,6 +578,8 @@ $1 = "a"
 $2 = "b c"
 $3 = "d"
 $4=$5=$6=$7=$8=$9 = ""
+
+3. As elsewhere $1 removes ; and unpaired {}, % lets them through.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~unalias
 
@@ -594,7 +595,7 @@ Lists all substitutes and gags matching the pattern.
 Defines a substitution for text incoming from the MUD.  It can be used to
 highlight stuff, remind you about items stats, etc.
 <pattern> can include positional variables %0..%9, which can be used in <new
-text> as well.
+text> as well.  Use ^ and $ to anchor to the beginning or end of a line.
 Note:
 subsitutions, similarly to actions, do NOT ignore color codes.
 
@@ -1410,7 +1411,7 @@ invis players;#loop 1,10 {^:$0: there is more than one of me!}
 If <act. pattern> can be found in the <line>, <command> is executed.  Both
 <act. pattern> and <command> can contain positional variables %0..%9, which
 will be filled according to the text in <line> which matched a given variable
-in <act. pattern.
+in <act. pattern>.
 It is usually safer to use $0..$9 instead of %0..%9 as $ removes all
 semicolons from the variables. In case of no match, the #elif/#else part
 is executed.
@@ -1449,7 +1450,7 @@ matched subexpression, like in Perl, sed and the like.
 $0 will be assigned the whole part of the line that matched the regexp.
 
 Example:
- #grep {__h_abc(.)def(.+)ghijkl} {abc1def12345ghi} {whatever}
+ #grep {abc(.)def(.+)ghijk} {__h_abc1def12345ghijkl} {#showme {[$0] [$1] [$2]}}
         $0 = "abc1def12345ghi"
         $1 = "1"
         $2 = "12345"
