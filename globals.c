@@ -29,7 +29,6 @@ struct session *sessionlist, *activesession, *nullsession;
 pvars_t *pvars; /* the %0, %1, %2,....%9 variables */
 char tintin_char = DEFAULT_TINTIN_CHAR;
 char tintin_char_set = false;
-char verbatim_char = DEFAULT_VERBATIM_CHAR;
 char status[BUFFER_SIZE];
 int LINES, COLS;
 bool isstatus;

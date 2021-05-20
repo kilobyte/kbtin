@@ -73,7 +73,7 @@
 #define DEFAULT_TINTIN_CHAR '#'           /* tintin char */
 #define DEFAULT_TICK_SIZE 60
 #define DEFAULT_ROUTE_DISTANCE 10
-#define DEFAULT_VERBATIM_CHAR '\\'        /* if an input starts with this
+#define VERBATIM_CHAR '\\'                /* if an input starts with this
                                              char, it will be sent 'as is'
                                              to the MUD */
 #define MAX_SESNAME_LENGTH 512 /* don't accept session names longer than this */

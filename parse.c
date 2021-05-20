@@ -94,7 +94,7 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
         PPOP;
         return ses;
     }
-    if (*input==verbatim_char && (ses!=nullsession))
+    if (*input==VERBATIM_CHAR && (ses!=nullsession))
     {
         input++;
         write_line_mud(input, ses);
