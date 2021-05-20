@@ -338,6 +338,9 @@ Valid codes:
 Sets the tintin-char to punctuation character <char>.  The tintin-char
 is the symbol you use to prefix commands.
 
+An implied #char is done the first time a #read file starts with a punctuation
+character, avoiding a chicken-or-egg problem.
+
 Example:
 #char ~    -> commands are now "~char", etc instead of "#char"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -895,7 +898,7 @@ in your config files containing aliases, actions, etc.  If you prefer to get
 your file sent directly to the MUD, use #textin instead.
 
 The first character in file, if it is a valid tintin-char, it becomes one.
-That is, a #char command is implied.
+That is, a #char command is implied.  This is done only once.
 
 You can split long lines -- any line that begins with whitespace is assumed
 to be the continuation of the last line -- as long as the result is no longer
