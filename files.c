@@ -540,13 +540,13 @@ void debuglog(struct session *ses, const char *format, ...)
 struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
 {
     char line[BUFFER_SIZE], buffer[BUFFER_SIZE], lstr[BUFFER_SIZE], *cptr, *eptr;
-    bool flag, ignore_lines;
+    bool want_tt_char, ignore_lines;
     int nl;
     mbstate_t cs;
 
     memset(&cs, 0, sizeof(cs));
 
-    flag = !in_read;
+    want_tt_char = !in_read;
     if (!ses->verbose)
         puts_echoing = false;
     if (!in_read)
@@ -572,14 +572,14 @@ struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
         if (!nl++)
             if (line[0]=='#' && line[1]=='!') /* Unix hashbang script */
                 continue;
-        if (flag)
+        if (want_tt_char)
         {
             puts_echoing = ses->verbose || !real_quiet;
             if (is7punct(*line))
                 char_command(line, ses);
             if (!ses->verbose)
                 puts_echoing = false;
-            flag = false;
+            want_tt_char = false;
         }
         for (cptr = line; *cptr && *cptr != '\n' && *cptr!='\r'; cptr++) ;
         *cptr = '\0';
