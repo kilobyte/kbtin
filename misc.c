@@ -265,6 +265,7 @@ void char_command(const char *arg, struct session *ses)
     {
         tintin_char = *arg;
         tintin_printf(ses, "#OK. TINTIN-CHAR is now {%c}", tintin_char);
+        tintin_char_set = true;
     }
     else
         tintin_eprintf(ses, "#SPECIFY A PROPER TINTIN-CHAR! SOMETHING LIKE # OR /!");

@@ -546,7 +546,7 @@ struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
 
     memset(&cs, 0, sizeof(cs));
 
-    want_tt_char = !in_read;
+    want_tt_char = !in_read && !tintin_char_set;
     if (!ses->verbose)
         puts_echoing = false;
     if (!in_read)
