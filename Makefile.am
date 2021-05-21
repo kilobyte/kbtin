@@ -3,6 +3,7 @@ helpdir = $(pkgdatadir)
 help_DATA= KBtin_help.gz
 AM_CPPFLAGS = -DDATA_PATH=\"$(helpdir)\"
 man_MANS = KBtin.6
+AUTOMAKE_OPTIONS = foreign
 
 KBtin_C_FILES=action.c alias.c antisub.c files.c glob.c help.c highlight.c\
 	history.c ivars.c llist.c main.c misc.c net.c parse.c path.c session.c\
@@ -16,7 +17,7 @@ KBtin_LDADD=@ZLIB_LIBS@ @LIBICONV@ @GNUTLS_LIBS@
 
 AM_CFLAGS=-Wall
 
-KBtin_DOCS=BUGS OLDNEWS NEWS KEYPAD FAQ
+KBtin_DOCS=BUGS OLDNEWS KEYPAD FAQ
 EXTRA_DIST=KBtin_help commands make_commands $(man_MANS) help2ansi \
 	fixmanual terminfo.src prof_init kbtin.ico make_protos $(KBtin_DOCS) \
 	autogen.sh VERSION get_version a2html
