@@ -853,3 +853,14 @@ black blue green cyan maroon magenta brown gray charcoal azure lime aqua red pin
 
 #SESSION 'a' DIED.
 ===
+
+### 16-color recognition
+<<<
+#sub ~ ^
+#run a {printf '\e\x5b30mx\e\x5b34mx\e\x5b32mx\e\x5b36mx\e\x5b31mx\e\x5b35mx\e\x5b33mx\e\x5b37mx\e\x5b1;30mx\e\x5b34mx\e\x5b32mx\e\x5b36mx\e\x5b31mx\e\x5b35mx\e\x5b33mx\e\x5b37mx\n'}
+>>>
+^0^x^1^x^2^x^3^x^4^x^5^x^6^x^7^x^8^x^9^x^10^x^11^x^12^x^13^x^14^x^15^x
+
+#SESSION 'a' DIED.
+#THERE'S NO ACTIVE SESSION NOW.
+===
