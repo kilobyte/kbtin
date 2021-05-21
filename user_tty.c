@@ -283,10 +283,19 @@ static void redraw_status(void)
         if (getcolor(&pos, &color, 0))
         {
             c=color;
-            if (!(c&0x70))
-                c=c|(STATUS_COLOR<<4);
-            if ((c&15)==((c>>4)&7))
-                c=(c&0xf0)|(c&7? 0:(STATUS_COLOR==COLOR_BLACK? 7:0));
+            if (!(c&CBG_MASK))
+                c=c|(STATUS_COLOR<<CBG_AT);
+            if ((c&CFG_MASK) == (c&CBG_MASK) >> CBG_AT)
+            {
+                int k = c&CFG_MASK;
+                if (k != 0 && k != 8)
+                    k = 0;
+                else if (STATUS_COLOR == COLOR_BLACK)
+                    k = 7;
+                else
+                    k = 0;
+                c=(c&~CFG_MASK)|k;
+            }
             tbuf=ansicolor(tbuf, c);
             pos++;
         }
