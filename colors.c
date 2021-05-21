@@ -142,9 +142,55 @@ static int rgb_to_16(struct rgb c)
         return fg;
 }
 
+static int sqrd(unsigned char a, unsigned char b)
+{
+    int _ = ((int)a) - ((int)b);
+    return _>=0?_:-_;
+}
+
+// Riermersma's formula
+static uint32_t rgb_diff(struct rgb x, struct rgb y)
+{
+    int rm = (x.r+y.r)/2;
+    return 2*sqrd(x.r, y.r)
+         + 4*sqrd(x.g, y.g)
+         + 3*sqrd(x.b, y.b)
+         + rm*(sqrd(x.r, y.r)-sqrd(x.b, y.b))/256;
+}
+
+static uint32_t m6(uint32_t x)
+{
+    x = (x+5)/40;
+    return x? x-1 : 0;
+}
+
+static uint32_t rgb_to_color_cube(struct rgb c)
+{
+    return 16 + m6(c.r)*36 + m6(c.g)*6 + m6(c.b);
+}
+
+static uint32_t rgb_to_grayscale_gradient(struct rgb c)
+{
+    int x = 232 + (c.r*2 + c.g*3 + c.b) / 60;
+    return (x > 255)? 255 : x;
+}
+
 static int rgb_to_256(struct rgb c)
 {
-    return rgb_to_16(c);
+    uint32_t c1 = rgb_to_16(c);
+    uint32_t bd = rgb_diff(c, rgb_from_256(c1));
+    uint32_t res = c1;
+
+    uint32_t c2 = rgb_to_color_cube(c);
+    uint32_t d = rgb_diff(c, rgb_from_256(c2));
+    if (d < bd)
+        bd = d, res = c2;
+
+    uint32_t c3 = rgb_to_grayscale_gradient(c);
+    d = rgb_diff(c, rgb_from_256(c3));
+    if (d < bd)
+        res = c3;
+    return res;
 }
 
 #define MAXTOK 16
