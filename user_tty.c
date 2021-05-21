@@ -434,8 +434,8 @@ static inline void print_char(const WC ch)
     }
     else if (o_oldcolor!=o_color) /* b_addline already updates the color */
     {
-        if ((o_color&15)==((o_color&0x70)>>4))
-            o_color=(o_color&0xf0)|((o_color&7)?0:7);
+        if ((o_color&CFG_MASK)==((o_color&CBG_MASK)>>CBG_AT))
+            o_color=(o_color&~CFG_MASK)|((o_color&CFG_MASK)?0:7);
         o_len+=setcolor(out_line+o_len, o_color);
         if (b_screenb==b_bottom)
             tbuf=ansicolor(tbuf, o_color);
