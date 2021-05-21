@@ -465,7 +465,7 @@ error_msg:
         if (!*arg)
             goto null_codes;
     }
-    /* we allow BOTH {a} {b} {c} _and_ {{a} {b} {c}} - inconstency, but it's ok */
+    /* we allow BOTH {a} {b} {c} _and_ {{a} {b} {c}} - inconsistency, but it's ok */
     for (int nc=0;nc<16;nc++)
     {
         if (!*arg)
