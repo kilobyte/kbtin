@@ -103,15 +103,15 @@ static struct rgb rgb_from_256(int i)
     struct rgb c;
     if (i < 8)
     {   /* Standard colours. */
-        c.r = i&1 ? 0xaa : 0x00;
+        c.r = i&4 ? 0xaa : 0x00;
         c.g = i&2 ? 0xaa : 0x00;
-        c.b = i&4 ? 0xaa : 0x00;
+        c.b = i&1 ? 0xaa : 0x00;
     }
     else if (i < 16)
     {
-        c.r = i&1 ? 0xff : 0x55;
+        c.r = i&4 ? 0xff : 0x55;
         c.g = i&2 ? 0xff : 0x55;
-        c.b = i&4 ? 0xff : 0x55;
+        c.b = i&1 ? 0xff : 0x55;
     }
     else if (i < 232)
     {   /* 6x6x6 colour cube. */
@@ -124,7 +124,7 @@ static struct rgb rgb_from_256(int i)
     return c;
 }
 
-static int rgb_foreground(struct rgb c)
+static int rgb_to_16(struct rgb c)
 {
     u8 fg, max = c.r;
     if (c.g > max)
@@ -142,9 +142,9 @@ static int rgb_foreground(struct rgb c)
         return fg;
 }
 
-static int rgb_background(struct rgb c)
+static int rgb_to_256(struct rgb c)
 {
-    return rgb_foreground(c) << CBG_AT;
+    return rgb_to_16(c);
 }
 
 #define MAXTOK 16
@@ -225,12 +225,16 @@ again:
                             ccolor|=CFL_STRIKETHRU;
                             break;
                         case 21:
-                            ccolor&=~8;
+                            if ((ccolor&CFG_MASK) < 16)
+                                ccolor&=~8;
                             break;
                         case 22:
-                            ccolor&=~8;
-                            if (!(ccolor&CBG_MASK))
-                                ccolor|=7;
+                            if ((ccolor&CFG_MASK) < 16)
+                            {
+                                ccolor&=~8;
+                                if (!(ccolor&CBG_MASK))
+                                    ccolor|=7;
+                            }
                             break;
                         case 23:
                             ccolor&=~CFL_ITALIC;
@@ -251,8 +255,13 @@ again:
                             if (tok[i]==5 && i+1<nt)
                             {   /* 256 colours */
                                 i++;
-                                ccolor=(ccolor&~CFG_MASK)
-                                    | rgb_foreground(rgb_from_256(tok[i]));
+                                int k = tok[i];
+                                if (k < 256)
+                                {
+                                    if (k < 16)
+                                        k = (k&8) | rgbbgr[k&7];
+                                    ccolor=(ccolor&~CFG_MASK) | k;
+                                }
                             }
                             else if (tok[i]==2 && i+3<nt)
                             {   /* 24 bit */
@@ -262,8 +271,7 @@ again:
                                     .g = tok[i+2],
                                     .b = tok[i+3],
                                 };
-                                ccolor=(ccolor&~CFG_MASK)
-                                    | rgb_foreground(c);
+                                ccolor=(ccolor&~CFG_MASK) | rgb_to_256(c);
                                 i+=3;
                             }
                             /* Subcommands 3 (CMY) and 4 (CMYK) are so insane
@@ -277,8 +285,13 @@ again:
                             if (tok[i]==5 && i+1<nt)
                             {   /* 256 colours */
                                 i++;
-                                ccolor=(ccolor&~CBG_MASK)
-                                    | rgb_background(rgb_from_256(tok[i]));
+                                int k = tok[i];
+                                if (k < 256)
+                                {
+                                    if (k < 16)
+                                        k = (k&8) | rgbbgr[k&7];
+                                    ccolor=(ccolor&~CBG_MASK) | k<<CBG_AT;
+                                }
                             }
                             else if (tok[i]==2 && i+3<nt)
                             {   /* 24 bit */
@@ -288,8 +301,7 @@ again:
                                     .g = tok[i+2],
                                     .b = tok[i+3],
                                 };
-                                ccolor=(ccolor&~CBG_MASK)
-                                    | rgb_background(c);
+                                ccolor=(ccolor&~CBG_MASK) | rgb_to_256(c)<<CBG_AT;
                                 i+=3;
                             }
                             break;
@@ -418,9 +430,10 @@ color:
             mudcolors=MUDC_NULL;
         case MUDC_NULL:
             break;
-        case MUDC_ON:
-            strcpy(txt, MUDcolors[c&0xf]);
-            txt+=strlen(MUDcolors[c&0xf]);
+        case MUDC_ON:;
+            int k = rgb_to_16(rgb_from_256(c&CFG_MASK));
+            strcpy(txt, MUDcolors[k]);
+            txt+=strlen(MUDcolors[k]);
         }
     }
     *txt=0;
@@ -483,15 +496,27 @@ null_codes:
 char *ansicolor(char *s, int c)
 {
     *s++=27, *s++='[', *s++='0';
-    if (c&8)
-        *s++=';', *s++='1';
-    *s++=';', *s++='3';
-    *s++='0'+rgbbgr[c&7];
-    if (c&(8<<CBG_AT))
-        *s++=';', *s++='1', *s++='0';
+    int k = c & CFG_MASK;
+    if (k < 16)
+    {
+        if (k&8)
+            *s++=';', *s++='1';
+        *s++=';', *s++='3';
+        *s++='0'+rgbbgr[k&7];
+    }
     else
-        *s++=';', *s++='4';
-    *s++='0'+rgbbgr[(c>>CBG_AT)&7];
+        s+=sprintf(s, ";38;5;%d", k);
+    k = (c & CBG_MASK) >> CBG_AT;
+    if (k < 16)
+    {
+        if (k&8)
+            *s++=';', *s++='1', *s++='0';
+        else
+            *s++=';', *s++='4';
+        *s++='0'+rgbbgr[k&7];
+    }
+    else
+        s+=sprintf(s, ";48;5;%d", k);
     if (c>>=CFL_AT)
     {
         if (c&C_BLINK)

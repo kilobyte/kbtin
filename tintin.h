@@ -23,8 +23,8 @@
 #define LOGCS_LOCAL     ((char*)1)
 #define LOGCS_REMOTE    ((char*)2)
 
-#define CFG_BITS	4
-#define CBG_BITS	4
+#define CFG_BITS	8
+#define CBG_BITS	8
 #define CFL_BITS	4
 
 #define C_BLINK		1
