@@ -864,3 +864,13 @@ black blue green cyan maroon magenta brown gray charcoal azure lime aqua red pin
 #SESSION 'a' DIED.
 #THERE'S NO ACTIVE SESSION NOW.
 ===
+
+### #ifaliase
+<<<
+#ifali {foo} {#show ✓} #else {#show ✗}
+#ali foo dupa
+#ifali {foo} {#show ✓} #else {#show ✗}
+>>>
+✗
+✓
+===
