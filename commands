@@ -171,3 +171,4 @@ gmtime
 ctoi
 loginputformat
 initvariable
+*ifaliasexists
