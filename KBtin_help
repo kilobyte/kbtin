@@ -11,7 +11,7 @@ Input/output:
    blank       speedwalk   showme      status      margins     bell
    send        sendchar    charset
 Aliases:
-   alias       unalias
+   alias       unalias     ifaliasexists
 Triggers:
    action      unaction    ignore      promptaction    unpromptaction
    hook        unhook      doactions   dopromptactions
@@ -588,6 +588,12 @@ $4=$5=$6=$7=$8=$9 = ""
 
 #unalias <pattern>
 Removes all aliases whose name matches <pattern>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~ifaliasexists
+
+#ifaliasexists <alias> <ifexists> <command> [#elif/#else ...]
+
+Queries whether <alias> has been defined; if yes, the <command> is executed.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~substitute
 
