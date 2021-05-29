@@ -18,6 +18,7 @@
 #include "protos/hooks.h"
 #include "protos/llist.h"
 #include "protos/print.h"
+#include "protos/math.h"
 #include "protos/misc.h"
 #include "protos/net.h"
 #include "protos/parse.h"
@@ -432,6 +433,7 @@ int main(int argc, char **argv)
 {
     tintin_exec=argv[0];
     init_locale();
+    asserts_math();
     user_setdriver(isatty(0)?1:0);
     parse_options(argc, argv);
     init_bind();

@@ -32,6 +32,8 @@
 #define C_UNDERLINE	4
 #define C_STRIKETHRU	8
 
+#define DENOM (1000000LL*3*3*3*7*2*5*2)
+
 /*************************/
 /* telnet protocol stuff */
 /*************************/
@@ -238,6 +240,8 @@ enum
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
+
+typedef int64_t num_t;
 
 /************************ structures *********************/
 struct listnode
