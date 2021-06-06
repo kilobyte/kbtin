@@ -25,6 +25,40 @@ num_t ndiv(num_t x, num_t y)
     return zh*DENOM + zl;
 }
 
+int num2str(char *buf, num_t v)
+{
+    char *b = buf + sprintf(buf, "%"PRId64, (int64_t)(v/DENOM));
+    unsigned x = llabs(v%DENOM);
+    if (!x)
+        return b-buf;
+    *b++='.';
+    int dig = 10;
+    do
+    {
+        unsigned r = x/(DENOM/10);
+        *b++='0'+r;
+        x=(x-r*(DENOM/10))*10;
+    } while (x && --dig);
+    *b=0;
+    return b-buf;
+}
+
+num_t str2num(const char *str, char **err)
+{
+    num_t xh = strtol(str, err, 10) * DENOM;
+    if (**err!='.')
+        return xh;
+    num_t y = DENOM*1000;
+    num_t x = 0;
+    for (str = *err+1; isadigit(*str); str++)
+    {
+        x += y * (*str-'0');
+        y/=10;
+    }
+    *err = (char*)str;
+    return xh + (x+4999)/10000;
+}
+
 static void ass(num_t x, num_t y, const char *what)
 {
     if (x==y)
