@@ -290,7 +290,10 @@ static bool conv_to_nums(char *arg, struct session *ses)
         else if (*ptr == '/')
         {
             stacks[i][1] = 3;
-            stacks[i][3] = 1;
+            if (ptr[1] == '/') /* / is integer division, // fractional */
+                stacks[i][3] = 2, ptr++;
+            else
+                stacks[i][3] = 1;
         }
         else if (*ptr == '+')
         {
@@ -455,13 +458,15 @@ static bool do_one_inside(int begin, int end)
                 stacks[ploc][0] = stacks[next][0];
                 if (stacks[loc][3]==0)
                     stacks[ploc][2] = nmul(stacks[ploc][2], stacks[next][2]);
-                else if (stacks[next][2])
-                    stacks[ploc][2] = ndiv(stacks[ploc][2], stacks[next][2]);
-                else
+                else if (!stacks[next][2])
                 {
                     stacks[ploc][2]=0;
                     tintin_eprintf(0, "#Error: Division by zero.");
                 }
+                else if (stacks[loc][3]==1)
+                    stacks[ploc][2] = N(stacks[ploc][2] / stacks[next][2]);
+                else
+                    stacks[ploc][2] = ndiv(stacks[ploc][2], stacks[next][2]);
                 break;
             case 5:            /* highest priority is +,- */
                 stacks[ploc][0] = stacks[next][0];
