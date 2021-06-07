@@ -874,3 +874,26 @@ black blue green cyan maroon magenta brown gray charcoal azure lime aqua red pin
 ✗
 ✓
 ===
+
+### math
+<<<
+#ali m {#math x {$1};#strcmp {$x} {$2} {#nop} #else {#show {Error: $1 => $x expected $2}}}
+m 2+2 4
+m 2.1+2.2 4.3
+m 2*2   4
+m 2*-2 -4
+m -2*2 -4
+m -2*-2 4
+m 10*0.1 1
+m 2/2 1
+m 2/1 2
+m 2//2 1
+m 2//1 2
+m 10//3 3.3333333333
+m 0.999999999999999999999 1
+m 1//(1//3) 3
+m -1//(-1//-3) -3
+m T F
+>>>
+Error: T => 1 expected F
+===
