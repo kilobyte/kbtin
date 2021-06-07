@@ -4,6 +4,7 @@
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/ivars.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/misc.h"
 #include "protos/parse.h"
@@ -11,8 +12,8 @@
 #include "protos/utils.h"
 #include "protos/variables.h"
 
-static int stacks[100][4];
-static bool conv_to_ints(char *arg, struct session *ses);
+static num_t stacks[100][4];
+static bool conv_to_nums(char *arg, struct session *ses);
 static bool do_one_inside(int begin, int end);
 
 
@@ -22,7 +23,6 @@ static bool do_one_inside(int begin, int end);
 void math_command(const char *line, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[BUFFER_SIZE];
-    int i;
 
     line = get_arg(line, left, 0, ses);
     line = get_arg(line, right, 1, ses);
@@ -31,8 +31,7 @@ void math_command(const char *line, struct session *ses)
         tintin_eprintf(ses, "#Syntax: #math <variable> <expression>");
         return;
     }
-    i = eval_expression(right, ses);
-    sprintf(temp, "%d", i);
+    num2str(temp, eval_expression(right, ses));
     set_variable(left, temp, ses);
 }
 
@@ -113,9 +112,9 @@ static bool do_inline(const char *line, int *res, struct session *ses)
 }
 
 
-int eval_expression(char *arg, struct session *ses)
+num_t eval_expression(char *arg, struct session *ses)
 {
-    if (!conv_to_ints(arg, ses))
+    if (!conv_to_nums(arg, ses))
         return 0;
 
     while (1)
@@ -159,7 +158,7 @@ int eval_expression(char *arg, struct session *ses)
     }
 }
 
-static bool conv_to_ints(char *arg, struct session *ses)
+static bool conv_to_nums(char *arg, struct session *ses)
 {
     int i, flag;
     bool result, should_differ;
@@ -177,8 +176,10 @@ static bool conv_to_ints(char *arg, struct session *ses)
             /* inline commands */
         {
             ptr=(char*)get_inline(ptr+1, temp)-1;
-            if (!do_inline(temp, &(stacks[i][2]), ses))
+            int res;
+            if (!do_inline(temp, &res, ses))
                 return false;
+            stacks[i][2]=N(res);
             stacks[i][1]=15;
         }
         /* jku: comparing strings with = and != */
@@ -243,14 +244,12 @@ static bool conv_to_ints(char *arg, struct session *ses)
             if (result == should_differ)
             { /* success */
                 stacks[i][1] = 15;
-                stacks[i][2] = 1;
-                /* fprintf(stderr, "Expr TRUE\n"); */
+                stacks[i][2] = N(1);
             }
             else
             {
                 stacks[i][1] = 15;
-                stacks[i][2] = 0;
-                /* fprintf(stderr, "Expr FALSE\n"); */
+                stacks[i][2] = N(0);
             }
         }
         /* jku: end of comparing strings */
@@ -260,7 +259,7 @@ static bool conv_to_ints(char *arg, struct session *ses)
             if (ses->mesvar[MSG_VARIABLE])
                 tintin_eprintf(ses, "#Undefined variable in {%s}.", arg);
             stacks[i][1] = 15;
-            stacks[i][2] = 0;
+            stacks[i][2] = N(0);
             if (*(++ptr)==BRACE_OPEN)
             {
                 ptr=(char*)get_arg_in_braces(ptr, temp, 0);
@@ -310,11 +309,7 @@ static bool conv_to_ints(char *arg, struct session *ses)
             }
             else
             {
-                tptr = ptr;
-                ptr++;
-                while (isadigit(*ptr))
-                    ptr++;
-                sscanf(tptr, "%d", &stacks[i][2]);
+                stacks[i][2] = str2num(ptr, &ptr);
                 stacks[i][1] = 15;
                 ptr--;
             }
@@ -368,21 +363,18 @@ static bool conv_to_ints(char *arg, struct session *ses)
         else if (isadigit(*ptr))
         {
             stacks[i][1] = 15;
-            tptr = ptr;
-            while (isadigit(*ptr))
-                ptr++;
-            sscanf(tptr, "%d", &stacks[i][2]);
+            stacks[i][2] = str2num(ptr, &ptr);
             ptr--;
         }
         else if (*ptr == 'T')
         {
             stacks[i][1] = 15;
-            stacks[i][2] = 1;
+            stacks[i][2] = N(1);
         }
         else if (*ptr == 'F')
         {
             stacks[i][1] = 15;
-            stacks[i][2] = 0;
+            stacks[i][2] = N(0);
         }
         else
         {
@@ -446,7 +438,7 @@ static bool do_one_inside(int begin, int end)
                 return false;
             stacks[loc][0] = stacks[next][0];
             stacks[loc][1] = 15;
-            stacks[loc][2] = !stacks[next][2];
+            stacks[loc][2] = N(!stacks[next][2]);
         }
         else
         {
@@ -462,9 +454,9 @@ static bool do_one_inside(int begin, int end)
             case 3:            /* highest priority is *,/ */
                 stacks[ploc][0] = stacks[next][0];
                 if (stacks[loc][3]==0)
-                    stacks[ploc][2] *= stacks[next][2];
+                    stacks[ploc][2] = nmul(stacks[ploc][2], stacks[next][2]);
                 else if (stacks[next][2])
-                    stacks[ploc][2] /= stacks[next][2];
+                    stacks[ploc][2] = ndiv(stacks[ploc][2], stacks[next][2]);
                 else
                 {
                     stacks[ploc][2]=0;
@@ -483,33 +475,33 @@ static bool do_one_inside(int begin, int end)
                 switch (stacks[loc][3])
                 {
                 case 5:
-                    stacks[ploc][2] = (stacks[ploc][2] > stacks[next][2]);
+                    stacks[ploc][2] = N(stacks[ploc][2] > stacks[next][2]);
                     break;
                 case 4:
-                    stacks[ploc][2] = (stacks[ploc][2] >= stacks[next][2]);
+                    stacks[ploc][2] = N(stacks[ploc][2] >= stacks[next][2]);
                     break;
                 case 7:
-                    stacks[ploc][2] = (stacks[ploc][2] < stacks[next][2]);
+                    stacks[ploc][2] = N(stacks[ploc][2] < stacks[next][2]);
                     break;
                 case 6:
-                    stacks[ploc][2] = (stacks[ploc][2] <= stacks[next][2]);
+                    stacks[ploc][2] = N(stacks[ploc][2] <= stacks[next][2]);
                 }
                 break;
             case 11:            /* highest priority is == */
                 stacks[ploc][0] = stacks[next][0];
-                stacks[ploc][2] = (stacks[ploc][2] == stacks[next][2]);
+                stacks[ploc][2] = N(stacks[ploc][2] == stacks[next][2]);
                 break;
             case 12:            /* highest priority is != */
                 stacks[ploc][0] = stacks[next][0];
-                stacks[ploc][2] = (stacks[ploc][2] != stacks[next][2]);
+                stacks[ploc][2] = N(stacks[ploc][2] != stacks[next][2]);
                 break;
             case 13:            /* highest priority is && */
                 stacks[ploc][0] = stacks[next][0];
-                stacks[ploc][2] = (stacks[ploc][2] && stacks[next][2]);
+                stacks[ploc][2] = N(stacks[ploc][2] && stacks[next][2]);
                 break;
             case 14:            /* highest priority is || */
                 stacks[ploc][0] = stacks[next][0];
-                stacks[ploc][2] = (stacks[ploc][2] || stacks[next][2]);
+                stacks[ploc][2] = N(stacks[ploc][2] || stacks[next][2]);
                 break;
             default:
                 tintin_eprintf(0, "#Programming error *slap Bill*");
