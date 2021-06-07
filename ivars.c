@@ -163,7 +163,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
     int i, flag;
     bool result, should_differ;
     bool regex=false; /* false=strncmp, true=regex match */
-    char *ptr, *tptr;
+    char *ptr;
     char temp[BUFFER_SIZE];
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
@@ -186,7 +186,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
         else if (*ptr == '[')
         {
             ptr++;
-            tptr=left;
+            char *tptr=left;
             while ((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
             {
                 *tptr = *ptr;
