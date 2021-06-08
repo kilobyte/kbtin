@@ -433,7 +433,6 @@ int main(int argc, char **argv)
 {
     tintin_exec=argv[0];
     init_locale();
-    asserts_math();
     user_setdriver(isatty(0)?1:0);
     parse_options(argc, argv);
     init_bind();

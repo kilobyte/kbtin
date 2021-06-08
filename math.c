@@ -58,26 +58,3 @@ num_t str2num(const char *str, char **err)
     *err = (char*)str;
     return xh + (x+4999)/10000;
 }
-
-static void ass(num_t x, num_t y, const char *what)
-{
-    if (x==y)
-        return;
-    fprintf(stderr, "Assert failed: %s is %"PRId64", expected %"PRId64"\n", what, x, y);
-}
-
-#define ASS(x,y) ass((x), (y), #x)
-#define ASS4(op,x,y,e) do {\
-    ASS(op(DENOM*x,DENOM*y),DENOM*e);\
-    ASS(op(DENOM*x,DENOM*-y),-DENOM*e);\
-    ASS(op(DENOM*-x,DENOM*y),-DENOM*e);\
-    ASS(op(DENOM*-x,DENOM*-y),DENOM*e);} while(0)
-
-void asserts_math(void)
-{
-    ASS4(nmul, 2, 2, 4);
-    ASS4(nmul, 10, 1/10, 1);
-    ASS4(ndiv, 2, 2, 1);
-    ASS4(ndiv, 2, 1, 2);
-    ASS4(ndiv, 10, 3, 10/3);
-}
