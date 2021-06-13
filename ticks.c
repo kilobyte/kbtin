@@ -185,7 +185,11 @@ int check_event(int time, struct session *ses)
             && ses->tick_size>ses->pretick && time!=ses->time10)
     {
         if (do_hook(ses, HOOK_PRETICK, 0, false) == ses)
-            tintin_puts1("#10 SECONDS TO TICK!!!", ses);
+        {
+            char buf[BUFFER_SIZE];
+            sprintf(buf, "#%d SECONDS TO TICK!!!", ses->pretick);
+            tintin_puts1(buf, ses);
+        }
         if (any_closed)
             return -1;
         ses->time10=time;
