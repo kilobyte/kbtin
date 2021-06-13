@@ -865,7 +865,7 @@ black blue green cyan maroon magenta brown gray charcoal azure lime aqua red pin
 #THERE'S NO ACTIVE SESSION NOW.
 ===
 
-### #ifaliase
+### #ifaliasexists
 <<<
 #ifali {foo} {#show ✓} #else {#show ✗}
 #ali foo dupa
