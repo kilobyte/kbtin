@@ -9,6 +9,7 @@
 #include "protos/antisub.h"
 #include "protos/bind.h"
 #include "protos/colors.h"
+#include "protos/events.h"
 #include "protos/files.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
@@ -187,8 +188,8 @@ static void init_nullses(void)
     nullsession->name=mystrdup("main");
     nullsession->address=0;
     nullsession->tickstatus = false;
-    nullsession->tick_size = DEFAULT_TICK_SIZE;
-    nullsession->pretick = DEFAULT_PRETICK;
+    nullsession->tick_size = DEFAULT_TICK_SIZE*NANO;
+    nullsession->pretick = DEFAULT_PRETICK*NANO;
     nullsession->time0 = 0;
     nullsession->snoopstatus = true;
     nullsession->logfile = 0;
@@ -488,11 +489,11 @@ ever wants to read -- that is what docs are for.
 /* return seconds to next tick (global, all sessions) */
 /* also display tick messages                         */
 /******************************************************/
-static int check_events(void)
+static timens_t check_events(void)
 {
-    int tick_time = 0, curr_time, tt;
+    timens_t tick_time = 0, curr_time, tt;
 
-    curr_time = time(NULL);
+    curr_time = current_time();
 restart:
     any_closed=false;
     for (struct session *sp = sessionlist; sp; sp = sp->next)
@@ -500,7 +501,6 @@ restart:
         tt = check_event(curr_time, sp);
         if (any_closed)
             goto restart;
-        /* printf("#%s %d(%d)\n", sp->name, tt, curr_time); */
         if (tt > curr_time && (tick_time == 0 || tt < tick_time))
             tick_time = tt;
     }
@@ -541,8 +541,9 @@ static void tintin(void)
         }
 #endif
 
-        tv.tv_sec = check_events();
-        tv.tv_usec = 0;
+        timens_t ev = check_events();
+        tv.tv_sec = ev/NANO;
+        tv.tv_usec = ev%NANO/1000;
 
         maxfd=0;
         FD_ZERO(&readfdmask);

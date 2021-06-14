@@ -242,6 +242,8 @@ size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
 
 typedef int64_t num_t;
+typedef int64_t timens_t;
+#define NANO 1000000000LL
 
 /************************ structures *********************/
 struct listnode
@@ -274,7 +276,7 @@ struct eventnode
 {
     struct eventnode *next;
     char *event;
-    time_t time;
+    timens_t time;
 };
 
 struct routenode
@@ -304,9 +306,9 @@ struct session
     char *name;
     char *address;
     bool tickstatus;
-    time_t time0;      /* time of last tick (adjusted every tick) */
-    time_t time10;
-    int tick_size, pretick;
+    timens_t time0;      /* time of last tick (adjusted every tick) */
+    timens_t time10;
+    timens_t tick_size, pretick;
     bool snoopstatus;
     FILE *logfile, *debuglogfile;
     char *logname, *debuglogname;

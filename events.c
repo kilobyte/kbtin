@@ -8,6 +8,21 @@
 #include "protos/variables.h"
 
 
+timens_t current_time(void)
+{
+    struct timespec cts;
+    clock_gettime(CLOCK_REALTIME, &cts);
+    return cts.tv_sec*NANO + cts.tv_nsec;
+}
+
+int usec(timens_t t)
+{
+    t%=NANO;
+    if (t<0)
+        t+=NANO;
+    return t/1000;
+}
+
 void execute_event(struct eventnode *ev, struct session *ses)
 {
     if (activesession==ses && ses->mesvar[MSG_EVENT])
@@ -20,7 +35,7 @@ void execute_event(struct eventnode *ev, struct session *ses)
 static void list_events(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    time_t ct; /* current time */
+    timens_t ct; /* current time */
     bool flag;
     struct eventnode *ev;
 
@@ -30,7 +45,7 @@ static void list_events(const char *arg, struct session *ses)
         return;
     }
 
-    ct = time(NULL);
+    ct = current_time();
     ev = ses->events;
     arg = get_arg_in_braces(arg, left, 1);
 
@@ -39,7 +54,8 @@ static void list_events(const char *arg, struct session *ses)
         tintin_printf(ses, "#Defined events:");
         while (ev)
         {
-            tintin_printf(ses, "(%d)\t {%s}", ev->time-ct, ev->event);
+            tintin_printf(ses, "(%d.%06d)\t {%s}", (int)((ev->time-ct)/NANO),
+                usec(ev->time-ct), ev->event);
             ev = ev->next;
         }
     }
@@ -50,7 +66,8 @@ static void list_events(const char *arg, struct session *ses)
         {
             if (match(left, ev->event))
             {
-                tintin_printf(ses, "(%d)\t {%s}", ev->time-ct, ev->event);
+                tintin_printf(ses, "(%d.%06d)\t {%s}", (ev->time-ct)/NANO,
+                    usec(ev->time-ct), ev->event);
                 flag = true;
             }
             ev = ev->next;
@@ -92,7 +109,7 @@ void delay_command(const char *arg, struct session *ses)
     }
 
     ev = TALLOC(struct eventnode);
-    ev->time = time(NULL) + delay;
+    ev->time = current_time() + delay*NANO;
     ev->next = NULL;
     ev->event = mystrdup(right);
 
@@ -162,6 +179,8 @@ void undelay_command(const char *arg, struct session *ses)
         return;
     }
 
+    timens_t ct = current_time();
+
     flag = false;
     ev = &(ses->events);
     while (*ev)
@@ -169,8 +188,8 @@ void undelay_command(const char *arg, struct session *ses)
         {
             flag=true;
             if (ses==activesession && ses->mesvar[MSG_EVENT])
-                tintin_printf(ses, "#Ok. Event {%s} at %ld won't be executed.",
-                    (*ev)->event, (*ev)->time-time(0));
+                tintin_printf(ses, "#Ok. Event {%s} at %ld.%06ld won't be executed.",
+                    (*ev)->event, ((*ev)->time-ct)/NANO, usec((*ev)->time-ct));
             remove_event(ev);
         }
         else

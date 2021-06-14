@@ -23,10 +23,10 @@ void tick_command(const char *arg, struct session *ses)
     if (ses)
     {
         char buf[100];
-        int to_tick;
+        timens_t to_tick;
 
         to_tick = ses->tick_size - (time(NULL) - ses->time0) % ses->tick_size;
-        sprintf(buf, "THERE'S NOW %d SECONDS TO NEXT TICK.", to_tick);
+        sprintf(buf, "THERE'S NOW %d SECONDS TO NEXT TICK.", to_tick/NANO);
         tintin_puts(buf, ses);
     }
     else
@@ -55,8 +55,11 @@ void tickon_command(const char *arg, struct session *ses)
     if (ses)
     {
         ses->tickstatus = true;
+        timens_t ct = current_time();
         if (ses->time0 == 0)
-            ses->time0 = time(NULL);
+            ses->time0 = ct;
+        if (ses->time0 + ses->tick_size - ses->pretick <= ct)
+            ses->time10 = ses->time0;
         tintin_puts("#TICKER IS NOW ON.", ses);
     }
     else
@@ -89,8 +92,9 @@ void ticksize_command(const char *arg, struct session *ses)
         tintin_eprintf(ses, "#TICKSIZE OUT OF RANGE (1..%d)", 0x7fffffff);
         return;
     }
-    ses->tick_size = x;
-    ses->time0 = time(NULL);
+    ses->tick_size = x*NANO;
+    ses->time0 = current_time();
+    ses->time10 = 0;
     tintin_printf(ses, "#OK. NEW TICKSIZE SET");
 }
 
@@ -123,11 +127,14 @@ void pretick_command(const char *arg, struct session *ses)
     if (x>=ses->tick_size)
     {
         tintin_eprintf(ses, "#PRETICK (%d) has to be smaller than #TICKSIZE (%d)",
-            x, ses->tick_size);
+            x, ses->tick_size/NANO);
         return;
     }
-    ses->pretick = x;
-    ses->time10 = time(NULL);
+    ses->pretick = x*NANO;
+    if (current_time() - ses->pretick < ses->time0)
+        ses->time10 = ses->time0;
+    else
+        ses->time10 = 0;
     if (x)
         tintin_printf(ses, "#OK. PRETICK SET TO %d", x);
     else
@@ -143,14 +150,14 @@ void show_pretick_command(const char *arg, struct session *ses)
 
 int timetilltick(struct session *ses)
 {
-    return ses->tick_size - (time(NULL) - ses->time0) % ses->tick_size;
+    return (ses->tick_size - (current_time() - ses->time0) % ses->tick_size)/NANO;
 }
 
 /* returns the time (since 1970) of next event (tick) */
-int check_event(int time, struct session *ses)
+timens_t check_event(timens_t time, struct session *ses)
 {
-    int tt; /* tick time */
-    int et; /* event time */
+    timens_t tt; /* tick time */
+    timens_t et; /* event time */
     struct eventnode *ev;
 
     assert(ses);
@@ -181,18 +188,18 @@ int check_event(int time, struct session *ses)
         ses->time0 = time - (time - ses->time0) % ses->tick_size;
         tt = ses->time0 + ses->tick_size;
     }
-    else if (ses->tickstatus && tt-ses->pretick==time
-            && ses->tick_size>ses->pretick && time!=ses->time10)
+    else if (ses->tickstatus && tt-ses->pretick<=time
+            && ses->tick_size>ses->pretick && ses->time10<ses->time0)
     {
         if (do_hook(ses, HOOK_PRETICK, 0, false) == ses)
         {
             char buf[BUFFER_SIZE];
-            sprintf(buf, "#%d SECONDS TO TICK!!!", ses->pretick);
+            sprintf(buf, "#%d SECONDS TO TICK!!!", ses->pretick/NANO);
             tintin_puts1(buf, ses);
         }
         if (any_closed)
             return -1;
-        ses->time10=time;
+        ses->time10 = ses->time0;
     }
 
     if (ses->tickstatus && ses->tick_size>ses->pretick && tt-time>ses->pretick)
