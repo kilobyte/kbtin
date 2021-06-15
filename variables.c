@@ -133,8 +133,18 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                         strcpy(value, ses->logfile?ses->logname:"");
                     else if (strcmp(varname, "_random")==0)
                         sprintf(value, "%d", rand());
-                    else if (strcmp(varname, "_time")==0 || strcmp(varname, "time")==0)
-                        sprintf(value, "%lld", start_time/NANO);
+                    else if (strcmp(varname, "_time")==0)
+                    {
+                        timens_t age = current_time() - start_time;
+                        sprintf(value, "%lld", age/NANO);
+                    }
+                    else if (strcmp(varname, "starttime")==0)
+                        sprintf(value, "%lld.%09lld", start_time/NANO, start_time%NANO);
+                    else if (strcmp(varname, "time")==0)
+                    {
+                        timens_t ct = current_time();
+                        sprintf(value, "%lld.%09lld", ct/NANO, ct%NANO);
+                    }
                     else if (strcmp(varname, "_clock")==0)
                         sprintf(value, "%ld", (long int)time(0));
                     else if (strcmp(varname, "_msec")==0)
