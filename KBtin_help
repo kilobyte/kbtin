@@ -1670,14 +1670,17 @@ Example:
 
 #math <dest.var> <expression>
 Calculates the value of <expression> and stores the result into <dest.var>.
+Fractional values are supported; small common divisors won't accumulate errors.
 
 Operators                    Function
 ------------------------------------------------
 !                            logical not
-*                            integer multiply
-/                            integer divide
-+                            integer addition
--                            integer subtraction
+*                            multiply
+/                            integer division
+//                           division
+%                            modulo
++                            addition
+-                            subtraction
 >                            greater than
 >=                           greater than or equal
 <                            less than
