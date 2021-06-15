@@ -13,8 +13,6 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 
-time_t time0;
-int utime0;
 
 /*********************/
 /* the #tick command */

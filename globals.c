@@ -32,3 +32,5 @@ char tintin_char_set = false;
 char status[BUFFER_SIZE];
 int LINES, COLS;
 bool isstatus;
+time_t time0;
+int utime0;
