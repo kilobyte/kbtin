@@ -121,6 +121,7 @@
 #define DEFAULT_ERROR_MESS true
 #define DEFAULT_HOOK_MESS true
 #define DEFAULT_LOG_MESS true
+#define DEFAULT_TICK_MESS true
 #define DEFAULT_PRETICK 10
 #define DEFAULT_CHARSET "ISO-8859-1"      /* the MUD-side charset */
 #define DEFAULT_LOGCHARSET LOGCS_LOCAL
@@ -191,6 +192,7 @@ enum
     MSG_ERROR,
     MSG_HOOK,
     MSG_LOG,
+    MSG_TICK,
     MAX_MESVAR
 };
 enum

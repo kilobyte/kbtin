@@ -540,6 +540,7 @@ static const char *msNAME[]=
     "errors",
     "hooks",
     "logging",
+    "ticks",
     "all"
 };
 

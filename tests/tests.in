@@ -688,6 +688,7 @@ FIN
 
 ### zap in #hook tick
 <<<
+#mess tick on
 #de 2 #end
 #run a cat
 #hook tick {#showme A;#zap;#showme B}
@@ -695,6 +696,7 @@ FIN
 #tickon
 #showme _
 >>>
+#Ok. messages concerning ticks are now ON.
 #OK. TICKSIZE SET TO 1
 #TICKER IS NOW ON.
 _
@@ -708,6 +710,7 @@ B
 
 ### zap in #hook pretick
 <<<
+#mess tick on
 #de 2 #end
 #run a cat
 #hook pretick {#showme A;#zap;#showme B}
@@ -715,6 +718,7 @@ B
 #tickon
 #showme _
 >>>
+#Ok. messages concerning ticks are now ON.
 #OK. TICKSIZE SET TO 11
 #TICKER IS NOW ON.
 _

@@ -41,7 +41,8 @@ void tickoff_command(const char *arg, struct session *ses)
     if (ses)
     {
         ses->tickstatus = false;
-        tintin_puts("#TICKER IS NOW OFF.", ses);
+        if (ses->mesvar[MSG_TICK])
+            tintin_puts("#TICKER IS NOW OFF.", ses);
     }
     else
         tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
@@ -60,7 +61,8 @@ void tickon_command(const char *arg, struct session *ses)
             ses->time0 = ct;
         if (ses->time0 + ses->tick_size - ses->pretick <= ct)
             ses->time10 = ses->time0;
-        tintin_puts("#TICKER IS NOW ON.", ses);
+        if (ses->mesvar[MSG_TICK])
+            tintin_puts("#TICKER IS NOW ON.", ses);
     }
     else
         tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
@@ -96,7 +98,8 @@ void ticksize_command(const char *arg, struct session *ses)
     ses->time0 = current_time();
     ses->time10 = 0;
     usecstr(left, x);
-    tintin_printf(ses, "#OK. TICKSIZE SET TO %s", left);
+    if (ses->mesvar[MSG_TICK])
+        tintin_printf(ses, "#OK. TICKSIZE SET TO %s", left);
 }
 
 
@@ -139,6 +142,8 @@ void pretick_command(const char *arg, struct session *ses)
         ses->time10 = ses->time0;
     else
         ses->time10 = 0;
+    if (!ses->mesvar[MSG_TICK])
+        return;
     if (!x)
         tintin_printf(ses, "#OK. PRETICK TURNED OFF");
     else
@@ -187,8 +192,11 @@ timens_t check_event(timens_t time, struct session *ses)
     {
         if (ses->tickstatus)
         {
-            if (do_hook(ses, HOOK_TICK, 0, false) == ses)
+            if (do_hook(ses, HOOK_TICK, 0, false) == ses
+                && ses->mesvar[MSG_TICK])
+            {
                 tintin_puts1("#TICK!!!", ses);
+            }
         }
         if (any_closed)
             return -1;
@@ -198,7 +206,8 @@ timens_t check_event(timens_t time, struct session *ses)
     else if (ses->tickstatus && tt-ses->pretick<=time
             && ses->tick_size>ses->pretick && ses->time10<ses->time0)
     {
-        if (do_hook(ses, HOOK_PRETICK, 0, false) == ses)
+        if (do_hook(ses, HOOK_PRETICK, 0, false) == ses
+            && ses->mesvar[MSG_TICK])
         {
             char buf[BUFFER_SIZE], num[32];
             usecstr(num, ses->pretick);

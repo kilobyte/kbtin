@@ -730,6 +730,8 @@ void write_command(const char *filename, struct session *ses)
     SFLAG("messages paths", mesvar[MSG_PATH], DEFAULT_PATH_MESS);
     SFLAG("messages errors", mesvar[MSG_ERROR], DEFAULT_ERROR_MESS);
     SFLAG("messages hooks", mesvar[MSG_HOOK], DEFAULT_HOOK_MESS);
+    SFLAG("messages log", mesvar[MSG_LOG], DEFAULT_LOG_MESS);
+    SFLAG("messages ticks", mesvar[MSG_TICK], DEFAULT_TICK_MESS);
     SFLAG("verbatim", verbatim, false);
     if (ses->tick_size != DEFAULT_TICK_SIZE*NANO)
     {
@@ -913,6 +915,8 @@ void writesession_command(const char *filename, struct session *ses)
     SFLAG("messages paths", mesvar[MSG_PATH], DEFAULT_PATH_MESS);
     SFLAG("messages errors", mesvar[MSG_ERROR], DEFAULT_ERROR_MESS);
     SFLAG("messages hooks", mesvar[MSG_HOOK], DEFAULT_HOOK_MESS);
+    SFLAG("messages log", mesvar[MSG_LOG], DEFAULT_LOG_MESS);
+    SFLAG("messages ticks", mesvar[MSG_TICK], DEFAULT_TICK_MESS);
     SFLAG("verbatim", verbatim, false);
     if (ses->tick_size != DEFAULT_TICK_SIZE*NANO)
     {
