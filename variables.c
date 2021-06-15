@@ -136,7 +136,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                         strcpy(value, activesession->name);
                     else if (!strcmp(varname, "LOGFILE"))
                         strcpy(value, ses->logfile?ses->logname:"");
-                    else if (!strcmp(varname, "_random"))
+                    else if (!strcmp(varname, "RANDOM") || !strcmp(varname, "_random"))
                         sprintf(value, "%d", rand());
                     else if (!strcmp(varname, "_time"))
                     {

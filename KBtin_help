@@ -1757,10 +1757,10 @@ special properties (they can still be restored by #unvar).
 * STARTTIME        - time (incl. fractional seconds) of KBtin's start
 * TIME             - time (incl. fractional seconds) past the Epoch
 * HOME             - your Unix home dir (same as ~ in most shells)
+* RANDOM, _random  - a random non-negative integer [0..2147483647]
 * secstotick       - seconds till next tick
 * _clock           - time in seconds past the Epoch (1970-01-01)
 * _msec            - milliseconds since KBtin started
-* _random          - a random non-negative number
 * _time            - time in integer seconds since KBtin started
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~unvariable
