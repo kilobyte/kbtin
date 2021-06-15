@@ -108,56 +108,56 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                 else
                 {
                     /* secstotick code added by Sverre Normann */
-                    if (strcmp(varname, "secstotick")==0)
+                    if (!strcmp(varname, "secstotick"))
                         sprintf(value, "%lld", timetilltick(ses)/NANO);
-                    else if (strcmp(varname, "TIMETOTICK")==0)
+                    else if (!strcmp(varname, "TIMETOTICK"))
                     {
                         timens_t tt = timetilltick(ses);
                         sprintf(value, "%lld.%09ld", tt/NANO, labs(tt%NANO));
                     }
-                    else if (strcmp(varname, "LINES")==0)
+                    else if (!strcmp(varname, "LINES"))
                         sprintf(value, "%d", LINES);
-                    else if (strcmp(varname, "COLS")==0)
+                    else if (!strcmp(varname, "COLS"))
                         sprintf(value, "%d", COLS);
-                    else if (strcmp(varname, "PATH")==0)
+                    else if (!strcmp(varname, "PATH"))
                         path2var(value, ses);
-                    else if (strcmp(varname, "IDLETIME")==0)
+                    else if (!strcmp(varname, "IDLETIME"))
                         sprintf(value, "%ld", (long int)(time(0)-ses->idle_since));
-                    else if (strcmp(varname, "SERVERIDLE")==0)
+                    else if (!strcmp(varname, "SERVERIDLE"))
                         sprintf(value, "%ld", (long int)(time(0)-ses->server_idle_since));
-                    else if (_ && (strcmp(varname, "LINE")==0
-                                   || strcmp(varname, "_")==0))
+                    else if (_ && (!strcmp(varname, "LINE")
+                                   || !strcmp(varname, "_")))
                         strcpy(value, _);
-                    else if (strcmp(varname, "SESSION")==0)
+                    else if (!strcmp(varname, "SESSION"))
                         strcpy(value, ses->name);
-                    else if (strcmp(varname, "SESSIONS")==0)
+                    else if (!strcmp(varname, "SESSIONS"))
                         seslist(value);
-                    else if (strcmp(varname, "ASESSION")==0)
+                    else if (!strcmp(varname, "ASESSION"))
                         strcpy(value, activesession->name);
-                    else if (strcmp(varname, "LOGFILE")==0)
+                    else if (!strcmp(varname, "LOGFILE"))
                         strcpy(value, ses->logfile?ses->logname:"");
-                    else if (strcmp(varname, "_random")==0)
+                    else if (!strcmp(varname, "_random"))
                         sprintf(value, "%d", rand());
-                    else if (strcmp(varname, "_time")==0)
+                    else if (!strcmp(varname, "_time"))
                     {
                         timens_t age = current_time() - start_time;
                         sprintf(value, "%lld", age/NANO);
                     }
-                    else if (strcmp(varname, "STARTTIME")==0)
+                    else if (!strcmp(varname, "STARTTIME"))
                         sprintf(value, "%lld.%09lld", start_time/NANO, start_time%NANO);
-                    else if (strcmp(varname, "TIME")==0)
+                    else if (!strcmp(varname, "TIME"))
                     {
                         timens_t ct = current_time();
                         sprintf(value, "%lld.%09lld", ct/NANO, ct%NANO);
                     }
-                    else if (strcmp(varname, "_clock")==0)
+                    else if (!strcmp(varname, "_clock"))
                         sprintf(value, "%ld", (long int)time(0));
-                    else if (strcmp(varname, "_msec")==0)
+                    else if (!strcmp(varname, "_msec"))
                     {
                         timens_t age = current_time() - start_time;
                         sprintf(value, "%lld", age / (NANO/1000));
                     }
-                    else if (strcmp(varname, "HOME")==0)
+                    else if (!strcmp(varname, "HOME"))
                     {
                         v=getenv("HOME");
                         if (v)
