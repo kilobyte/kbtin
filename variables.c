@@ -109,7 +109,12 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                 {
                     /* secstotick code added by Sverre Normann */
                     if (strcmp(varname, "secstotick")==0)
-                        sprintf(value, "%d", timetilltick(ses));
+                        sprintf(value, "%lld", timetilltick(ses)/NANO);
+                    else if (strcmp(varname, "TIMETOTICK")==0)
+                    {
+                        timens_t tt = timetilltick(ses);
+                        sprintf(value, "%lld.%09ld", tt/NANO, labs(tt%NANO));
+                    }
                     else if (strcmp(varname, "LINES")==0)
                         sprintf(value, "%d", LINES);
                     else if (strcmp(varname, "COLS")==0)

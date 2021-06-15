@@ -160,9 +160,9 @@ void show_pretick_command(const char *arg, struct session *ses)
 }
 
 
-int timetilltick(struct session *ses)
+timens_t timetilltick(struct session *ses)
 {
-    return (ses->tick_size - (current_time() - ses->time0) % ses->tick_size)/NANO;
+    return ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
 }
 
 /* returns the time (since 1970) of next event (tick) */
