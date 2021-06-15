@@ -301,6 +301,11 @@ static bool conv_to_nums(char *arg, struct session *ses)
             else
                 stacks[i].op = 1;
         }
+        else if (*ptr == '%')
+        {
+            stacks[i].prio = 3;
+            stacks[i].op = 3;
+        }
         else if (*ptr == '+')
         {
             stacks[i].prio = 5;
@@ -471,8 +476,10 @@ static bool do_one_inside(int begin, int end)
                 }
                 else if (stacks[loc].op==1)
                     stacks[ploc].val = N(stacks[ploc].val / stacks[next].val);
-                else
+                else if (stacks[loc].op==2)
                     stacks[ploc].val = ndiv(stacks[ploc].val, stacks[next].val);
+                else
+                    stacks[ploc].val %= stacks[next].val;
                 break;
             case 5:            /* highest priority is +,- */
                 stacks[ploc].pos = stacks[next].pos;
