@@ -9,6 +9,7 @@
 #include "protos/events.h"
 #include "protos/globals.h"
 #include "protos/hooks.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 
@@ -25,8 +26,9 @@ void tick_command(const char *arg, struct session *ses)
         char buf[100];
         timens_t to_tick;
 
-        to_tick = ses->tick_size - (time(NULL) - ses->time0) % ses->tick_size;
-        sprintf(buf, "THERE'S NOW %d SECONDS TO NEXT TICK.", to_tick/NANO);
+        to_tick = ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
+        sprintf(buf, "THERE'S NOW %lld.%06d SECONDS TO NEXT TICK.",
+            to_tick/NANO, usec(to_tick));
         tintin_puts(buf, ses);
     }
     else
@@ -72,7 +74,7 @@ void tickon_command(const char *arg, struct session *ses)
 /*************************/
 void ticksize_command(const char *arg, struct session *ses)
 {
-    int x;
+    timens_t x;
     char left[BUFFER_SIZE], *err;
 
     get_arg(arg, left, 1, ses);
@@ -86,16 +88,17 @@ void ticksize_command(const char *arg, struct session *ses)
         tintin_eprintf(ses, "#SYNTAX: #ticksize <number>");
         return;
     }
-    x=strtol(left, &err, 10);
-    if (*err || x<1 || x>=0x7fffffff)
+    x=str2timens(left, &err);
+    if (*err || x<=0)
     {
-        tintin_eprintf(ses, "#TICKSIZE OUT OF RANGE (1..%d)", 0x7fffffff);
+        tintin_eprintf(ses, "#INVALID TICKSIZE");
         return;
     }
-    ses->tick_size = x*NANO;
+    ses->tick_size = x;
     ses->time0 = current_time();
     ses->time10 = 0;
-    tintin_printf(ses, "#OK. NEW TICKSIZE SET");
+    usecstr(left, x);
+    tintin_printf(ses, "#OK. TICKSIZE SET TO %s", left);
 }
 
 
@@ -104,7 +107,7 @@ void ticksize_command(const char *arg, struct session *ses)
 /************************/
 void pretick_command(const char *arg, struct session *ses)
 {
-    int x;
+    timens_t x;
     char left[BUFFER_SIZE], *err;
 
     get_arg(arg, left, 1, ses);
@@ -114,31 +117,37 @@ void pretick_command(const char *arg, struct session *ses)
         return;
     }
     if (!*left)
-        x=ses->pretick? 0 : 10;
+        x=ses->pretick? 0 : 10 * NANO;
     else
     {
-        x=strtol(left, &err, 10);
-        if (*err || x<0 || x>=0x7fffffff)
+        x=str2timens(left, &err);
+        if (*err || x<0)
         {
-            tintin_eprintf(ses, "#PRETICK VALUE OUT OF RANGE (0..%d)", 0x7fffffff);
+            tintin_eprintf(ses, "#INVALID PRETICK DELAY");
             return;
         }
     }
     if (x>=ses->tick_size)
     {
-        tintin_eprintf(ses, "#PRETICK (%d) has to be smaller than #TICKSIZE (%d)",
-            x, ses->tick_size/NANO);
+        char right[32];
+        usecstr(left, x);
+        usecstr(right, ses->tick_size);
+        tintin_eprintf(ses, "#PRETICK (%s) has to be smaller than #TICKSIZE (%s)",
+                left, right);
         return;
     }
-    ses->pretick = x*NANO;
+    ses->pretick = x;
     if (current_time() - ses->pretick < ses->time0)
         ses->time10 = ses->time0;
     else
         ses->time10 = 0;
-    if (x)
-        tintin_printf(ses, "#OK. PRETICK SET TO %d", x);
-    else
+    if (!x)
         tintin_printf(ses, "#OK. PRETICK TURNED OFF");
+    else
+    {
+        usecstr(left, x);
+        tintin_printf(ses, "#OK. PRETICK SET TO %s", left);
+    }
 }
 
 
@@ -193,8 +202,9 @@ timens_t check_event(timens_t time, struct session *ses)
     {
         if (do_hook(ses, HOOK_PRETICK, 0, false) == ses)
         {
-            char buf[BUFFER_SIZE];
-            sprintf(buf, "#%d SECONDS TO TICK!!!", ses->pretick/NANO);
+            char buf[BUFFER_SIZE], num[32];
+            usecstr(num, ses->pretick);
+            sprintf(buf, "#%s SECONDS TO TICK!!!", num);
             tintin_puts1(buf, ses);
         }
         if (any_closed)

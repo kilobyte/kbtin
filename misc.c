@@ -14,6 +14,7 @@
 #include "protos/hooks.h"
 #include "protos/llist.h"
 #include "protos/print.h"
+#include "protos/math.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/routes.h"
@@ -959,8 +960,11 @@ void info_command(const char *arg, struct session *ses)
         ses->echo, ses->speedwalk, ses->blank, ses->verbatim);
     tintin_printf(ses, " toggle subs=%d, ignore actions=%d, PreSub=%d, verbose=%d",
         ses->togglesubs, ses->ignore, ses->presub, ses->verbose);
-    tintin_printf(ses, "Ticker is %s (ticksize=%d, pretick=%d)",
-        ses->tickstatus?"enabled":"disabled", ses->tick_size, ses->pretick);
+    char num1[32], num2[32];
+    usecstr(num1, ses->tick_size);
+    usecstr(num2, ses->pretick);
+    tintin_printf(ses, "Ticker is %s (ticksize=%s, pretick=%s)",
+        ses->tickstatus?"enabled":"disabled", num1, num2);
     if (ui_own_output)
     {
         bptr=buffer;

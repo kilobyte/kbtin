@@ -695,7 +695,7 @@ FIN
 #tickon
 #showme _
 >>>
-#OK. NEW TICKSIZE SET
+#OK. TICKSIZE SET TO 1
 #TICKER IS NOW ON.
 _
 A
@@ -715,7 +715,7 @@ B
 #tickon
 #showme _
 >>>
-#OK. NEW TICKSIZE SET
+#OK. TICKSIZE SET TO 11
 #TICKER IS NOW ON.
 _
 A

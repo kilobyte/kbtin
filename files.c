@@ -12,6 +12,7 @@
 #include "protos/hooks.h"
 #include "protos/llist.h"
 #include "protos/print.h"
+#include "protos/math.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/run.h"
@@ -730,8 +731,16 @@ void write_command(const char *filename, struct session *ses)
     SFLAG("messages errors", mesvar[MSG_ERROR], DEFAULT_ERROR_MESS);
     SFLAG("messages hooks", mesvar[MSG_HOOK], DEFAULT_HOOK_MESS);
     SFLAG("verbatim", verbatim, false);
-    SFLAG("ticksize", tick_size, DEFAULT_TICK_SIZE);
-    SFLAG("pretick", pretick, DEFAULT_PRETICK);
+    if (ses->tick_size != DEFAULT_TICK_SIZE*NANO)
+    {
+        usecstr(num, ses->tick_size);
+        cfprintf(myfile, "%cticksize %s\n", tintin_char, num);
+    }
+    if (ses->pretick != DEFAULT_PRETICK*NANO)
+    {
+        usecstr(num, ses->pretick);
+        cfprintf(myfile, "%cpretick %s\n", tintin_char, num);
+    }
     if (strcmp(DEFAULT_CHARSET, ses->charset))
         cfprintf(myfile, "%ccharset {%s}\n", tintin_char, ses->charset);
     if (strcmp(logcs_name(DEFAULT_LOGCHARSET), logcs_name(ses->logcharset)))
@@ -905,8 +914,16 @@ void writesession_command(const char *filename, struct session *ses)
     SFLAG("messages errors", mesvar[MSG_ERROR], DEFAULT_ERROR_MESS);
     SFLAG("messages hooks", mesvar[MSG_HOOK], DEFAULT_HOOK_MESS);
     SFLAG("verbatim", verbatim, false);
-    SFLAG("ticksize", tick_size, DEFAULT_TICK_SIZE);
-    SFLAG("pretick", pretick, DEFAULT_PRETICK);
+    if (ses->tick_size != DEFAULT_TICK_SIZE*NANO)
+    {
+        usecstr(num, ses->tick_size);
+        cfprintf(myfile, "%cticksize %s\n", tintin_char, num);
+    }
+    if (ses->pretick != DEFAULT_PRETICK*NANO)
+    {
+        usecstr(num, ses->pretick);
+        cfprintf(myfile, "%cpretick %s\n", tintin_char, num);
+    }
     if (strcmp(nullsession->charset, ses->charset))
         cfprintf(myfile, "%ccharset {%s}\n", tintin_char, ses->charset);
     if (strcmp(logcs_name(nullsession->logcharset), logcs_name(ses->logcharset)))

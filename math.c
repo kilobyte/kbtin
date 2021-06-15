@@ -43,6 +43,16 @@ int num2str(char *buf, num_t v)
     return b-buf;
 }
 
+int usecstr(char *buf, timens_t v)
+{
+    if (!(v % NANO))
+        return sprintf(buf, "%lld", v/NANO);
+    int usec = v%NANO/1000;
+    if (usec < 0)
+        usec+=1000000;
+    return sprintf(buf, "%lld.%06d", v/NANO, usec);
+}
+
 num_t str2num(const char *str, char **err)
 {
     num_t xh = strtol(str, err, 10) * DENOM;
@@ -57,4 +67,17 @@ num_t str2num(const char *str, char **err)
     }
     *err = (char*)str;
     return xh + (x+4999)/10000;
+}
+
+/* parse a timestamp */
+timens_t str2timens(const char *str, char **err)
+{
+    timens_t t = strtol(str, err, 10) * NANO;
+    if (**err!='.')
+        return t;
+    num_t x = NANO;
+    for (str = *err+1; isadigit(*str); str++)
+        t += (*str-'0') * (x/= 10);
+    *err = (char*)str;
+    return t;
 }

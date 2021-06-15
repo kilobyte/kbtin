@@ -2,6 +2,7 @@
 #include "protos/action.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
@@ -81,7 +82,7 @@ static void list_events(const char *arg, struct session *ses)
 void delay_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[BUFFER_SIZE], *cptr;
-    time_t delay;
+    timens_t delay;
     struct eventnode *ev, *ptr, *ptrlast;
 
     if (!ses)
@@ -102,14 +103,14 @@ void delay_command(const char *arg, struct session *ses)
         return;
     }
 
-    if (!*left || (delay=strtol(left, &cptr, 10))<0 || *cptr)
+    if (!*left || (delay=str2timens(left, &cptr))<0 || *cptr)
     {
         tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), NEGATIVE DELAY", left);
         return;
     }
 
     ev = TALLOC(struct eventnode);
-    ev->time = current_time() + delay*NANO;
+    ev->time = current_time() + delay;
     ev->next = NULL;
     ev->event = mystrdup(right);
 
