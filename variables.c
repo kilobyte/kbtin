@@ -8,6 +8,7 @@
 #include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/chinese.h"
+#include "protos/events.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
@@ -133,14 +134,13 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                     else if (strcmp(varname, "_random")==0)
                         sprintf(value, "%d", rand());
                     else if (strcmp(varname, "_time")==0 || strcmp(varname, "time")==0)
-                        sprintf(value, "%ld", (long int)time0);
+                        sprintf(value, "%lld", start_time/NANO);
                     else if (strcmp(varname, "_clock")==0)
                         sprintf(value, "%ld", (long int)time(0));
                     else if (strcmp(varname, "_msec")==0)
                     {
-                        struct timeval tv;
-                        gettimeofday(&tv, 0);
-                        sprintf(value, "%ld", (long int)((tv.tv_sec-time0)*1000+(tv.tv_usec-utime0)/1000));
+                        timens_t age = current_time() - start_time;
+                        sprintf(value, "%lld", age / (NANO/1000));
                     }
                     else if (strcmp(varname, "HOME")==0)
                     {

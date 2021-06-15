@@ -178,11 +178,10 @@ static void setup_ulimit(void)
 
 static void init_nullses(void)
 {
-    struct timeval tv;
+    struct timespec tv;
 
-    gettimeofday(&tv, 0);
-    time0 = tv.tv_sec;
-    utime0 = tv.tv_usec;
+    clock_gettime(CLOCK_REALTIME, &tv);
+    start_time = tv.tv_sec*NANO + tv.tv_nsec;
 
     nullsession=TALLOC(struct session);
     nullsession->name=mystrdup("main");
@@ -443,7 +442,7 @@ int main(int argc, char **argv)
     strcpy(status, EMPTY_LINE);
     user_init();
     /*  read_complete();            no tab-completion */
-    srand((getpid()*0x10001)^time0);
+    srand((getpid()*0x10001)^start_time^(start_time>>32));
     lastdraft=0;
 
     if (ui_own_output || tty)
