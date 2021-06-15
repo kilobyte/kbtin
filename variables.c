@@ -143,9 +143,9 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                         timens_t age = current_time() - start_time;
                         sprintf(value, "%lld", age/NANO);
                     }
-                    else if (strcmp(varname, "starttime")==0)
+                    else if (strcmp(varname, "STARTTIME")==0)
                         sprintf(value, "%lld.%09lld", start_time/NANO, start_time%NANO);
-                    else if (strcmp(varname, "time")==0)
+                    else if (strcmp(varname, "TIME")==0)
                     {
                         timens_t ct = current_time();
                         sprintf(value, "%lld.%09lld", ct/NANO, ct%NANO);
