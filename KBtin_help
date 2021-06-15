@@ -1743,7 +1743,6 @@ KBtin supports a number of built-in variables.  They won't show on the list
 given by #var, and defining a variable by that name will destroy their
 special properties (they can still be restored by #unvar).
 
-* secstotick       - seconds till next tick
 * TIMETOTICK       - seconds (with fractions) till next tick
 * COLS, LINES      - screen size
 * PATH             - the current path
@@ -1755,13 +1754,14 @@ special properties (they can still be restored by #unvar).
 * LOGFILE          - the name of log file, or empty string if not logging
 * LINE, _          - (only in a #action or #promptaction): the current line
                      of input
-* _random          - a random non-negative number
-* _time            - time in integer seconds since KBtin started
-* _msec            - milliseconds since KBtin started
 * STARTTIME        - time (incl. fractional seconds) of KBtin's start
-* _clock           - time in seconds past the Epoch (1970-01-01)
 * TIME             - time (incl. fractional seconds) past the Epoch
 * HOME             - your Unix home dir (same as ~ in most shells)
+* secstotick       - seconds till next tick
+* _clock           - time in seconds past the Epoch (1970-01-01)
+* _msec            - milliseconds since KBtin started
+* _random          - a random non-negative number
+* _time            - time in integer seconds since KBtin started
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~unvariable
 
