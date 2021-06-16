@@ -125,6 +125,8 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                         sprintf(value, "%ld", (long int)(time(0)-ses->idle_since));
                     else if (!strcmp(varname, "SERVERIDLE"))
                         sprintf(value, "%ld", (long int)(time(0)-ses->server_idle_since));
+                    else if (!strcmp(varname, "LINENUM"))
+                        sprintf(value, "%llu", ses->linenum);
                     else if (_ && (!strcmp(varname, "LINE")
                                    || !strcmp(varname, "_")))
                         strcpy(value, _);

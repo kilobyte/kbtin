@@ -351,6 +351,8 @@ struct session
     gnutls_session_t ssl;
 #endif
     struct timeval line_time;
+    unsigned long long linenum;
+    bool drafted;
 };
 
 typedef char pvars_t[10][BUFFER_SIZE];

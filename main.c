@@ -243,9 +243,11 @@ static void init_nullses(void)
     nullsession->no_return = 0;
     nullsession->path_length = 0;
     nullsession->last_line[0] = 0;
+    nullsession->linenum = 0;
     nullsession->events = NULL;
     nullsession->verbose=false;
     nullsession->closing=false;
+    nullsession->drafted=false;
     sessionlist = nullsession;
     activesession = nullsession;
     pvars=0;
@@ -742,6 +744,7 @@ static void read_mud(struct session *ses)
             *cpdest = '\0';
             do_one_line(linebuffer, 1, ses);
             ses->lastintitle=0;
+            ses->drafted=false;
 
             cpsource++;
             cpdest=linebuffer;
@@ -762,6 +765,7 @@ static void read_mud(struct session *ses)
             {
                 do_one_line(linebuffer, 0, ses);
                 ses->lastintitle=0;
+                ses->drafted=false; /* abandoned */
             }
             cpdest=linebuffer;
         }
@@ -773,13 +777,17 @@ static void read_mud(struct session *ses)
         *cpdest=0;
         do_one_line(linebuffer, 1, ses);
         ses->lastintitle=0;
+        ses->drafted=false;
         cpdest=linebuffer;
     }
     *cpdest = '\0';
     strcpy(ses->last_line, linebuffer);
     if (!ses->more_coming)
         if (cpdest!=linebuffer)
+        {
             do_one_line(linebuffer, 0, ses);
+            ses->drafted=true;
+        }
     PROFEND(mud_lag, mud_cnt);
 }
 
@@ -794,6 +802,8 @@ static void do_one_line(char *line, int nl, struct session *ses)
 
     if (nl)
         gettimeofday(&t1, 0);
+    if (!ses->drafted)
+        ses->linenum++;
     PROFPUSH("conv: remote->utf8");
     convert(&ses->c_io, ubuf, line, -1);
 # define line ubuf

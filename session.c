@@ -329,6 +329,8 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->lastintitle=0;
     newsession->debuglogfile=0;
     newsession->debuglogname=0;
+    newsession->linenum=0;
+    newsession->drafted=false;
     newsession->partial_line_marker = mystrdup(ses->partial_line_marker);
     for (int i=0;i<=MAX_MESVAR;i++)
         newsession->mesvar[i] = ses->mesvar[i];
