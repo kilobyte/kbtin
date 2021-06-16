@@ -997,10 +997,10 @@ void info_command(const char *arg, struct session *ses)
         tintin_printf(ses, "Idle time: %d, server idle: %d",
             now-ses->idle_since, now-ses->server_idle_since);
     }
-    if (ses->line_time.tv_sec||ses->line_time.tv_usec)
-        tintin_printf(ses, "Line processing time: %d.%06ds (%1.1f per second)",
-            ses->line_time.tv_sec, ses->line_time.tv_usec,
-            1/(ses->line_time.tv_sec+ses->line_time.tv_usec*0.000001));
+    if (ses->line_time)
+        tintin_printf(ses, "Line processing time: %lld.%06llds (%1.1f per second)",
+            ses->line_time/NANO, ses->line_time%NANO/1000,
+            1/(ses->line_time*0.000000001));
     if (ses->closing)
         tintin_printf(ses, "The session has it's closing mark set to %d!", ses->closing);
 }

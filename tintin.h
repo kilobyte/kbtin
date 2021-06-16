@@ -350,7 +350,7 @@ struct session
 #ifdef HAVE_GNUTLS
     gnutls_session_t ssl;
 #endif
-    struct timeval line_time;
+    timens_t line_time;
     unsigned long long linenum;
     bool drafted;
 };

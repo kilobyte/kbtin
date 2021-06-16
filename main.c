@@ -272,8 +272,7 @@ static void init_nullses(void)
                               DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
     nullify_conv(&nullsession->c_io);
     nullify_conv(&nullsession->c_log);
-    nullsession->line_time.tv_sec=0;
-    nullsession->line_time.tv_usec=0;
+    nullsession->line_time=0;
 #ifdef HAVE_GNUTLS
     nullsession->ssl=0;
 #endif
@@ -798,10 +797,10 @@ static void do_one_line(char *line, int nl, struct session *ses)
 {
     bool isnb;
     char ubuf[BUFFER_SIZE];
-    struct timeval t1, t2;
+    timens_t t;
 
     if (nl)
-        gettimeofday(&t1, 0);
+        t = current_time();
     if (!ses->drafted)
         ses->linenum++;
     PROFPUSH("conv: remote->utf8");
@@ -884,22 +883,15 @@ static void do_one_line(char *line, int nl, struct session *ses)
 
     if (nl)
     {
-        gettimeofday(&t2, 0);
-        t2.tv_sec-=t1.tv_sec;
-        t2.tv_usec-=t1.tv_usec;
-        if (t2.tv_usec<0)
-            t2.tv_usec+=1000000, t2.tv_sec--;
-        if (ses->line_time.tv_sec || ses->line_time.tv_usec)
+        t = current_time() - t;
+        if (ses->line_time)
         {
             /* A dragged average: every new line counts for 10% of the value.
               The weight of any old line decays with half-life around 6.5. */
-            int64_t t=(int64_t)(ses->line_time.tv_sec*9+t2.tv_sec)*100000
-                              +(ses->line_time.tv_usec*9+t2.tv_usec)/10;
-            ses->line_time.tv_sec =t/1000000;
-            ses->line_time.tv_usec=t%1000000;
+            ses->line_time=(ses->line_time*9+t)/10;
         }
         else
-            ses->line_time=t2;
+            ses->line_time=t;
     }
 }
 
