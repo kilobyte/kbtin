@@ -227,7 +227,7 @@ static void init_nullses(void)
     nullsession->binds = init_hash();
     nullsession->next = 0;
     nullsession->sessionstart=nullsession->idle_since=
-        nullsession->server_idle_since=time(0);
+        nullsession->server_idle_since=current_time();
     nullsession->debuglogfile=0;
     nullsession->debuglogname=0;
     for (int i=0;i<HISTORY_SIZE;i++)

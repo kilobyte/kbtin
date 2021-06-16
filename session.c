@@ -12,6 +12,7 @@
 #include "protos/hooks.h"
 #include "protos/llist.h"
 #include "protos/print.h"
+#include "protos/math.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/routes.h"
@@ -322,7 +323,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->presub = ses->presub;
     newsession->verbatim = ses->verbatim;
     newsession->sessionstart=newsession->idle_since=
-        newsession->server_idle_since=time(0);
+        newsession->server_idle_since=current_time();
     newsession->nagle=false;
     newsession->halfcr_in=false;
     newsession->halfcr_log=false;

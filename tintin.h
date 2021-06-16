@@ -333,8 +333,8 @@ struct session
     bool verbose, blank, echo, speedwalk, togglesubs, presub, verbatim;
     char *partial_line_marker;
     bool mesvar[MAX_MESVAR+1];
-    time_t idle_since, server_idle_since;
-    time_t sessionstart;
+    timens_t idle_since, server_idle_since;
+    timens_t sessionstart;
     char *hooks[NHOOKS];
     int closing;
     int nagle;

@@ -14,6 +14,7 @@
 #include "protos/files.h"
 #include "protos/globals.h"
 #include "protos/hooks.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/prof.h"
 #include "protos/run.h"
@@ -166,7 +167,7 @@ void write_line_mud(const char *line, struct session *ses)
     PROFPOP;
 
     if (*line)
-        ses->idle_since=time(0);
+        ses->idle_since=current_time();
     if (ses->issocket)
     {
         if (!ses->nagle)
@@ -302,7 +303,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
         didget=read(ses->socket, buffer, INPUT_CHUNK);
         if (didget<=0)
             return -1;
-        ses->server_idle_since=time(0);
+        ses->server_idle_since=current_time();
         ses->more_coming=(didget==INPUT_CHUNK);
         buffer[didget]=0;
         return didget;
@@ -364,7 +365,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
     tintin_printf(ses, "~8~text:[%s]~-1~", tmpbuf);
 #endif
 
-    ses->server_idle_since=time(0);
+    ses->server_idle_since=current_time();
     ses->more_coming = (didget+=len) == INPUT_CHUNK;
     len=0;
     ses->ga=false;

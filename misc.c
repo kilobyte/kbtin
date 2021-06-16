@@ -993,9 +993,10 @@ void info_command(const char *arg, struct session *ses)
         tintin_printf(ses, "Debuglog: {%s}", ses->debuglogname);
     if (ses!=nullsession)
     {
-        time_t now=time(0);
-        tintin_printf(ses, "Idle time: %d, server idle: %d",
-            now-ses->idle_since, now-ses->server_idle_since);
+        timens_t ct=current_time();
+        tintin_printf(ses, "Idle time: %d.%d, server idle: %d.%d",
+            (ct-ses->idle_since)/NANO, (ct-ses->idle_since)%NANO/(NANO/10),
+            (ct-ses->server_idle_since)/NANO, (ct-ses->server_idle_since)%NANO/(NANO/10));
     }
     if (ses->line_time)
         tintin_printf(ses, "Line processing time: %lld.%06llds (%1.1f per second)",

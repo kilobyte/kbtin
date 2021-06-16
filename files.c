@@ -523,18 +523,16 @@ void debuglog(struct session *ses, const char *format, ...)
 {
     va_list ap;
     char buf[BUFFER_SIZE];
-    struct timeval tv;
 
     if (!ses->debuglogfile)
         return;
 
-    gettimeofday(&tv, 0);
+    timens_t t = current_time()-ses->sessionstart;
     va_start(ap, format);
     if (vsnprintf(buf, BUFFER_SIZE-1, format, ap)>BUFFER_SIZE-2)
         buf[BUFFER_SIZE-3]='>';
     va_end(ap);
-    cfprintf(ses->debuglogfile, "%4ld.%06d: %s\n",
-        (long int)tv.tv_sec-ses->sessionstart, (int)tv.tv_usec, buf);
+    cfprintf(ses->debuglogfile, "%4lld.%06lld: %s\n", t/NANO, t%NANO, buf);
 }
 
 

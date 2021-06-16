@@ -12,6 +12,7 @@
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/path.h"
@@ -122,9 +123,9 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                     else if (!strcmp(varname, "PATH"))
                         path2var(value, ses);
                     else if (!strcmp(varname, "IDLETIME"))
-                        sprintf(value, "%ld", (long int)(time(0)-ses->idle_since));
+                        nsecstr(value, current_time()-ses->idle_since);
                     else if (!strcmp(varname, "SERVERIDLE"))
-                        sprintf(value, "%ld", (long int)(time(0)-ses->server_idle_since));
+                        nsecstr(value, current_time()-ses->server_idle_since);
                     else if (!strcmp(varname, "LINENUM"))
                         sprintf(value, "%llu", ses->linenum);
                     else if (_ && (!strcmp(varname, "LINE")
