@@ -9,7 +9,6 @@
 #include "protos/antisub.h"
 #include "protos/bind.h"
 #include "protos/colors.h"
-#include "protos/events.h"
 #include "protos/files.h"
 #include "protos/glob.h"
 #include "protos/globals.h"

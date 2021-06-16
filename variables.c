@@ -8,7 +8,6 @@
 #include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/chinese.h"
-#include "protos/events.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/hash.h"

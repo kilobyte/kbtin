@@ -12,6 +12,7 @@
 #include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
+#include "protos/utils.h"
 
 
 /*********************/

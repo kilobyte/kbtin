@@ -9,13 +9,6 @@
 #include "protos/variables.h"
 
 
-timens_t current_time(void)
-{
-    struct timespec cts;
-    clock_gettime(CLOCK_REALTIME, &cts);
-    return cts.tv_sec*NANO + cts.tv_nsec;
-}
-
 int usec(timens_t t)
 {
     t%=NANO;
