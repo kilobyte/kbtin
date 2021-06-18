@@ -13,10 +13,12 @@ The features include:
 * guaranteed actions (a line being split between two packets is not a problem)
 * lists processing ("#foreach {$friends} {tell $0 [XX] $message}")
 * TELNET protocol support
+* MCCP compression
 * the ability to run local programs as it was a MUD -- this is the only client you can use with games like adventure, or even programs like mysqlclient
 * secondary sessions (ICQ integration, etc)
 * UTF-8 and IPv6 support
 * native SSL, with certificate retention to avoid MitM attacks
+* fractional arithmetic
 
 KBtin has been ported to the following systems:
 
