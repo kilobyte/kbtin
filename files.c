@@ -23,7 +23,7 @@
 #include <pwd.h>
 #include <fcntl.h>
 
-static void prepare_for_write(const char *command, const char *left, const char *right, const char *pr, char *result);
+static void cfcom(FILE *f, const char *command, const char *left, const char *right, const char *pr);
 extern void char_command(const char *arg, struct session *ses);
 
 /*******************************/
@@ -673,11 +673,10 @@ struct session* read_command(const char *filename, struct session *ses)
 }
 
 
-#define WFLAG(name, var, org)   if (var!=(org))                                 \
-                                {                                               \
-                                    sprintf(num, "%d", var);                    \
-                                    prepare_for_write(name, num, 0, 0, buffer); \
-                                    cfputs(buffer, myfile);                     \
+#define WFLAG(name, var, org)   if (var!=(org))                         \
+                                {                                       \
+                                    sprintf(num, "%d", var);            \
+                                    cfcom(myfile, name, num, 0, 0);     \
                                 }
 #define SFLAG(name, var, org)   WFLAG(name, ses->var, org)
 /**********************/
@@ -747,58 +746,38 @@ void write_command(const char *filename, struct session *ses)
         cfprintf(myfile, "%clogcharset {%s}\n", tintin_char, logcs_name(ses->logcharset));
     nodeptr = templist = hash2list(ses->aliases, "*");
     while ((nodeptr = nodeptr->next))
-    {
-        prepare_for_write("alias", nodeptr->left, nodeptr->right, 0, buffer);
-        cfputs(buffer, myfile);
-    }
+        cfcom(myfile, "alias", nodeptr->left, nodeptr->right, 0);
     zap_list(templist);
 
     nodeptr = ses->actions;
     while ((nodeptr = nodeptr->next))
-    {
-        prepare_for_write("action", nodeptr->left, nodeptr->right, nodeptr->pr,
-                          buffer);
-        cfputs(buffer, myfile);
-    }
+        cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
 
     nodeptr = ses->antisubs;
     while ((nodeptr = nodeptr->next))
-    {
-        prepare_for_write("antisub", nodeptr->left, 0, 0, buffer);
-        cfputs(buffer, myfile);
-    }
+        cfcom(myfile, "antisub", nodeptr->left, 0, 0);
 
     nodeptr = ses->subs;
     while ((nodeptr = nodeptr->next))
     {
         if (strcmp( nodeptr->right, EMPTY_LINE))
-            prepare_for_write("sub", nodeptr->left, nodeptr->right, 0, buffer);
+            cfcom(myfile, "sub", nodeptr->left, nodeptr->right, 0);
         else
-            prepare_for_write("gag", nodeptr->left, 0, 0, buffer);
-        cfputs(buffer, myfile);
+            cfcom(myfile, "gag", nodeptr->left, 0, 0);
     }
 
     nodeptr = templist = hash2list(ses->myvars, "*");
     while ((nodeptr = nodeptr->next))
-    {
-        prepare_for_write("var", nodeptr->left, nodeptr->right, "\0", buffer);
-        cfputs(buffer, myfile);
-    }
+        cfcom(myfile, "var", nodeptr->left, nodeptr->right, 0);
     zap_list(templist);
 
     nodeptr = ses->highs;
     while ((nodeptr = nodeptr->next))
-    {
-        prepare_for_write("highlight", nodeptr->right, nodeptr->left, "\0", buffer);
-        cfputs(buffer, myfile);
-    }
+        cfcom(myfile, "highlight", nodeptr->right, nodeptr->left, 0);
 
     nodeptr = templist = hash2list(ses->pathdirs, "*");
     while ((nodeptr = nodeptr->next))
-    {
-        prepare_for_write("pathdir", nodeptr->left, nodeptr->right, 0, buffer);
-        cfputs(buffer, myfile);
-    }
+        cfcom(myfile, "pathdir", nodeptr->left, nodeptr->right, 0);
     zap_list(templist);
 
     for (int nr=0;nr<MAX_LOCATIONS;nr++)
@@ -818,18 +797,12 @@ void write_command(const char *filename, struct session *ses)
 
     nodeptr = templist = hash2list(ses->binds, "*");
     while ((nodeptr = nodeptr->next))
-    {
-        prepare_for_write("bind", nodeptr->left, nodeptr->right, 0, buffer);
-        cfputs(buffer, myfile);
-    }
+        cfcom(myfile, "bind", nodeptr->left, nodeptr->right, 0);
     zap_list(templist);
 
     for (int nr=0;nr<NHOOKS;nr++)
         if (ses->hooks[nr])
-        {
-            prepare_for_write("hook", hook_names[nr], ses->hooks[nr], 0, buffer);
-            cfputs(buffer, myfile);
-        }
+            cfcom(myfile, "hook", hook_names[nr], ses->hooks[nr], 0);
 
     fclose(myfile);
     tintin_printf(ses, "#COMMANDS-FILE WRITTEN.");
@@ -937,8 +910,7 @@ void writesession_command(const char *filename, struct session *ses)
         if ((val=get_hash(nullsession->aliases, nodeptr->left)))
             if (!strcmp(val, nodeptr->right))
                 continue;
-        prepare_for_write("alias", nodeptr->left, nodeptr->right, 0, buffer);
-        cfputs(buffer, myfile);
+        cfcom(myfile, "alias", nodeptr->left, nodeptr->right, 0);
     }
     zap_list(onptr);
 
@@ -949,9 +921,7 @@ void writesession_command(const char *filename, struct session *ses)
             if (!strcmp(onptr->right, nodeptr->right)||
                     !strcmp(onptr->right, nodeptr->right))
                 continue;
-        prepare_for_write("action", nodeptr->left, nodeptr->right, nodeptr->pr,
-                          buffer);
-        cfputs(buffer, myfile);
+        cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
     }
 
     nodeptr = ses->antisubs;
@@ -960,8 +930,7 @@ void writesession_command(const char *filename, struct session *ses)
         if ((onptr=searchnode_list(nullsession->antisubs, nodeptr->left)))
             if (!strcmp(onptr->right, nodeptr->right))
                 continue;
-        prepare_for_write("antisubstitute", nodeptr->left, 0, 0, buffer);
-        cfputs(buffer, myfile);
+        cfcom(myfile, "antisubstitute", nodeptr->left, 0, 0);
     }
 
     nodeptr = ses->subs;
@@ -971,10 +940,9 @@ void writesession_command(const char *filename, struct session *ses)
             if (!strcmp(onptr->right, nodeptr->right))
                 continue;
         if (strcmp( nodeptr->right, EMPTY_LINE))
-            prepare_for_write("sub", nodeptr->left, nodeptr->right, 0, buffer);
+            cfcom(myfile, "sub", nodeptr->left, nodeptr->right, 0);
         else
-            prepare_for_write("gag", nodeptr->left, 0, 0, buffer);
-        cfputs(buffer, myfile);
+            cfcom(myfile, "gag", nodeptr->left, 0, 0);
     }
 
     nodeptr = onptr = hash2list(ses->myvars, "*");
@@ -983,8 +951,7 @@ void writesession_command(const char *filename, struct session *ses)
         if ((val=get_hash(nullsession->myvars, nodeptr->left)))
             if (!strcmp(val, nodeptr->right))
                 continue;
-        prepare_for_write("var", nodeptr->left, nodeptr->right, 0, buffer);
-        cfputs(buffer, myfile);
+        cfcom(myfile, "var", nodeptr->left, nodeptr->right, 0);
     }
     zap_list(onptr);
 
@@ -994,8 +961,7 @@ void writesession_command(const char *filename, struct session *ses)
         if ((onptr=searchnode_list(nullsession->highs, nodeptr->left)))
             if (!strcmp(onptr->right, nodeptr->right))
                 continue;
-        prepare_for_write("highlight", nodeptr->right, nodeptr->left, 0, buffer);
-        cfputs(buffer, myfile);
+        cfcom(myfile, "highlight", nodeptr->right, nodeptr->left, 0);
     }
 
     nodeptr = onptr = hash2list(ses->pathdirs, "*");
@@ -1004,8 +970,7 @@ void writesession_command(const char *filename, struct session *ses)
         if ((val=get_hash(nullsession->pathdirs, nodeptr->left)))
             if (!strcmp(val, nodeptr->right))
                 continue;
-        prepare_for_write("pathdirs", nodeptr->left, nodeptr->right, 0, buffer);
-        cfputs(buffer, myfile);
+        cfcom(myfile, "pathdirs", nodeptr->left, nodeptr->right, 0);
     }
     zap_list(onptr);
 
@@ -1036,8 +1001,7 @@ void writesession_command(const char *filename, struct session *ses)
         if ((val=get_hash(nullsession->binds, nodeptr->left)))
             if (!strcmp(val, nodeptr->right))
                 continue;
-        prepare_for_write("bind", nodeptr->left, nodeptr->right, 0, buffer);
-        cfputs(buffer, myfile);
+        cfcom(myfile, "bind", nodeptr->left, nodeptr->right, 0);
     }
     zap_list(onptr);
 
@@ -1045,10 +1009,9 @@ void writesession_command(const char *filename, struct session *ses)
         if (ses->hooks[nr])
             if (!nullsession->hooks[nr] ||
                 strcmp(ses->hooks[nr], nullsession->hooks[nr]))
-                {
-                    prepare_for_write("hook", hook_names[nr], ses->hooks[nr], 0, buffer);
-                    cfputs(buffer, myfile);
-                }
+            {
+                cfcom(myfile, "hook", hook_names[nr], ses->hooks[nr], 0);
+            }
 
     fclose(myfile);
     tintin_printf(ses, "#COMMANDS-FILE WRITTEN.");
@@ -1056,16 +1019,18 @@ void writesession_command(const char *filename, struct session *ses)
 }
 
 
-static void prepare_for_write(const char *command, const char *left, const char *right, const char *pr, char *result)
+static void cfcom(FILE *f, const char *command, const char *left, const char *right, const char *pr)
 {
+    char buffer[BUFFER_SIZE*4], *b = buffer;
     /* "result" is four times as big as the regular buffer.  This is */
     /* pointless as read line are capped at 1/2 buffer anyway.       */
-    result+=sprintf(result, "%c%s {%s}", tintin_char, command, left);
+    b+=sprintf(b, "%c%s {%s}", tintin_char, command, left);
     if (right)
-        result+=sprintf(result, " {%s}", right);
+        b+=sprintf(b, " {%s}", right);
     if (pr && strlen(pr))
-        result+=sprintf(result, " {%s}", pr);
-    sprintf(result, "\n");
+        b+=sprintf(b, " {%s}", pr);
+    *b++='\n'; *b=0;
+    cfputs(buffer, f);
 }
 
 
