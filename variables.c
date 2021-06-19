@@ -1016,7 +1016,7 @@ void explode_command(const char *arg, struct session *ses)
 void implode_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], del[BUFFER_SIZE], right[BUFFER_SIZE],
-         res[BUFFER_SIZE], temp[BUFFER_SIZE], *r;
+         res[BUFFER_SIZE], temp[BUFFER_SIZE];
     const char *p;
 
     arg = get_arg(arg, left, 0, ses);
@@ -1027,8 +1027,8 @@ void implode_command(const char *arg, struct session *ses)
 
     int dellen=strlen(del);
     p = get_arg_in_braces(right, res, 0);
-    r=strchr(res, 0);
-    int len=r-res;
+    int len=strlen(res);
+    char *r = res+len;
     while (*p)
     {
         p = get_arg_in_braces(p, temp, 0);
