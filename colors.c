@@ -13,7 +13,7 @@ static char *MUDcolors[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_minus_token)
 {
-    int fg, bg, blink;
+    unsigned fg, bg, blink;
     const char *txt=*ptr;
 
     if (*(txt++)!='~')
