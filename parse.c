@@ -382,6 +382,9 @@ void init_parse(void)
     c_commands=init_hash();
     set_hash_nostring(commands, "end", (char*)end_command);
     set_hash_nostring(commands, "unlink", (char*)unlink_command);
+/* this terrible cast avoid gcc (-w → -Wcast-function-type) insisting it
+   still knows better despite an explicit cast */
+#define SC t_command)(void(*)(void)
 #include "load_commands.h"
 }
 
