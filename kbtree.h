@@ -48,7 +48,7 @@ typedef struct {
 } kbitr_t;
 
 #define	__KB_KEY(type, x)	((type*)((char*)x + 4))
-#define __KB_PTR(btr, x)	((kbnode_t**)((char*)x + btr->off_ptr))
+#define __KB_PTR(btr, x)	((kbnode_t**)((char*)x + (btr)->off_ptr))
 
 #define __KB_TREE_T(name)						\
 	typedef struct {							\
@@ -184,7 +184,7 @@ typedef struct {
 			if (i != x->n - 1)											\
 				memmove(__KB_KEY(key_t, x) + i + 2, __KB_KEY(key_t, x) + i + 1, (x->n - i - 1) * sizeof(key_t)); \
 			ret = &__KB_KEY(key_t, x)[i + 1];							\
-			*ret = *k;													\
+			*ret = (key_t)*k;													\
 			++x->n;														\
 		} else {														\
 			i = __kb_getp_aux_##name(x, k, 0) + 1;						\
@@ -223,7 +223,7 @@ typedef struct {
 		int yn, zn, i, r = 0;											\
 		kbnode_t *xp, *y, *z;											\
 		key_t kp;														\
-		if (x == 0) return *k;											\
+		if (x == 0) return (key_t)*k;											\
 		if (s) { /* s can only be 0, 1 or 2 */							\
 			r = x->is_internal == 0? 0 : s == 1? 1 : -1;				\
 			i = s == 1? x->n - 1 : -1;									\
@@ -248,7 +248,7 @@ typedef struct {
 				return kp;												\
 			} else if (yn == b->t - 1 && zn == b->t - 1) {				\
 				y = __KB_PTR(b, x)[i]; z = __KB_PTR(b, x)[i + 1];		\
-				__KB_KEY(key_t, y)[y->n++] = *k;						\
+				__KB_KEY(key_t, y)[y->n++] = (key_t)*k;						\
 				memmove(__KB_KEY(key_t, y) + y->n, __KB_KEY(key_t, z), z->n * sizeof(key_t)); \
 				if (y->is_internal) memmove(__KB_PTR(b, y) + y->n, __KB_PTR(b, z), (z->n + 1) * sizeof(void*)); \
 				y->n += z->n;											\
