@@ -13,7 +13,7 @@ KBtin_C_FILES=action.c alias.c antisub.c files.c glob.c help.c highlight.c\
 	math.c
 
 BUILT_SOURCES=commands.h load_commands.h $(KBtin_C_FILES:%.c=protos/%.h)
-KBtin_SOURCES=$(KBtin_C_FILES) tintin.h unicode.h translit.h malloc.h
+KBtin_SOURCES=$(KBtin_C_FILES) tintin.h unicode.h translit.h malloc.h kblib.h
 KBtin_LDADD=@ZLIB_LIBS@ @LIBICONV@ @GNUTLS_LIBS@
 
 AM_CFLAGS=-Wall
