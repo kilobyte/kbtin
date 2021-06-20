@@ -6,6 +6,7 @@
 /*                    New code by Bill Reiss 1993                     */
 /**********************************************************************/
 #include "tintin.h"
+#include "kbtree.h"
 #include "protos/action.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
@@ -25,6 +26,9 @@
 
 static void cfcom(FILE *f, const char *command, const char *left, const char *right, const char *pr);
 extern void char_command(const char *arg, struct session *ses);
+
+/**/ KBTREE_INIT(str, char*, strcmp)
+typedef kbtree_t(str) slist;
 
 /*******************************/
 /* expand tildes in a filename */
@@ -688,6 +692,8 @@ void write_command(const char *filename, struct session *ses)
     char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct listnode *nodeptr, *templist;
     struct routenode *rptr;
+    slist *sl;
+    kbitr_t itr;
 
     get_arg_in_braces(filename, buffer, 1);
     substitute_vars(buffer, fname);
@@ -753,9 +759,9 @@ void write_command(const char *filename, struct session *ses)
     while ((nodeptr = nodeptr->next))
         cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
 
-    nodeptr = ses->antisubs;
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "antisub", nodeptr->left, 0, 0);
+    sl = (slist*)ses->antisubs;
+    for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
+        cfcom(myfile, "antisub", kb_itr_key(char*, &itr), 0, 0);
 
     nodeptr = ses->subs;
     while ((nodeptr = nodeptr->next))
@@ -842,6 +848,8 @@ void writesession_command(const char *filename, struct session *ses)
     char buffer[BUFFER_SIZE*4], *val, num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct listnode *nodeptr, *onptr;
     struct routenode *rptr;
+    slist *sl, *orgsl;
+    kbitr_t itr;
 
     if (ses==nullsession)
     {
@@ -924,13 +932,13 @@ void writesession_command(const char *filename, struct session *ses)
         cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
     }
 
-    nodeptr = ses->antisubs;
-    while ((nodeptr = nodeptr->next))
+    sl = (slist*)ses->antisubs;
+    orgsl = (slist*)nullsession->antisubs;
+    for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
     {
-        if ((onptr=searchnode_list(nullsession->antisubs, nodeptr->left)))
-            if (!strcmp(onptr->right, nodeptr->right))
-                continue;
-        cfcom(myfile, "antisub", nodeptr->left, 0, 0);
+        char *p = kb_itr_key(char*, &itr);
+        if (!kb_get(str, orgsl, p))
+            cfcom(myfile, "antisub", p, 0, 0);
     }
 
     nodeptr = ses->subs;

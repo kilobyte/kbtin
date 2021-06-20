@@ -59,7 +59,7 @@ typedef struct {
 	} kbtree_##name##_t;
 
 #define __KB_INIT(name, key_t)											\
-	kbtree_##name##_t *kb_init_##name(int size)							\
+	static kbtree_##name##_t *kb_init_##name(int size)							\
 	{																	\
 		kbtree_##name##_t *b;											\
 		b = (kbtree_##name##_t*)calloc(1, sizeof(kbtree_##name##_t));	\

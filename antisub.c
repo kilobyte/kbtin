@@ -6,11 +6,16 @@
 /*********************************************************************/
 #include "tintin.h"
 #include "protos/action.h"
+#include "protos/glob.h"
 #include "protos/globals.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
+#include "protos/slist.h"
+#include "protos/utils.h"
+#include "kbtree.h"
 
+/**/ KBTREE_INIT(str, char*, strcmp)
+typedef kbtree_t(str) slist;
 
 /*******************************/
 /* the #antisubstitute command */
@@ -18,21 +23,19 @@
 void antisubstitute_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    struct listnode *myantisubs, *ln;
+    slist *ass = (slist*)ses->antisubs;
 
-    myantisubs = ses->antisubs;
     arg = get_arg_in_braces(arg, left, 1);
 
     if (!*left)
     {
         tintin_puts("#THESE ANTISUBSTITUTES HAS BEEN DEFINED:", ses);
-        show_list(myantisubs);
+        show_slist((struct slist*)ass);
     }
     else
     {
-        if ((ln = searchnode_list(myantisubs, left)))
-            deletenode_list(myantisubs, ln);
-        insertnode_list(myantisubs, left, left, 0, ALPHA);
+        if (!kb_get(str, ass, left))
+            kb_put(str, ass, mystrdup(left));
         antisubnum++;
         if (ses->mesvar[MSG_SUBSTITUTE])
             tintin_printf(ses, "Ok. Any line with {%s} will not be subbed.", left);
@@ -43,33 +46,65 @@ void antisubstitute_command(const char *arg, struct session *ses)
 void unantisubstitute_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    struct listnode *myantisubs, *ln, *temp;
-    bool flag = false;
+    bool had_any = false;
+    slist *ass = (slist*)ses->antisubs;
 
-    myantisubs = ses->antisubs;
-    temp = myantisubs;
-    arg = get_arg_in_braces(arg, left, 1);
-    while ((ln = search_node_with_wild(temp, left)))
+    get_arg_in_braces(arg, left, 1);
+
+    if (strchr(left, '*')) /* wildcard deletion -- have to check all */
     {
-        if (ses->mesvar[MSG_SUBSTITUTE])
-            tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", ln->left);
-        deletenode_list(myantisubs, ln);
-        flag = true;
+        kbitr_t itr;
+        char **todel = malloc(kb_size(ass) * sizeof(char*));
+        char **last = todel;
+
+        for (kb_itr_first(str, ass, &itr); kb_itr_valid(&itr); kb_itr_next(str, ass, &itr))
+        {
+            char *p = kb_itr_key(char*, &itr);
+            if (match(left, p))
+                *last++ = p;
+        }
+
+        if (last!=todel)
+        {
+            had_any = true;
+            for (char **del = todel; del != last; del++)
+            {
+                if (ses->mesvar[MSG_SUBSTITUTE])
+                    tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", *del);
+                kb_del(str, ass, *del);
+                free(*del);
+            }
+        }
+        free(todel);
     }
-    if (!flag && ses->mesvar[MSG_SUBSTITUTE])
+    else /* single item deletion */
+    {
+        char *str = *kb_get(str, ass, left);
+        if ((had_any = !!str))
+        {
+            if (ses->mesvar[MSG_SUBSTITUTE])
+                tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", left);
+            kb_del(str, ass, left);
+            free(str);
+        }
+    }
+
+    if (!had_any && ses->mesvar[MSG_SUBSTITUTE])
         tintin_printf(ses, "#THAT ANTISUBSTITUTE (%s) IS NOT DEFINED.", left);
 }
 
 
 bool do_one_antisub(const char *line, struct session *ses)
 {
-    struct listnode *ln;
+    slist *ass = (slist*)ses->antisubs;
     pvars_t vars;
+    kbitr_t itr;
 
-    ln = ses->antisubs;
-
-    while ((ln = ln->next))
-        if (check_one_action(line, ln->left, &vars, false, ses))
+    for (kb_itr_first(str, ass, &itr); kb_itr_valid(&itr); kb_itr_next(str, ass, &itr))
+    {
+        const char *p = kb_itr_key(char*, &itr);
+        if (check_one_action(line, p, &vars, false, ses))
             return true;
+    }
     return false;
 }

@@ -23,6 +23,7 @@
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/session.h"
+#include "protos/slist.h"
 #include "protos/substitute.h"
 #include "protos/ticks.h"
 #include "protos/unicode.h"
@@ -221,7 +222,7 @@ static void init_nullses(void)
     nullsession->last_term_type=0;
     nullsession->server_echo = 0;
     nullsession->nagle = false;
-    nullsession->antisubs = init_list();
+    nullsession->antisubs = init_slist();
     nullsession->binds = init_hash();
     nullsession->next = 0;
     nullsession->sessionstart=nullsession->idle_since=

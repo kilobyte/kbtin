@@ -17,6 +17,7 @@
 #include "protos/parse.h"
 #include "protos/routes.h"
 #include "protos/run.h"
+#include "protos/slist.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
@@ -295,7 +296,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->highs = copy_list(ses->highs, ALPHA);
     newsession->pathdirs = copy_hash(ses->pathdirs);
     newsession->socket = sock;
-    newsession->antisubs = copy_list(ses->antisubs, ALPHA);
+    newsession->antisubs = copy_slist(ses->antisubs);
     newsession->binds = copy_hash(ses->binds);
     newsession->issocket = issocket;
     newsession->naws = !issocket;

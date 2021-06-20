@@ -253,6 +253,8 @@ struct listnode
     char *left, *right, *pr;
 };
 
+struct slist;
+
 struct hashentry
 {
     char *left;
@@ -316,7 +318,8 @@ struct session
     char *loginputprefix, *loginputsuffix;
     logtype_t logtype;
     bool ignore;
-    struct listnode *actions, *prompts, *subs, *highs, *antisubs;
+    struct listnode *actions, *subs, *prompts, *highs;
+    struct slist *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds;
     struct listnode *path;
     struct routenode *routes[MAX_LOCATIONS];
