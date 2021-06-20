@@ -397,7 +397,7 @@ void cleanup_session(struct session *ses)
     }
     sprintf(buf, "#SESSION '%s' DIED.", ses->name);
     tintin_puts(buf, NULL);
-    if (close(ses->socket) == -1)
+    if (ses->socket && close(ses->socket) == -1)
         syserr("close in cleanup");
     if (ses->logfile)
         log_off(ses);
