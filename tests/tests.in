@@ -905,3 +905,23 @@ m 4.6%2.1 0.4
 >>>
 Error: T => 1 expected F
 ===
+
+### #antisub
+<<<
+#var todo {{#anti foo} {#unanti foo} {#anti bar;#anti baz} {#unanti b*} {#end}}
+#act GO {#show .;#split cur todo {$todo};#if 1 {$$cur};foo;bar;baz;quux;GO}
+#run a cat
+#gag {%0}
+GO
+>>>
+.
+foo
+.
+.
+bar
+baz
+.
+.
+
+#SESSION 'a' DIED.
+===
