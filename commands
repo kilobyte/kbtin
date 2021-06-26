@@ -153,11 +153,6 @@ hooks
 unhook
 logcomment
 gagthis
-
-#ifdef PROFILING
-profile
-#endif
-
 charset
 logcharset
 

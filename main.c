@@ -22,7 +22,6 @@
 #include "protos/misc.h"
 #include "protos/net.h"
 #include "protos/parse.h"
-#include "protos/prof.h"
 #include "protos/session.h"
 #include "protos/substitute.h"
 #include "protos/ticks.h"
@@ -473,13 +472,8 @@ ever wants to read -- that is what docs are for.
     user_mark_greeting();
 
     setup_signals();
-#ifdef PROFILING
-    setup_prof();
-#endif
-    PROF("initializing");
     setup_ulimit();
     init_nullses();
-    PROF("other");
     apply_options();
     tintin();
     return 0;
@@ -581,8 +575,6 @@ static void tintin(void)
 
         if (FD_ISSET(0, &readfdmask))
         {
-            PROFSTART;
-            PROFPUSH("user interface");
             result=read(0, kbdbuf+inbuf, BUFFER_SIZE-inbuf);
             if (result==-1)
                 myquitsig(0);
@@ -637,9 +629,7 @@ static void tintin(void)
                 }
             }
             inbuf=0;
-        partial:
-            PROFEND(kbd_lag, kbd_cnt);
-            PROFPOP;
+        partial:;
         }
         for (struct session *ses = sessionlist; ses; ses = ses->next)
         {
@@ -686,7 +676,6 @@ static void read_mud(struct session *ses)
     char temp[BUFFER_SIZE];
     int didget, count;
 
-    PROFSTART;
     if ((didget = read_buffer_mud(buffer, ses))==-1)
     {
         cleanup_session(ses);
@@ -786,7 +775,6 @@ static void read_mud(struct session *ses)
             do_one_line(linebuffer, 0, ses);
             ses->drafted=true;
         }
-    PROFEND(mud_lag, mud_cnt);
 }
 
 /**********************************************************/
@@ -802,10 +790,8 @@ static void do_one_line(char *line, int nl, struct session *ses)
         t = current_time();
     if (!ses->drafted)
         ses->linenum++;
-    PROFPUSH("conv: remote->utf8");
     convert(&ses->c_io, ubuf, line, -1);
 # define line ubuf
-    PROF("looking for passwords");
     switch (ses->server_echo)
     {
     case 0:
@@ -826,25 +812,18 @@ static void do_one_line(char *line, int nl, struct session *ses)
         }
     }
     _=line;
-    PROF("processing incoming colors");
     do_in_MUD_colors(line, false, ses);
     isnb=isnotblank(line, false);
-    PROF("promptactions");
     if (!ses->ignore && (nl||isnb))
         check_all_promptactions(line, ses);
-    PROF("actions");
     if (nl && !ses->presub && !ses->ignore)
         check_all_actions(line, ses);
-    PROF("substitutions");
     if (!ses->togglesubs && (nl||isnb) && !do_one_antisub(line, ses))
         do_all_sub(line, ses);
-    PROF("actions");
     if (nl && ses->presub && !ses->ignore)
         check_all_actions(line, ses);
-    PROF("highlights");
     if (isnb&&!ses->togglesubs)
         do_all_high(line, ses);
-    PROF("display");
     if (isnotblank(line, ses->blank))
     {
         if (ses==activesession)
@@ -876,7 +855,6 @@ static void do_one_line(char *line, int nl, struct session *ses)
         else if (ses->snoopstatus)
             snoop(line, ses);
     }
-    PROFPOP;
     _=0;
 #undef line
 

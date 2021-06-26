@@ -2,7 +2,6 @@
 #include <locale.h>
 #include "tintin.h"
 #include "translit.h"
-#include "protos/prof.h"
 #include "protos/utils.h"
 
 char *user_charset_name;
@@ -208,11 +207,9 @@ void utf8_to_local(char *d, const char *s)
 {
     mbstate_t cs;
 
-    PROFPUSH("conv: utf8->local");
     memset(&cs, 0, sizeof(cs));
     utf8_to_mb(&d, s, &cs);
     *d=0;
-    PROFPOP;
 }
 
 void local_to_utf8(char *d, const char *s, int maxb, mbstate_t *cs)
@@ -221,7 +218,6 @@ void local_to_utf8(char *d, const char *s, int maxb, mbstate_t *cs)
     int len, n;
     wchar_t c;
 
-    PROFPUSH("conv: local->utf8");
     if (!cs)
     {
         memset(&cs0, 0, sizeof(cs0));
@@ -251,7 +247,6 @@ void local_to_utf8(char *d, const char *s, int maxb, mbstate_t *cs)
     }
 out:
     *d=0;
-    PROFPOP;
 }
 
 int utf8_width(char *s)

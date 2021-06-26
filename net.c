@@ -16,7 +16,6 @@
 #include "protos/hooks.h"
 #include "protos/math.h"
 #include "protos/print.h"
-#include "protos/prof.h"
 #include "protos/run.h"
 #include "protos/telnet.h"
 #include "protos/unicode.h"
@@ -162,9 +161,7 @@ static void alarm_func(int k)
 void write_line_mud(const char *line, struct session *ses)
 {
     char rstr[BUFFER_SIZE];
-    PROFPUSH("conv: utf8->remote");
     convert(&ses->c_io, rstr, line, 1);
-    PROFPOP;
 
     if (*line)
         ses->idle_since=current_time();

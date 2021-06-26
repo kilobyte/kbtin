@@ -35,7 +35,6 @@ manual.html
 *.orig
 *~
 package.m4
-profinit.h
 protos
 protos.h
 stamp-h

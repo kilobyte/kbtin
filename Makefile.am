@@ -8,11 +8,11 @@ AUTOMAKE_OPTIONS = foreign
 KBtin_C_FILES=action.c alias.c antisub.c files.c glob.c help.c highlight.c\
 	history.c ivars.c llist.c main.c misc.c net.c parse.c path.c session.c\
 	substitute.c ticks.c utils.c variables.c events.c user.c run.c colors.c\
-	routes.c bind.c telnet.c hash.c regexp.c prof.c hooks.c unicode.c\
+	routes.c bind.c telnet.c hash.c regexp.c hooks.c unicode.c\
 	user_pipe.c user_tty.c wcwidth.c chinese.c print.c ssl.c pty.c globals.c\
 	math.c
 
-BUILT_SOURCES=commands.h load_commands.h profinit.h $(KBtin_C_FILES:%.c=protos/%.h)
+BUILT_SOURCES=commands.h load_commands.h $(KBtin_C_FILES:%.c=protos/%.h)
 KBtin_SOURCES=$(KBtin_C_FILES) tintin.h unicode.h translit.h malloc.h
 KBtin_LDADD=@ZLIB_LIBS@ @LIBICONV@ @GNUTLS_LIBS@
 
@@ -20,7 +20,7 @@ AM_CFLAGS=-Wall
 
 KBtin_DOCS=BUGS OLDNEWS KEYPAD FAQ
 EXTRA_DIST=KBtin_help commands make_commands $(man_MANS) help2ansi \
-	fixmanual terminfo.src prof_init kbtin.ico make_protos $(KBtin_DOCS) \
+	fixmanual terminfo.src kbtin.ico make_protos $(KBtin_DOCS) \
 	autogen.sh VERSION get_version a2html
 CLEANFILES=$(BUILT_SOURCES) KBtin_help.gz manual.html
 
@@ -59,9 +59,6 @@ commands.h: make_commands commands tintin.h
 	$(srcdir)/make_commands <$(srcdir)/commands
 
 load_commands.h: commands make_commands commands.h
-
-profinit.h: $(KBtin_C_FILES) prof_init
-	$(srcdir)/prof_init $(srcdir) $(KBtin_C_FILES)
 
 $(KBtin_C_FILES:%.c=protos/%.h): protos/%.h: %.c make_protos
 	$(QUIET_PROTO)$(srcdir)/make_protos $(srcdir) $*.c
