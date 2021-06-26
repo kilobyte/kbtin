@@ -33,7 +33,8 @@ Files:
 Comments:
    nop         remark
 Variables:
-   math        random      variable    unvariable  initvariable
+   math        random      variable    unvariable  initvariable sin cos
+   angle
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
    substring   prepad      postpad     reverse     strlen      atoi
@@ -1781,6 +1782,38 @@ This is merely a convenience over:
 
 Example:
 #init count 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~angle
+
+inline (#angle <x> <y>)
+This function calculates 360°-based angle that points towards coordinates
+<x>,<y>; both the angle and coordinates use the usual mathematical orientation
+-- that is, angle 0° goes to the east, 90° to the north; positive x coordinate
+goes eastwards, positive y northwards.
+
+If you want clock-like orientation and y going south, the formula to do so is:
+    (450 - #angle x -y) % 360
+
+Examples:
+#math a #angle 1 0  → 0
+#math a #angle 1 1  → 45
+#math a #angle 0 1  → 90
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~sin
+
+inline (#sin <a>)
+This function returns sinus of 360°-based angle <a>.
+
+Examples:
+#math a #sinus 90  → 1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~cos
+
+inline (#cos <a>)
+This function returns cosinus of 360°-based angle <a>.
+
+Examples:
+#math a #cosinus 90  → 0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab

@@ -5,12 +5,14 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
+#include <math.h>
 #include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/chinese.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
+#include "protos/ivars.h"
 #include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
@@ -1650,4 +1652,64 @@ void initvariable_command(const char* arg, struct session* ses)
         tintin_eprintf(ses, "#Syntax: #initvar <var> <value>");
     else if (!get_hash(ses->myvars, left))
         set_variable(left, right, ses);
+}
+
+/*********************/
+/* the #angle inline */
+/*********************/
+num_t angle_inline(const char *line, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    line = get_arg(line, left, 0, ses);
+    line = get_arg(line, right, 1, ses);
+    if (!*left || !*right)
+    {
+        tintin_eprintf(ses, "#Error: #angle requires two args.");
+        return 0;
+    }
+
+    num_t x = eval_expression(left, ses);
+    num_t y = eval_expression(right, ses);
+
+    num_t a = atan2(y, x) * 180 * M_1_PI * DENOM;
+    if (a < 0)
+        a += 360*DENOM;
+    return a;
+}
+
+/*******************/
+/* the #sin inline */
+/*******************/
+num_t sinus_inline(const char *line, struct session *ses)
+{
+    char arg[BUFFER_SIZE];
+
+    line = get_arg(line, arg, 1, ses);
+    if (!*arg)
+    {
+        tintin_eprintf(ses, "#Error: #sin require an argument.");
+        return 0;
+    }
+
+    num_t x = eval_expression(arg, ses);
+    return sin(x * M_PI / 180 / DENOM) * DENOM;
+}
+
+/*******************/
+/* the #cos inline */
+/*******************/
+num_t cosinus_inline(const char *line, struct session *ses)
+{
+    char arg[BUFFER_SIZE];
+
+    line = get_arg(line, arg, 1, ses);
+    if (!*arg)
+    {
+        tintin_eprintf(ses, "#Error: #cos require an argument.");
+        return 0;
+    }
+
+    num_t x = eval_expression(arg, ses);
+    return cos(x * M_PI / 180 / DENOM) * DENOM;
 }

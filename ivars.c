@@ -78,7 +78,7 @@ struct session *if_command(const char *line, struct session *ses)
 }
 
 
-static bool do_inline(const char *line, int *res, struct session *ses)
+static bool do_inline(const char *line, num_t *res, struct session *ses)
 {
     char command[BUFFER_SIZE], *ptr;
     struct stacks savestacks[100];
@@ -95,23 +95,29 @@ static bool do_inline(const char *line, int *res, struct session *ses)
        tintin_printf(ses, "#executing inline command [%c%s] with [%s]", tintin_char, command, line);
     */
     if (is_abrev(command, "finditem"))
-        *res=finditem_inline(line, ses);
+        *res=N(finditem_inline(line, ses));
     else if (is_abrev(command, "isatom"))
-        *res=isatom_inline(line, ses);
+        *res=N(isatom_inline(line, ses));
     else if (is_abrev(command, "listlength"))
-        *res=listlength_inline(line, ses);
+        *res=N(listlength_inline(line, ses));
     else if (is_abrev(command, "strlen"))
-        *res=strlen_inline(line, ses);
+        *res=N(strlen_inline(line, ses));
     else if (is_abrev(command, "random"))
-        *res=random_inline(line, ses);
+        *res=N(random_inline(line, ses));
     else if (is_abrev(command, "grep"))
-        *res=grep_inline(line, ses);
+        *res=N(grep_inline(line, ses));
     else if (is_abrev(command, "strcmp"))
-        *res=strcmp_inline(line, ses);
+        *res=N(strcmp_inline(line, ses));
     else if (is_abrev(command, "match"))
-        *res=match_inline(line, ses);
+        *res=N(match_inline(line, ses));
     else if (is_abrev(command, "ord"))
-        *res=ord_inline(line, ses);
+        *res=N(ord_inline(line, ses));
+    else if (is_abrev(command, "angle"))
+        *res=angle_inline(line, ses);
+    else if (is_abrev(command, "sinus"))
+        *res=sinus_inline(line, ses);
+    else if (is_abrev(command, "cosinus"))
+        *res=cosinus_inline(line, ses);
     else
     {
         tintin_eprintf(ses, "#Unknown inline command [%c%s]!", tintin_char, command);
@@ -187,10 +193,10 @@ static bool conv_to_nums(char *arg, struct session *ses)
             /* inline commands */
         {
             ptr=(char*)get_inline(ptr+1, temp)-1;
-            int res;
+            num_t res;
             if (!do_inline(temp, &res, ses))
                 return false;
-            stacks[i].val=N(res);
+            stacks[i].val=res;
             stacks[i].prio=15;
         }
         /* jku: comparing strings with = and != */
