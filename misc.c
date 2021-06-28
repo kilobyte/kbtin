@@ -342,7 +342,10 @@ void end_command(const char *arg, struct session *ses)
     do_hook(nullsession, HOOK_END, 0, true);
 #ifdef HAVE_VALGRIND_VALGRIND_H
     if (RUNNING_ON_VALGRIND)
+    {
         cleanup_session(nullsession);
+        cleanup_parse();
+    }
 #endif
     activesession = NULL;
     if (ui_own_output)

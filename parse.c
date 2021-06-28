@@ -358,6 +358,12 @@ void init_parse(void)
 #include "load_commands.h"
 }
 
+void cleanup_parse(void)
+{
+    kill_hash_nostring(commands);
+    kill_hash_nostring(c_commands);
+}
+
 
 /**********************************************/
 /* get all arguments - don't remove "s and \s */

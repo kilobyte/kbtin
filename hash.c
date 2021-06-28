@@ -55,6 +55,18 @@ void kill_hash(struct hashtable* h)
     TFREE(h, struct hashtable);
 }
 
+void kill_hash_nostring(struct hashtable* h)
+{
+    if (h->nval)
+        for (int i=0; i<h->size; i++)
+        {
+            if (h->tab[i].left && (h->tab[i].left!=DELETED_HASHENTRY))
+                SFREE(h->tab[i].left);
+        }
+    CFREE(h->tab, h->size, struct hashentry);
+    TFREE(h, struct hashtable);
+}
+
 
 static inline void add_hash_value(struct hashtable *h, char *left, char *right)
 {
