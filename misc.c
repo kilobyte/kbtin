@@ -15,6 +15,7 @@
 #include "protos/files.h"
 #include "protos/globals.h"
 #include "protos/highlight.h"
+#include "protos/history.h"
 #include "protos/hooks.h"
 #include "protos/llist.h"
 #include "protos/print.h"
@@ -347,6 +348,7 @@ void end_command(const char *arg, struct session *ses)
         cleanup_session(nullsession);
         cleanup_parse();
         cleanup_bind();
+        cleanup_history();
     }
 #endif
     activesession = NULL;
