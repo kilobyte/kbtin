@@ -12,7 +12,7 @@
 #include "protos/utils.h"
 #include "protos/variables.h"
 
-static struct
+static struct stacks
 {
     int pos;
     int prio;
@@ -81,6 +81,10 @@ struct session *if_command(const char *line, struct session *ses)
 static bool do_inline(const char *line, int *res, struct session *ses)
 {
     char command[BUFFER_SIZE], *ptr;
+    struct stacks savestacks[100];
+
+    _Static_assert(sizeof(savestacks) == sizeof(stacks), "stacks size mismatch");
+    memcpy(savestacks, stacks, sizeof(savestacks));
 
     ptr=command;
     while (*line&&(*line!=' '))
@@ -114,6 +118,7 @@ static bool do_inline(const char *line, int *res, struct session *ses)
         return false;
     }
 
+    memcpy(stacks, savestacks, sizeof(savestacks));
     return true;
 }
 
