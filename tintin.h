@@ -241,10 +241,13 @@ enum
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
+#include "kbtree.h"
 
 typedef int64_t num_t;
 typedef int64_t timens_t;
 #define NANO 1000000000LL
+
+KBTREE_HEADER(str, char*, strcmp)
 
 /************************ structures *********************/
 struct listnode

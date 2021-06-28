@@ -27,7 +27,6 @@
 static void cfcom(FILE *f, const char *command, const char *left, const char *right, const char *pr);
 extern void char_command(const char *arg, struct session *ses);
 
-/**/ KBTREE_INIT(str, char*, strcmp)
 typedef kbtree_t(str) slist;
 
 /*******************************/

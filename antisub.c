@@ -14,7 +14,6 @@
 #include "protos/utils.h"
 #include "kbtree.h"
 
-/**/ KBTREE_INIT(str, char*, strcmp)
 typedef kbtree_t(str) slist;
 
 /*******************************/

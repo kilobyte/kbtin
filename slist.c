@@ -2,7 +2,7 @@
 #include "kbtree.h"
 #include "protos/print.h"
 
-/**/ KBTREE_INIT(str, char*, strcmp)
+/**/ KBTREE_CODE(str, char*, strcmp)
 typedef kbtree_t(str) slist;
 
 struct slist* init_slist(void)
