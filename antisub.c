@@ -14,22 +14,20 @@
 #include "protos/utils.h"
 #include "kbtree.h"
 
-typedef kbtree_t(str) slist;
-
 /*******************************/
 /* the #antisubstitute command */
 /*******************************/
 void antisubstitute_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    slist *ass = (slist*)ses->antisubs;
+    kbtree_t(str) *ass = ses->antisubs;
 
     arg = get_arg_in_braces(arg, left, 1);
 
     if (!*left)
     {
         tintin_puts("#THESE ANTISUBSTITUTES HAS BEEN DEFINED:", ses);
-        show_slist((struct slist*)ass);
+        show_slist(ass);
     }
     else
     {
@@ -46,7 +44,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
     bool had_any = false;
-    slist *ass = (slist*)ses->antisubs;
+    kbtree_t(str) *ass = ses->antisubs;
 
     get_arg_in_braces(arg, left, 1);
 
@@ -95,7 +93,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
 
 bool do_one_antisub(const char *line, struct session *ses)
 {
-    slist *ass = (slist*)ses->antisubs;
+    kbtree_t(str) *ass = ses->antisubs;
     pvars_t vars;
     kbitr_t itr;
 

@@ -27,8 +27,6 @@
 static void cfcom(FILE *f, const char *command, const char *left, const char *right, const char *pr);
 extern void char_command(const char *arg, struct session *ses);
 
-typedef kbtree_t(str) slist;
-
 /*******************************/
 /* expand tildes in a filename */
 /********************************************/
@@ -691,7 +689,7 @@ void write_command(const char *filename, struct session *ses)
     char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct listnode *nodeptr, *templist;
     struct routenode *rptr;
-    slist *sl;
+    kbtree_t(str) *sl;
     kbitr_t itr;
 
     get_arg_in_braces(filename, buffer, 1);
@@ -758,7 +756,7 @@ void write_command(const char *filename, struct session *ses)
     while ((nodeptr = nodeptr->next))
         cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
 
-    sl = (slist*)ses->antisubs;
+    sl = ses->antisubs;
     for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
         cfcom(myfile, "antisub", kb_itr_key(char*, &itr), 0, 0);
 
@@ -847,7 +845,7 @@ void writesession_command(const char *filename, struct session *ses)
     char buffer[BUFFER_SIZE*4], *val, num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct listnode *nodeptr, *onptr;
     struct routenode *rptr;
-    slist *sl, *orgsl;
+    kbtree_t(str) *sl, *orgsl;
     kbitr_t itr;
 
     if (ses==nullsession)
@@ -931,8 +929,8 @@ void writesession_command(const char *filename, struct session *ses)
         cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
     }
 
-    sl = (slist*)ses->antisubs;
-    orgsl = (slist*)nullsession->antisubs;
+    sl = ses->antisubs;
+    orgsl = nullsession->antisubs;
     for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
     {
         char *p = kb_itr_key(char*, &itr);

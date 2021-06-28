@@ -256,8 +256,6 @@ struct listnode
     char *left, *right, *pr;
 };
 
-struct slist;
-
 struct hashentry
 {
     char *left;
@@ -322,7 +320,7 @@ struct session
     logtype_t logtype;
     bool ignore;
     struct listnode *actions, *subs, *prompts, *highs;
-    struct slist *antisubs;
+    kbtree_t(str) *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds;
     struct listnode *path;
     struct routenode *routes[MAX_LOCATIONS];

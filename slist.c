@@ -3,28 +3,25 @@
 #include "protos/print.h"
 
 /**/ KBTREE_CODE(str, char*, strcmp)
-typedef kbtree_t(str) slist;
 
-struct slist* init_slist(void)
+kbtree_t(str)* init_slist(void)
 {
-    return (struct slist*)kb_init(str, KB_DEFAULT_SIZE);
+    return kb_init(str, KB_DEFAULT_SIZE);
 }
 
-void kill_slist(struct slist* s)
+void kill_slist(kbtree_t(str) *l)
 {
-    slist *l = (slist*)s;
     kbitr_t itr;
 
     kb_itr_first(str, l, &itr);
     for (; kb_itr_valid(&itr); kb_itr_next(str, l, &itr))
         free(kb_itr_key(char*, &itr));
 
-    kb_destroy(str, (slist*)s);
+    kb_destroy(str, l);
 }
 
-void show_slist(struct slist* s)
+void show_slist(kbtree_t(str) *l)
 {
-    slist *l = (slist*)s;
     kbitr_t itr;
 
     kb_itr_first(str, l, &itr);
@@ -35,10 +32,9 @@ void show_slist(struct slist* s)
     }
 }
 
-struct slist* copy_slist(struct slist *src)
+kbtree_t(str) *copy_slist(kbtree_t(str) *a)
 {
-    slist *a = (slist*)src;
-    slist *b = kb_init(str, KB_DEFAULT_SIZE);
+    kbtree_t(str) *b = kb_init(str, KB_DEFAULT_SIZE);
     kbitr_t itr;
 
     kb_itr_first(str, a, &itr);
@@ -48,10 +44,10 @@ struct slist* copy_slist(struct slist *src)
         kb_put(str, b, p);
     }
 
-    return (struct slist*)b;
+    return b;
 }
 
-int count_slist(struct slist *s)
+int count_slist(kbtree_t(str) *s)
 {
-    return kb_size((slist*)s);
+    return kb_size(s);
 }
