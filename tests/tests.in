@@ -964,7 +964,7 @@ baz
 -----
 #charset {UTF-8}
 #alias {bar} {a}
-#antisubstitute {bar}
+#antisub {bar}
 #sub {bar} {a}
 #var {bar} {a}
 #route {bar} {baz} {e} 10

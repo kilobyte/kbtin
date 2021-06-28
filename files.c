@@ -930,7 +930,7 @@ void writesession_command(const char *filename, struct session *ses)
         if ((onptr=searchnode_list(nullsession->antisubs, nodeptr->left)))
             if (!strcmp(onptr->right, nodeptr->right))
                 continue;
-        cfcom(myfile, "antisubstitute", nodeptr->left, 0, 0);
+        cfcom(myfile, "antisub", nodeptr->left, 0, 0);
     }
 
     nodeptr = ses->subs;
