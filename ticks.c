@@ -26,8 +26,8 @@ void tick_command(const char *arg, struct session *ses)
         timens_t to_tick;
 
         to_tick = ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
-        sprintf(buf, "THERE'S NOW %lld.%06d SECONDS TO NEXT TICK.",
-            to_tick/NANO, usec(to_tick));
+        sprintf(buf, "THERE'S NOW %lld.%03d SECONDS TO NEXT TICK.",
+            to_tick/NANO, msec(to_tick));
         tintin_puts(buf, ses);
     }
     else

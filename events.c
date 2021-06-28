@@ -9,12 +9,12 @@
 #include "protos/variables.h"
 
 
-int usec(timens_t t)
+int msec(timens_t t)
 {
     t%=NANO;
     if (t<0)
         t+=NANO;
-    return t/1000;
+    return t/1000000;
 }
 
 void execute_event(struct eventnode *ev, struct session *ses)
@@ -48,8 +48,8 @@ static void list_events(const char *arg, struct session *ses)
         tintin_printf(ses, "#Defined events:");
         while (ev)
         {
-            tintin_printf(ses, "(%d.%06d)\t {%s}", (int)((ev->time-ct)/NANO),
-                usec(ev->time-ct), ev->event);
+            tintin_printf(ses, "(%d.%03d)\t {%s}", (int)((ev->time-ct)/NANO),
+                msec(ev->time-ct), ev->event);
             ev = ev->next;
         }
     }
@@ -60,8 +60,8 @@ static void list_events(const char *arg, struct session *ses)
         {
             if (match(left, ev->event))
             {
-                tintin_printf(ses, "(%d.%06d)\t {%s}", (ev->time-ct)/NANO,
-                    usec(ev->time-ct), ev->event);
+                tintin_printf(ses, "(%d.%03d)\t {%s}", (ev->time-ct)/NANO,
+                    msec(ev->time-ct), ev->event);
                 flag = true;
             }
             ev = ev->next;
@@ -182,8 +182,8 @@ void undelay_command(const char *arg, struct session *ses)
         {
             flag=true;
             if (ses==activesession && ses->mesvar[MSG_EVENT])
-                tintin_printf(ses, "#Ok. Event {%s} at %ld.%06ld won't be executed.",
-                    (*ev)->event, ((*ev)->time-ct)/NANO, usec((*ev)->time-ct));
+                tintin_printf(ses, "#Ok. Event {%s} at %ld.%03ld won't be executed.",
+                    (*ev)->event, ((*ev)->time-ct)/NANO, msec((*ev)->time-ct));
             remove_event(ev);
         }
         else
