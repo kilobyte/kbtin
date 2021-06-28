@@ -132,7 +132,7 @@ void set_hash(struct hashtable *h, const char *key, const char *value)
 }
 
 
-void set_hash_nostring(struct hashtable *h, const char *key, char *value)
+void set_hash_nostring(struct hashtable *h, const char *key, const char *value)
 {
     if (h->nent*5 > h->size*4)
         rehash(h, h->nval*3);
@@ -145,7 +145,7 @@ void set_hash_nostring(struct hashtable *h, const char *key, char *value)
                 j=i;
         if (!strcmp(h->tab[i].left, key))
         {
-            h->tab[i].right=value;
+            h->tab[i].right=(char*)value;
             return;
         }
         if (!i)
@@ -157,7 +157,7 @@ void set_hash_nostring(struct hashtable *h, const char *key, char *value)
     else
         h->nent++;
     h->tab[i].left = mystrdup(key);
-    h->tab[i].right= value;
+    h->tab[i].right= (char*)value;
     h->nval++;
 }
 

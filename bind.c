@@ -3,6 +3,7 @@
 #include "protos/alias.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
+#include "protos/misc.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/user.h"
@@ -195,15 +196,20 @@ void init_bind(void)
     if (!ui_keyboard)
         return;
     for (const char**n=KEYNAMES;**n;n+=2)
-        set_hash(keynames, n[0], n[1]);
+        set_hash_nostring(keynames, n[0], n[1]);
+}
+
+void cleanup_bind(void)
+{
+    kill_hash_nostring(keynames);
 }
 
 void bind_xterm(bool xterm)
 {
     if (xterm)
         for (const char**n=XTERM_KEYNAMES;**n;n+=2)
-            set_hash(keynames, n[0], n[1]);
+            set_hash_nostring(keynames, n[0], n[1]);
     else
         for (const char**n=NORMAL_KEYNAMES;**n;n+=2)
-            set_hash(keynames, n[0], n[1]);
+            set_hash_nostring(keynames, n[0], n[1]);
 }

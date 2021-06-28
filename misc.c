@@ -10,6 +10,7 @@
 #ifdef HAVE_VALGRIND_VALGRIND_H
 #include <valgrind/valgrind.h>
 #endif
+#include "protos/bind.h"
 #include "protos/colors.h"
 #include "protos/files.h"
 #include "protos/globals.h"
@@ -345,6 +346,7 @@ void end_command(const char *arg, struct session *ses)
     {
         cleanup_session(nullsession);
         cleanup_parse();
+        cleanup_bind();
     }
 #endif
     activesession = NULL;
