@@ -949,7 +949,7 @@ baz
 #end
 >>>
 #COMMANDS-FILE WRITTEN.
-#COMMANDS-FILE WRITTEN.
+#DELTA COMMANDS FILE WRITTEN.
 #charset {UTF-8}
 #alias {bar} {a}
 #alias {foo} {a}

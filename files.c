@@ -845,7 +845,7 @@ void writesession_command(const char *filename, struct session *ses)
 
     if (ses==nullsession)
     {
-        write_command(filename, ses);
+        tintin_eprintf(ses, "#THIS IS THE NULL SESSION -- NO DELTA!");
         return;
     }
 
@@ -1014,7 +1014,7 @@ void writesession_command(const char *filename, struct session *ses)
             }
 
     fclose(myfile);
-    tintin_printf(ses, "#COMMANDS-FILE WRITTEN.");
+    tintin_printf(ses, "#DELTA COMMANDS FILE WRITTEN.");
     return;
 }
 
