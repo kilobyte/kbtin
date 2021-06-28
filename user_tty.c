@@ -12,6 +12,9 @@
 #endif
 #include <assert.h>
 #include <sys/ioctl.h>
+#ifdef HAVE_VALGRIND_VALGRIND_H
+#include <valgrind/valgrind.h>
+#endif
 
 static mbstate_t outstate;
 #define OUTSTATE &outstate
@@ -389,7 +392,7 @@ static void b_addline(void)
     strcpy(new, out_line);
     if (b_bottom==b_first+CONSOLE_LENGTH)
         b_shorten();
-    b_output[(unsigned int)b_current%(unsigned int)CONSOLE_LENGTH]=new;
+    b_output[b_current%CONSOLE_LENGTH]=new;
     o_pos=0;
     o_len=setcolor(out_line, o_oldcolor=o_color);
     if (b_bottom<++b_current)
@@ -1589,9 +1592,9 @@ static void usertty_init(void)
     in_getpassword=false;
 
     b_first=0;
-    b_current=-1;
-    b_bottom=-1;
-    b_screenb=-1;
+    b_current=0;
+    b_bottom=0;
+    b_screenb=0;
     b_last=-1;
     b_output[0]=out_line;
     out_line[0]=0;
@@ -1626,6 +1629,13 @@ static void usertty_done(void)
     term_commit();
     term_restore();
     write_stdout("\n", 1);
+#ifdef HAVE_VALGRIND_VALGRIND_H
+    if (RUNNING_ON_VALGRIND)
+    {
+        while (b_shorten())
+            ;
+    }
+#endif
 }
 
 static void usertty_pause(void)
