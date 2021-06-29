@@ -57,7 +57,7 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
     {
         const char *err;
         fg=getco(txt, &err);
-        if (fg > C_MASK)
+        if (fg > CFG_MASK)
             return 0;
         txt=err;
     }
