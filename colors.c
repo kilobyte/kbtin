@@ -11,6 +11,35 @@ const int rgbbgr[8]={0,4,2,6,1,5,3,7};
 static enum {MUDC_OFF, MUDC_ON, MUDC_NULL, MUDC_NULL_WARN} mudcolors=MUDC_NULL_WARN;
 static char *MUDcolors[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
+static int getco(const char *restrict txt, const char **err)
+{
+    if (!isadigit(txt[1]))
+    {
+        *err=txt+1;
+        return txt[0]-'0';
+    }
+
+    if (!isadigit(txt[2]))
+    {
+        *err=txt+2;
+        int c = (txt[0]-'0')*10+txt[1]-'0';
+        if (c >= 16)
+            return c - 16 + 232; /* 24-level color ramp */
+        return c;
+    }
+
+    if (!isadigit(txt[3]))
+    {
+        if (txt[0]<'6' && txt[1]<'6' && txt[2]<'6')
+        {
+            *err=txt+3;
+            return 16 + 36*(txt[0]-'0') + 6*(txt[1]-'0') + (txt[2]-'0');
+        }
+    }
+
+    return -1U>>1;
+}
+
 int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_minus_token)
 {
     unsigned fg, bg, blink;
@@ -26,8 +55,8 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
     }
     if (isadigit(*txt))
     {
-        char *err;
-        fg=strtol(txt, &err, 10);
+        const char *err;
+        fg=getco(txt, &err);
         if (fg > C_MASK)
             return 0;
         txt=err;
@@ -46,8 +75,8 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
         return 0;
     if (isadigit(*++txt))
     {
-        char *err;
-        bg=strtol(txt, &err, 10);
+        const char *err;
+        bg=getco(txt, &err);
         if (bg > CBG_MAX)
             return 0;
         txt=err;
@@ -79,15 +108,35 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
     return 1;
 }
 
+static int setco(char *txt, int c)
+{
+    if (c<10)
+        return txt[0]=c+'0', 1;
+    if (c<16)
+        return txt[0]='1', txt[1]=c+'0'-10, 2;
+    if (c>=232)
+        return sprintf(txt, "%d", c+16-232);
+    c-=16;
+    txt[0]='0'+c/36;
+    txt[1]='0'+(c/6)%6;
+    txt[2]='0'+c%6;
+    return 3;
+}
+
 int setcolor(char *txt, int c)
 {
     if (c==-1)
         return sprintf(txt, "~-1~");
+    char *txt0 = txt;
+    *txt++='~';
+    txt+=setco(txt, c&CFG_MASK);
     if (c < 1<<CBG_AT)
-        return sprintf(txt, "~%d~", c);
+        return *txt++='~', *txt=0, txt-txt0;
+    *txt++=':';
+    txt+=setco(txt, (c&CBG_MASK)>>CBG_AT);
     if (c < 1<<CFL_AT)
-        return sprintf(txt, "~%d:%d~", c&CFG_MASK, (c&CBG_MASK)>>CBG_AT);
-    return sprintf(txt, "~%d:%d:%d~", c&CFG_MASK, (c&CBG_MASK)>>CBG_AT, c>>CFL_AT);
+        return *txt++='~', *txt=0, txt-txt0;
+    return txt-txt0+sprintf(txt, ":%d~", c>>CFL_AT);
 }
 
 typedef unsigned char u8;
@@ -95,6 +144,7 @@ struct rgb { u8 r; u8 g; u8 b; };
 
 static inline u8 ramp256_6(int i)
 {
+    /* 00 5f 87 af d7 ff */
     return i ? 55 + i * 40 : 0;
 }
 
