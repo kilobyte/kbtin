@@ -247,6 +247,8 @@ typedef int64_t num_t;
 typedef int64_t timens_t;
 #define NANO 1000000000LL
 
+#define ARRAYSZ(x) (sizeof(x)/sizeof((x)[0]))
+
 KBTREE_HEADER(str, char*, strcmp)
 
 /************************ structures *********************/

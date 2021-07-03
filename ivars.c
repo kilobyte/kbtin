@@ -81,7 +81,7 @@ struct session *if_command(const char *line, struct session *ses)
 static bool do_inline(const char *line, num_t *res, struct session *ses)
 {
     char command[BUFFER_SIZE], *ptr;
-    struct stacks savestacks[100];
+    struct stacks savestacks[ARRAYSZ(stacks)];
 
     _Static_assert(sizeof(savestacks) == sizeof(stacks), "stacks size mismatch");
     memcpy(savestacks, stacks, sizeof(savestacks));
@@ -410,6 +410,11 @@ static bool conv_to_nums(char *arg, struct session *ses)
         {
             stacks[i].pos = i + 1;
             i++;
+            if (i >= ARRAYSZ(stacks))
+            {
+                tintin_eprintf(ses, "Error. Expression too long: {%s}", arg);
+                return false;
+            }
         }
         ptr++;
     }
