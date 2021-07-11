@@ -106,6 +106,7 @@
 #define DEFAULT_TOGGLESUBS false          /* turn subs on and off FALSE=ON*/
 #define DEFAULT_KEYPAD false              /* start in standard keypad mode */
 #define DEFAULT_RETAIN false              /* retain the last typed line */
+#define DEFAULT_BOLD true                 /* allow terminals to make bright bold */
 #define DEFAULT_ALIAS_MESS true           /* messages for responses */
 #define DEFAULT_ACTION_MESS true          /* when setting/deleting aliases, */
 #define DEFAULT_SUB_MESS true             /* actions, etc. may be set to */

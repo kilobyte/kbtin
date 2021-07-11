@@ -665,6 +665,22 @@ void speedwalk_command(const char *arg, struct session *ses)
 }
 
 
+/*********************/
+/* the #bold command */
+/*********************/
+void bold_command(const char *arg, struct session *ses)
+{
+    togglebool(&bold, arg, ses,
+               "#Terminals are now allowed to turn bright into bold.",
+               "#Terminals are now told to not substitute bright by bold.");
+    if (ui_own_output)
+    {
+        user_pause();
+        user_resume();
+    }
+}
+
+
 /***********************/
 /* the #status command */
 /***********************/

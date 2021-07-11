@@ -9,7 +9,7 @@ Session management:
 Input/output:
    verbatim    char        echo        history     cr          mudcolors
    blank       speedwalk   showme      status      margins     bell
-   send        sendchar    charset
+   send        sendchar    charset     bold
 Aliases:
    alias       unalias     ifaliasexists
 Triggers:
@@ -392,6 +392,11 @@ This command doesn't support background colors and blink (yet?).
 Example (color table for T2T):
 #mudcolors $0$ $BLU$ $GRN$ $CYN$ $RED$ $MAG$ $YEL$ $0$ $0$ $HIB$ $HIG$ $HIC$
 $HIR$ $HIM$ $HIY$ $BOLD$
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~bold
+
+Some terminals make bright colors wide-stroked as well.  You can use this
+command to try to disable this behaviour.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~showme
 

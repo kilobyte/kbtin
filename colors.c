@@ -1,4 +1,5 @@
 #include "tintin.h"
+#include "protos/globals.h"
 #include "protos/print.h"
 #include "protos/misc.h"
 #include "protos/parse.h"
@@ -595,9 +596,12 @@ char *ansicolor(char *s, int c)
     int k = c & CFG_MASK;
     if (k < 16)
     {
-        if (k&8)
-            *s++=';', *s++='1';
-        *s++=';', *s++='3';
+        if (!(k&8))
+            *s++=';', *s++='3';
+        else if (bold)
+            *s++=';', *s++='1', *s++=';', *s++='3';
+        else
+            *s++=';', *s++='9';
         *s++='0'+rgbbgr[k&7];
     }
     else

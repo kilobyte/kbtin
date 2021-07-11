@@ -3,6 +3,7 @@
 bool term_echoing = true;
 bool keypad= DEFAULT_KEYPAD;
 bool retain= DEFAULT_RETAIN;
+bool bold  = DEFAULT_BOLD;
 int alnum = 0;
 int acnum = 0;
 int subnum = 0;
