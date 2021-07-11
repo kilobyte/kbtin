@@ -410,7 +410,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
         {
             stacks[i].pos = i + 1;
             i++;
-            if (i >= ARRAYSZ(stacks))
+            if (i >= (int)ARRAYSZ(stacks))
             {
                 tintin_eprintf(ses, "Error. Expression too long: {%s}", arg);
                 return false;
