@@ -60,6 +60,7 @@ static const char *KEYNAMES[]=
     "ESC[OC",       "RightArrow",
     "ESC[OD",       "LeftArrow",
     "ESC[OE",       "MidArrow",
+    "ESCOE",        "Kpad5",        /* screen on vte */
     "ESCOM",        "KpadEnter",    /* alternate keypad mode */
     "ESCOP",        "KpadNumLock",
     "ESCOQ",        "KpadDivide",
