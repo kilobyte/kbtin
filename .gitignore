@@ -21,6 +21,9 @@ configure.lineno
 configure.scan
 depcomp
 missing
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
 VERSION
 .deps
 install-sh

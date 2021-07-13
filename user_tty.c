@@ -7,7 +7,7 @@
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
-#if HAVE_TERMIOS_H
+#ifdef HAVE_TERMIOS_H
 # include <termios.h>
 #endif
 #include <assert.h>

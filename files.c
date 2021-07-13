@@ -25,6 +25,11 @@
 #include <pwd.h>
 #include <fcntl.h>
 
+
+#ifndef O_BINARY
+# define O_BINARY 0
+#endif
+
 static void cfcom(FILE *f, const char *command, const char *left, const char *right, const char *pr);
 extern void char_command(const char *arg, struct session *ses);
 

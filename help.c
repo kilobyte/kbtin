@@ -9,6 +9,10 @@
 #include "protos/utils.h"
 
 
+#ifndef O_BINARY
+# define O_BINARY 0
+#endif
+
 static FILE* check_file(const char *filestring)
 {
 #if COMPRESSED_HELP
