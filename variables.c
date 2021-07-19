@@ -249,7 +249,7 @@ void unvariable_command(const char *arg, struct session *ses)
 
     do
     {
-        arg = get_arg(arg, left, 1, ses);
+        arg = get_arg(arg, left, 0, ses);
         delete_hashlist(ses, ses->myvars, left,
             ses->mesvar[MSG_VARIABLE]? "#Ok. $%s is no longer a variable." : 0,
             ses->mesvar[MSG_VARIABLE]? "#THAT VARIABLE (%s) IS NOT DEFINED." : 0);
