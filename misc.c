@@ -195,7 +195,7 @@ void sendchar_command(const char *arg, struct session *ses)
                     ch=strtol(chp, &ep, 8);
                 uchar:
                     if (ch<0 || ch>0x10ffff)
-                        tintin_eprintf(ses, "#sendchar: code %x out of Unicode at {\\%s}", ch, chp);
+                        tintin_eprintf(ses, "#sendchar: code %lx out of Unicode at {\\%s}", ch, chp);
                     else
                     {
                         wchar_t wch=ch;
@@ -216,7 +216,7 @@ void sendchar_command(const char *arg, struct session *ses)
                     chp++;
                 ch=strtol(chp, &ep, 16);
                 if (ch<0 || ch>0x10ffff)
-                    tintin_eprintf(ses, "#sendchar: code %x out of Unicode at {U%s}", ch, chp);
+                    tintin_eprintf(ses, "#sendchar: code %lx out of Unicode at {U%s}", ch, chp);
                 else
                 {
                     wchar_t wch=ch;

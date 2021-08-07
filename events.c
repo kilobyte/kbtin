@@ -182,7 +182,7 @@ void undelay_command(const char *arg, struct session *ses)
         {
             flag=true;
             if (ses==activesession && ses->mesvar[MSG_EVENT])
-                tintin_printf(ses, "#Ok. Event {%s} at %ld.%03ld won't be executed.",
+                tintin_printf(ses, "#Ok. Event {%s} at %ld.%03d won't be executed.",
                     (*ev)->event, ((*ev)->time-ct)/NANO, msec((*ev)->time-ct));
             remove_event(ev);
         }
