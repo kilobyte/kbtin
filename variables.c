@@ -1371,7 +1371,7 @@ void ctime_command(const char *arg, struct session *ses)
             {}
     else
         tt=time(0);
-    p = ct = ctime(&tt);
+    p = ct = ctime_r(&tt, arg2);
     while (p && *p)
     {
         if (*p == '\n')

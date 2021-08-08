@@ -197,7 +197,7 @@ static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct sess
     t=time(0);
     if (gnutls_x509_crt_get_activation_time(cert)>t)
     {
-        snprintf(buf2, BUFFER_SIZE, "%s", ctime(&t));
+        ctime_r(&t, buf2);
         if ((bptr=strchr(buf2, '\n')))
             *bptr=0;
         snprintf(fname, BUFFER_SIZE, "certificate activation time is in the future (%.128s).",
@@ -207,7 +207,7 @@ static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct sess
 
     if (gnutls_x509_crt_get_expiration_time(cert)<t)
     {
-        snprintf(buf2, BUFFER_SIZE, "%s", ctime(&t));
+        ctime_r(&t, buf2);
         if ((bptr=strchr(buf2, '\n')))
             *bptr=0;
         snprintf(fname, BUFFER_SIZE, "certificate has expired (on %.128s).",
