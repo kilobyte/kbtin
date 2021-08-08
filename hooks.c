@@ -102,7 +102,7 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
     char hookcmd[BUFFER_SIZE];
 
     pvars_t vars, *lastvars;
-    int oldclos=oldclos;
+    int oldclos=0;
 
     if (!ses->hooks[t])
         return ses;
