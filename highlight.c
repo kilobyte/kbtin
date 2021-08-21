@@ -116,70 +116,66 @@ void highlight_command(const char *arg, struct session *ses)
     {
         tintin_printf(ses, "#THESE HIGHLIGHTS HAVE BEEN DEFINED:");
         show_list(myhighs);
+        return;
     }
-    else
-    {
-        tmp1 = left;
-        tmp2 = tmp1;
-        while (*tmp2 != '\0')
-        {
-            tmp2++;
-            while (*tmp2 != ',' && *tmp2 != '\0')
-                tmp2++;
-            while (isaspace(*tmp1))
-                tmp1++;
-            memcpy(tmp3, tmp1, tmp2 - tmp1);
-            tmp3[tmp2 - tmp1] = '\0';
-            colflag = get_high(tmp3);
-            tmp1 = tmp2 + 1;
-        }
-        if (colflag)
-        {
-            if (!*right)
-            {
-                if (ses->mesvar[MSG_HIGHLIGHT] || ses->mesvar[MSG_ERROR])
-                    tintin_eprintf(ses, "#Highlight WHAT?");
-                return;
-            }
-            if ((ln = searchnode_list(myhighs, right)))
-                deletenode_list(myhighs, ln);
-            insertnode_list(myhighs, right, left, get_fastener(right, tmp1), LENGTH);
-            hinum++;
-            if (ses->mesvar[MSG_HIGHLIGHT])
-                tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
-        }
-        else
-        {
-            if (!puts_echoing && ses->mesvar[MSG_ERROR])
-            {
-                tintin_eprintf(ses, "#Invalid highlighting color: {%s}", left);
-                return;
-            }
 
-            if (strcmp(left, "list"))
-                tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
+    tmp1 = left;
+    tmp2 = tmp1;
+    while (*tmp2 != '\0')
+    {
+        tmp2++;
+        while (*tmp2 != ',' && *tmp2 != '\0')
+            tmp2++;
+        while (isaspace(*tmp1))
+            tmp1++;
+        memcpy(tmp3, tmp1, tmp2 - tmp1);
+        tmp3[tmp2 - tmp1] = '\0';
+        colflag = get_high(tmp3);
+        tmp1 = tmp2 + 1;
+    }
+    if (colflag)
+    {
+        if (!*right)
+        {
+            if (ses->mesvar[MSG_HIGHLIGHT] || ses->mesvar[MSG_ERROR])
+                tintin_eprintf(ses, "#Highlight WHAT?");
+            return;
+        }
+        if ((ln = searchnode_list(myhighs, right)))
+            deletenode_list(myhighs, ln);
+        insertnode_list(myhighs, right, left, get_fastener(right, tmp1), LENGTH);
+        hinum++;
+        if (ses->mesvar[MSG_HIGHLIGHT])
+            tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
+        return;
+    }
+
+    if (!puts_echoing && ses->mesvar[MSG_ERROR])
+    {
+        tintin_eprintf(ses, "#Invalid highlighting color: {%s}", left);
+        return;
+    }
+
+    if (strcmp(left, "list"))
+        tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
+    tmp3[0]=0;
+    tmp1=tmp3;
+    for (int i=0;cNames[i].num!=-1;i++)
+    {
+        sprintf(left, "%s~7~, ", cNames[i].name);
+        if (cNames[i].num)
+            tmp1+=sprintf(tmp1, "~%i~%-20s ", cNames[i].num, left);
+        else
+            tmp1+=sprintf(tmp1, "~7~%-20s ", left);
+        if ((i%4)==3)
+        {
+            tintin_printf(ses, "%s", tmp3);
             tmp3[0]=0;
             tmp1=tmp3;
-            for (int i=0;cNames[i].num!=-1;i++)
-            {
-                sprintf(left, "%s~7~, ", cNames[i].name);
-                if (cNames[i].num)
-                    tmp1+=sprintf(tmp1, "~%i~%-20s ", cNames[i].num, left);
-                else
-                    tmp1+=sprintf(tmp1, "~7~%-20s ", left);
-                if ((i%4)==3)
-                {
-                    tintin_printf(ses, "%s", tmp3);
-                    tmp3[0]=0;
-                    tmp1=tmp3;
-                }
-            }
-            strcpy(tmp1, "or 0..15:0..7:0..1");
-            tintin_printf(ses, "%s", tmp3);
         }
-
-
     }
+    strcpy(tmp1, "or 0..15:0..7:0..1");
+    tintin_printf(ses, "%s", tmp3);
 }
 
 /*****************************/
