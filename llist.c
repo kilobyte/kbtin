@@ -295,7 +295,7 @@ void deletenode_list(struct listnode *listhead, struct listnode *nptr)
 /* search for a node containing the ltext in left-field */
 /* return: ptr to node on success / NULL on failure     */
 /********************************************************/
-struct listnode* searchnode_list(struct listnode *listhead, char *cptr)
+struct listnode* searchnode_list(struct listnode *listhead, const char *cptr)
 {
     int i;
 
@@ -336,7 +336,7 @@ void show_list_action(struct listnode *listhead)
             shownode_list_action(listhead);
 }
 
-struct listnode* search_node_with_wild(struct listnode *listhead, char *cptr)
+struct listnode* search_node_with_wild(struct listnode *listhead, const char *cptr)
 {
     while ((listhead = listhead->next))
     {
