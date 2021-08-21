@@ -40,13 +40,13 @@ static struct colordef
         {14, "yellow"},
         {15, "white"},
         {15, "bold"},
-        {112, "inverse"},
-        {112, "reverse"},
-        {135, "blink"},
-        {519, "underline"},
-        {519, "underlined"},
-        {263, "italic"},
-        {-1, ""},
+        {7<<CBG_AT, "inverse"},
+        {7<<CBG_AT, "reverse"},
+        {CFL_BLINK, "blink"},
+        {CFL_UNDERLINE, "underline"},
+        {CFL_UNDERLINE, "underlined"},
+        {CFL_ITALIC, "italic"},
+        {-1, 0},
     };
 
 static int highpattern[64];
@@ -163,10 +163,8 @@ void highlight_command(const char *arg, struct session *ses)
     for (int i=0;cNames[i].num!=-1;i++)
     {
         sprintf(left, "%s~7~, ", cNames[i].name);
-        if (cNames[i].num)
-            tmp1+=sprintf(tmp1, "~%i~%-20s ", cNames[i].num, left);
-        else
-            tmp1+=sprintf(tmp1, "~7~%-20s ", left);
+        tmp1+=setcolor(tmp1, cNames[i].num);
+        tmp1+=sprintf(tmp1, "%-20s ", left);
         if ((i%4)==3)
         {
             tintin_printf(ses, "%s", tmp3);
