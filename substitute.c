@@ -52,20 +52,19 @@ static void parse_sub(const char *left, const char *right,  bool gag, struct ses
             else
                 tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
         }
+        return;
     }
-    else
+
+    if ((ln = searchnode_list(mysubs, left)))
+        deletenode_list(mysubs, ln);
+    insertnode_list(mysubs, left, right, 0, ALPHA);
+    subnum++;
+    if (ses->mesvar[MSG_SUBSTITUTE])
     {
-        if ((ln = searchnode_list(mysubs, left)))
-            deletenode_list(mysubs, ln);
-        insertnode_list(mysubs, left, right, 0, ALPHA);
-        subnum++;
-        if (ses->mesvar[MSG_SUBSTITUTE])
-        {
-            if (strcmp(right, EMPTY_LINE))
-                tintin_printf(ses, "#Ok. {%s} now replaces {%s}.", right, left);
-            else
-                tintin_printf(ses, "#Ok. {%s} is now gagged.", left);
-        }
+        if (strcmp(right, EMPTY_LINE))
+            tintin_printf(ses, "#Ok. {%s} now replaces {%s}.", right, left);
+        else
+            tintin_printf(ses, "#Ok. {%s} is now gagged.", left);
     }
 }
 
