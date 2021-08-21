@@ -46,6 +46,7 @@ static struct colordef
         {CFL_UNDERLINE, "underline"},
         {CFL_UNDERLINE, "underlined"},
         {CFL_ITALIC, "italic"},
+        {CFL_STRIKETHRU, "strike"},
         {-1, 0},
     };
 
