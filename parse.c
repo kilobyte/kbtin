@@ -548,12 +548,9 @@ static inline const char* get_arg_stop_spaces(const char *s, char *arg)
 const char* get_arg(const char *s, char *arg, bool allow_spaces, struct session *ses)
 {
     const char *cptr=get_arg_in_braces(s, arg, allow_spaces);
-    if (*arg)
-    {
-        char tmp[BUFFER_SIZE];
-        substitute_vars(arg, tmp);
-        substitute_myvars(tmp, arg, ses);
-    }
+    char tmp[BUFFER_SIZE];
+    substitute_vars(arg, tmp);
+    substitute_myvars(tmp, arg, ses);
     return cptr;
 }
 
