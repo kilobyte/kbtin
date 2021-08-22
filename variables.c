@@ -127,6 +127,8 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                         nsecstr(value, current_time()-ses->idle_since);
                     else if (!strcmp(varname, "SERVERIDLE"))
                         nsecstr(value, current_time()-ses->server_idle_since);
+                    else if (!strcmp(varname, "USERIDLE"))
+                        nsecstr(value, current_time()-idle_since);
                     else if (!strcmp(varname, "LINENUM"))
                         sprintf(value, "%llu", ses->linenum);
                     else if (_ && (!strcmp(varname, "LINE")

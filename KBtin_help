@@ -1754,6 +1754,7 @@ special properties (they can still be restored by #unvar).
 * PATH             - the current path
 * IDLETIME         - time since last text has been sent to the MUD
 * SERVERIDLE       - time since last text has been received
+* USERIDLE         - time since last input from the user
 * SESSION          - the current session
 * ASESSION         - the foreground (active) session
 * SESSIONS         - a list of all sessions defined

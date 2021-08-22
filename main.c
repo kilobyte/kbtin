@@ -177,10 +177,7 @@ static void setup_ulimit(void)
 
 static void init_nullses(void)
 {
-    struct timespec tv;
-
-    clock_gettime(CLOCK_REALTIME, &tv);
-    start_time = tv.tv_sec*NANO + tv.tv_nsec;
+    start_time = idle_since = current_time();
 
     nullsession=TALLOC(struct session);
     nullsession->name=mystrdup("main");
@@ -225,8 +222,8 @@ static void init_nullses(void)
     nullsession->antisubs = init_slist();
     nullsession->binds = init_hash();
     nullsession->next = 0;
-    nullsession->sessionstart=nullsession->idle_since=
-        nullsession->server_idle_since=current_time();
+    nullsession->sessionstart = nullsession->idle_since =
+        nullsession->server_idle_since = start_time;
     nullsession->debuglogfile=0;
     nullsession->debuglogname=0;
     for (int i=0;i<HISTORY_SIZE;i++)
@@ -576,6 +573,7 @@ static void tintin(void)
 
         if (FD_ISSET(0, &readfdmask))
         {
+            idle_since = current_time();
             result=read(0, kbdbuf+inbuf, BUFFER_SIZE-inbuf);
             if (result==-1)
                 myquitsig(0);
