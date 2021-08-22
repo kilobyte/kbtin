@@ -1164,7 +1164,7 @@ void random_command(const char *arg, struct session *ses)
     if (sscanf(right, "%d, %d%c", &low, &high, &dummy) != 2)
         return tintin_eprintf(ses, "#Wrong number of range arguments in #random: got {%s}.", right);
     if (low < 0 || high < 0)
-        return tintin_eprintf(ses, "#Both arguments of range in #random should be >0, got %d,%d.", low, high);
+        return tintin_eprintf(ses, "#Both arguments of range in #random should be ≥0, got %d,%d.", low, high);
 
     if (low > high)
     {
@@ -1190,7 +1190,7 @@ int random_inline(const char *arg, struct session *ses)
     else if (sscanf(right, "%d, %d", &low, &high) != 2)
         tintin_eprintf(ses, "#Wrong number of range arguments in #random: got {%s}.", right);
     else if (low < 0 || high < 0)
-        tintin_eprintf(ses, "#Both arguments of range in #random should be >0, got %d,%d.", low, high);
+        tintin_eprintf(ses, "#Both arguments of range in #random should be ≥0, got %d,%d.", low, high);
     else
     {
         if (low > high)
