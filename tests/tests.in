@@ -926,6 +926,33 @@ baz
 #SESSION 'a' DIED.
 ===
 
+### antisub2
+<<<
+#var todo {{#anti foo} {#unanti foo} {#anti bar;#anti baz} {#unanti b*} {#end}}
+#act GO {#show .;#split cur todo {$todo};#if 1 {$$cur};#anti;foo;bar;baz;quux;GO}
+#run a cat
+#gag {%0}
+GO
+>>>
+.
+#THESE ANTISUBSTITUTES HAS BEEN DEFINED:
+{foo}
+foo
+.
+#THESE ANTISUBSTITUTES HAS BEEN DEFINED:
+.
+#THESE ANTISUBSTITUTES HAS BEEN DEFINED:
+{bar}
+{baz}
+bar
+baz
+.
+#THESE ANTISUBSTITUTES HAS BEEN DEFINED:
+.
+
+#SESSION 'a' DIED.
+===
+
 ### #write, #writeses
 <<<
 #var foo a
