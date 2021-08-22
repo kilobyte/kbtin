@@ -107,12 +107,8 @@ void highlight_command(const char *arg, struct session *ses)
     pright = right;
     *pright = '\0';
     myhighs = ses->highs;
-    arg = get_arg_in_braces(arg, left, 0);
-    arg = get_arg_in_braces(arg, right, 1);
-    substitute_vars(left, tmp3);
-    substitute_myvars(tmp3, left, ses);
-    substitute_vars(right, tmp3);
-    substitute_myvars(tmp3, right, ses);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
     if (!*left)
     {
         tintin_printf(ses, "#THESE HIGHLIGHTS HAVE BEEN DEFINED:");

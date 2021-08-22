@@ -138,16 +138,14 @@ void bind_command(const char *arg, struct session *ses)
 /***********************/
 void unbind_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], result[BUFFER_SIZE];
+    char left[BUFFER_SIZE];
 
     if (!ui_keyboard)
     {
         tintin_eprintf(ses, "#UI: no access to keyboard => no keybindings");
         return;
     }
-    arg = get_arg_in_braces(arg, left, 1);
-    substitute_vars(left, result);
-    substitute_myvars(result, left, ses);
+    arg = get_arg(arg, left, 1, ses);
     delete_hashlist(ses, ses->binds, left,
         ses->mesvar[MSG_BIND]? "#Ok. {%s} is no longer bound." : 0,
         ses->mesvar[MSG_BIND]? "#No match(es) found for {%s}" : 0);

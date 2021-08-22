@@ -74,7 +74,7 @@ static void list_events(const char *arg, struct session *ses)
 /* add new event to the list */
 void delay_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[BUFFER_SIZE], *cptr;
+    char left[BUFFER_SIZE], right[BUFFER_SIZE], *cptr;
     timens_t delay;
     struct eventnode *ev, *ptr, *ptrlast;
 
@@ -84,12 +84,8 @@ void delay_command(const char *arg, struct session *ses)
         return;
     }
 
-    arg = get_arg_in_braces(arg, left, 0);
-    arg = get_arg_in_braces(arg, right, 1);
-    substitute_vars(left, temp);
-    substitute_myvars(temp, left, ses);
-    substitute_vars(right, temp);
-    substitute_myvars(temp, right, ses);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
     if (!*right)
     {
         list_events(left, ses);
@@ -153,7 +149,7 @@ static void remove_event(struct eventnode **ev)
 /* remove events matching regexp arg from list */
 void undelay_command(const char *arg, struct session *ses)
 {
-    char temp[BUFFER_SIZE], left[BUFFER_SIZE];
+    char left[BUFFER_SIZE];
     bool flag;
     struct eventnode **ev;
 
@@ -163,9 +159,7 @@ void undelay_command(const char *arg, struct session *ses)
         return;
     }
 
-    arg = get_arg_in_braces(arg, left, 1);
-    substitute_vars(left, temp);
-    substitute_myvars(temp, left, ses);
+    arg = get_arg(arg, left, 1, ses);
 
     if (!*left)
     {

@@ -191,7 +191,7 @@ void do_all_sub(char *line, struct session *ses)
 
 void changeto_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], temp[BUFFER_SIZE];
+    char left[BUFFER_SIZE];
 
     if (!_)
     {
@@ -199,9 +199,7 @@ void changeto_command(const char *arg, struct session *ses)
         return;
     }
 
-    get_arg_in_braces(arg, left, 1);
-    substitute_vars(left, temp);
-    substitute_myvars(temp, left, ses);
+    get_arg(arg, left, 1, ses);
     strcpy(_, left);
 }
 

@@ -498,15 +498,12 @@ void check_all_promptactions(const char *line, struct session *ses)
 void match_command(const char *arg, struct session *ses)
 {
     pvars_t vars, *lastpvars;
-    char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE],
-         temp[BUFFER_SIZE];
+    char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
     bool flag=false;
 
     arg=get_arg_in_braces(arg, left, 0);
-    arg=get_arg_in_braces(arg, line, 0);
+    arg=get_arg(arg, line, 0, ses);
     arg=get_arg_in_braces(arg, right, 0);
-    substitute_vars(line, temp);
-    substitute_myvars(temp, line, ses);
 
     if (!*left || !*right)
     {
