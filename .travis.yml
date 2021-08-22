@@ -42,7 +42,7 @@ matrix:
     - os: osx
       osx_image: xcode12.2
       before_install:
-        brew update && for pkg in libtool glib gettext;do if ! brew list -1|grep -q "^${pkg}\$";then brew install "$pkg";fi;done && brew link --force gettext
+        brew update && for pkg in libtool glib gettext;do if ! brew list -1|grep -q "^${pkg}\$";then brew install "$pkg";fi;done && brew link --force gettext && gcc --version
 
 script: ./autogen.sh && ./configure && make check
 after_failure: cat tests/testsuite.log
