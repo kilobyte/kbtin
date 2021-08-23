@@ -55,6 +55,18 @@ void kill_hash(struct hashtable* h)
     TFREE(h, struct hashtable);
 }
 
+void kill_hash_nostring(struct hashtable* h)
+{
+    if (h->nval)
+        for (int i=0; i<h->size; i++)
+        {
+            if (h->tab[i].left && (h->tab[i].left!=DELETED_HASHENTRY))
+                SFREE(h->tab[i].left);
+        }
+    CFREE(h->tab, h->size, struct hashentry);
+    TFREE(h, struct hashtable);
+}
+
 
 static inline void add_hash_value(struct hashtable *h, char *left, char *right)
 {
@@ -120,7 +132,7 @@ void set_hash(struct hashtable *h, const char *key, const char *value)
 }
 
 
-void set_hash_nostring(struct hashtable *h, const char *key, char *value)
+void set_hash_nostring(struct hashtable *h, const char *key, const char *value)
 {
     if (h->nent*5 > h->size*4)
         rehash(h, h->nval*3);
@@ -133,7 +145,7 @@ void set_hash_nostring(struct hashtable *h, const char *key, char *value)
                 j=i;
         if (!strcmp(h->tab[i].left, key))
         {
-            h->tab[i].right=value;
+            h->tab[i].right=(char*)value;
             return;
         }
         if (!i)
@@ -145,7 +157,7 @@ void set_hash_nostring(struct hashtable *h, const char *key, char *value)
     else
         h->nent++;
     h->tab[i].left = mystrdup(key);
-    h->tab[i].right= value;
+    h->tab[i].right= (char*)value;
     h->nval++;
 }
 

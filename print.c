@@ -24,7 +24,7 @@ void tintin_puts(const char *cptr, struct session *ses)
         check_all_actions(line, ses);
         _=0;
     }
-    tintin_printf(ses, line);
+    tintin_printf(ses, "%s", line);
 }
 
 /****************************************************/

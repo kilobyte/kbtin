@@ -4,7 +4,6 @@
 #undef TELNET_DEBUG     /* define to show TELNET negotiations */
 #undef USER_DEBUG       /* debugging of the user interface */
 #undef TERM_DEBUG       /* debugging pseudo-tty stuff */
-#undef PROFILING        /* profiling */
 
 #include <stdbool.h>
 
@@ -23,14 +22,16 @@
 #define LOGCS_LOCAL     ((char*)1)
 #define LOGCS_REMOTE    ((char*)2)
 
-#define CFG_BITS	4
-#define CBG_BITS	4
+#define CFG_BITS	8
+#define CBG_BITS	8
 #define CFL_BITS	4
 
 #define C_BLINK		1
 #define C_ITALIC	2
 #define C_UNDERLINE	4
 #define C_STRIKETHRU	8
+
+#define DENOM (1000000LL*3*3*3*7*2*5*2)
 
 /*************************/
 /* telnet protocol stuff */
@@ -73,7 +74,7 @@
 #define DEFAULT_TINTIN_CHAR '#'           /* tintin char */
 #define DEFAULT_TICK_SIZE 60
 #define DEFAULT_ROUTE_DISTANCE 10
-#define DEFAULT_VERBATIM_CHAR '\\'        /* if an input starts with this
+#define VERBATIM_CHAR '\\'                /* if an input starts with this
                                              char, it will be sent 'as is'
                                              to the MUD */
 #define MAX_SESNAME_LENGTH 512 /* don't accept session names longer than this */
@@ -105,6 +106,7 @@
 #define DEFAULT_TOGGLESUBS false          /* turn subs on and off FALSE=ON*/
 #define DEFAULT_KEYPAD false              /* start in standard keypad mode */
 #define DEFAULT_RETAIN false              /* retain the last typed line */
+#define DEFAULT_BOLD true                 /* allow terminals to make bright bold */
 #define DEFAULT_ALIAS_MESS true           /* messages for responses */
 #define DEFAULT_ACTION_MESS true          /* when setting/deleting aliases, */
 #define DEFAULT_SUB_MESS true             /* actions, etc. may be set to */
@@ -119,6 +121,7 @@
 #define DEFAULT_ERROR_MESS true
 #define DEFAULT_HOOK_MESS true
 #define DEFAULT_LOG_MESS true
+#define DEFAULT_TICK_MESS true
 #define DEFAULT_PRETICK 10
 #define DEFAULT_CHARSET "ISO-8859-1"      /* the MUD-side charset */
 #define DEFAULT_LOGCHARSET LOGCS_LOCAL
@@ -189,6 +192,7 @@ enum
     MSG_ERROR,
     MSG_HOOK,
     MSG_LOG,
+    MSG_TICK,
     MAX_MESVAR
 };
 enum
@@ -238,6 +242,15 @@ enum
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
+#include "kbtree.h"
+
+typedef int64_t num_t;
+typedef int64_t timens_t;
+#define NANO 1000000000LL
+
+#define ARRAYSZ(x) (sizeof(x)/sizeof((x)[0]))
+
+KBTREE_HEADER(str, char*, strcmp)
 
 /************************ structures *********************/
 struct listnode
@@ -270,7 +283,7 @@ struct eventnode
 {
     struct eventnode *next;
     char *event;
-    time_t time;
+    timens_t time;
 };
 
 struct routenode
@@ -300,16 +313,17 @@ struct session
     char *name;
     char *address;
     bool tickstatus;
-    time_t time0;      /* time of last tick (adjusted every tick) */
-    time_t time10;
-    int tick_size, pretick;
+    timens_t time0;      /* time of last tick (adjusted every tick) */
+    timens_t time10;
+    timens_t tick_size, pretick;
     bool snoopstatus;
     FILE *logfile, *debuglogfile;
     char *logname, *debuglogname;
     char *loginputprefix, *loginputsuffix;
     logtype_t logtype;
     bool ignore;
-    struct listnode *actions, *prompts, *subs, *highs, *antisubs;
+    struct listnode *actions, *subs, *prompts, *highs;
+    kbtree_t(str) *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds;
     struct listnode *path;
     struct routenode *routes[MAX_LOCATIONS];
@@ -325,8 +339,8 @@ struct session
     bool verbose, blank, echo, speedwalk, togglesubs, presub, verbatim;
     char *partial_line_marker;
     bool mesvar[MAX_MESVAR+1];
-    time_t idle_since, server_idle_since;
-    time_t sessionstart;
+    timens_t idle_since, server_idle_since;
+    timens_t sessionstart;
     char *hooks[NHOOKS];
     int closing;
     int nagle;
@@ -342,25 +356,12 @@ struct session
 #ifdef HAVE_GNUTLS
     gnutls_session_t ssl;
 #endif
-    struct timeval line_time;
+    timens_t line_time;
+    unsigned long long linenum;
+    bool drafted;
 };
 
 typedef char pvars_t[10][BUFFER_SIZE];
-
-#ifdef PROFILING
-# define PROF(x) prof_area=(x)
-# define PROFPUSH(x) {const char *prev_prof=prof_area; prof_area=(x)
-# define PROFPOP prof_area=prev_prof;}
-# define PROFSTART struct timeval tvstart, tvend;gettimeofday(&tvstart,0);
-# define PROFEND(x,y) gettimeofday(&tvend,0);(x)+=(tvend.tv_sec-tvstart.tv_sec) \
-    *1000000+tvend.tv_usec-tvstart.tv_usec;(y)++;
-#else
-# define PROF(x)
-# define PROFPUSH(x)
-# define PROFPOP
-# define PROFSTART
-# define PROFEND(x,y)
-#endif
 
 #ifdef WORDS_BIGENDIAN
 # define to_little_endian(x) ((uint32_t) ( \
@@ -413,3 +414,4 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define EMPTY_CHAR 0xffff
 #define VALID_TIN_CHARS "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 #define is7punct(x) strchr(VALID_TIN_CHARS, (x))
+#define N(x) ((x)*DENOM)

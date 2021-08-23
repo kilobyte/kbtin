@@ -5,12 +5,15 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
+#include <math.h>
 #include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/chinese.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
+#include "protos/ivars.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/path.h"
@@ -107,42 +110,60 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                 else
                 {
                     /* secstotick code added by Sverre Normann */
-                    if (strcmp(varname, "secstotick")==0)
-                        sprintf(value, "%d", timetilltick(ses));
-                    else if (strcmp(varname, "LINES")==0)
-                        sprintf(value, "%d", LINES);
-                    else if (strcmp(varname, "COLS")==0)
-                        sprintf(value, "%d", COLS);
-                    else if (strcmp(varname, "PATH")==0)
-                        path2var(value, ses);
-                    else if (strcmp(varname, "IDLETIME")==0)
-                        sprintf(value, "%ld", (long int)(time(0)-ses->idle_since));
-                    else if (strcmp(varname, "SERVERIDLE")==0)
-                        sprintf(value, "%ld", (long int)(time(0)-ses->server_idle_since));
-                    else if (_ && (strcmp(varname, "LINE")==0
-                                   || strcmp(varname, "_")==0))
-                        strcpy(value, _);
-                    else if (strcmp(varname, "SESSION")==0)
-                        strcpy(value, ses->name);
-                    else if (strcmp(varname, "SESSIONS")==0)
-                        seslist(value);
-                    else if (strcmp(varname, "ASESSION")==0)
-                        strcpy(value, activesession->name);
-                    else if (strcmp(varname, "LOGFILE")==0)
-                        strcpy(value, ses->logfile?ses->logname:"");
-                    else if (strcmp(varname, "_random")==0)
-                        sprintf(value, "%d", rand());
-                    else if (strcmp(varname, "_time")==0 || strcmp(varname, "time")==0)
-                        sprintf(value, "%ld", (long int)time0);
-                    else if (strcmp(varname, "_clock")==0)
-                        sprintf(value, "%ld", (long int)time(0));
-                    else if (strcmp(varname, "_msec")==0)
+                    if (!strcmp(varname, "secstotick"))
+                        sprintf(value, "%lld", timetilltick(ses)/NANO);
+                    else if (!strcmp(varname, "TIMETOTICK"))
                     {
-                        struct timeval tv;
-                        gettimeofday(&tv, 0);
-                        sprintf(value, "%ld", (long int)((tv.tv_sec-time0)*1000+(tv.tv_usec-utime0)/1000));
+                        timens_t tt = timetilltick(ses);
+                        sprintf(value, "%lld.%09ld", tt/NANO, labs(tt%NANO));
                     }
-                    else if (strcmp(varname, "HOME")==0)
+                    else if (!strcmp(varname, "LINES"))
+                        sprintf(value, "%d", LINES);
+                    else if (!strcmp(varname, "COLS"))
+                        sprintf(value, "%d", COLS);
+                    else if (!strcmp(varname, "PATH"))
+                        path2var(value, ses);
+                    else if (!strcmp(varname, "IDLETIME"))
+                        nsecstr(value, current_time()-ses->idle_since);
+                    else if (!strcmp(varname, "SERVERIDLE"))
+                        nsecstr(value, current_time()-ses->server_idle_since);
+                    else if (!strcmp(varname, "USERIDLE"))
+                        nsecstr(value, current_time()-idle_since);
+                    else if (!strcmp(varname, "LINENUM"))
+                        sprintf(value, "%llu", ses->linenum);
+                    else if (_ && (!strcmp(varname, "LINE")
+                                   || !strcmp(varname, "_")))
+                        strcpy(value, _);
+                    else if (!strcmp(varname, "SESSION"))
+                        strcpy(value, ses->name);
+                    else if (!strcmp(varname, "SESSIONS"))
+                        seslist(value);
+                    else if (!strcmp(varname, "ASESSION"))
+                        strcpy(value, activesession->name);
+                    else if (!strcmp(varname, "LOGFILE"))
+                        strcpy(value, ses->logfile?ses->logname:"");
+                    else if (!strcmp(varname, "RANDOM") || !strcmp(varname, "_random"))
+                        sprintf(value, "%d", rand());
+                    else if (!strcmp(varname, "_time"))
+                    {
+                        timens_t age = current_time() - start_time;
+                        sprintf(value, "%lld", age/NANO);
+                    }
+                    else if (!strcmp(varname, "STARTTIME"))
+                        sprintf(value, "%lld.%09lld", start_time/NANO, start_time%NANO);
+                    else if (!strcmp(varname, "TIME"))
+                    {
+                        timens_t ct = current_time();
+                        sprintf(value, "%lld.%09lld", ct/NANO, ct%NANO);
+                    }
+                    else if (!strcmp(varname, "_clock"))
+                        sprintf(value, "%ld", (long int)time(0));
+                    else if (!strcmp(varname, "_msec"))
+                    {
+                        timens_t age = current_time() - start_time;
+                        sprintf(value, "%lld", age / (NANO/1000));
+                    }
+                    else if (!strcmp(varname, "HOME"))
                     {
                         v=getenv("HOME");
                         if (v)
@@ -230,7 +251,7 @@ void unvariable_command(const char *arg, struct session *ses)
 
     do
     {
-        arg = get_arg(arg, left, 1, ses);
+        arg = get_arg(arg, left, 0, ses);
         delete_hashlist(ses, ses->myvars, left,
             ses->mesvar[MSG_VARIABLE]? "#Ok. $%s is no longer a variable." : 0,
             ses->mesvar[MSG_VARIABLE]? "#THAT VARIABLE (%s) IS NOT DEFINED." : 0);
@@ -999,7 +1020,7 @@ void explode_command(const char *arg, struct session *ses)
 void implode_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], del[BUFFER_SIZE], right[BUFFER_SIZE],
-         res[BUFFER_SIZE], temp[BUFFER_SIZE], *r;
+         res[BUFFER_SIZE], temp[BUFFER_SIZE];
     const char *p;
 
     arg = get_arg(arg, left, 0, ses);
@@ -1010,8 +1031,8 @@ void implode_command(const char *arg, struct session *ses)
 
     int dellen=strlen(del);
     p = get_arg_in_braces(right, res, 0);
-    r=strchr(res, 0);
-    int len=r-res;
+    int len=strlen(res);
+    char *r = res+len;
     while (*p)
     {
         p = get_arg_in_braces(p, temp, 0);
@@ -1145,7 +1166,7 @@ void random_command(const char *arg, struct session *ses)
     if (sscanf(right, "%d, %d%c", &low, &high, &dummy) != 2)
         return tintin_eprintf(ses, "#Wrong number of range arguments in #random: got {%s}.", right);
     if (low < 0 || high < 0)
-        return tintin_eprintf(ses, "#Both arguments of range in #random should be >0, got %d,%d.", low, high);
+        return tintin_eprintf(ses, "#Both arguments of range in #random should be ≥0, got %d,%d.", low, high);
 
     if (low > high)
     {
@@ -1171,7 +1192,7 @@ int random_inline(const char *arg, struct session *ses)
     else if (sscanf(right, "%d, %d", &low, &high) != 2)
         tintin_eprintf(ses, "#Wrong number of range arguments in #random: got {%s}.", right);
     else if (low < 0 || high < 0)
-        tintin_eprintf(ses, "#Both arguments of range in #random should be >0, got %d,%d.", low, high);
+        tintin_eprintf(ses, "#Both arguments of range in #random should be ≥0, got %d,%d.", low, high);
     else
     {
         if (low > high)
@@ -1352,7 +1373,7 @@ void ctime_command(const char *arg, struct session *ses)
             {}
     else
         tt=time(0);
-    p = ct = ctime(&tt);
+    p = ct = ctime_r(&tt, arg2);
     while (p && *p)
     {
         if (*p == '\n')
@@ -1633,4 +1654,64 @@ void initvariable_command(const char* arg, struct session* ses)
         tintin_eprintf(ses, "#Syntax: #initvar <var> <value>");
     else if (!get_hash(ses->myvars, left))
         set_variable(left, right, ses);
+}
+
+/*********************/
+/* the #angle inline */
+/*********************/
+num_t angle_inline(const char *line, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    line = get_arg(line, left, 0, ses);
+    line = get_arg(line, right, 1, ses);
+    if (!*left || !*right)
+    {
+        tintin_eprintf(ses, "#Error: #angle requires two args.");
+        return 0;
+    }
+
+    num_t x = eval_expression(left, ses);
+    num_t y = eval_expression(right, ses);
+
+    num_t a = atan2(y, x) * 180 * M_1_PI * DENOM;
+    if (a < 0)
+        a += 360*DENOM;
+    return a;
+}
+
+/*******************/
+/* the #sin inline */
+/*******************/
+num_t sinus_inline(const char *line, struct session *ses)
+{
+    char arg[BUFFER_SIZE];
+
+    line = get_arg(line, arg, 1, ses);
+    if (!*arg)
+    {
+        tintin_eprintf(ses, "#Error: #sin require an argument.");
+        return 0;
+    }
+
+    num_t x = eval_expression(arg, ses);
+    return sin(x * M_PI / 180 / DENOM) * DENOM;
+}
+
+/*******************/
+/* the #cos inline */
+/*******************/
+num_t cosinus_inline(const char *line, struct session *ses)
+{
+    char arg[BUFFER_SIZE];
+
+    line = get_arg(line, arg, 1, ses);
+    if (!*arg)
+    {
+        tintin_eprintf(ses, "#Error: #cos require an argument.");
+        return 0;
+    }
+
+    num_t x = eval_expression(arg, ses);
+    return cos(x * M_PI / 180 / DENOM) * DENOM;
 }

@@ -12,6 +12,9 @@
 #endif
 #include <assert.h>
 #include <sys/ioctl.h>
+#ifdef HAVE_VALGRIND_VALGRIND_H
+#include <valgrind/valgrind.h>
+#endif
 
 static mbstate_t outstate;
 #define OUTSTATE &outstate
@@ -283,10 +286,19 @@ static void redraw_status(void)
         if (getcolor(&pos, &color, 0))
         {
             c=color;
-            if (!(c&0x70))
-                c=c|(STATUS_COLOR<<4);
-            if ((c&15)==((c>>4)&7))
-                c=(c&0xf0)|(c&7? 0:(STATUS_COLOR==COLOR_BLACK? 7:0));
+            if (!(c&CBG_MASK))
+                c=c|(STATUS_COLOR<<CBG_AT);
+            if ((c&CFG_MASK) == (c&CBG_MASK) >> CBG_AT)
+            {
+                int k = c&CFG_MASK;
+                if (k != 0 && k != 8)
+                    k = 0;
+                else if (STATUS_COLOR == COLOR_BLACK)
+                    k = 7;
+                else
+                    k = 0;
+                c=(c&~CFG_MASK)|k;
+            }
             tbuf=ansicolor(tbuf, c);
             pos++;
         }
@@ -380,7 +392,7 @@ static void b_addline(void)
     strcpy(new, out_line);
     if (b_bottom==b_first+CONSOLE_LENGTH)
         b_shorten();
-    b_output[(unsigned int)b_current%(unsigned int)CONSOLE_LENGTH]=new;
+    b_output[b_current%CONSOLE_LENGTH]=new;
     o_pos=0;
     o_len=setcolor(out_line, o_oldcolor=o_color);
     if (b_bottom<++b_current)
@@ -425,8 +437,8 @@ static inline void print_char(const WC ch)
     }
     else if (o_oldcolor!=o_color) /* b_addline already updates the color */
     {
-        if ((o_color&15)==((o_color&0x70)>>4))
-            o_color=(o_color&0xf0)|((o_color&7)?0:7);
+        if ((o_color&CFG_MASK)==((o_color&CBG_MASK)>>CBG_AT))
+            o_color=(o_color&~CFG_MASK)|((o_color&CFG_MASK)?0:7);
         o_len+=setcolor(out_line+o_len, o_color);
         if (b_screenb==b_bottom)
             tbuf=ansicolor(tbuf, o_color);
@@ -922,6 +934,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             bind_xterm((val[0]==0 && val[1]==115) /* konsole */
                        || val[0]==1               /* libvte, mlterm, aterm, termit */
                        || val[0]==41              /* xterm, terminology */
+                       || val[0]==83              /* screen */
                       );
         }
         else
@@ -1580,9 +1593,9 @@ static void usertty_init(void)
     in_getpassword=false;
 
     b_first=0;
-    b_current=-1;
-    b_bottom=-1;
-    b_screenb=-1;
+    b_current=0;
+    b_bottom=0;
+    b_screenb=0;
     b_last=-1;
     b_output[0]=out_line;
     out_line[0]=0;
@@ -1617,6 +1630,13 @@ static void usertty_done(void)
     term_commit();
     term_restore();
     write_stdout("\n", 1);
+#ifdef HAVE_VALGRIND_VALGRIND_H
+    if (RUNNING_ON_VALGRIND)
+    {
+        while (b_shorten())
+            ;
+    }
+#endif
 }
 
 static void usertty_pause(void)

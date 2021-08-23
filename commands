@@ -153,11 +153,6 @@ hooks
 unhook
 logcomment
 gagthis
-
-#ifdef PROFILING
-profile
-#endif
-
 charset
 logcharset
 
@@ -171,3 +166,5 @@ gmtime
 ctoi
 loginputformat
 initvariable
+*ifaliasexists
+bold

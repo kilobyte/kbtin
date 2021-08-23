@@ -3,6 +3,7 @@
 #include "protos/alias.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
+#include "protos/misc.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/user.h"
@@ -59,6 +60,7 @@ static const char *KEYNAMES[]=
     "ESC[OC",       "RightArrow",
     "ESC[OD",       "LeftArrow",
     "ESC[OE",       "MidArrow",
+    "ESCOE",        "Kpad5",        /* screen on vte */
     "ESCOM",        "KpadEnter",    /* alternate keypad mode */
     "ESCOP",        "KpadNumLock",
     "ESCOQ",        "KpadDivide",
@@ -136,16 +138,14 @@ void bind_command(const char *arg, struct session *ses)
 /***********************/
 void unbind_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], result[BUFFER_SIZE];
+    char left[BUFFER_SIZE];
 
     if (!ui_keyboard)
     {
         tintin_eprintf(ses, "#UI: no access to keyboard => no keybindings");
         return;
     }
-    arg = get_arg_in_braces(arg, left, 1);
-    substitute_vars(left, result);
-    substitute_myvars(result, left, ses);
+    arg = get_arg(arg, left, 1, ses);
     delete_hashlist(ses, ses->binds, left,
         ses->mesvar[MSG_BIND]? "#Ok. {%s} is no longer bound." : 0,
         ses->mesvar[MSG_BIND]? "#No match(es) found for {%s}" : 0);
@@ -195,15 +195,20 @@ void init_bind(void)
     if (!ui_keyboard)
         return;
     for (const char**n=KEYNAMES;**n;n+=2)
-        set_hash(keynames, n[0], n[1]);
+        set_hash_nostring(keynames, n[0], n[1]);
+}
+
+void cleanup_bind(void)
+{
+    kill_hash_nostring(keynames);
 }
 
 void bind_xterm(bool xterm)
 {
     if (xterm)
         for (const char**n=XTERM_KEYNAMES;**n;n+=2)
-            set_hash(keynames, n[0], n[1]);
+            set_hash_nostring(keynames, n[0], n[1]);
     else
         for (const char**n=NORMAL_KEYNAMES;**n;n+=2)
-            set_hash(keynames, n[0], n[1]);
+            set_hash_nostring(keynames, n[0], n[1]);
 }

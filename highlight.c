@@ -40,13 +40,14 @@ static struct colordef
         {14, "yellow"},
         {15, "white"},
         {15, "bold"},
-        {112, "inverse"},
-        {112, "reverse"},
-        {135, "blink"},
-        {519, "underline"},
-        {519, "underlined"},
-        {263, "italic"},
-        {-1, ""},
+        {7<<CBG_AT, "inverse"},
+        {7<<CBG_AT, "reverse"},
+        {CFL_BLINK, "blink"},
+        {CFL_UNDERLINE, "underline"},
+        {CFL_UNDERLINE, "underlined"},
+        {CFL_ITALIC, "italic"},
+        {CFL_STRIKETHRU, "strike"},
+        {-1, 0},
     };
 
 static int highpattern[64];
@@ -101,85 +102,77 @@ void highlight_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     struct listnode *myhighs, *ln;
     bool colflag = true;
-    char *pright, *tmp1, *tmp2, tmp3[BUFFER_SIZE];
+    char *pright, *bp, *cp, buf[BUFFER_SIZE];
 
     pright = right;
     *pright = '\0';
     myhighs = ses->highs;
-    arg = get_arg_in_braces(arg, left, 0);
-    arg = get_arg_in_braces(arg, right, 1);
-    substitute_vars(left, tmp3);
-    substitute_myvars(tmp3, left, ses);
-    substitute_vars(right, tmp3);
-    substitute_myvars(tmp3, right, ses);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
     if (!*left)
     {
         tintin_printf(ses, "#THESE HIGHLIGHTS HAVE BEEN DEFINED:");
         show_list(myhighs);
+        return;
     }
-    else
+
+    bp = left;
+    cp = bp;
+    while (*cp != '\0')
     {
-        tmp1 = left;
-        tmp2 = tmp1;
-        while (*tmp2 != '\0')
-        {
-            tmp2++;
-            while (*tmp2 != ',' && *tmp2 != '\0')
-                tmp2++;
-            while (isaspace(*tmp1))
-                tmp1++;
-            memcpy(tmp3, tmp1, tmp2 - tmp1);
-            tmp3[tmp2 - tmp1] = '\0';
-            colflag = get_high(tmp3);
-            tmp1 = tmp2 + 1;
-        }
-        if (colflag)
-        {
-            if (!*right)
-            {
-                if (ses->mesvar[MSG_HIGHLIGHT] || ses->mesvar[MSG_ERROR])
-                    tintin_eprintf(ses, "#Highlight WHAT?");
-                return;
-            }
-            if ((ln = searchnode_list(myhighs, right)))
-                deletenode_list(myhighs, ln);
-            insertnode_list(myhighs, right, left, get_fastener(right, tmp1), LENGTH);
-            hinum++;
-            if (ses->mesvar[MSG_HIGHLIGHT])
-                tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
-        }
-        else
-        {
-            if (!puts_echoing && ses->mesvar[MSG_ERROR])
-            {
-                tintin_eprintf(ses, "#Invalid highlighting color: {%s}", left);
-                return;
-            }
-
-            if (strcmp(left, "list"))
-                tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
-            tmp3[0]=0;
-            tmp1=tmp3;
-            for (int i=0;cNames[i].num!=-1;i++)
-            {
-                sprintf(left, "%s~7~, ", cNames[i].name);
-                if (cNames[i].num)
-                    tmp1+=sprintf(tmp1, "~%i~%-20s ", cNames[i].num, left);
-                else
-                    tmp1+=sprintf(tmp1, "~7~%-20s ", left);
-                if ((i%4)==3)
-                {
-                    tintin_printf(ses, "%s", tmp3);
-                    tmp3[0]=0;
-                    tmp1=tmp3;
-                }
-            }
-            strcpy(tmp1, "or 0..15:0..7:0..1");
-            tintin_printf(ses, "%s", tmp3);
-        }
-
-
+        cp++;
+        while (*cp != ',' && *cp != '\0')
+            cp++;
+        while (isaspace(*bp))
+            bp++;
+        memcpy(buf, bp, cp - bp);
+        buf[cp - bp] = '\0';
+        colflag = get_high(buf);
+        bp = cp + 1;
     }
+    if (colflag)
+    {
+        if (!*right)
+        {
+            if (ses->mesvar[MSG_HIGHLIGHT] || ses->mesvar[MSG_ERROR])
+                tintin_eprintf(ses, "#Highlight WHAT?");
+            return;
+        }
+        if ((ln = searchnode_list(myhighs, right)))
+            deletenode_list(myhighs, ln);
+        insertnode_list(myhighs, right, left, get_fastener(right, bp), LENGTH);
+        hinum++;
+        if (ses->mesvar[MSG_HIGHLIGHT])
+            tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
+        return;
+    }
+
+    if (!puts_echoing && ses->mesvar[MSG_ERROR])
+    {
+        tintin_eprintf(ses, "#Invalid highlighting color: {%s}", left);
+        return;
+    }
+
+    if (strcmp(left, "list"))
+        tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
+    buf[0]=0;
+    bp=buf;
+    for (int i=0;cNames[i].num!=-1;i++)
+    {
+        bp+=setcolor(bp, cNames[i].num);
+        int len = sprintf(bp, "%s~7~, ", cNames[i].name);
+        bp+=len;
+        while (len++ < 21)
+            *bp++=' ' ;
+        *bp=0;
+        if ((i%4)==3)
+        {
+            tintin_printf(ses, "%s", buf);
+            buf[0]=0;
+            bp=buf;
+        }
+    }
+    tintin_printf(ses, "%sor 0..15:0..7:0..1", buf);
 }
 
 /*****************************/

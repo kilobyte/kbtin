@@ -12,10 +12,12 @@
 #include "protos/hooks.h"
 #include "protos/llist.h"
 #include "protos/print.h"
+#include "protos/math.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/routes.h"
 #include "protos/run.h"
+#include "protos/slist.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
@@ -294,7 +296,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->highs = copy_list(ses->highs, ALPHA);
     newsession->pathdirs = copy_hash(ses->pathdirs);
     newsession->socket = sock;
-    newsession->antisubs = copy_list(ses->antisubs, ALPHA);
+    newsession->antisubs = copy_slist(ses->antisubs);
     newsession->binds = copy_hash(ses->binds);
     newsession->issocket = issocket;
     newsession->naws = !issocket;
@@ -322,13 +324,15 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->presub = ses->presub;
     newsession->verbatim = ses->verbatim;
     newsession->sessionstart=newsession->idle_since=
-        newsession->server_idle_since=time(0);
+        newsession->server_idle_since=current_time();
     newsession->nagle=false;
     newsession->halfcr_in=false;
     newsession->halfcr_log=false;
     newsession->lastintitle=0;
     newsession->debuglogfile=0;
     newsession->debuglogname=0;
+    newsession->linenum=0;
+    newsession->drafted=false;
     newsession->partial_line_marker = mystrdup(ses->partial_line_marker);
     for (int i=0;i<=MAX_MESVAR;i++)
         newsession->mesvar[i] = ses->mesvar[i];
@@ -351,8 +355,7 @@ static struct session *new_session(const char *name, const char *address, int so
     if (!new_conv(&newsession->c_io, newsession->charset, 0))
         tintin_eprintf(0, "#Warning: can't open charset: %s", newsession->charset);
     nullify_conv(&newsession->c_log);
-    newsession->line_time.tv_sec=0;
-    newsession->line_time.tv_usec=0;
+    newsession->line_time=0;
 #ifdef HAVE_GNUTLS
     newsession->ssl=ssl;
 #endif
@@ -395,7 +398,7 @@ void cleanup_session(struct session *ses)
     }
     sprintf(buf, "#SESSION '%s' DIED.", ses->name);
     tintin_puts(buf, NULL);
-    if (close(ses->socket) == -1)
+    if (ses->socket && close(ses->socket) == -1)
         syserr("close in cleanup");
     if (ses->logfile)
         log_off(ses);

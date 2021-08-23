@@ -4,6 +4,7 @@
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/ivars.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/misc.h"
 #include "protos/parse.h"
@@ -11,8 +12,14 @@
 #include "protos/utils.h"
 #include "protos/variables.h"
 
-static int stacks[100][4];
-static bool conv_to_ints(char *arg, struct session *ses);
+static struct stacks
+{
+    int pos;
+    int prio;
+    num_t val;
+    int op;
+} stacks[100];
+static bool conv_to_nums(char *arg, struct session *ses);
 static bool do_one_inside(int begin, int end);
 
 
@@ -22,7 +29,6 @@ static bool do_one_inside(int begin, int end);
 void math_command(const char *line, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[BUFFER_SIZE];
-    int i;
 
     line = get_arg(line, left, 0, ses);
     line = get_arg(line, right, 1, ses);
@@ -31,8 +37,7 @@ void math_command(const char *line, struct session *ses)
         tintin_eprintf(ses, "#Syntax: #math <variable> <expression>");
         return;
     }
-    i = eval_expression(right, ses);
-    sprintf(temp, "%d", i);
+    num2str(temp, eval_expression(right, ses));
     set_variable(left, temp, ses);
 }
 
@@ -73,9 +78,13 @@ struct session *if_command(const char *line, struct session *ses)
 }
 
 
-static bool do_inline(const char *line, int *res, struct session *ses)
+static bool do_inline(const char *line, num_t *res, struct session *ses)
 {
     char command[BUFFER_SIZE], *ptr;
+    struct stacks savestacks[ARRAYSZ(stacks)];
+
+    _Static_assert(sizeof(savestacks) == sizeof(stacks), "stacks size mismatch");
+    memcpy(savestacks, stacks, sizeof(savestacks));
 
     ptr=command;
     while (*line&&(*line!=' '))
@@ -86,36 +95,43 @@ static bool do_inline(const char *line, int *res, struct session *ses)
        tintin_printf(ses, "#executing inline command [%c%s] with [%s]", tintin_char, command, line);
     */
     if (is_abrev(command, "finditem"))
-        *res=finditem_inline(line, ses);
+        *res=N(finditem_inline(line, ses));
     else if (is_abrev(command, "isatom"))
-        *res=isatom_inline(line, ses);
+        *res=N(isatom_inline(line, ses));
     else if (is_abrev(command, "listlength"))
-        *res=listlength_inline(line, ses);
+        *res=N(listlength_inline(line, ses));
     else if (is_abrev(command, "strlen"))
-        *res=strlen_inline(line, ses);
+        *res=N(strlen_inline(line, ses));
     else if (is_abrev(command, "random"))
-        *res=random_inline(line, ses);
+        *res=N(random_inline(line, ses));
     else if (is_abrev(command, "grep"))
-        *res=grep_inline(line, ses);
+        *res=N(grep_inline(line, ses));
     else if (is_abrev(command, "strcmp"))
-        *res=strcmp_inline(line, ses);
+        *res=N(strcmp_inline(line, ses));
     else if (is_abrev(command, "match"))
-        *res=match_inline(line, ses);
+        *res=N(match_inline(line, ses));
     else if (is_abrev(command, "ord"))
-        *res=ord_inline(line, ses);
+        *res=N(ord_inline(line, ses));
+    else if (is_abrev(command, "angle"))
+        *res=angle_inline(line, ses);
+    else if (is_abrev(command, "sinus"))
+        *res=sinus_inline(line, ses);
+    else if (is_abrev(command, "cosinus"))
+        *res=cosinus_inline(line, ses);
     else
     {
         tintin_eprintf(ses, "#Unknown inline command [%c%s]!", tintin_char, command);
         return false;
     }
 
+    memcpy(stacks, savestacks, sizeof(savestacks));
     return true;
 }
 
 
-int eval_expression(char *arg, struct session *ses)
+num_t eval_expression(char *arg, struct session *ses)
 {
-    if (!conv_to_ints(arg, ses))
+    if (!conv_to_nums(arg, ses))
         return 0;
 
     while (1)
@@ -125,19 +141,19 @@ int eval_expression(char *arg, struct session *ses)
         int begin = -1;
         int end = -1;
         int prev = -1;
-        while (stacks[i][0] && flag)
+        while (stacks[i].pos && flag)
         {
-            if (stacks[i][1] == 0)
+            if (stacks[i].prio == 0)
             {
                 begin = i;
             }
-            else if (stacks[i][1] == 1)
+            else if (stacks[i].prio == 1)
             {
                 end = i;
                 flag = false;
             }
             prev = i;
-            i = stacks[i][0];
+            i = stacks[i].pos;
         }
         if ((flag && (begin != -1)) || (!flag && (begin == -1)))
         {
@@ -147,7 +163,7 @@ int eval_expression(char *arg, struct session *ses)
         if (flag)
         {
             if (prev == -1)
-                return stacks[0][2];
+                return stacks[0].val;
             begin = -1;
             end = i;
         }
@@ -159,12 +175,12 @@ int eval_expression(char *arg, struct session *ses)
     }
 }
 
-static bool conv_to_ints(char *arg, struct session *ses)
+static bool conv_to_nums(char *arg, struct session *ses)
 {
     int i, flag;
     bool result, should_differ;
     bool regex=false; /* false=strncmp, true=regex match */
-    char *ptr, *tptr;
+    char *ptr;
     char temp[BUFFER_SIZE];
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
@@ -177,15 +193,17 @@ static bool conv_to_ints(char *arg, struct session *ses)
             /* inline commands */
         {
             ptr=(char*)get_inline(ptr+1, temp)-1;
-            if (!do_inline(temp, &(stacks[i][2]), ses))
+            num_t res;
+            if (!do_inline(temp, &res, ses))
                 return false;
-            stacks[i][1]=15;
+            stacks[i].val=res;
+            stacks[i].prio=15;
         }
         /* jku: comparing strings with = and != */
         else if (*ptr == '[')
         {
             ptr++;
-            tptr=left;
+            char *tptr=left;
             while ((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
             {
                 *tptr = *ptr;
@@ -242,15 +260,13 @@ static bool conv_to_ints(char *arg, struct session *ses)
                 result = strcmp(left, right);
             if (result == should_differ)
             { /* success */
-                stacks[i][1] = 15;
-                stacks[i][2] = 1;
-                /* fprintf(stderr, "Expr TRUE\n"); */
+                stacks[i].prio = 15;
+                stacks[i].val = N(1);
             }
             else
             {
-                stacks[i][1] = 15;
-                stacks[i][2] = 0;
-                /* fprintf(stderr, "Expr FALSE\n"); */
+                stacks[i].prio = 15;
+                stacks[i].val = N(0);
             }
         }
         /* jku: end of comparing strings */
@@ -259,8 +275,8 @@ static bool conv_to_ints(char *arg, struct session *ses)
         {
             if (ses->mesvar[MSG_VARIABLE])
                 tintin_eprintf(ses, "#Undefined variable in {%s}.", arg);
-            stacks[i][1] = 15;
-            stacks[i][2] = 0;
+            stacks[i].prio = 15;
+            stacks[i].val = N(0);
             if (*(++ptr)==BRACE_OPEN)
             {
                 ptr=(char*)get_arg_in_braces(ptr, temp, 0);
@@ -274,48 +290,52 @@ static bool conv_to_ints(char *arg, struct session *ses)
         }
         /* jku: end of changes */
         else if (*ptr == '(')
-            stacks[i][1] = 0;
+            stacks[i].prio = 0;
         else if (*ptr == ')')
-            stacks[i][1] = 1;
+            stacks[i].prio = 1;
         else if (*ptr == '!')
             if (*(ptr + 1) == '=')
-                stacks[i][1] = 12,
+                stacks[i].prio = 12,
                 ptr++;
             else
-                stacks[i][1] = 2;
+                stacks[i].prio = 2;
         else if (*ptr == '*')
         {
-            stacks[i][1] = 3;
-            stacks[i][3] = 0;
+            stacks[i].prio = 3;
+            stacks[i].op = 0;
         }
         else if (*ptr == '/')
         {
-            stacks[i][1] = 3;
-            stacks[i][3] = 1;
+            stacks[i].prio = 3;
+            if (ptr[1] == '/') /* / is integer division, // fractional */
+                stacks[i].op = 2, ptr++;
+            else
+                stacks[i].op = 1;
+        }
+        else if (*ptr == '%')
+        {
+            stacks[i].prio = 3;
+            stacks[i].op = 3;
         }
         else if (*ptr == '+')
         {
-            stacks[i][1] = 5;
-            stacks[i][3] = 2;
+            stacks[i].prio = 5;
+            stacks[i].op = 2;
         }
         else if (*ptr == '-')
         {
             flag = -1;
             if (i > 0)
-                flag = stacks[i - 1][1];
+                flag = stacks[i - 1].prio;
             if (flag == 15)
             {
-                stacks[i][1] = 5;
-                stacks[i][3] = 3;
+                stacks[i].prio = 5;
+                stacks[i].op = 3;
             }
             else
             {
-                tptr = ptr;
-                ptr++;
-                while (isadigit(*ptr))
-                    ptr++;
-                sscanf(tptr, "%d", &stacks[i][2]);
-                stacks[i][1] = 15;
+                stacks[i].val = str2num(ptr, &ptr);
+                stacks[i].prio = 15;
                 ptr--;
             }
         }
@@ -323,14 +343,14 @@ static bool conv_to_ints(char *arg, struct session *ses)
         {
             if (*(ptr + 1) == '=')
             {
-                stacks[i][1] = 8;
-                stacks[i][3] = 4;
+                stacks[i].prio = 8;
+                stacks[i].op = 4;
                 ptr++;
             }
             else
             {
-                stacks[i][1] = 8;
-                stacks[i][3] = 5;
+                stacks[i].prio = 8;
+                stacks[i].op = 5;
             }
         }
         else if (*ptr == '<')
@@ -338,51 +358,48 @@ static bool conv_to_ints(char *arg, struct session *ses)
             if (*(ptr + 1) == '=')
             {
                 ptr++;
-                stacks[i][1] = 8;
-                stacks[i][3] = 6;
+                stacks[i].prio = 8;
+                stacks[i].op = 6;
             }
             else
             {
-                stacks[i][1] = 8;
-                stacks[i][3] = 7;
+                stacks[i].prio = 8;
+                stacks[i].op = 7;
             }
         }
         else if (*ptr == '=')
         {
-            stacks[i][1] = 11;
+            stacks[i].prio = 11;
             if (*(ptr + 1) == '=')
                 ptr++;
         }
         else if (*ptr == '&')
         {
-            stacks[i][1] = 13;
+            stacks[i].prio = 13;
             if (*(ptr + 1) == '&')
                 ptr++;
         }
         else if (*ptr == '|')
         {
-            stacks[i][1] = 14;
+            stacks[i].prio = 14;
             if (*(ptr + 1) == '|')
                 ptr++;
         }
         else if (isadigit(*ptr))
         {
-            stacks[i][1] = 15;
-            tptr = ptr;
-            while (isadigit(*ptr))
-                ptr++;
-            sscanf(tptr, "%d", &stacks[i][2]);
+            stacks[i].prio = 15;
+            stacks[i].val = str2num(ptr, &ptr);
             ptr--;
         }
         else if (*ptr == 'T')
         {
-            stacks[i][1] = 15;
-            stacks[i][2] = 1;
+            stacks[i].prio = 15;
+            stacks[i].val = N(1);
         }
         else if (*ptr == 'F')
         {
-            stacks[i][1] = 15;
-            stacks[i][2] = 0;
+            stacks[i].prio = 15;
+            stacks[i].val = N(0);
         }
         else
         {
@@ -391,13 +408,18 @@ static bool conv_to_ints(char *arg, struct session *ses)
         }
         if (*ptr != ' ')
         {
-            stacks[i][0] = i + 1;
+            stacks[i].pos = i + 1;
             i++;
+            if (i >= (int)ARRAYSZ(stacks))
+            {
+                tintin_eprintf(ses, "Error. Expression too long: {%s}", arg);
+                return false;
+            }
         }
         ptr++;
     }
     if (i > 0)
-        stacks[i][0] = 0;
+        stacks[i].pos = 0;
     return true;
 }
 
@@ -405,111 +427,115 @@ static bool do_one_inside(int begin, int end)
 {
     while (1)
     {
-        int ptr = (begin > -1) ? stacks[begin][0] : 0;
+        int ptr = (begin > -1) ? stacks[begin].pos : 0;
         int highest = 16;
         int loc = -1;
         int ploc = -1;
         int prev = -1;
         while (ptr < end)
         {
-            if (stacks[ptr][1] < highest)
+            if (stacks[ptr].prio < highest)
             {
-                highest = stacks[ptr][1];
+                highest = stacks[ptr].prio;
                 loc = ptr;
                 ploc = prev;
             }
             prev = ptr;
-            ptr = stacks[ptr][0];
+            ptr = stacks[ptr].pos;
         }
 
         if (highest == 15)
         {
             if (begin > -1)
             {
-                stacks[begin][1] = 15;
-                stacks[begin][2] = stacks[loc][2];
-                stacks[begin][0] = stacks[end][0];
+                stacks[begin].prio = 15;
+                stacks[begin].val = stacks[loc].val;
+                stacks[begin].pos = stacks[end].pos;
                 return true;
             }
             else
             {
-                stacks[0][0] = stacks[end][0];
-                stacks[0][1] = 15;
-                stacks[0][2] = stacks[loc][2];
+                stacks[0].pos = stacks[end].pos;
+                stacks[0].prio = 15;
+                stacks[0].val = stacks[loc].val;
                 return true;
             }
         }
         else if (highest == 2)
         {
-            int next = stacks[loc][0];
-            if (stacks[next][1] != 15 || stacks[next][0] == 0)
+            int next = stacks[loc].pos;
+            if (stacks[next].prio != 15 || stacks[next].pos == 0)
                 return false;
-            stacks[loc][0] = stacks[next][0];
-            stacks[loc][1] = 15;
-            stacks[loc][2] = !stacks[next][2];
+            stacks[loc].pos = stacks[next].pos;
+            stacks[loc].prio = 15;
+            stacks[loc].val = N(!stacks[next].val);
         }
         else
         {
             int next;
             assert(loc >= 0);
-            next = stacks[loc][0];
-            if (ploc == -1 || stacks[next][0] == 0 || stacks[next][1] != 15)
+            next = stacks[loc].pos;
+            if (ploc == -1 || stacks[next].pos == 0 || stacks[next].prio != 15)
                 return false;
-            if (stacks[ploc][1] != 15)
+            if (stacks[ploc].prio != 15)
                 return false;
             switch (highest)
             {
             case 3:            /* highest priority is *,/ */
-                stacks[ploc][0] = stacks[next][0];
-                if (stacks[loc][3]==0)
-                    stacks[ploc][2] *= stacks[next][2];
-                else if (stacks[next][2])
-                    stacks[ploc][2] /= stacks[next][2];
-                else
+                stacks[ploc].pos = stacks[next].pos;
+                if (stacks[loc].op==0)
+                    stacks[ploc].val = nmul(stacks[ploc].val, stacks[next].val);
+                else if (!stacks[next].val)
                 {
-                    stacks[ploc][2]=0;
+                    stacks[ploc].val=0;
                     tintin_eprintf(0, "#Error: Division by zero.");
                 }
+                else if (stacks[loc].op==1)
+                    stacks[ploc].val = N(stacks[ploc].val / stacks[next].val);
+                else if (stacks[loc].op==2)
+                    stacks[ploc].val = ndiv(stacks[ploc].val, stacks[next].val);
+                else
+                    stacks[ploc].val %= stacks[next].val;
                 break;
             case 5:            /* highest priority is +,- */
-                stacks[ploc][0] = stacks[next][0];
-                if (stacks[loc][3]==2)
-                    stacks[ploc][2] += stacks[next][2];
+                stacks[ploc].pos = stacks[next].pos;
+                if (stacks[loc].op==2)
+                    stacks[ploc].val += stacks[next].val;
                 else
-                    stacks[ploc][2] -= stacks[next][2];
+                    stacks[ploc].val -= stacks[next].val;
                 break;
             case 8:            /* highest priority is >,>=,<,<= */
-                stacks[ploc][0] = stacks[next][0];
-                switch (stacks[loc][3])
+                stacks[ploc].pos = stacks[next].pos;
+                switch (stacks[loc].op)
                 {
                 case 5:
-                    stacks[ploc][2] = (stacks[ploc][2] > stacks[next][2]);
+                    stacks[ploc].val = N(stacks[ploc].val > stacks[next].val);
                     break;
                 case 4:
-                    stacks[ploc][2] = (stacks[ploc][2] >= stacks[next][2]);
+                    stacks[ploc].val = N(stacks[ploc].val >= stacks[next].val);
                     break;
                 case 7:
-                    stacks[ploc][2] = (stacks[ploc][2] < stacks[next][2]);
+                    stacks[ploc].val = N(stacks[ploc].val < stacks[next].val);
                     break;
                 case 6:
-                    stacks[ploc][2] = (stacks[ploc][2] <= stacks[next][2]);
+                    stacks[ploc].val = N(stacks[ploc].val <= stacks[next].val);
                 }
                 break;
             case 11:            /* highest priority is == */
-                stacks[ploc][0] = stacks[next][0];
-                stacks[ploc][2] = (stacks[ploc][2] == stacks[next][2]);
+                stacks[ploc].pos = stacks[next].pos;
+                stacks[ploc].val = N(stacks[ploc].val == stacks[next].val);
                 break;
             case 12:            /* highest priority is != */
-                stacks[ploc][0] = stacks[next][0];
-                stacks[ploc][2] = (stacks[ploc][2] != stacks[next][2]);
+                stacks[ploc].pos = stacks[next].pos;
+                stacks[ploc].val = N(stacks[ploc].val != stacks[next].val);
                 break;
             case 13:            /* highest priority is && */
-                stacks[ploc][0] = stacks[next][0];
-                stacks[ploc][2] = (stacks[ploc][2] && stacks[next][2]);
+                stacks[ploc].pos = stacks[next].pos;
+                stacks[ploc].val = N(stacks[ploc].val && stacks[next].val);
                 break;
             case 14:            /* highest priority is || */
-                stacks[ploc][0] = stacks[next][0];
-                stacks[ploc][2] = (stacks[ploc][2] || stacks[next][2]);
+                stacks[ploc].pos = stacks[next].pos;
+                stacks[ploc].val = N(stacks[ploc].val || stacks[next].val);
                 break;
             default:
                 tintin_eprintf(0, "#Programming error *slap Bill*");

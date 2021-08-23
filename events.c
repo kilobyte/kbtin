@@ -2,11 +2,20 @@
 #include "protos/action.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
 #include "protos/variables.h"
 
+
+int msec(timens_t t)
+{
+    t%=NANO;
+    if (t<0)
+        t+=NANO;
+    return t/1000000;
+}
 
 void execute_event(struct eventnode *ev, struct session *ses)
 {
@@ -20,7 +29,7 @@ void execute_event(struct eventnode *ev, struct session *ses)
 static void list_events(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    time_t ct; /* current time */
+    timens_t ct; /* current time */
     bool flag;
     struct eventnode *ev;
 
@@ -30,7 +39,7 @@ static void list_events(const char *arg, struct session *ses)
         return;
     }
 
-    ct = time(NULL);
+    ct = current_time();
     ev = ses->events;
     arg = get_arg_in_braces(arg, left, 1);
 
@@ -39,7 +48,8 @@ static void list_events(const char *arg, struct session *ses)
         tintin_printf(ses, "#Defined events:");
         while (ev)
         {
-            tintin_printf(ses, "(%d)\t {%s}", ev->time-ct, ev->event);
+            tintin_printf(ses, "(%d.%03d)\t {%s}", (int)((ev->time-ct)/NANO),
+                msec(ev->time-ct), ev->event);
             ev = ev->next;
         }
     }
@@ -50,7 +60,8 @@ static void list_events(const char *arg, struct session *ses)
         {
             if (match(left, ev->event))
             {
-                tintin_printf(ses, "(%d)\t {%s}", ev->time-ct, ev->event);
+                tintin_printf(ses, "(%d.%03d)\t {%s}", (ev->time-ct)/NANO,
+                    msec(ev->time-ct), ev->event);
                 flag = true;
             }
             ev = ev->next;
@@ -63,8 +74,8 @@ static void list_events(const char *arg, struct session *ses)
 /* add new event to the list */
 void delay_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[BUFFER_SIZE], *cptr;
-    time_t delay;
+    char left[BUFFER_SIZE], right[BUFFER_SIZE], *cptr;
+    timens_t delay;
     struct eventnode *ev, *ptr, *ptrlast;
 
     if (!ses)
@@ -73,26 +84,22 @@ void delay_command(const char *arg, struct session *ses)
         return;
     }
 
-    arg = get_arg_in_braces(arg, left, 0);
-    arg = get_arg_in_braces(arg, right, 1);
-    substitute_vars(left, temp);
-    substitute_myvars(temp, left, ses);
-    substitute_vars(right, temp);
-    substitute_myvars(temp, right, ses);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
     if (!*right)
     {
         list_events(left, ses);
         return;
     }
 
-    if (!*left || (delay=strtol(left, &cptr, 10))<0 || *cptr)
+    if (!*left || (delay=str2timens(left, &cptr))<0 || *cptr)
     {
         tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), NEGATIVE DELAY", left);
         return;
     }
 
     ev = TALLOC(struct eventnode);
-    ev->time = time(NULL) + delay;
+    ev->time = current_time() + delay;
     ev->next = NULL;
     ev->event = mystrdup(right);
 
@@ -142,7 +149,7 @@ static void remove_event(struct eventnode **ev)
 /* remove events matching regexp arg from list */
 void undelay_command(const char *arg, struct session *ses)
 {
-    char temp[BUFFER_SIZE], left[BUFFER_SIZE];
+    char left[BUFFER_SIZE];
     bool flag;
     struct eventnode **ev;
 
@@ -152,15 +159,15 @@ void undelay_command(const char *arg, struct session *ses)
         return;
     }
 
-    arg = get_arg_in_braces(arg, left, 1);
-    substitute_vars(left, temp);
-    substitute_myvars(temp, left, ses);
+    arg = get_arg(arg, left, 1, ses);
 
     if (!*left)
     {
         tintin_eprintf(ses, "#ERROR: valid syntax is: #undelay {event pattern}");
         return;
     }
+
+    timens_t ct = current_time();
 
     flag = false;
     ev = &(ses->events);
@@ -169,8 +176,8 @@ void undelay_command(const char *arg, struct session *ses)
         {
             flag=true;
             if (ses==activesession && ses->mesvar[MSG_EVENT])
-                tintin_printf(ses, "#Ok. Event {%s} at %ld won't be executed.",
-                    (*ev)->event, (*ev)->time-time(0));
+                tintin_printf(ses, "#Ok. Event {%s} at %ld.%03d won't be executed.",
+                    (*ev)->event, ((*ev)->time-ct)/NANO, msec((*ev)->time-ct));
             remove_event(ev);
         }
         else

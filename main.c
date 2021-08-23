@@ -18,11 +18,12 @@
 #include "protos/hooks.h"
 #include "protos/llist.h"
 #include "protos/print.h"
+#include "protos/math.h"
 #include "protos/misc.h"
 #include "protos/net.h"
 #include "protos/parse.h"
-#include "protos/prof.h"
 #include "protos/session.h"
+#include "protos/slist.h"
 #include "protos/substitute.h"
 #include "protos/ticks.h"
 #include "protos/unicode.h"
@@ -176,18 +177,14 @@ static void setup_ulimit(void)
 
 static void init_nullses(void)
 {
-    struct timeval tv;
-
-    gettimeofday(&tv, 0);
-    time0 = tv.tv_sec;
-    utime0 = tv.tv_usec;
+    start_time = idle_since = current_time();
 
     nullsession=TALLOC(struct session);
     nullsession->name=mystrdup("main");
     nullsession->address=0;
     nullsession->tickstatus = false;
-    nullsession->tick_size = DEFAULT_TICK_SIZE;
-    nullsession->pretick = DEFAULT_PRETICK;
+    nullsession->tick_size = DEFAULT_TICK_SIZE*NANO;
+    nullsession->pretick = DEFAULT_PRETICK*NANO;
     nullsession->time0 = 0;
     nullsession->snoopstatus = true;
     nullsession->logfile = 0;
@@ -222,11 +219,11 @@ static void init_nullses(void)
     nullsession->last_term_type=0;
     nullsession->server_echo = 0;
     nullsession->nagle = false;
-    nullsession->antisubs = init_list();
+    nullsession->antisubs = init_slist();
     nullsession->binds = init_hash();
     nullsession->next = 0;
-    nullsession->sessionstart=nullsession->idle_since=
-        nullsession->server_idle_since=time(0);
+    nullsession->sessionstart = nullsession->idle_since =
+        nullsession->server_idle_since = start_time;
     nullsession->debuglogfile=0;
     nullsession->debuglogname=0;
     for (int i=0;i<HISTORY_SIZE;i++)
@@ -242,9 +239,11 @@ static void init_nullses(void)
     nullsession->no_return = 0;
     nullsession->path_length = 0;
     nullsession->last_line[0] = 0;
+    nullsession->linenum = 0;
     nullsession->events = NULL;
     nullsession->verbose=false;
     nullsession->closing=false;
+    nullsession->drafted=false;
     sessionlist = nullsession;
     activesession = nullsession;
     pvars=0;
@@ -263,13 +262,13 @@ static void init_nullses(void)
     nullsession->mesvar[MSG_ERROR]= DEFAULT_ERROR_MESS;
     nullsession->mesvar[MSG_HOOK]= DEFAULT_HOOK_MESS;
     nullsession->mesvar[MSG_LOG]= DEFAULT_LOG_MESS;
+    nullsession->mesvar[MSG_TICK]= DEFAULT_TICK_MESS;
     nullsession->charset=mystrdup(DEFAULT_CHARSET);
     nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
                               DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
     nullify_conv(&nullsession->c_io);
     nullify_conv(&nullsession->c_log);
-    nullsession->line_time.tv_sec=0;
-    nullsession->line_time.tv_usec=0;
+    nullsession->line_time=0;
 #ifdef HAVE_GNUTLS
     nullsession->ssl=0;
 #endif
@@ -440,7 +439,7 @@ int main(int argc, char **argv)
     strcpy(status, EMPTY_LINE);
     user_init();
     /*  read_complete();            no tab-completion */
-    srand((getpid()*0x10001)^time0);
+    srand((getpid()*0x10001)^start_time^(start_time>>32));
     lastdraft=0;
 
     if (ui_own_output || tty)
@@ -471,13 +470,8 @@ ever wants to read -- that is what docs are for.
     user_mark_greeting();
 
     setup_signals();
-#ifdef PROFILING
-    setup_prof();
-#endif
-    PROF("initializing");
     setup_ulimit();
     init_nullses();
-    PROF("other");
     apply_options();
     tintin();
     return 0;
@@ -487,11 +481,11 @@ ever wants to read -- that is what docs are for.
 /* return seconds to next tick (global, all sessions) */
 /* also display tick messages                         */
 /******************************************************/
-static int check_events(void)
+static timens_t check_events(void)
 {
-    int tick_time = 0, curr_time, tt;
+    timens_t tick_time = 0, curr_time, tt;
 
-    curr_time = time(NULL);
+    curr_time = current_time();
 restart:
     any_closed=false;
     for (struct session *sp = sessionlist; sp; sp = sp->next)
@@ -499,7 +493,6 @@ restart:
         tt = check_event(curr_time, sp);
         if (any_closed)
             goto restart;
-        /* printf("#%s %d(%d)\n", sp->name, tt, curr_time); */
         if (tt > curr_time && (tick_time == 0 || tt < tick_time))
             tick_time = tt;
     }
@@ -540,8 +533,9 @@ static void tintin(void)
         }
 #endif
 
-        tv.tv_sec = check_events();
-        tv.tv_usec = 0;
+        timens_t ev = check_events();
+        tv.tv_sec = ev/NANO;
+        tv.tv_usec = ev%NANO/1000;
 
         maxfd=0;
         FD_ZERO(&readfdmask);
@@ -579,8 +573,7 @@ static void tintin(void)
 
         if (FD_ISSET(0, &readfdmask))
         {
-            PROFSTART;
-            PROFPUSH("user interface");
+            idle_since = current_time();
             result=read(0, kbdbuf+inbuf, BUFFER_SIZE-inbuf);
             if (result==-1)
                 myquitsig(0);
@@ -635,9 +628,7 @@ static void tintin(void)
                 }
             }
             inbuf=0;
-        partial:
-            PROFEND(kbd_lag, kbd_cnt);
-            PROFPOP;
+        partial:;
         }
         for (struct session *ses = sessionlist; ses; ses = ses->next)
         {
@@ -684,7 +675,6 @@ static void read_mud(struct session *ses)
     char temp[BUFFER_SIZE];
     int didget, count;
 
-    PROFSTART;
     if ((didget = read_buffer_mud(buffer, ses))==-1)
     {
         cleanup_session(ses);
@@ -740,6 +730,7 @@ static void read_mud(struct session *ses)
             *cpdest = '\0';
             do_one_line(linebuffer, 1, ses);
             ses->lastintitle=0;
+            ses->drafted=false;
 
             cpsource++;
             cpdest=linebuffer;
@@ -760,6 +751,7 @@ static void read_mud(struct session *ses)
             {
                 do_one_line(linebuffer, 0, ses);
                 ses->lastintitle=0;
+                ses->drafted=false; /* abandoned */
             }
             cpdest=linebuffer;
         }
@@ -771,14 +763,17 @@ static void read_mud(struct session *ses)
         *cpdest=0;
         do_one_line(linebuffer, 1, ses);
         ses->lastintitle=0;
+        ses->drafted=false;
         cpdest=linebuffer;
     }
     *cpdest = '\0';
     strcpy(ses->last_line, linebuffer);
     if (!ses->more_coming)
         if (cpdest!=linebuffer)
+        {
             do_one_line(linebuffer, 0, ses);
-    PROFEND(mud_lag, mud_cnt);
+            ses->drafted=true;
+        }
 }
 
 /**********************************************************/
@@ -788,14 +783,14 @@ static void do_one_line(char *line, int nl, struct session *ses)
 {
     bool isnb;
     char ubuf[BUFFER_SIZE];
-    struct timeval t1, t2;
+    timens_t t;
 
     if (nl)
-        gettimeofday(&t1, 0);
-    PROFPUSH("conv: remote->utf8");
+        t = current_time();
+    if (!ses->drafted)
+        ses->linenum++;
     convert(&ses->c_io, ubuf, line, -1);
 # define line ubuf
-    PROF("looking for passwords");
     switch (ses->server_echo)
     {
     case 0:
@@ -816,25 +811,18 @@ static void do_one_line(char *line, int nl, struct session *ses)
         }
     }
     _=line;
-    PROF("processing incoming colors");
     do_in_MUD_colors(line, false, ses);
     isnb=isnotblank(line, false);
-    PROF("promptactions");
     if (!ses->ignore && (nl||isnb))
         check_all_promptactions(line, ses);
-    PROF("actions");
     if (nl && !ses->presub && !ses->ignore)
         check_all_actions(line, ses);
-    PROF("substitutions");
     if (!ses->togglesubs && (nl||isnb) && !do_one_antisub(line, ses))
         do_all_sub(line, ses);
-    PROF("actions");
     if (nl && ses->presub && !ses->ignore)
         check_all_actions(line, ses);
-    PROF("highlights");
     if (isnb&&!ses->togglesubs)
         do_all_high(line, ses);
-    PROF("display");
     if (isnotblank(line, ses->blank))
     {
         if (ses==activesession)
@@ -866,28 +854,20 @@ static void do_one_line(char *line, int nl, struct session *ses)
         else if (ses->snoopstatus)
             snoop(line, ses);
     }
-    PROFPOP;
     _=0;
 #undef line
 
     if (nl)
     {
-        gettimeofday(&t2, 0);
-        t2.tv_sec-=t1.tv_sec;
-        t2.tv_usec-=t1.tv_usec;
-        if (t2.tv_usec<0)
-            t2.tv_usec+=1000000, t2.tv_sec--;
-        if (ses->line_time.tv_sec || ses->line_time.tv_usec)
+        t = current_time() - t;
+        if (ses->line_time)
         {
             /* A dragged average: every new line counts for 10% of the value.
               The weight of any old line decays with half-life around 6.5. */
-            int64_t t=(int64_t)(ses->line_time.tv_sec*9+t2.tv_sec)*100000
-                              +(ses->line_time.tv_usec*9+t2.tv_usec)/10;
-            ses->line_time.tv_sec =t/1000000;
-            ses->line_time.tv_usec=t%1000000;
+            ses->line_time=(ses->line_time*9+t)/10;
         }
         else
-            ses->line_time=t2;
+            ses->line_time=t;
     }
 }
 

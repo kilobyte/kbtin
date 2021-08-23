@@ -7,18 +7,25 @@
 #include "tintin.h"
 #include <fcntl.h>
 #include <sys/stat.h>
+#ifdef HAVE_VALGRIND_VALGRIND_H
+#include <valgrind/valgrind.h>
+#endif
+#include "protos/bind.h"
 #include "protos/colors.h"
 #include "protos/files.h"
 #include "protos/globals.h"
 #include "protos/highlight.h"
+#include "protos/history.h"
 #include "protos/hooks.h"
 #include "protos/llist.h"
 #include "protos/print.h"
+#include "protos/math.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/routes.h"
 #include "protos/run.h"
 #include "protos/session.h"
+#include "protos/slist.h"
 #include "protos/substitute.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
@@ -188,7 +195,7 @@ void sendchar_command(const char *arg, struct session *ses)
                     ch=strtol(chp, &ep, 8);
                 uchar:
                     if (ch<0 || ch>0x10ffff)
-                        tintin_eprintf(ses, "#sendchar: code %x out of Unicode at {\\%s}", ch, chp);
+                        tintin_eprintf(ses, "#sendchar: code %lx out of Unicode at {\\%s}", ch, chp);
                     else
                     {
                         wchar_t wch=ch;
@@ -209,7 +216,7 @@ void sendchar_command(const char *arg, struct session *ses)
                     chp++;
                 ch=strtol(chp, &ep, 16);
                 if (ch<0 || ch>0x10ffff)
-                    tintin_eprintf(ses, "#sendchar: code %x out of Unicode at {U%s}", ch, chp);
+                    tintin_eprintf(ses, "#sendchar: code %lx out of Unicode at {U%s}", ch, chp);
                 else
                 {
                     wchar_t wch=ch;
@@ -265,6 +272,7 @@ void char_command(const char *arg, struct session *ses)
     {
         tintin_char = *arg;
         tintin_printf(ses, "#OK. TINTIN-CHAR is now {%c}", tintin_char);
+        tintin_char_set = true;
     }
     else
         tintin_eprintf(ses, "#SPECIFY A PROPER TINTIN-CHAR! SOMETHING LIKE # OR /!");
@@ -335,6 +343,15 @@ void end_command(const char *arg, struct session *ses)
     }
     activesession = nullsession;
     do_hook(nullsession, HOOK_END, 0, true);
+#ifdef HAVE_VALGRIND_VALGRIND_H
+    if (RUNNING_ON_VALGRIND)
+    {
+        cleanup_session(nullsession);
+        cleanup_parse();
+        cleanup_bind();
+        cleanup_history();
+    }
+#endif
     activesession = NULL;
     if (ui_own_output)
     {
@@ -538,6 +555,7 @@ static const char *msNAME[]=
     "errors",
     "hooks",
     "logging",
+    "ticks",
     "all"
 };
 
@@ -644,6 +662,22 @@ void speedwalk_command(const char *arg, struct session *ses)
     togglebool(&ses->speedwalk, arg, ses,
                "#SPEEDWALK IS NOW ON.",
                "#SPEEDWALK IS NOW OFF.");
+}
+
+
+/*********************/
+/* the #bold command */
+/*********************/
+void bold_command(const char *arg, struct session *ses)
+{
+    togglebool(&bold, arg, ses,
+               "#Terminals are now allowed to turn bright into bold.",
+               "#Terminals are now told to not substitute bright by bold.");
+    if (ui_own_output)
+    {
+        user_pause();
+        user_resume();
+    }
 }
 
 
@@ -921,7 +955,7 @@ void info_command(const char *arg, struct session *ses)
     int practions = count_list(ses->prompts);
     int aliases   = ses->aliases->nval;
     int subs      = count_list(ses->subs);
-    int antisubs  = count_list(ses->antisubs);
+    int antisubs  = count_slist(ses->antisubs);
     int vars      = ses->myvars->nval;
     int highs     = count_list(ses->highs);
     int binds     = ses->binds->nval;
@@ -958,8 +992,11 @@ void info_command(const char *arg, struct session *ses)
         ses->echo, ses->speedwalk, ses->blank, ses->verbatim);
     tintin_printf(ses, " toggle subs=%d, ignore actions=%d, PreSub=%d, verbose=%d",
         ses->togglesubs, ses->ignore, ses->presub, ses->verbose);
-    tintin_printf(ses, "Ticker is %s (ticksize=%d, pretick=%d)",
-        ses->tickstatus?"enabled":"disabled", ses->tick_size, ses->pretick);
+    char num1[32], num2[32];
+    usecstr(num1, ses->tick_size);
+    usecstr(num2, ses->pretick);
+    tintin_printf(ses, "Ticker is %s (ticksize=%s, pretick=%s)",
+        ses->tickstatus?"enabled":"disabled", num1, num2);
     if (ui_own_output)
     {
         bptr=buffer;
@@ -987,14 +1024,15 @@ void info_command(const char *arg, struct session *ses)
         tintin_printf(ses, "Debuglog: {%s}", ses->debuglogname);
     if (ses!=nullsession)
     {
-        time_t now=time(0);
-        tintin_printf(ses, "Idle time: %d, server idle: %d",
-            now-ses->idle_since, now-ses->server_idle_since);
+        timens_t ct=current_time();
+        tintin_printf(ses, "Idle time: %d.%d, server idle: %d.%d",
+            (ct-ses->idle_since)/NANO, (ct-ses->idle_since)%NANO/(NANO/10),
+            (ct-ses->server_idle_since)/NANO, (ct-ses->server_idle_since)%NANO/(NANO/10));
     }
-    if (ses->line_time.tv_sec||ses->line_time.tv_usec)
-        tintin_printf(ses, "Line processing time: %d.%06ds (%1.1f per second)",
-            ses->line_time.tv_sec, ses->line_time.tv_usec,
-            1/(ses->line_time.tv_sec+ses->line_time.tv_usec*0.000001));
+    if (ses->line_time)
+        tintin_printf(ses, "Line processing time: %lld.%06llds (%1.1f per second)",
+            ses->line_time/NANO, ses->line_time%NANO/1000,
+            1/(ses->line_time*0.000000001));
     if (ses->closing)
         tintin_printf(ses, "The session has it's closing mark set to %d!", ses->closing);
 }

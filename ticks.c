@@ -9,11 +9,11 @@
 #include "protos/events.h"
 #include "protos/globals.h"
 #include "protos/hooks.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
+#include "protos/utils.h"
 
-time_t time0;
-int utime0;
 
 /*********************/
 /* the #tick command */
@@ -23,10 +23,11 @@ void tick_command(const char *arg, struct session *ses)
     if (ses)
     {
         char buf[100];
-        int to_tick;
+        timens_t to_tick;
 
-        to_tick = ses->tick_size - (time(NULL) - ses->time0) % ses->tick_size;
-        sprintf(buf, "THERE'S NOW %d SECONDS TO NEXT TICK.", to_tick);
+        to_tick = ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
+        sprintf(buf, "THERE'S NOW %lld.%03d SECONDS TO NEXT TICK.",
+            to_tick/NANO, msec(to_tick));
         tintin_puts(buf, ses);
     }
     else
@@ -41,7 +42,8 @@ void tickoff_command(const char *arg, struct session *ses)
     if (ses)
     {
         ses->tickstatus = false;
-        tintin_puts("#TICKER IS NOW OFF.", ses);
+        if (ses->mesvar[MSG_TICK])
+            tintin_puts("#TICKER IS NOW OFF.", ses);
     }
     else
         tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
@@ -55,9 +57,13 @@ void tickon_command(const char *arg, struct session *ses)
     if (ses)
     {
         ses->tickstatus = true;
+        timens_t ct = current_time();
         if (ses->time0 == 0)
-            ses->time0 = time(NULL);
-        tintin_puts("#TICKER IS NOW ON.", ses);
+            ses->time0 = ct;
+        if (ses->time0 + ses->tick_size - ses->pretick <= ct)
+            ses->time10 = ses->time0;
+        if (ses->mesvar[MSG_TICK])
+            tintin_puts("#TICKER IS NOW ON.", ses);
     }
     else
         tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
@@ -69,7 +75,7 @@ void tickon_command(const char *arg, struct session *ses)
 /*************************/
 void ticksize_command(const char *arg, struct session *ses)
 {
-    int x;
+    timens_t x;
     char left[BUFFER_SIZE], *err;
 
     get_arg(arg, left, 1, ses);
@@ -83,15 +89,18 @@ void ticksize_command(const char *arg, struct session *ses)
         tintin_eprintf(ses, "#SYNTAX: #ticksize <number>");
         return;
     }
-    x=strtol(left, &err, 10);
-    if (*err || x<1 || x>=0x7fffffff)
+    x=str2timens(left, &err);
+    if (*err || x<=0)
     {
-        tintin_eprintf(ses, "#TICKSIZE OUT OF RANGE (1..%d)", 0x7fffffff);
+        tintin_eprintf(ses, "#INVALID TICKSIZE");
         return;
     }
     ses->tick_size = x;
-    ses->time0 = time(NULL);
-    tintin_printf(ses, "#OK. NEW TICKSIZE SET");
+    ses->time0 = current_time();
+    ses->time10 = 0;
+    usecstr(left, x);
+    if (ses->mesvar[MSG_TICK])
+        tintin_printf(ses, "#OK. TICKSIZE SET TO %s", left);
 }
 
 
@@ -100,7 +109,7 @@ void ticksize_command(const char *arg, struct session *ses)
 /************************/
 void pretick_command(const char *arg, struct session *ses)
 {
-    int x;
+    timens_t x;
     char left[BUFFER_SIZE], *err;
 
     get_arg(arg, left, 1, ses);
@@ -110,28 +119,39 @@ void pretick_command(const char *arg, struct session *ses)
         return;
     }
     if (!*left)
-        x=ses->pretick? 0 : 10;
+        x=ses->pretick? 0 : 10 * NANO;
     else
     {
-        x=strtol(left, &err, 10);
-        if (*err || x<0 || x>=0x7fffffff)
+        x=str2timens(left, &err);
+        if (*err || x<0)
         {
-            tintin_eprintf(ses, "#PRETICK VALUE OUT OF RANGE (0..%d)", 0x7fffffff);
+            tintin_eprintf(ses, "#INVALID PRETICK DELAY");
             return;
         }
     }
     if (x>=ses->tick_size)
     {
-        tintin_eprintf(ses, "#PRETICK (%d) has to be smaller than #TICKSIZE (%d)",
-            x, ses->tick_size);
+        char right[32];
+        usecstr(left, x);
+        usecstr(right, ses->tick_size);
+        tintin_eprintf(ses, "#PRETICK (%s) has to be smaller than #TICKSIZE (%s)",
+                left, right);
         return;
     }
     ses->pretick = x;
-    ses->time10 = time(NULL);
-    if (x)
-        tintin_printf(ses, "#OK. PRETICK SET TO %d", x);
+    if (current_time() - ses->pretick < ses->time0)
+        ses->time10 = ses->time0;
     else
+        ses->time10 = 0;
+    if (!ses->mesvar[MSG_TICK])
+        return;
+    if (!x)
         tintin_printf(ses, "#OK. PRETICK TURNED OFF");
+    else
+    {
+        usecstr(left, x);
+        tintin_printf(ses, "#OK. PRETICK SET TO %s", left);
+    }
 }
 
 
@@ -141,16 +161,16 @@ void show_pretick_command(const char *arg, struct session *ses)
 }
 
 
-int timetilltick(struct session *ses)
+timens_t timetilltick(struct session *ses)
 {
-    return ses->tick_size - (time(NULL) - ses->time0) % ses->tick_size;
+    return ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
 }
 
 /* returns the time (since 1970) of next event (tick) */
-int check_event(int time, struct session *ses)
+timens_t check_event(timens_t time, struct session *ses)
 {
-    int tt; /* tick time */
-    int et; /* event time */
+    timens_t tt; /* tick time */
+    timens_t et; /* event time */
     struct eventnode *ev;
 
     assert(ses);
@@ -173,22 +193,31 @@ int check_event(int time, struct session *ses)
     {
         if (ses->tickstatus)
         {
-            if (do_hook(ses, HOOK_TICK, 0, false) == ses)
+            if (do_hook(ses, HOOK_TICK, 0, false) == ses
+                && ses->mesvar[MSG_TICK])
+            {
                 tintin_puts1("#TICK!!!", ses);
+            }
         }
         if (any_closed)
             return -1;
         ses->time0 = time - (time - ses->time0) % ses->tick_size;
         tt = ses->time0 + ses->tick_size;
     }
-    else if (ses->tickstatus && tt-ses->pretick==time
-            && ses->tick_size>ses->pretick && time!=ses->time10)
+    else if (ses->tickstatus && tt-ses->pretick<=time
+            && ses->tick_size>ses->pretick && ses->time10<ses->time0)
     {
-        if (do_hook(ses, HOOK_PRETICK, 0, false) == ses)
-            tintin_puts1("#10 SECONDS TO TICK!!!", ses);
+        if (do_hook(ses, HOOK_PRETICK, 0, false) == ses
+            && ses->mesvar[MSG_TICK])
+        {
+            char buf[BUFFER_SIZE], num[32];
+            usecstr(num, ses->pretick);
+            sprintf(buf, "#%s SECONDS TO TICK!!!", num);
+            tintin_puts1(buf, ses);
+        }
         if (any_closed)
             return -1;
-        ses->time10=time;
+        ses->time10 = ses->time0;
     }
 
     if (ses->tickstatus && ses->tick_size>ses->pretick && tt-time>ses->pretick)

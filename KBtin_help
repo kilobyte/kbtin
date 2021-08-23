@@ -9,9 +9,9 @@ Session management:
 Input/output:
    verbatim    char        echo        history     cr          mudcolors
    blank       speedwalk   showme      status      margins     bell
-   send        sendchar    charset
+   send        sendchar    charset     bold
 Aliases:
-   alias       unalias
+   alias       unalias     ifaliasexists
 Triggers:
    action      unaction    ignore      promptaction    unpromptaction
    hook        unhook      doactions   dopromptactions
@@ -33,7 +33,8 @@ Files:
 Comments:
    nop         remark
 Variables:
-   math        random      variable    unvariable  initvariable
+   math        random      variable    unvariable  initvariable sin cos
+   angle
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
    substring   prepad      postpad     reverse     strlen      atoi
@@ -338,6 +339,9 @@ Valid codes:
 Sets the tintin-char to punctuation character <char>.  The tintin-char
 is the symbol you use to prefix commands.
 
+An implied #char is done the first time a #read file starts with a punctuation
+character, avoiding a chicken-or-egg problem.
+
 Example:
 #char ~    -> commands are now "~char", etc instead of "#char"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -388,6 +392,11 @@ This command doesn't support background colors and blink (yet?).
 Example (color table for T2T):
 #mudcolors $0$ $BLU$ $GRN$ $CYN$ $RED$ $MAG$ $YEL$ $0$ $0$ $HIB$ $HIG$ $HIC$
 $HIR$ $HIM$ $HIY$ $BOLD$
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~bold
+
+Some terminals make bright colors wide-stroked as well.  You can use this
+command to try to disable this behaviour.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~showme
 
@@ -585,6 +594,12 @@ $4=$5=$6=$7=$8=$9 = ""
 
 #unalias <pattern>
 Removes all aliases whose name matches <pattern>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~ifaliasexists
+
+#ifaliasexists <alias> <ifexists> <command> [#elif/#else ...]
+
+Queries whether <alias> has been defined; if yes, the <command> is executed.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~substitute
 
@@ -895,7 +910,7 @@ in your config files containing aliases, actions, etc.  If you prefer to get
 your file sent directly to the MUD, use #textin instead.
 
 The first character in file, if it is a valid tintin-char, it becomes one.
-That is, a #char command is implied.
+That is, a #char command is implied.  This is done only once.
 
 You can split long lines -- any line that begins with whitespace is assumed
 to be the continuation of the last line -- as long as the result is no longer
@@ -1661,14 +1676,17 @@ Example:
 
 #math <dest.var> <expression>
 Calculates the value of <expression> and stores the result into <dest.var>.
+Fractional values are supported; small common divisors won't accumulate errors.
 
 Operators                    Function
 ------------------------------------------------
 !                            logical not
-*                            integer multiply
-/                            integer divide
-+                            integer addition
--                            integer subtraction
+*                            multiply
+/                            integer division
+//                           division
+%                            modulo
++                            addition
+-                            subtraction
 >                            greater than
 >=                           greater than or equal
 <                            less than
@@ -1731,22 +1749,27 @@ KBtin supports a number of built-in variables.  They won't show on the list
 given by #var, and defining a variable by that name will destroy their
 special properties (they can still be restored by #unvar).
 
-* secstotick       - seconds till next tick
+* TIMETOTICK       - seconds (with fractions) till next tick
 * COLS, LINES      - screen size
 * PATH             - the current path
 * IDLETIME         - time since last text has been sent to the MUD
 * SERVERIDLE       - time since last text has been received
+* USERIDLE         - time since last input from the user
 * SESSION          - the current session
 * ASESSION         - the foreground (active) session
 * SESSIONS         - a list of all sessions defined
 * LOGFILE          - the name of log file, or empty string if not logging
 * LINE, _          - (only in a #action or #promptaction): the current line
                      of input
-* _random          - a random non-negative number
-* _time, time      - time in seconds since KBtin started
+* STARTTIME        - time (incl. fractional seconds) of KBtin's start
+* TIME             - time (incl. fractional seconds) past the Epoch
+* HOME             - your Unix home dir (same as ~ in most shells)
+* RANDOM, _random  - a random non-negative integer [0..2147483647]
+* LINENUM          - number of current line of MUD input
+* secstotick       - seconds till next tick
 * _clock           - time in seconds past the Epoch (1970-01-01)
 * _msec            - milliseconds since KBtin started
-* HOME             - your Unix home dir (same as ~ in most shells)
+* _time            - time in integer seconds since KBtin started
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~unvariable
 
@@ -1765,6 +1788,38 @@ This is merely a convenience over:
 
 Example:
 #init count 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~angle
+
+inline (#angle <x> <y>)
+This function calculates 360°-based angle that points towards coordinates
+<x>,<y>; both the angle and coordinates use the usual mathematical orientation
+-- that is, angle 0° goes to the east, 90° to the north; positive x coordinate
+goes eastwards, positive y northwards.
+
+If you want clock-like orientation and y going south, the formula to do so is:
+    (450 - #angle x -y) % 360
+
+Examples:
+#math a #angle 1 0  → 0
+#math a #angle 1 1  → 45
+#math a #angle 0 1  → 90
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~sin
+
+inline (#sin <a>)
+This function returns sinus of 360°-based angle <a>.
+
+Examples:
+#math a #sinus 90  → 1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~cos
+
+inline (#cos <a>)
+This function returns cosinus of 360°-based angle <a>.
+
+Examples:
+#math a #cosinus 90  → 0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab

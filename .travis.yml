@@ -39,10 +39,11 @@ matrix:
           - libglib2.0-dev
           - libgnutls28-dev
       before_install: sudo apt update && sudo apt install -y gettext;
-    - os: osx
-      osx_image: xcode12.2
-      before_install:
-        brew update && for pkg in libtool glib gettext;do if ! brew list -1|grep -q "^${pkg}\$";then brew install "$pkg";fi;done && brew link --force gettext
+    #Travis runs for FruitOS cost >25× as much as anything else.
+    #- os: osx
+    #  osx_image: xcode12.2
+    #  before_install:
+    #    brew update && for pkg in libtool glib gettext;do if ! brew list -1|grep -q "^${pkg}\$";then brew install "$pkg";fi;done && brew link --force gettext
 
 script: ./autogen.sh && ./configure && make check
 after_failure: cat tests/testsuite.log

@@ -92,3 +92,10 @@ again:;
     }
     syserr("write to stdout failed");
 }
+
+timens_t current_time(void)
+{
+    struct timespec cts;
+    clock_gettime(CLOCK_REALTIME, &cts);
+    return cts.tv_sec*NANO + cts.tv_nsec;
+}

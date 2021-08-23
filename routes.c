@@ -465,7 +465,11 @@ void dogoto_command(const char *arg, struct session *ses)
     d[j]=a;
     pptr=path;
     for (i=j;i>=0;i--)
-        pptr+=snprintf(pptr, path-pptr+BUFFER_SIZE, " %s", ses->locations[d[i]]);
+    {
+        pptr+=snprintf(pptr, path-pptr+BUFFER_SIZE-1, " %s", ses->locations[d[i]]);
+        if (pptr>=path+BUFFER_SIZE-2)
+            break;
+    }
     pptr=path+(pptr!=path);
     if (*locvar)
         set_variable(locvar, pptr, ses);
@@ -476,10 +480,17 @@ void dogoto_command(const char *arg, struct session *ses)
             if (r->dest==d[i-1])
             {
                 if (flag)
+                {
                     pptr+=snprintf(pptr,
-                        path-pptr+BUFFER_SIZE,
+                        path-pptr+BUFFER_SIZE-1,
                         " {%s}",
                         r->path);
+                    if (pptr>=path+BUFFER_SIZE-2)
+                    {
+                        tintin_eprintf(ses, "#Path too long in #dogoto");
+                        goto truncated_path;
+                    }
+                }
                 else
                 {
                     tintin_printf(ses, "%-10s>%-10s {%s}",
@@ -489,6 +500,7 @@ void dogoto_command(const char *arg, struct session *ses)
                 }
             }
     }
+truncated_path:
     pptr=path+(pptr!=path);
     if (*pathvar)
         set_variable(pathvar, pptr, ses);

@@ -10,6 +10,7 @@
 #include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/routes.h"
+#include "protos/slist.h"
 #include "protos/utils.h"
 
 
@@ -83,7 +84,7 @@ void kill_all(struct session *ses, bool no_reinit)
     kill_hash(ses->myvars);
     kill_list(ses->highs);
     kill_list(ses->subs);
-    kill_list(ses->antisubs);
+    kill_slist(ses->antisubs);
     kill_list(ses->path);
     kill_hash(ses->pathdirs);
     kill_hash(ses->binds);
@@ -97,7 +98,7 @@ void kill_all(struct session *ses, bool no_reinit)
     ses->myvars = init_hash();
     ses->highs = init_list();
     ses->subs = init_list();
-    ses->antisubs = init_list();
+    ses->antisubs = init_slist();
     ses->path = init_list();
     ses->binds = init_hash();
     ses->pathdirs = init_hash();
@@ -294,7 +295,7 @@ void deletenode_list(struct listnode *listhead, struct listnode *nptr)
 /* search for a node containing the ltext in left-field */
 /* return: ptr to node on success / NULL on failure     */
 /********************************************************/
-struct listnode* searchnode_list(struct listnode *listhead, char *cptr)
+struct listnode* searchnode_list(struct listnode *listhead, const char *cptr)
 {
     int i;
 
@@ -335,7 +336,7 @@ void show_list_action(struct listnode *listhead)
             shownode_list_action(listhead);
 }
 
-struct listnode* search_node_with_wild(struct listnode *listhead, char *cptr)
+struct listnode* search_node_with_wild(struct listnode *listhead, const char *cptr)
 {
     while ((listhead = listhead->next))
     {

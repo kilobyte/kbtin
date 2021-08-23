@@ -16,18 +16,15 @@
 /***************************/
 /* the #substitute command */
 /***************************/
-static void parse_sub(const char *arg, bool gag, struct session *ses)
+static void parse_sub(const char *left, const char *right,  bool gag, struct session *ses)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE];
     struct listnode *mysubs, *ln;
     bool flag=false;
 
     mysubs = ses->subs;
-    arg = get_arg_in_braces(arg, left, 0);
-    arg = get_arg_in_braces(arg, right, 1);
 
     if (!*left && !*right)
-        strcpy(left, "*");
+        left = "*";
     if (!*right)
     {
         while ((mysubs = search_node_with_wild(mysubs, left)))
@@ -55,26 +52,29 @@ static void parse_sub(const char *arg, bool gag, struct session *ses)
             else
                 tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
         }
+        return;
     }
-    else
+
+    if ((ln = searchnode_list(mysubs, left)))
+        deletenode_list(mysubs, ln);
+    insertnode_list(mysubs, left, right, 0, ALPHA);
+    subnum++;
+    if (ses->mesvar[MSG_SUBSTITUTE])
     {
-        if ((ln = searchnode_list(mysubs, left)))
-            deletenode_list(mysubs, ln);
-        insertnode_list(mysubs, left, right, 0, ALPHA);
-        subnum++;
-        if (ses->mesvar[MSG_SUBSTITUTE])
-        {
-            if (strcmp(right, EMPTY_LINE))
-                tintin_printf(ses, "#Ok. {%s} now replaces {%s}.", right, left);
-            else
-                tintin_printf(ses, "#Ok. {%s} is now gagged.", left);
-        }
+        if (strcmp(right, EMPTY_LINE))
+            tintin_printf(ses, "#Ok. {%s} now replaces {%s}.", right, left);
+        else
+            tintin_printf(ses, "#Ok. {%s} is now gagged.", left);
     }
 }
 
 void substitute_command(const char *arg, struct session *ses)
 {
-    parse_sub(arg, 0, ses);
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+    arg = get_arg_in_braces(arg, left, 0);
+    arg = get_arg_in_braces(arg, right, 1);
+
+    parse_sub(left, right, 0, ses);
 }
 
 void gag_command(const char *arg, struct session *ses)
@@ -82,14 +82,9 @@ void gag_command(const char *arg, struct session *ses)
     char temp[BUFFER_SIZE];
 
     if (!*arg)
-    {
-        parse_sub("", 1, ses);
-        return;
-    }
-    get_arg_in_braces(arg, temp+1, 1);
-    temp[0]='{';
-    strcat(temp, "} {"EMPTY_LINE"}");
-    parse_sub(temp, 1, ses);
+        return parse_sub("", "", 1, ses);
+    get_arg_in_braces(arg, temp, 1);
+    parse_sub(temp, EMPTY_LINE, 1, ses);
 }
 
 /*****************************/
@@ -196,7 +191,7 @@ void do_all_sub(char *line, struct session *ses)
 
 void changeto_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], temp[BUFFER_SIZE];
+    char left[BUFFER_SIZE];
 
     if (!_)
     {
@@ -204,9 +199,7 @@ void changeto_command(const char *arg, struct session *ses)
         return;
     }
 
-    get_arg_in_braces(arg, left, 1);
-    substitute_vars(left, temp);
-    substitute_myvars(temp, left, ses);
+    get_arg(arg, left, 1, ses);
     strcpy(_, left);
 }
 

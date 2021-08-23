@@ -70,3 +70,10 @@ static void insert_history(const char *buffer)
 
     history[0] = mystrdup(buffer);
 }
+
+void cleanup_history(void)
+{
+    for (int i = 0; i < HISTORY_SIZE; i++)
+        if (history[i])
+            SFREE(history[i]);
+}

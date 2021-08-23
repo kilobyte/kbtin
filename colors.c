@@ -1,4 +1,5 @@
 #include "tintin.h"
+#include "protos/globals.h"
 #include "protos/print.h"
 #include "protos/misc.h"
 #include "protos/parse.h"
@@ -11,9 +12,38 @@ const int rgbbgr[8]={0,4,2,6,1,5,3,7};
 static enum {MUDC_OFF, MUDC_ON, MUDC_NULL, MUDC_NULL_WARN} mudcolors=MUDC_NULL_WARN;
 static char *MUDcolors[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
+static int getco(const char *restrict txt, const char **err)
+{
+    if (!isadigit(txt[1]))
+    {
+        *err=txt+1;
+        return txt[0]-'0';
+    }
+
+    if (!isadigit(txt[2]))
+    {
+        *err=txt+2;
+        int c = (txt[0]-'0')*10+txt[1]-'0';
+        if (c >= 16)
+            return c - 16 + 232; /* 24-level color ramp */
+        return c;
+    }
+
+    if (!isadigit(txt[3]))
+    {
+        if (txt[0]<'6' && txt[1]<'6' && txt[2]<'6')
+        {
+            *err=txt+3;
+            return 16 + 36*(txt[0]-'0') + 6*(txt[1]-'0') + (txt[2]-'0');
+        }
+    }
+
+    return -1U>>1;
+}
+
 int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_minus_token)
 {
-    int fg, bg, blink;
+    unsigned fg, bg, blink;
     const char *txt=*ptr;
 
     if (*(txt++)!='~')
@@ -26,9 +56,9 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
     }
     if (isadigit(*txt))
     {
-        char *err;
-        fg=strtol(txt, &err, 10);
-        if (fg > C_MASK)
+        const char *err;
+        fg=getco(txt, &err);
+        if (fg > CFG_MASK)
             return 0;
         txt=err;
     }
@@ -46,8 +76,8 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
         return 0;
     if (isadigit(*++txt))
     {
-        char *err;
-        bg=strtol(txt, &err, 10);
+        const char *err;
+        bg=getco(txt, &err);
         if (bg > CBG_MAX)
             return 0;
         txt=err;
@@ -79,15 +109,35 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
     return 1;
 }
 
+static int setco(char *txt, int c)
+{
+    if (c<10)
+        return txt[0]=c+'0', 1;
+    if (c<16)
+        return txt[0]='1', txt[1]=c+'0'-10, 2;
+    if (c>=232)
+        return sprintf(txt, "%d", c+16-232);
+    c-=16;
+    txt[0]='0'+c/36;
+    txt[1]='0'+(c/6)%6;
+    txt[2]='0'+c%6;
+    return 3;
+}
+
 int setcolor(char *txt, int c)
 {
     if (c==-1)
         return sprintf(txt, "~-1~");
+    char *txt0 = txt;
+    *txt++='~';
+    txt+=setco(txt, c&CFG_MASK);
     if (c < 1<<CBG_AT)
-        return sprintf(txt, "~%d~", c);
+        return *txt++='~', *txt=0, txt-txt0;
+    *txt++=':';
+    txt+=setco(txt, (c&CBG_MASK)>>CBG_AT);
     if (c < 1<<CFL_AT)
-        return sprintf(txt, "~%d:%d~", c&CFG_MASK, (c&CBG_MASK)>>CBG_AT);
-    return sprintf(txt, "~%d:%d:%d~", c&CFG_MASK, (c&CBG_MASK)>>CBG_AT, c>>CFL_AT);
+        return *txt++='~', *txt=0, txt-txt0;
+    return txt-txt0+sprintf(txt, ":%d~", c>>CFL_AT);
 }
 
 typedef unsigned char u8;
@@ -95,6 +145,7 @@ struct rgb { u8 r; u8 g; u8 b; };
 
 static inline u8 ramp256_6(int i)
 {
+    /* 00 5f 87 af d7 ff */
     return i ? 55 + i * 40 : 0;
 }
 
@@ -103,15 +154,15 @@ static struct rgb rgb_from_256(int i)
     struct rgb c;
     if (i < 8)
     {   /* Standard colours. */
-        c.r = i&1 ? 0xaa : 0x00;
+        c.r = i&4 ? 0xaa : 0x00;
         c.g = i&2 ? 0xaa : 0x00;
-        c.b = i&4 ? 0xaa : 0x00;
+        c.b = i&1 ? 0xaa : 0x00;
     }
     else if (i < 16)
     {
-        c.r = i&1 ? 0xff : 0x55;
+        c.r = i&4 ? 0xff : 0x55;
         c.g = i&2 ? 0xff : 0x55;
-        c.b = i&4 ? 0xff : 0x55;
+        c.b = i&1 ? 0xff : 0x55;
     }
     else if (i < 232)
     {   /* 6x6x6 colour cube. */
@@ -124,7 +175,7 @@ static struct rgb rgb_from_256(int i)
     return c;
 }
 
-static int rgb_foreground(struct rgb c)
+static int rgb_to_16(struct rgb c)
 {
     u8 fg, max = c.r;
     if (c.g > max)
@@ -142,9 +193,55 @@ static int rgb_foreground(struct rgb c)
         return fg;
 }
 
-static int rgb_background(struct rgb c)
+static int sqrd(unsigned char a, unsigned char b)
 {
-    return rgb_foreground(c) << CBG_AT;
+    int _ = ((int)a) - ((int)b);
+    return _>=0?_:-_;
+}
+
+// Riermersma's formula
+static uint32_t rgb_diff(struct rgb x, struct rgb y)
+{
+    int rm = (x.r+y.r)/2;
+    return 2*sqrd(x.r, y.r)
+         + 4*sqrd(x.g, y.g)
+         + 3*sqrd(x.b, y.b)
+         + rm*(sqrd(x.r, y.r)-sqrd(x.b, y.b))/256;
+}
+
+static uint32_t m6(uint32_t x)
+{
+    x = (x+5)/40;
+    return x? x-1 : 0;
+}
+
+static uint32_t rgb_to_color_cube(struct rgb c)
+{
+    return 16 + m6(c.r)*36 + m6(c.g)*6 + m6(c.b);
+}
+
+static uint32_t rgb_to_grayscale_gradient(struct rgb c)
+{
+    int x = 232 + (c.r*2 + c.g*3 + c.b) / 60;
+    return (x > 255)? 255 : x;
+}
+
+static int rgb_to_256(struct rgb c)
+{
+    uint32_t c1 = rgb_to_16(c);
+    uint32_t bd = rgb_diff(c, rgb_from_256(c1));
+    uint32_t res = c1;
+
+    uint32_t c2 = rgb_to_color_cube(c);
+    uint32_t d = rgb_diff(c, rgb_from_256(c2));
+    if (d < bd)
+        bd = d, res = c2;
+
+    uint32_t c3 = rgb_to_grayscale_gradient(c);
+    d = rgb_diff(c, rgb_from_256(c3));
+    if (d < bd)
+        res = c3;
+    return res;
 }
 
 #define MAXTOK 16
@@ -225,12 +322,16 @@ again:
                             ccolor|=CFL_STRIKETHRU;
                             break;
                         case 21:
-                            ccolor&=~8;
+                            if ((ccolor&CFG_MASK) < 16)
+                                ccolor&=~8;
                             break;
                         case 22:
-                            ccolor&=~8;
-                            if (!(ccolor&CBG_MASK))
-                                ccolor|=7;
+                            if ((ccolor&CFG_MASK) < 16)
+                            {
+                                ccolor&=~8;
+                                if (!(ccolor&CBG_MASK))
+                                    ccolor|=7;
+                            }
                             break;
                         case 23:
                             ccolor&=~CFL_ITALIC;
@@ -251,8 +352,13 @@ again:
                             if (tok[i]==5 && i+1<nt)
                             {   /* 256 colours */
                                 i++;
-                                ccolor=(ccolor&~CFG_MASK)
-                                    | rgb_foreground(rgb_from_256(tok[i]));
+                                int k = tok[i];
+                                if (k < 256)
+                                {
+                                    if (k < 16)
+                                        k = (k&8) | rgbbgr[k&7];
+                                    ccolor=(ccolor&~CFG_MASK) | k;
+                                }
                             }
                             else if (tok[i]==2 && i+3<nt)
                             {   /* 24 bit */
@@ -262,8 +368,7 @@ again:
                                     .g = tok[i+2],
                                     .b = tok[i+3],
                                 };
-                                ccolor=(ccolor&~CFG_MASK)
-                                    | rgb_foreground(c);
+                                ccolor=(ccolor&~CFG_MASK) | rgb_to_256(c);
                                 i+=3;
                             }
                             /* Subcommands 3 (CMY) and 4 (CMYK) are so insane
@@ -277,8 +382,13 @@ again:
                             if (tok[i]==5 && i+1<nt)
                             {   /* 256 colours */
                                 i++;
-                                ccolor=(ccolor&~CBG_MASK)
-                                    | rgb_background(rgb_from_256(tok[i]));
+                                int k = tok[i];
+                                if (k < 256)
+                                {
+                                    if (k < 16)
+                                        k = (k&8) | rgbbgr[k&7];
+                                    ccolor=(ccolor&~CBG_MASK) | k<<CBG_AT;
+                                }
                             }
                             else if (tok[i]==2 && i+3<nt)
                             {   /* 24 bit */
@@ -288,8 +398,7 @@ again:
                                     .g = tok[i+2],
                                     .b = tok[i+3],
                                 };
-                                ccolor=(ccolor&~CBG_MASK)
-                                    | rgb_background(c);
+                                ccolor=(ccolor&~CBG_MASK) | rgb_to_256(c)<<CBG_AT;
                                 i+=3;
                             }
                             break;
@@ -418,9 +527,10 @@ color:
             mudcolors=MUDC_NULL;
         case MUDC_NULL:
             break;
-        case MUDC_ON:
-            strcpy(txt, MUDcolors[c&0xf]);
-            txt+=strlen(MUDcolors[c&0xf]);
+        case MUDC_ON:;
+            int k = rgb_to_16(rgb_from_256(c&CFG_MASK));
+            strcpy(txt, MUDcolors[k]);
+            txt+=strlen(MUDcolors[k]);
         }
     }
     *txt=0;
@@ -452,7 +562,7 @@ error_msg:
         if (!*arg)
             goto null_codes;
     }
-    /* we allow BOTH {a} {b} {c} _and_ {{a} {b} {c}} - inconstency, but it's ok */
+    /* we allow BOTH {a} {b} {c} _and_ {{a} {b} {c}} - inconsistency, but it's ok */
     for (int nc=0;nc<16;nc++)
     {
         if (!*arg)
@@ -483,15 +593,30 @@ null_codes:
 char *ansicolor(char *s, int c)
 {
     *s++=27, *s++='[', *s++='0';
-    if (c&8)
-        *s++=';', *s++='1';
-    *s++=';', *s++='3';
-    *s++='0'+rgbbgr[c&7];
-    if (c&(8<<CBG_AT))
-        *s++=';', *s++='1', *s++='0';
+    int k = c & CFG_MASK;
+    if (k < 16)
+    {
+        if (!(k&8))
+            *s++=';', *s++='3';
+        else if (bold)
+            *s++=';', *s++='1', *s++=';', *s++='3';
+        else
+            *s++=';', *s++='9';
+        *s++='0'+rgbbgr[k&7];
+    }
     else
-        *s++=';', *s++='4';
-    *s++='0'+rgbbgr[(c>>CBG_AT)&7];
+        s+=sprintf(s, ";38;5;%d", k);
+    k = (c & CBG_MASK) >> CBG_AT;
+    if (k < 16)
+    {
+        if (k&8)
+            *s++=';', *s++='1', *s++='0';
+        else
+            *s++=';', *s++='4';
+        *s++='0'+rgbbgr[k&7];
+    }
+    else
+        s+=sprintf(s, ";48;5;%d", k);
     if (c>>=CFL_AT)
     {
         if (c&C_BLINK)
