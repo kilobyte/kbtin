@@ -1,3 +1,23 @@
+1.0.24:
+*	256-color support (instead of shoehorning to 16)
+*	auto-set #char only on first read
+*	#ifaliasexists
+*	fractional math
+*	// for fractional division
+*	% for modulo
+*	sub-second time handling
+*	make $_time working as documented
+*	$TIME, $STARTTIME, $TIMETOTICK, $RANDOM, $LINENUM, $USERIFLE
+*	drop #profile
+*	free everything if running on valgrind
+*	use a faster data structure, for #antisub only for now
+*	trigonometry: #sin #cos #angle
+*	bugfix: an expression with >100 tokens
+*	#bold
+*	bugfix: key codes were misinterpreted inside "screen"
+*	#unvar on multiple variables
+
+
 1.0.23:
 *	display error message for why a connection was dropped
 *	support bright background colors user-side
