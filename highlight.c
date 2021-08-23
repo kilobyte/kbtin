@@ -172,8 +172,7 @@ void highlight_command(const char *arg, struct session *ses)
             bp=buf;
         }
     }
-    strcpy(bp, "or 0..15:0..7:0..1");
-    tintin_printf(ses, "%s", buf);
+    tintin_printf(ses, "%sor 0..15:0..7:0..1", buf);
 }
 
 /*****************************/
