@@ -102,7 +102,7 @@ void highlight_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     struct listnode *myhighs, *ln;
     bool colflag = true;
-    char *pright, *tmp1, *tmp2, tmp3[BUFFER_SIZE];
+    char *pright, *bp, *cp, buf[BUFFER_SIZE];
 
     pright = right;
     *pright = '\0';
@@ -116,19 +116,19 @@ void highlight_command(const char *arg, struct session *ses)
         return;
     }
 
-    tmp1 = left;
-    tmp2 = tmp1;
-    while (*tmp2 != '\0')
+    bp = left;
+    cp = bp;
+    while (*cp != '\0')
     {
-        tmp2++;
-        while (*tmp2 != ',' && *tmp2 != '\0')
-            tmp2++;
-        while (isaspace(*tmp1))
-            tmp1++;
-        memcpy(tmp3, tmp1, tmp2 - tmp1);
-        tmp3[tmp2 - tmp1] = '\0';
-        colflag = get_high(tmp3);
-        tmp1 = tmp2 + 1;
+        cp++;
+        while (*cp != ',' && *cp != '\0')
+            cp++;
+        while (isaspace(*bp))
+            bp++;
+        memcpy(buf, bp, cp - bp);
+        buf[cp - bp] = '\0';
+        colflag = get_high(buf);
+        bp = cp + 1;
     }
     if (colflag)
     {
@@ -140,7 +140,7 @@ void highlight_command(const char *arg, struct session *ses)
         }
         if ((ln = searchnode_list(myhighs, right)))
             deletenode_list(myhighs, ln);
-        insertnode_list(myhighs, right, left, get_fastener(right, tmp1), LENGTH);
+        insertnode_list(myhighs, right, left, get_fastener(right, bp), LENGTH);
         hinum++;
         if (ses->mesvar[MSG_HIGHLIGHT])
             tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
@@ -155,25 +155,25 @@ void highlight_command(const char *arg, struct session *ses)
 
     if (strcmp(left, "list"))
         tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
-    tmp3[0]=0;
-    tmp1=tmp3;
+    buf[0]=0;
+    bp=buf;
     for (int i=0;cNames[i].num!=-1;i++)
     {
-        tmp1+=setcolor(tmp1, cNames[i].num);
-        int len = sprintf(tmp1, "%s~7~, ", cNames[i].name);
-        tmp1+=len;
+        bp+=setcolor(bp, cNames[i].num);
+        int len = sprintf(bp, "%s~7~, ", cNames[i].name);
+        bp+=len;
         while (len++ < 21)
-            *tmp1++=' ' ;
-        *tmp1=0;
+            *bp++=' ' ;
+        *bp=0;
         if ((i%4)==3)
         {
-            tintin_printf(ses, "%s", tmp3);
-            tmp3[0]=0;
-            tmp1=tmp3;
+            tintin_printf(ses, "%s", buf);
+            buf[0]=0;
+            bp=buf;
         }
     }
-    strcpy(tmp1, "or 0..15:0..7:0..1");
-    tintin_printf(ses, "%s", tmp3);
+    strcpy(bp, "or 0..15:0..7:0..1");
+    tintin_printf(ses, "%s", buf);
 }
 
 /*****************************/
