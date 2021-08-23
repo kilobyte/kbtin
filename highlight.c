@@ -159,9 +159,12 @@ void highlight_command(const char *arg, struct session *ses)
     tmp1=tmp3;
     for (int i=0;cNames[i].num!=-1;i++)
     {
-        sprintf(left, "%s~7~, ", cNames[i].name);
         tmp1+=setcolor(tmp1, cNames[i].num);
-        tmp1+=sprintf(tmp1, "%-20s ", left);
+        int len = sprintf(tmp1, "%s~7~, ", cNames[i].name);
+        tmp1+=len;
+        while (len++ < 21)
+            *tmp1++=' ' ;
+        *tmp1=0;
         if ((i%4)==3)
         {
             tintin_printf(ses, "%s", tmp3);
