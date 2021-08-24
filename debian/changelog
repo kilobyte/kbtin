@@ -1,3 +1,10 @@
+kbtin (1.0.24-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Drop B-Dep on gettext.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Tue, 24 Aug 2021 03:09:24 +0200
+
 kbtin (1.0.23-1) experimental; urgency=medium
 
   * New upstream release.
