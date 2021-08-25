@@ -782,29 +782,43 @@ void shell_command(const char *arg, struct session *ses)
 /********************/
 struct session* zap_command(const char *arg, struct session *ses)
 {
-    bool flag=(ses==activesession);
+    struct session *target = ses;
+    char sname[BUFFER_SIZE];
 
     if (*arg)
     {
-        tintin_eprintf(ses, "#ZAP <ses> is still unimplemented."); /* FIXME */
-        return ses;
+        get_arg(arg, sname, 1, ses);
+        target = 0;
+        for (struct session *s = sessionlist; s; s = s->next)
+            if (!strcmp(s->name, sname))
+            {
+                target = s;
+                break;
+            }
+        if (!target)
+        {
+            tintin_eprintf(ses, "#THERE'S NO SESSION BY THAT NAME.");
+            return ses;
+        }
     }
 
-    if (ses==nullsession)
-        end_command("end", (struct session *)NULL); /* no return */
-
-    if (ses->closing)
+    if (target->closing)
     {
-        if (ses->closing==-1)
+        if (target->closing==-1)
             tintin_eprintf(ses, "#You can't use #ZAP from here.");
         return ses;
     }
-    tintin_puts("#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!", ses);
-    ses->closing=1;
-    do_hook(ses, HOOK_ZAP, 0, true);
-    ses->closing=0;
-    cleanup_session(ses);
-    return flag?newactive_session():activesession;
+
+    if (target==nullsession)
+        end_command("end", (struct session *)NULL); /* no return */
+
+    bool was_active=(target==activesession);
+    tintin_puts("#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!", target);
+    target->closing=1;
+    do_hook(target, HOOK_ZAP, 0, true);
+    target->closing=0;
+    cleanup_session(target);
+    return was_active?newactive_session():activesession;
 }
 
 
