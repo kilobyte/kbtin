@@ -789,24 +789,22 @@ struct session* zap_command(const char *arg, struct session *ses)
         tintin_eprintf(ses, "#ZAP <ses> is still unimplemented."); /* FIXME */
         return ses;
     }
-    if (ses!=nullsession)
+
+    if (ses==nullsession)
+        end_command("end", (struct session *)NULL); /* no return */
+
+    if (ses->closing)
     {
-        if (ses->closing)
-        {
-            if (ses->closing==-1)
-                tintin_eprintf(ses, "#You can't use #ZAP from here.");
-            return ses;
-        }
-        tintin_puts("#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!", ses);
-        ses->closing=1;
-        do_hook(ses, HOOK_ZAP, 0, true);
-        ses->closing=0;
-        cleanup_session(ses);
-        return flag?newactive_session():activesession;
+        if (ses->closing==-1)
+            tintin_eprintf(ses, "#You can't use #ZAP from here.");
+        return ses;
     }
-    else
-        end_command("end", (struct session *)NULL);
-    return 0;   /* stupid lint */
+    tintin_puts("#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!", ses);
+    ses->closing=1;
+    do_hook(ses, HOOK_ZAP, 0, true);
+    ses->closing=0;
+    cleanup_session(ses);
+    return flag?newactive_session():activesession;
 }
 
 
