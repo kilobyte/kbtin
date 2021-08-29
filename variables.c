@@ -1366,13 +1366,10 @@ void ctime_command(const char *arg, struct session *ses)
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, arg2, 1, ses);
-    if (*arg2)
-        if ((tt=time2secs(arg2, ses))==INVALID_TIME)
-            return;
-        else
-            {}
-    else
+    if (!*arg2)
         tt=time(0);
+    else if ((tt=time2secs(arg2, ses))==INVALID_TIME)
+        return;
     p = ct = ctime_r(&tt, arg2);
     while (p && *p)
     {
