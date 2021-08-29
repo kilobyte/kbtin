@@ -1076,30 +1076,29 @@ void collate_command(const char *arg, struct session *ses)
         if (!*arg || *arg==' ')
             continue;
         arg = get_arg_in_braces(arg, cur, 0);
-        if (j)
+        if (!j)
+            continue;
+        if (strcmp(cur, last))
         {
-            if (strcmp(cur, last))
+            if (isatom(last))
             {
-                if (isatom(last))
-                {
-                    if (i>1)
-                        outptr+=sprintf(outptr, "%d", i);
-                    if (i)
-                        outptr+=sprintf(outptr, "%s ", last);
-                }
-                else
-                {
-                    if (i>1)
-                        outptr+=sprintf(outptr, "%d", i);
-                    if (i)
-                        outptr+=sprintf(outptr, "{%s} ", last);
-                }
-                strcpy(last, cur);
-                i=j;
+                if (i>1)
+                    outptr+=sprintf(outptr, "%d", i);
+                if (i)
+                    outptr+=sprintf(outptr, "%s ", last);
             }
             else
-                i+=j;
+            {
+                if (i>1)
+                    outptr+=sprintf(outptr, "%d", i);
+                if (i)
+                    outptr+=sprintf(outptr, "{%s} ", last);
+            }
+            strcpy(last, cur);
+            i=j;
         }
+        else
+            i+=j;
     }
     if (i>1)
         outptr+=sprintf(outptr, "%d", i);
