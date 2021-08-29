@@ -1080,20 +1080,10 @@ void collate_command(const char *arg, struct session *ses)
             continue;
         if (strcmp(cur, last))
         {
-            if (isatom(last))
-            {
-                if (i>1)
-                    outptr+=sprintf(outptr, "%d", i);
-                if (i)
-                    outptr+=sprintf(outptr, "%s ", last);
-            }
-            else
-            {
-                if (i>1)
-                    outptr+=sprintf(outptr, "%d", i);
-                if (i)
-                    outptr+=sprintf(outptr, "{%s} ", last);
-            }
+            if (i>1)
+                outptr+=sprintf(outptr, "%d", i);
+            if (i)
+                outptr+=sprintf(outptr, isatom(last)?"%s":"{%s}", last);
             strcpy(last, cur);
             i=j;
         }
