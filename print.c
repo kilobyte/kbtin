@@ -70,7 +70,10 @@ void tintin_printf(struct session *ses, const char *format, ...)
         va_start(ap, format);
         int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
         if (n>BUFFER_SIZE-2)
+        {
             buf[BUFFER_SIZE-3]='>';
+            n=BUFFER_SIZE-2;
+        }
         va_end(ap);
         strcpy(buf+n, "\n");
         user_textout(buf);
@@ -89,7 +92,10 @@ void tintin_eprintf(struct session *ses, const char *format, ...)
         va_start(ap, format);
         int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
         if (n>BUFFER_SIZE-2)
+        {
             buf[BUFFER_SIZE-3]='>';
+            n=BUFFER_SIZE-2;
+        }
         va_end(ap);
         strcpy(buf+n, "\n");
         user_textout(buf);
