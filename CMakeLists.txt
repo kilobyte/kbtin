@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
-cmake_policy(SET CMP0075 OLD) # hush the warning, either option works
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
+	cmake_policy(SET CMP0075 NEW) # hush the warning, either option works
+endif()
 project(kbtin C)
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
