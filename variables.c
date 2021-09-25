@@ -549,6 +549,27 @@ void prepad_command(const char *arg, struct session *ses)
     set_variable(destvar, astr, ses);
 }
 
+void trim_command(const char *arg, struct session *ses)
+{
+    char destvar[BUFFER_SIZE], str[BUFFER_SIZE], *s, *e, *p;
+
+    arg = get_arg(arg, destvar, 0, ses);
+    arg = get_arg(arg, str, 1, ses);
+
+    if (!*destvar)
+        return tintin_eprintf(ses, "#Error - syntax: #trim {dest var} {text}");
+
+    s = str;
+    while (isaspace(*s))
+        s++;
+    for (p=e=s; *p; p++)
+        if (!isaspace(*p))
+            e = p+1;
+    *e=0;
+    set_variable(destvar, s, ses);
+}
+
+
 #define INVALID_TIME (int)0x80000000
 
 /************************************************************/

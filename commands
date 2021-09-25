@@ -104,6 +104,7 @@ ticksize
 tolower
 togglesubs
 toupper
+trim
 unaction
 unalias
 unantisubstitute
