@@ -13,6 +13,7 @@
 #include "protos/alias.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
+#include "protos/lists.h"
 #include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"

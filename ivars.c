@@ -4,6 +4,7 @@
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/ivars.h"
+#include "protos/lists.h"
 #include "protos/math.h"
 #include "protos/print.h"
 #include "protos/misc.h"
