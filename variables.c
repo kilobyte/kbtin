@@ -962,7 +962,7 @@ num_t sinus_inline(const char *line, struct session *ses)
     line = get_arg(line, arg, 1, ses);
     if (!*arg)
     {
-        tintin_eprintf(ses, "#Error: #sin require an argument.");
+        tintin_eprintf(ses, "#Error: #sin requires an argument.");
         return 0;
     }
 
@@ -980,7 +980,7 @@ num_t cosinus_inline(const char *line, struct session *ses)
     line = get_arg(line, arg, 1, ses);
     if (!*arg)
     {
-        tintin_eprintf(ses, "#Error: #cos require an argument.");
+        tintin_eprintf(ses, "#Error: #cos requires an argument.");
         return 0;
     }
 
