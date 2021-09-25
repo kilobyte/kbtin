@@ -115,24 +115,23 @@ static int builtin_var(const char *varname, char *value, struct session *ses)
 /*************************************************************************/
 void substitute_myvars(const char *arg, char *result, struct session *ses)
 {
-    char varname[BUFFER_SIZE], value[BUFFER_SIZE], *v;
-    int nest = 0, counter, varlen, valuelen;
-    bool specvar;
+    char varname[BUFFER_SIZE], value[BUFFER_SIZE];
+    int nest = 0;
     int len=strlen(arg);
 
     while (*arg)
     {
         if (*arg == '$')
         {                           /* substitute variable */
-            counter = 0;
+            bool specvar;
+            int counter = 0, varlen = 0;
             while (*(arg + counter) == '$')
                 counter++;
-            varlen = 0;
 
             /* ${name} code added by Sverre Normann */
             if (*(arg+counter) != BRACE_OPEN)
             {
-                /* ordinary variable which name contains no spaces and special characters  */
+                /* ordinary variable whose name contains no spaces and special characters  */
                 specvar = false;
                 while (isalpha(*(arg+varlen+counter))||
                        (*(arg+varlen+counter)=='_')||
@@ -154,49 +153,39 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
 
             if (specvar) varlen += 2; /* 2*DELIMITERS e.g. {} */
 
+            char *v = 0;
+
             if (counter == nest + 1)
             {
-                if ((v=get_hash(ses->myvars, varname)))
+                v = get_hash(ses->myvars, varname);
+                if (!v && builtin_var(varname, value, ses))
+                    v = value;
+            }
+
+            if (v)
+            {
+                int valuelen = strlen(v);
+                if ((len+=valuelen-counter-varlen) > BUFFER_SIZE-10)
                 {
-                    valuelen = strlen(v);
-                    if ((len+=valuelen-counter-varlen) > BUFFER_SIZE-10)
+                    if (!aborting)
                     {
-                        if (!aborting)
-                        {
-                            tintin_eprintf(ses, "#ERROR: command+variables too long while substituting $%s%s%s.",
-                                specvar?"{":"", varname, specvar?"}":"");
-                            aborting=true;
-                        }
-                        len-=valuelen-counter-varlen;
-                        goto novar;
+                        tintin_eprintf(ses, "#ERROR: command+variables too long while substituting $%s%s%s.",
+                            specvar?"{":"", varname, specvar?"}":"");
+                        aborting=true;
                     }
+                    len-=valuelen-counter-varlen;
+                    v = 0;
+                }
+                else
+                {
                     strcpy(result, v);
                     result += valuelen;
                     arg += counter + varlen;
                 }
-                else
-                {
-                    if (!builtin_var(varname, value, ses))
-                        goto novar;
-                    valuelen=strlen(value);
-                    if ((len+=valuelen-counter-varlen) > BUFFER_SIZE-10)
-                    {
-                        if (!aborting)
-                        {
-                            tintin_eprintf(ses, "#ERROR: command+variables too long while substituting $%s.", varname);
-                            aborting=true;
-                        }
-                        len-=valuelen-counter-varlen;
-                        goto novar;
-                    }
-                    strcpy(result, value);
-                    result+=valuelen;
-                    arg += counter + varlen;
-                }
             }
-            else
+
+            if (!v)
             {
-novar:
                 memcpy(result, arg, counter + varlen);
                 result += varlen + counter;
                 arg += varlen + counter;
