@@ -32,6 +32,74 @@ void set_variable(const char *left, const char *right, struct session *ses)
         tintin_printf(ses, "#Ok. $%s is now set to {%s}.", left, right);
 }
 
+static int builtin_var(const char *varname, char *value, struct session *ses)
+{
+    if (!strcmp(varname, "secstotick"))
+        sprintf(value, "%lld", timetilltick(ses)/NANO);
+    else if (!strcmp(varname, "TIMETOTICK"))
+    {
+        timens_t tt = timetilltick(ses);
+        sprintf(value, "%lld.%09ld", tt/NANO, labs(tt%NANO));
+    }
+    else if (!strcmp(varname, "LINES"))
+        sprintf(value, "%d", LINES);
+    else if (!strcmp(varname, "COLS"))
+        sprintf(value, "%d", COLS);
+    else if (!strcmp(varname, "PATH"))
+        path2var(value, ses);
+    else if (!strcmp(varname, "IDLETIME"))
+        nsecstr(value, current_time()-ses->idle_since);
+    else if (!strcmp(varname, "SERVERIDLE"))
+        nsecstr(value, current_time()-ses->server_idle_since);
+    else if (!strcmp(varname, "USERIDLE"))
+        nsecstr(value, current_time()-idle_since);
+    else if (!strcmp(varname, "LINENUM"))
+        sprintf(value, "%llu", ses->linenum);
+    else if (_ && (!strcmp(varname, "LINE")
+                   || !strcmp(varname, "_")))
+        strcpy(value, _);
+    else if (!strcmp(varname, "SESSION"))
+        strcpy(value, ses->name);
+    else if (!strcmp(varname, "SESSIONS"))
+        seslist(value);
+    else if (!strcmp(varname, "ASESSION"))
+        strcpy(value, activesession->name);
+    else if (!strcmp(varname, "LOGFILE"))
+        strcpy(value, ses->logfile?ses->logname:"");
+    else if (!strcmp(varname, "RANDOM") || !strcmp(varname, "_random"))
+        sprintf(value, "%d", rand());
+    else if (!strcmp(varname, "_time"))
+    {
+        timens_t age = current_time() - start_time;
+        sprintf(value, "%lld", age/NANO);
+    }
+    else if (!strcmp(varname, "STARTTIME"))
+        sprintf(value, "%lld.%09lld", start_time/NANO, start_time%NANO);
+    else if (!strcmp(varname, "TIME"))
+    {
+        timens_t ct = current_time();
+        sprintf(value, "%lld.%09lld", ct/NANO, ct%NANO);
+    }
+    else if (!strcmp(varname, "_clock"))
+        sprintf(value, "%ld", (long int)time(0));
+    else if (!strcmp(varname, "_msec"))
+    {
+        timens_t age = current_time() - start_time;
+        sprintf(value, "%lld", age / (NANO/1000));
+    }
+    else if (!strcmp(varname, "HOME"))
+    {
+        const char *v=getenv("HOME");
+        if (v)
+            snprintf(value, BUFFER_SIZE, "%s", v);
+        else
+            *value=0;
+    }
+    else
+        return 0;
+    return 1;
+}
+
 /*************************************************************************/
 /* copy the arg text into the result-space, but substitute the variables */
 /* $<string> with the values they stand for                              */
@@ -108,69 +176,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                 }
                 else
                 {
-                    /* secstotick code added by Sverre Normann */
-                    if (!strcmp(varname, "secstotick"))
-                        sprintf(value, "%lld", timetilltick(ses)/NANO);
-                    else if (!strcmp(varname, "TIMETOTICK"))
-                    {
-                        timens_t tt = timetilltick(ses);
-                        sprintf(value, "%lld.%09ld", tt/NANO, labs(tt%NANO));
-                    }
-                    else if (!strcmp(varname, "LINES"))
-                        sprintf(value, "%d", LINES);
-                    else if (!strcmp(varname, "COLS"))
-                        sprintf(value, "%d", COLS);
-                    else if (!strcmp(varname, "PATH"))
-                        path2var(value, ses);
-                    else if (!strcmp(varname, "IDLETIME"))
-                        nsecstr(value, current_time()-ses->idle_since);
-                    else if (!strcmp(varname, "SERVERIDLE"))
-                        nsecstr(value, current_time()-ses->server_idle_since);
-                    else if (!strcmp(varname, "USERIDLE"))
-                        nsecstr(value, current_time()-idle_since);
-                    else if (!strcmp(varname, "LINENUM"))
-                        sprintf(value, "%llu", ses->linenum);
-                    else if (_ && (!strcmp(varname, "LINE")
-                                   || !strcmp(varname, "_")))
-                        strcpy(value, _);
-                    else if (!strcmp(varname, "SESSION"))
-                        strcpy(value, ses->name);
-                    else if (!strcmp(varname, "SESSIONS"))
-                        seslist(value);
-                    else if (!strcmp(varname, "ASESSION"))
-                        strcpy(value, activesession->name);
-                    else if (!strcmp(varname, "LOGFILE"))
-                        strcpy(value, ses->logfile?ses->logname:"");
-                    else if (!strcmp(varname, "RANDOM") || !strcmp(varname, "_random"))
-                        sprintf(value, "%d", rand());
-                    else if (!strcmp(varname, "_time"))
-                    {
-                        timens_t age = current_time() - start_time;
-                        sprintf(value, "%lld", age/NANO);
-                    }
-                    else if (!strcmp(varname, "STARTTIME"))
-                        sprintf(value, "%lld.%09lld", start_time/NANO, start_time%NANO);
-                    else if (!strcmp(varname, "TIME"))
-                    {
-                        timens_t ct = current_time();
-                        sprintf(value, "%lld.%09lld", ct/NANO, ct%NANO);
-                    }
-                    else if (!strcmp(varname, "_clock"))
-                        sprintf(value, "%ld", (long int)time(0));
-                    else if (!strcmp(varname, "_msec"))
-                    {
-                        timens_t age = current_time() - start_time;
-                        sprintf(value, "%lld", age / (NANO/1000));
-                    }
-                    else if (!strcmp(varname, "HOME"))
-                    {
-                        v=getenv("HOME");
-                        if (v)
-                            snprintf(value, BUFFER_SIZE, "%s", v);
-                        else
-                            *value=0;
-                    }
-                    else
+                    if (!builtin_var(varname, value, ses))
                         goto novar;
                     valuelen=strlen(value);
                     if ((len+=valuelen-counter-varlen) > BUFFER_SIZE-10)
@@ -186,8 +192,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                     strcpy(result, value);
                     result+=valuelen;
                     arg += counter + varlen;
-                    /* secstotick code end */
-                } /* end if ...searchnode... */
+                }
             }
             else
             {
