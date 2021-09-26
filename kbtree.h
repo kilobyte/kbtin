@@ -35,8 +35,10 @@
 #define KB_MAX_DEPTH 64
 
 typedef struct {
-	int32_t is_internal:1, n:31;
+	intptr_t is_internal:1, n:31;
 } kbnode_t;
+
+#define __KB_WORD sizeof(intptr_t)
 
 typedef struct {
 	kbnode_t *x;
@@ -47,7 +49,7 @@ typedef struct {
 	kbpos_t stack[KB_MAX_DEPTH], *p;
 } kbitr_t;
 
-#define	__KB_KEY(type, x)	((type*)((char*)x + 4))
+#define	__KB_KEY(type, x)	((type*)((char*)x + __KB_WORD))
 #define __KB_PTR(btr, x)	((kbnode_t**)((char*)x + (btr)->off_ptr))
 
 #define __KB_TREE_T(name)						\
@@ -63,13 +65,13 @@ typedef struct {
 	{																	\
 		kbtree_##name##_t *b;											\
 		b = (kbtree_##name##_t*)calloc(1, sizeof(kbtree_##name##_t));	\
-		b->t = ((size - 4 - sizeof(void*)) / (sizeof(void*) + sizeof(key_t)) + 1) >> 1; \
+		b->t = ((size - __KB_WORD - sizeof(void*)) / (sizeof(void*) + sizeof(key_t)) + 1) >> 1; \
 		if (b->t < 2) {													\
 			free(b); return 0;											\
 		}																\
 		b->n = 2 * b->t - 1;											\
-		b->off_ptr = 4 + b->n * sizeof(key_t);							\
-		b->ilen = (4 + sizeof(void*) + b->n * (sizeof(void*) + sizeof(key_t)) + 3) >> 2 << 2; \
+		b->off_ptr = __KB_WORD + b->n * sizeof(key_t);							\
+		b->ilen = (__KB_WORD + sizeof(void*) + b->n * (sizeof(void*) + sizeof(key_t)) + 3) >> 2 << 2; \
 		b->elen = (b->off_ptr + 3) >> 2 << 2;							\
 		b->root = (kbnode_t*)calloc(1, b->ilen);						\
 		++b->n_nodes;													\
