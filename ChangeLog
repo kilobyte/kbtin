@@ -6,7 +6,7 @@
 *	// for fractional division
 *	% for modulo
 *	sub-second time handling
-*	make $_time working as documented
+*	make $_time work as documented
 *	$TIME, $STARTTIME, $TIMETOTICK, $RANDOM, $LINENUM, $USERIFLE
 *	drop #profile
 *	free everything if running on valgrind
