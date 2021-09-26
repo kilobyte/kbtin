@@ -20,7 +20,7 @@ Substitutions:
    highlight  unhighlight  gag         ungag       togglesub   presub
    dosubstitutes           dohighlights            change      gagthis
 Information:
-   help        info        messages    news        version
+   help        info        messages    version
 Input:
    bind        unbind      keypad      retain
 Control statements:
