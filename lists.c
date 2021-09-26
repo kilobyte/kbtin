@@ -1,5 +1,4 @@
 #include "tintin.h"
-#include <math.h>
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/print.h"
