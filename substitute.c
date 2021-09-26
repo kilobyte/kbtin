@@ -11,6 +11,7 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/string.h"
+#include "protos/vars.h"
 
 
 /***************************/

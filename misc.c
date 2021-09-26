@@ -31,6 +31,7 @@
 #include "protos/user.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/vars.h"
 
 
 /* externs */

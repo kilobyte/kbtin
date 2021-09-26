@@ -8,6 +8,7 @@
 #include "protos/parse.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/vars.h"
 
 
 static struct colordef

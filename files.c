@@ -21,6 +21,7 @@
 #include "protos/user.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/vars.h"
 #include <pwd.h>
 #include <fcntl.h>
 

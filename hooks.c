@@ -4,6 +4,7 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
+#include "protos/vars.h"
 
 
 static bool magic_close_hook=true;

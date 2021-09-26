@@ -7,6 +7,7 @@
 #include "protos/parse.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/vars.h"
 
 
 extern struct session *if_command(const char *arg, struct session *ses);
