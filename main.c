@@ -209,7 +209,7 @@ static void init_nullses(void)
     nullsession->highs = init_list();
     nullsession->pathdirs = init_hash();
     nullsession->socket = 0;
-    nullsession->issocket = false;
+    nullsession->sestype = SES_NULL;
     nullsession->naws = false;
 #ifdef HAVE_ZLIB
     nullsession->can_mccp = false;
@@ -547,7 +547,7 @@ static void tintin(void)
         {
             if (ses==nullsession)
                 continue;
-            if (ses->nagle)
+            if (ses->sestype==SES_SOCKET && ses->nagle)
                 flush_socket(ses);
             FD_SET(ses->socket, &readfdmask);
             if (ses->socket>maxfd)

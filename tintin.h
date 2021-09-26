@@ -307,6 +307,8 @@ struct charset_conv
 
 typedef enum { LOG_RAW, LOG_LF, LOG_TTYREC } logtype_t;
 
+typedef enum { SES_NULL, SES_SOCKET, SES_PTY, SES_SELFPIPE } sestype_t;
+
 struct session
 {
     struct session *next;
@@ -331,7 +333,8 @@ struct session
     struct eventnode *events;
     int path_length, no_return;
     int socket, last_term_type;
-    bool issocket, naws, ga, gas;
+    sestype_t sestype;
+    bool naws, ga, gas;
     int server_echo; /* 0=not negotiated, 1=we shouldn't echo, 2=we can echo */
     bool more_coming;
     char last_line[BUFFER_SIZE], telnet_buf[BUFFER_SIZE];
@@ -343,7 +346,7 @@ struct session
     timens_t sessionstart;
     char *hooks[NHOOKS];
     int closing;
-    int nagle;
+    int nagle; /* reused as write end of the pipe for selfpipe */
     bool halfcr_in, halfcr_log; /* \r at the end of a packet */
     int lastintitle;
     char *charset, *logcharset;

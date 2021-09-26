@@ -978,20 +978,32 @@ void info_command(const char *arg, struct session *ses)
         if (ses->locations[i])
             locs++;
     int routes=count_routes(ses);
-    if (ses==nullsession)
+    switch (ses->sestype)
+    {
+    case SES_NULL:
         tintin_printf(ses, "Session : {%s}  (null session)", ses->name);
-    else
-        tintin_printf(ses, "Session : {%s}  Type: %s  %s : {%s}", ses->name,
-            ses->issocket?
+        break;
+
+    case SES_SOCKET:
+        tintin_printf(ses, "Session : {%s}  Type: %s  Address : {%s}", ses->name,
 #ifdef HAVE_GNUTLS
-                ses->ssl?"TCP/IP+SSL" :
+            ses->ssl?"TCP/IP+SSL" :
 #endif
-                "TCP/IP" : "pty",
-            ses->issocket?"Address":"Command line", ses->address);
+            "TCP/IP", ses->address);
 #ifdef HAVE_ZLIB
-    if (ses->issocket)
         tintin_printf(ses, "MCCP compression : %s", ses->mccp?"enabled":"disabled");
 #endif
+        break;
+
+    case SES_PTY:
+        tintin_printf(ses, "Session : {%s}  Type: pty  Command line : {%s}",
+            ses->name, ses->address);
+        break;
+
+    case SES_SELFPIPE:
+        tintin_printf(ses, "Session : {%s}  Type: self-pipe");
+    }
+
     tintin_printf(ses, "You have defined the following:");
     tintin_printf(ses, "Actions : %d  Promptactions: %d", actions, practions);
     tintin_printf(ses, "Aliases : %d", aliases);

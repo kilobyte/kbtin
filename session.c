@@ -35,7 +35,7 @@
 # define gnutls_session_t int
 #endif
 
-static struct session *new_session(const char *name, const char *address, int fd, bool issocket, gnutls_session_t ssl, struct session *ses);
+static struct session *new_session(const char *name, const char *address, int fd, sestype_t sestype, gnutls_session_t ssl, struct session *ses);
 static void show_session(struct session *ses);
 
 static bool session_exists(char *name)
@@ -181,10 +181,10 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
             close(sock);
             return ses;
         }
-        return new_session(left, right, sock, true, sslses, ses);
+        return new_session(left, right, sock, SES_SOCKET, sslses, ses);
     }
 #endif
-    return new_session(left, right, sock, true, 0, ses);
+    return new_session(left, right, sock, SES_SOCKET, 0, ses);
 }
 
 
@@ -221,6 +221,16 @@ struct session *run_command(const char *arg, struct session *ses)
         return ses;
     }
 
+    if (!strcmp(right, "//selfpipe"))
+    {
+        int p[2];
+        if (pipe(p))
+            syserr("pipe failed");
+        ses = new_session(left, right, p[0], SES_SELFPIPE, 0, ses);
+        ses->nagle = p[1];
+        return ses;
+    }
+
     utf8_to_local(ustr, right);
     if ((sock=run(ustr, COLS, LINES-1, TERM)) == -1)
     {
@@ -228,7 +238,7 @@ struct session *run_command(const char *arg, struct session *ses)
         return ses;
     }
 
-    return new_session(left, right, sock, false, 0, ses);
+    return new_session(left, right, sock, SES_PTY, 0, ses);
 }
 
 
@@ -270,7 +280,7 @@ struct session *newactive_session(void)
 /**********************/
 /* open a new session */
 /**********************/
-static struct session *new_session(const char *name, const char *address, int sock, bool issocket, gnutls_session_t ssl, struct session *ses)
+static struct session *new_session(const char *name, const char *address, int sock, sestype_t sestype, gnutls_session_t ssl, struct session *ses)
 {
     struct session *newsession;
 
@@ -299,8 +309,8 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->socket = sock;
     newsession->antisubs = copy_slist(ses->antisubs);
     newsession->binds = copy_hash(ses->binds);
-    newsession->issocket = issocket;
-    newsession->naws = !issocket;
+    newsession->sestype = sestype;
+    newsession->naws = (sestype == SES_PTY);
 #ifdef HAVE_ZLIB
     newsession->can_mccp = false;
     newsession->mccp = 0;
@@ -350,7 +360,7 @@ static struct session *new_session(const char *name, const char *address, int so
         else
             newsession->hooks[i]=0;
     newsession->closing=0;
-    newsession->charset = mystrdup(issocket ? ses->charset : user_charset_name);
+    newsession->charset = mystrdup(sestype==SES_SOCKET ? ses->charset : user_charset_name);
     newsession->logcharset = logcs_is_special(ses->logcharset) ?
                               ses->logcharset : mystrdup(ses->logcharset);
     if (!new_conv(&newsession->c_io, newsession->charset, 0))

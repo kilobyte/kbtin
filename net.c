@@ -165,8 +165,12 @@ void write_line_mud(const char *line, struct session *ses)
 
     if (*line)
         ses->idle_since=current_time();
-    if (ses->issocket)
+    switch (ses->sestype)
     {
+    case SES_NULL:
+        tintin_eprintf(ses, "#spurious output: %s", line);
+        break;
+    case SES_SOCKET:
         if (!ses->nagle)
         {
             setsockopt(ses->socket, IPPROTO_TCP, TCP_NODELAY, &ses->nagle,
@@ -174,11 +178,14 @@ void write_line_mud(const char *line, struct session *ses)
             ses->nagle=1;
         }
         telnet_write_line(rstr, ses, true);
-    }
-    else if (ses==nullsession)
-        tintin_eprintf(ses, "#spurious output: %s", line);  /* CHANGE ME */
-    else
+        break;
+    case SES_PTY:
         pty_write_line(rstr, ses->socket);
+        break;
+    case SES_SELFPIPE:
+        write(ses->nagle, line, strlen(line));
+        write(ses->nagle, "\n", 1);
+    }
     do_hook(ses, HOOK_SEND, line, true);
 }
 
@@ -189,10 +196,10 @@ void write_raw_mud(const char *line, int len, struct session *ses)
 {
     const char *lp=line;
     char *rp, rstr[BUFFER_SIZE];
-    int ret;
+    int ret=0;
 
     /* not updating $IDLETIME, it's most likely not a command */
-    if (ses->issocket && !ses->nagle)
+    if (ses->sestype==SES_SOCKET && !ses->nagle)
     {
         setsockopt(ses->socket, IPPROTO_TCP, TCP_NODELAY, &ses->nagle,
             sizeof(ses->nagle));
@@ -212,15 +219,25 @@ void write_raw_mud(const char *line, int len, struct session *ses)
             while (*rp)
                 rp++;
 
-            if (ses->issocket)
-                *rp=ret=0, telnet_write_line(rstr, ses, false);
-            else
+            switch (ses->sestype)
+            {
+            case SES_NULL:
+                break;
+            case SES_SOCKET:
+                *rp=0;
+                telnet_write_line(rstr, ses, false);
+                break;
+            case SES_PTY:
                 ret=write(ses->socket, rstr, rp-rstr);
+                break;
+            case SES_SELFPIPE:
+                ret=write(ses->nagle, rstr, rp-rstr);
+            }
         }
         else
         {
             lp++;
-            ret=write(ses->socket, "", 1);
+            ret=write((ses->sestype!=SES_SELFPIPE)? ses->socket : ses->nagle, "", 1);
         }
         if (ret<0)
             tintin_eprintf(ses, "#error writing to session: %s", strerror(errno));
@@ -295,7 +312,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
 #define tmpbuf ses->telnet_buf
 #define len ses->telnet_buflen
 
-    if (!ses->issocket)
+    if (ses->sestype != SES_SOCKET)
     {
         didget=read(ses->socket, buffer, INPUT_CHUNK);
         if (didget<=0)
