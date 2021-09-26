@@ -364,7 +364,7 @@ x ąęść
 x abc𠀧𠀀𠀁𠀂
 x
 #delay 1 #end
-#run a cat
+#run a //selfpipe
 #text testtmp
 #unlink testtmp
 >>>
@@ -579,9 +579,9 @@ def
 <<<
 #var dummy 0
 #alias s {#a rep $0;#b rep $0}
-#run a cat
+#run a //selfpipe
 #ali rep #showme $0: This is a.
-#run b cat
+#run b //selfpipe
 #ali rep #showme $0: This is b.
 s Initial
 #b
@@ -690,7 +690,7 @@ FIN
 <<<
 #mess tick on
 #de 2 #end
-#run a cat
+#run a //selfpipe
 #hook tick {#showme A;#zap;#showme B}
 #ticksize 1
 #tickon
@@ -712,7 +712,7 @@ B
 <<<
 #mess tick on
 #de 2 #end
-#run a cat
+#run a //selfpipe
 #hook pretick {#showme A;#zap;#showme B}
 #ticksize 11
 #tickon
@@ -818,7 +818,7 @@ xQUUX
 <<<
 #act {%1} {#showme {% %1};#showme {$ $1}}
 #gag {%1}
-#run a cat
+#run a //selfpipe
 #de 2 #end
 #
 a;b
@@ -847,7 +847,7 @@ $ {{{}}}
 
 ### #mudcolors
 <<<
-#run a cat
+#run a //selfpipe
 #de 2 #end
 #mudcolors black blue green cyan maroon magenta brown gray charcoal azure lime aqua red pink yellow white
 ~0~ ~1~ ~2~ ~3~ ~4~ ~5~ ~6~ ~7~ ~8~ ~9~ ~10~ ~11~ ~12~ ~13~ ~14~ ~15~
@@ -910,7 +910,7 @@ Error: T => 1 expected F
 <<<
 #var todo {{#anti foo} {#unanti foo} {#anti bar;#anti baz} {#unanti b*} {#end}}
 #act GO {#show .;#split cur todo {$todo};#if 1 {$$cur};foo;bar;baz;quux;GO}
-#run a cat
+#run a //selfpipe
 #gag {%0}
 GO
 >>>
@@ -934,7 +934,7 @@ baz
 #pro foo a
 #ant foo
 #ro foo bar e
-#run a cat
+#run a //selfpipe
 #var bar a
 #sub bar a
 #ali bar a
