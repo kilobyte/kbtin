@@ -2,11 +2,11 @@
 #include "protos/action.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
-#include "protos/ivars.h"
+#include "protos/eval.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
 
 
 extern struct session *if_command(const char *arg, struct session *ses);

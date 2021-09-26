@@ -20,7 +20,7 @@
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
 #include <pwd.h>
 #include <fcntl.h>
 

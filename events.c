@@ -6,7 +6,7 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
 
 
 int msec(timens_t t)

@@ -6,8 +6,8 @@ man_MANS = KBtin.6
 AUTOMAKE_OPTIONS = foreign
 
 KBtin_C_FILES=action.c alias.c antisub.c files.c glob.c help.c highlight.c\
-	history.c ivars.c llist.c main.c misc.c net.c parse.c path.c session.c\
-	substitute.c ticks.c utils.c variables.c events.c user.c run.c colors.c\
+	history.c eval.c llist.c main.c misc.c net.c parse.c path.c session.c\
+	substitute.c ticks.c utils.c string.c events.c user.c run.c colors.c\
 	routes.c bind.c telnet.c hash.c regexp.c hooks.c unicode.c\
 	user_pipe.c user_tty.c wcwidth.c chinese.c print.c ssl.c pty.c globals.c\
 	math.c slist.c lists.c

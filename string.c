@@ -11,7 +11,7 @@
 #include "protos/chinese.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
-#include "protos/ivars.h"
+#include "protos/eval.h"
 #include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"

@@ -16,7 +16,7 @@
 #include "protos/parse.h"
 #include "protos/path.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
 
 #include "commands.h"
 typedef void (*t_command)(const char*, struct session*);

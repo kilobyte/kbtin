@@ -18,7 +18,7 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/path.h"
-#include "protos/variables.h"
+#include "protos/string.h"
 
 static bool return_flag = true;
 

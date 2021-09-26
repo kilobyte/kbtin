@@ -10,7 +10,7 @@
 #include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
-#include "protos/variables.h"
+#include "protos/string.h"
 
 
 /***************************/
