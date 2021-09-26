@@ -179,7 +179,7 @@ void telnet_resize_all(void)
             case SES_PTY:
                 pty_resize(sp->socket, COLS, LINES-1-!!isstatus);
                 break;
-            default:
+            default:;
             }
 }
 
