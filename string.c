@@ -375,6 +375,191 @@ void prepad_command(const char *arg, struct session *ses)
     set_variable(destvar, astr, ses);
 }
 
+
+/**************************/
+/* the #substring command */
+/**************************/
+void substring_command(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE], mid[BUFFER_SIZE], right[BUFFER_SIZE], *p;
+    WC buf[BUFFER_SIZE], *lptr, *rptr;
+    int l, r, s, w;
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, mid, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
+    l=strtol(mid, &p, 10);
+    if (*p==',')
+        r=strtol(p+1, &p, 10);
+    else
+        r=l;
+    if (l<1)
+        l=1;
+
+    if (!*left || (p==mid) || (*p) || (r<0))
+        return tintin_eprintf(ses, "#SYNTAX: substr <var> <l>[,<r>] <string>");
+
+    p=mid;
+    TO_WC(buf, right);
+    lptr=buf;
+    s=1;
+    while (*lptr)
+    {
+        w=wcwidth(*lptr);
+        if (w<0)
+            w=0;
+        if (w && s>=l)
+            break;  /* skip incomplete CJK chars with all modifiers */
+        lptr++;
+        s+=w;
+    }
+    if (s>l)
+        *p++=' ';   /* the left edge is cut in half */
+    rptr=lptr;
+    while (w=wcwidth(*rptr), *rptr)
+    {
+        if (w<0)
+            w=0;
+        if (w && s+w>r+1)
+            break;  /* skip incomplete CJK chars with all modifiers */
+        rptr++;
+        s+=w;
+    }
+    if (rptr>lptr)
+        p+=wc_to_utf8(p, lptr, rptr-lptr, BUFFER_SIZE-3);
+    if (s==r && w==2)
+        *p++=' ';   /* the right edge is cut */
+    *p=0;
+    set_variable(left, mid, ses);
+}
+
+/***********************/
+/* the #strcmp command */
+/***********************/
+struct session *strcmp_command(const char *line, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE], cmd[BUFFER_SIZE];
+
+    line = get_arg(line, left, 0, ses);
+    line = get_arg(line, right, 0, ses);
+    line = get_arg_in_braces(line, cmd, 1);
+
+    if (!*cmd)
+    {
+        tintin_eprintf(ses, "#Syntax: #strcmp <a> <b> <command> [#else <command>]");
+        return ses;
+    }
+
+    if (!strcmp(left, right))
+        return parse_input(cmd, true, ses);
+
+    line = get_arg_in_braces(line, left, 0);
+    if (*left == tintin_char)
+    {
+        if (is_abrev(left + 1, "else"))
+        {
+            line = get_arg_in_braces(line, right, 1);
+            ses=parse_input(right, true, ses);
+        }
+        if (is_abrev(left + 1, "elif"))
+            ses=if_command(line, ses);
+    }
+    return ses;
+}
+
+/**********************/
+/* the #strcmp inline */
+/**********************/
+int strcmp_inline(const char *line, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    line = get_arg(line, left, 0, ses);
+    line = get_arg(line, right, 1, ses);
+
+    return !strcmp(left, right);
+}
+
+/***************************************/
+/* the #ifstrequal command             */
+/***************************************/
+/* (mainstream tintin++ compatibility) */
+/***************************************/
+struct session *ifstrequal_command(const char *line, struct session *ses)
+{
+    return strcmp_command(line, ses);
+}
+
+/*************************/
+/* the #ifexists command */
+/*************************/
+struct session *ifexists_command(const char *line, struct session *ses)
+{
+    char left[BUFFER_SIZE], cmd[BUFFER_SIZE];
+
+    line = get_arg(line, left, 0, ses);
+    line = get_arg_in_braces(line, cmd, 1);
+
+    if (!*cmd)
+    {
+        tintin_eprintf(ses, "#Syntax: #ifexists <varname> <command> [#else <command>]");
+        return ses;
+    }
+
+    if (get_hash(ses->myvars, left))
+        return parse_input(cmd, true, ses);
+
+    line = get_arg_in_braces(line, left, 0);
+    if (*left == tintin_char)
+    {
+        if (is_abrev(left + 1, "else"))
+        {
+            line = get_arg_in_braces(line, cmd, 1);
+            ses=parse_input(cmd, true, ses);
+        }
+        if (is_abrev(left + 1, "elif"))
+            ses=if_command(line, ses);
+    }
+    return ses;
+}
+
+/*********************/
+/* the #ctoi command */
+/*********************/
+void ctoi_command(const char* arg, struct session* ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    arg=get_arg(arg, left, 0, ses);
+    arg=get_arg(arg, right, 1, ses);
+
+    if (!*left || !*right)
+        return tintin_eprintf(ses, "#Syntax: #ctoi <var> <text>");
+
+    ctoi(right);
+    set_variable(left, right, ses);
+}
+
+/*****************************/
+/* the #initvariable command */
+/*****************************/
+void initvariable_command(const char* arg, struct session* ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    arg=get_arg(arg, left, 0, ses);
+    arg=get_arg(arg, right, 1, ses);
+
+    if (!*left)
+        tintin_eprintf(ses, "#Syntax: #initvar <var> <value>");
+    else if (!get_hash(ses->myvars, left))
+        set_variable(left, right, ses);
+}
+
+
+/*********************/
+/* the #trim command */
+/*********************/
 void trim_command(const char *arg, struct session *ses)
 {
     char destvar[BUFFER_SIZE], str[BUFFER_SIZE], *s, *e, *p;
@@ -571,187 +756,6 @@ void gmtime_command(const char *arg, struct session *ses)
         tintin_printf(ses, "#%s.", ct);
     else
         set_variable(left, ct, ses);
-}
-
-
-/**************************/
-/* the #substring command */
-/**************************/
-void substring_command(const char *arg, struct session *ses)
-{
-    char left[BUFFER_SIZE], mid[BUFFER_SIZE], right[BUFFER_SIZE], *p;
-    WC buf[BUFFER_SIZE], *lptr, *rptr;
-    int l, r, s, w;
-
-    arg = get_arg(arg, left, 0, ses);
-    arg = get_arg(arg, mid, 0, ses);
-    arg = get_arg(arg, right, 1, ses);
-    l=strtol(mid, &p, 10);
-    if (*p==',')
-        r=strtol(p+1, &p, 10);
-    else
-        r=l;
-    if (l<1)
-        l=1;
-
-    if (!*left || (p==mid) || (*p) || (r<0))
-        return tintin_eprintf(ses, "#SYNTAX: substr <var> <l>[,<r>] <string>");
-
-    p=mid;
-    TO_WC(buf, right);
-    lptr=buf;
-    s=1;
-    while (*lptr)
-    {
-        w=wcwidth(*lptr);
-        if (w<0)
-            w=0;
-        if (w && s>=l)
-            break;  /* skip incomplete CJK chars with all modifiers */
-        lptr++;
-        s+=w;
-    }
-    if (s>l)
-        *p++=' ';   /* the left edge is cut in half */
-    rptr=lptr;
-    while (w=wcwidth(*rptr), *rptr)
-    {
-        if (w<0)
-            w=0;
-        if (w && s+w>r+1)
-            break;  /* skip incomplete CJK chars with all modifiers */
-        rptr++;
-        s+=w;
-    }
-    if (rptr>lptr)
-        p+=wc_to_utf8(p, lptr, rptr-lptr, BUFFER_SIZE-3);
-    if (s==r && w==2)
-        *p++=' ';   /* the right edge is cut */
-    *p=0;
-    set_variable(left, mid, ses);
-}
-
-/***********************/
-/* the #strcmp command */
-/***********************/
-struct session *strcmp_command(const char *line, struct session *ses)
-{
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], cmd[BUFFER_SIZE];
-
-    line = get_arg(line, left, 0, ses);
-    line = get_arg(line, right, 0, ses);
-    line = get_arg_in_braces(line, cmd, 1);
-
-    if (!*cmd)
-    {
-        tintin_eprintf(ses, "#Syntax: #strcmp <a> <b> <command> [#else <command>]");
-        return ses;
-    }
-
-    if (!strcmp(left, right))
-        return parse_input(cmd, true, ses);
-
-    line = get_arg_in_braces(line, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            line = get_arg_in_braces(line, right, 1);
-            ses=parse_input(right, true, ses);
-        }
-        if (is_abrev(left + 1, "elif"))
-            ses=if_command(line, ses);
-    }
-    return ses;
-}
-
-/**********************/
-/* the #strcmp inline */
-/**********************/
-int strcmp_inline(const char *line, struct session *ses)
-{
-    char left[BUFFER_SIZE], right[BUFFER_SIZE];
-
-    line = get_arg(line, left, 0, ses);
-    line = get_arg(line, right, 1, ses);
-
-    return !strcmp(left, right);
-}
-
-/***************************************/
-/* the #ifstrequal command             */
-/***************************************/
-/* (mainstream tintin++ compatibility) */
-/***************************************/
-struct session *ifstrequal_command(const char *line, struct session *ses)
-{
-    return strcmp_command(line, ses);
-}
-
-/*************************/
-/* the #ifexists command */
-/*************************/
-struct session *ifexists_command(const char *line, struct session *ses)
-{
-    char left[BUFFER_SIZE], cmd[BUFFER_SIZE];
-
-    line = get_arg(line, left, 0, ses);
-    line = get_arg_in_braces(line, cmd, 1);
-
-    if (!*cmd)
-    {
-        tintin_eprintf(ses, "#Syntax: #ifexists <varname> <command> [#else <command>]");
-        return ses;
-    }
-
-    if (get_hash(ses->myvars, left))
-        return parse_input(cmd, true, ses);
-
-    line = get_arg_in_braces(line, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            line = get_arg_in_braces(line, cmd, 1);
-            ses=parse_input(cmd, true, ses);
-        }
-        if (is_abrev(left + 1, "elif"))
-            ses=if_command(line, ses);
-    }
-    return ses;
-}
-
-/*********************/
-/* the #ctoi command */
-/*********************/
-void ctoi_command(const char* arg, struct session* ses)
-{
-    char left[BUFFER_SIZE], right[BUFFER_SIZE];
-
-    arg=get_arg(arg, left, 0, ses);
-    arg=get_arg(arg, right, 1, ses);
-
-    if (!*left || !*right)
-        return tintin_eprintf(ses, "#Syntax: #ctoi <var> <text>");
-
-    ctoi(right);
-    set_variable(left, right, ses);
-}
-
-/*****************************/
-/* the #initvariable command */
-/*****************************/
-void initvariable_command(const char* arg, struct session* ses)
-{
-    char left[BUFFER_SIZE], right[BUFFER_SIZE];
-
-    arg=get_arg(arg, left, 0, ses);
-    arg=get_arg(arg, right, 1, ses);
-
-    if (!*left)
-        tintin_eprintf(ses, "#Syntax: #initvar <var> <value>");
-    else if (!get_hash(ses->myvars, left))
-        set_variable(left, right, ses);
 }
 
 /*********************/
