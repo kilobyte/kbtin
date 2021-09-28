@@ -70,6 +70,19 @@ abćdę|
   a ć|
 ===
 
+### colored #post/#prepad
+<<<
+#postpad x 5 ~1~abc~2~def;#showme {$x|}
+#postpad x 5 ~1~abc;#showme {$x|}
+#prepad x 5 ~1~abc~2~def;#showme {$x|}
+#prepad x 5 ~1~abc;#showme {$x|}
+>>>
+abcde|
+abc  |
+abcde|
+  abc|
+===
+
 ### #substr
 <<<
 #substr tmp 3 abcde;#showme {$tmp}

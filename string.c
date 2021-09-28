@@ -9,6 +9,7 @@
 #include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/chinese.h"
+#include "protos/colors.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/eval.h"
@@ -273,19 +274,33 @@ int random_inline(const char *arg, struct session *ses)
 /************************************************************************************/
 /* cut a string to width len, putting the cut point into *rstr and return the width */
 /************************************************************************************/
-static int cutws(WC *str, int len, WC **rstr)
+static int cutws(WC *str, int len, WC **rstr, int *color)
 {
-    int w, s;
+    char cbuf[BUFFER_SIZE], *cp=cbuf;
+    for (WC *sp=str; *sp; sp++)
+        *cp++ = (*sp>'~')? 'x' : *sp; // only color codes count
+    cp=cbuf;
 
-    s=0;
+    int s=0;
     while (*str)
     {
-        w=wcwidth(*str);
+        if (*str=='~')
+        {
+            const char *cend = cp;
+            if (getcolor(&cend, color, true))
+            {
+                str+=(cend-cp)+1;
+                cp+=(cend-cp)+1;
+                continue;
+            }
+        }
+
+        int w=wcwidth(*str);
         if (w<0)
             w=0;
         if (w && s+w>len)
             break;
-        str++;
+        str++; cp++;
         s+=w;
     }
     *rstr=str;
@@ -303,7 +318,7 @@ void postpad_command(const char *arg, struct session *ses)
 {
     char destvar[BUFFER_SIZE], lengthstr[BUFFER_SIZE], astr[BUFFER_SIZE], *aptr;
     WC bstr[BUFFER_SIZE], *bptr;
-    int len, length;
+    int len, length, dummy=-1;
 
     arg = get_arg(arg, destvar, 0, ses);
     arg = get_arg(arg, lengthstr, 0, ses);
@@ -316,7 +331,7 @@ void postpad_command(const char *arg, struct session *ses)
         return tintin_eprintf(ses, "#Error in #postpad - length has to be a positive number >0, got {%s}.", lengthstr);
 
     TO_WC(bstr, astr);
-    len=cutws(bstr, length, &bptr);
+    len=cutws(bstr, length, &bptr, &dummy);
     aptr=astr+wc_to_utf8(astr, bstr, bptr-bstr, BUFFER_SIZE-3);
     while (len<length)
         len++, *aptr++=' ';
@@ -338,7 +353,7 @@ void prepad_command(const char *arg, struct session *ses)
 {
     char destvar[BUFFER_SIZE], astr[BUFFER_SIZE], lengthstr[BUFFER_SIZE], *aptr;
     WC bstr[BUFFER_SIZE], *bptr;
-    int len, length;
+    int len, length, dummy=-1;
 
     arg = get_arg(arg, destvar, 0, ses);
     arg = get_arg(arg, lengthstr, 0, ses);
@@ -351,7 +366,7 @@ void prepad_command(const char *arg, struct session *ses)
         return tintin_eprintf(ses, "#Error in #prepad - length has to be a positive number >0, got {%s}.", lengthstr);
 
     TO_WC(bstr, astr);
-    len=cutws(bstr, length, &bptr);
+    len=cutws(bstr, length, &bptr, &dummy);
     aptr=astr;
     while (len<length)
         len++, *aptr++=' ';
