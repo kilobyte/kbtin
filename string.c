@@ -382,8 +382,8 @@ void prepad_command(const char *arg, struct session *ses)
 void substring_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], mid[BUFFER_SIZE], right[BUFFER_SIZE], *p;
-    WC buf[BUFFER_SIZE], *lptr, *rptr;
-    int l, r, s, w;
+    WC buf[BUFFER_SIZE];
+    int l, r;
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, mid, 0, ses);
@@ -401,35 +401,28 @@ void substring_command(const char *arg, struct session *ses)
 
     p=mid;
     TO_WC(buf, right);
-    lptr=buf;
-    s=1;
-    while (*lptr)
+    WC *lb=buf;
+    int color=-1;
+    if (l>1)
     {
-        w=wcwidth(*lptr);
-        if (w<0)
-            w=0;
-        if (w && s>=l)
-            break;  /* skip incomplete CJK chars with all modifiers */
-        lptr++;
-        s+=w;
+        int lw=cutws(buf, l-1, &lb, &color);
+        if (color!=-1)
+            p+=setcolor(p, color);
+        if (lw==l-2 && *lb) /* 1 column short and not end of string → half of a CJK char */
+        {
+            *p++=' ';
+            l++;
+            lb++;
+            while (*lb && !wcwidth(*lb)) /* eat combining chars as well */
+                lb++;
+        }
     }
-    if (s>l)
-        *p++=' ';   /* the left edge is cut in half */
-    rptr=lptr;
-    while (w=wcwidth(*rptr), *rptr)
-    {
-        if (w<0)
-            w=0;
-        if (w && s+w>r+1)
-            break;  /* skip incomplete CJK chars with all modifiers */
-        rptr++;
-        s+=w;
-    }
-    if (rptr>lptr)
-        p+=wc_to_utf8(p, lptr, rptr-lptr, BUFFER_SIZE-3);
-    if (s==r && w==2)
-        *p++=' ';   /* the right edge is cut */
-    *p=0;
+
+    WC *rb;
+    int rw=cutws(lb, r+1-l, &rb, &color);
+    p+=wc_to_utf8(p, lb, rb-lb, mid+BUFFER_SIZE-3-p);
+    if (rw==r-l && *rb) /* half of a CJK char */
+        *p++=' ', *p=0;
     set_variable(left, mid, ses);
 }
 

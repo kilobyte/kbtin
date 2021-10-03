@@ -96,6 +96,19 @@ de
 bćd
 ===
 
+### colored #substr
+<<<
+#substr tmp 3 ~1~a~2~b~3~c~4~d~5~e~6~;#showme {$tmp}
+#substr tmp 2,3 ~1~a~2~b~3~c~4~d~5~e~6~;#showme {$tmp}
+#substr tmp 4,1000 ~1~a~2~b~3~c~4~d~5~e~6~;#showme {$tmp}
+#substr tmp 2,4 ~1~ą~2~b~3~ć~4~d~5~e~6~f~7~;#showme {$tmp}
+>>>
+c
+bc
+de
+bćd
+===
+
 ### late var substitution
 <<<
 #var x A1
