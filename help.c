@@ -68,49 +68,41 @@ void help_command(const char *arg, struct session *ses)
             COMPRESSION_EXT);
         return;
     }
+
+    if (!*arg)
+    {
+        while (fgets(line, sizeof(line), myfile))
+        {
+            if (line[0]=='~' && line[1]=='~')
+                break;
+            char *eol=strchr(line, '\n');
+            if (eol)
+                *eol=0;
+            tintin_printf(0, "%s", line);
+        }
+        fclose(myfile);
+        return;
+    }
+
     if (*arg==tintin_char)
         arg++;
-    if (*arg)
+    sprintf(text, "~%s", arg);
+    while (fgets(line, sizeof(line), myfile))
     {
-        sprintf(text, "~%s", arg);
+        if (*line != '~' || !is_abrev(text, line))
+            continue;
         while (fgets(line, sizeof(line), myfile))
         {
-            if (*line == '~')
-            {
-                if (*(line + 1) == '*')
-                    break;
-                if (is_abrev(text, line))
-                {
-                    while (fgets(line, sizeof(line), myfile))
-                    {
-                        if ((*line == '~')&&(*(line+1)=='~'))
-                            goto end;
-                        else
-                        {
-                            *(line + strlen(line) - 1) = '\0';
-                            if (*line!='~')
-                                tintin_printf(0, "%s", line);
-                        }
-                    }
-                }
-            }
+            if (line[0]=='~' && line[1]=='~')
+                break;
+            char *eol=strchr(line, '\n');
+            if (eol)
+                *eol=0;
+            tintin_printf(0, "%s", line);
         }
-    }
-    else
-    {
-        while (fgets(line, sizeof(line), myfile))
-        {
-            if ((*line == '~')&&(*(line+1)=='~'))
-                goto end;
-            else
-            {
-                *(line + strlen(line) - 1) = '\0';
-                if (*line!='~')
-                    tintin_printf(0, "%s", line);
-            }
-        }
+        fclose(myfile);
+        return;
     }
     tintin_printf(0, "#Sorry, no help on that word.");
-end:
     fclose(myfile);
 }
