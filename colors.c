@@ -590,7 +590,7 @@ null_codes:
     tintin_printf(ses, "#outgoing color codes table initialized");
 }
 
-char *ansicolor(char *s, int c)
+char* ansicolor(char *s, int c)
 {
     *s++=27, *s++='[', *s++='0';
     int k = c & CFG_MASK;

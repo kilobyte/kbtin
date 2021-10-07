@@ -256,7 +256,7 @@ static void show_session(struct session *ses)
 /**********************************/
 /* find a new session to activate */
 /**********************************/
-struct session *newactive_session(void)
+struct session* newactive_session(void)
 {
     if ((activesession=sessionlist)==nullsession)
         activesession=activesession->next;
