@@ -45,7 +45,7 @@ int recursion;
 /**************************************************************************/
 struct session* parse_input(const char *input, bool override_verbatim, struct session *ses)
 {
-    char command[BUFFER_SIZE], arg[BUFFER_SIZE], result[BUFFER_SIZE], *al;
+    char command[BUFFER_SIZE], arg[BUFFER_SIZE], *al;
     int nspaces;
 
     if (++recursion>=MAX_RECURSION)
@@ -95,32 +95,16 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
     {
         while (*input == ';')
             input=space_out(input+1);
-        if (pvars)
+        input = get_command(input, command);
+        substitute_vars(command, command, ses);
+        nspaces=0;
+        while (*input==' ')
         {
-            input = get_command(input, command);
-            substitute_vars(command, command, ses);
-            nspaces=0;
-            while (*input==' ')
-            {
-                input++;
-                nspaces++;
-            }
-            input = get_arg_all(input, arg);
-            substitute_vars(arg, arg, ses);
+            input++;
+            nspaces++;
         }
-        else
-        {
-            input = get_command(input, result);
-            substitute_myvars( result, command, ses);
-            nspaces=0;
-            while (*input==' ')
-            {
-                input++;
-                nspaces++;
-            }
-            input = get_arg_all(input, result);
-            substitute_myvars( result, arg, ses);
-        }
+        input = get_arg_all(input, arg);
+        substitute_vars(arg, arg, ses);
 
         if (in_alias)
         {
