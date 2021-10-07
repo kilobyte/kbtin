@@ -348,7 +348,7 @@ void goto_command(const char *arg, struct session *ses)
             {
                 if (!*(r->cond))
                     goto good;
-                substitute_vars(r->cond, tmp);
+                substitute_ivars(r->cond, tmp);
                 substitute_myvars(tmp, cond, ses);
                 if (eval_expression(cond, ses))
                 {
@@ -447,7 +447,7 @@ void dogoto_command(const char *arg, struct session *ses)
             {
                 if (!*(r->cond))
                     goto good;
-                substitute_vars(r->cond, tmp);
+                substitute_ivars(r->cond, tmp);
                 substitute_myvars(tmp, cond, ses);
                 if (eval_expression(cond, ses))
                 {

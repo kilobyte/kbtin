@@ -66,7 +66,7 @@ static int defang_var(char *result, const char *var)
 /* copy the arg text into the result-space, but substitute the variables */
 /* %0..%9 with the real variables                                        */
 /*************************************************************************/
-void substitute_vars(const char *arg, char *result)
+void substitute_ivars(const char *arg, char *result)
 {
     int nest = 0;
     int numands, n;
@@ -282,7 +282,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                 specvar = true;
                 get_arg_in_braces(arg + counter, varname, 0);
                 varlen=strlen(varname);
-                substitute_vars(varname, value);
+                substitute_ivars(varname, value);
                 substitute_myvars(value, varname, ses);      /* RECURSIVE CALL */
             }
 
@@ -358,6 +358,6 @@ void prepare_actionalias(const char *string, char *result, struct session *ses)
 {
     char arg[BUFFER_SIZE];
 
-    substitute_vars(string, arg);
+    substitute_ivars(string, arg);
     substitute_myvars(arg, result, ses);
 }

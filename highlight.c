@@ -189,7 +189,7 @@ void unhighlight_command(const char *arg, struct session *ses)
     myhighs = ses->highs;
     temp = myhighs;
     arg = get_arg_in_braces(arg, left, 1);
-    substitute_vars(left, result);
+    substitute_ivars(left, result);
     substitute_myvars(result, left, ses);
     while ((ln = search_node_with_wild(temp, left)))
     {

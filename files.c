@@ -158,7 +158,7 @@ void unlink_command(const char *arg, struct session *ses)
     if (*arg)
     {
         arg = get_arg_in_braces(arg, temp, 1);
-        substitute_vars(temp, file);
+        substitute_ivars(temp, file);
         substitute_myvars(file, temp, ses);
         expand_filename(temp, file, lstr);
         unlink(lstr);
@@ -180,10 +180,10 @@ void deathlog_command(const char *arg, struct session *ses)
     {
         arg = get_arg_in_braces(arg, temp, 0);
         arg = get_arg_in_braces(arg, text, 1);
-        substitute_vars(temp, fname);
+        substitute_ivars(temp, fname);
         substitute_myvars(fname, temp, ses);
         expand_filename(temp, fname, lfname);
-        substitute_vars(text, temp);
+        substitute_ivars(text, temp);
         substitute_myvars(temp, text, ses);
         if ((fh = fopen(lfname, "a")))
         {
@@ -420,7 +420,7 @@ void condump_command(const char *arg, struct session *ses)
     if (*arg)
     {
         arg = get_arg_in_braces(arg, temp, 0);
-        substitute_vars(temp, fname);
+        substitute_ivars(temp, fname);
         substitute_myvars(fname, temp, ses);
         fh=open_logfile(ses, fname,
             "#DUMPING CONSOLE TO {%s}",
@@ -454,7 +454,7 @@ void log_command(const char *arg, struct session *ses)
                     tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
             }
             get_arg_in_braces(arg, temp, 1);
-            substitute_vars(temp, fname);
+            substitute_ivars(temp, fname);
             substitute_myvars(fname, temp, ses);
             ses->logfile=open_logfile(ses, temp,
                 "#OK. LOGGING TO {%s} .....",
@@ -499,7 +499,7 @@ void debuglog_command(const char *arg, struct session *ses)
             ses->debuglogname = NULL;
         }
         get_arg_in_braces(arg, temp, 1);
-        substitute_vars(temp, fname);
+        substitute_ivars(temp, fname);
         substitute_myvars(fname, temp, ses);
         ses->debuglogfile=open_logfile(ses, temp,
             "#OK. DEBUGLOG SET TO {%s} .....",
@@ -657,7 +657,7 @@ struct session* read_command(const char *filename, struct session *ses)
     char buffer[BUFFER_SIZE], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
 
     get_arg_in_braces(filename, buffer, 1);
-    substitute_vars(buffer, fname);
+    substitute_ivars(buffer, fname);
     substitute_myvars(fname, buffer, ses);
     expand_filename(buffer, fname, lfname);
     if (!*filename)
@@ -694,7 +694,7 @@ void write_command(const char *filename, struct session *ses)
     kbitr_t itr;
 
     get_arg_in_braces(filename, buffer, 1);
-    substitute_vars(buffer, fname);
+    substitute_ivars(buffer, fname);
     substitute_myvars(fname, buffer, ses);
     expand_filename(buffer, fname, lfname);
     if (!*filename)
@@ -856,7 +856,7 @@ void writesession_command(const char *filename, struct session *ses)
     }
 
     get_arg_in_braces(filename, buffer, 1);
-    substitute_vars(buffer, fname);
+    substitute_ivars(buffer, fname);
     substitute_myvars(fname, buffer, ses);
     expand_filename(buffer, fname, lfname);
     if (!*filename)
@@ -1052,7 +1052,7 @@ void textin_command(const char *arg, struct session *ses)
     memset(&cs, 0, sizeof(cs));
 
     get_arg_in_braces(arg, buffer, 1);
-    substitute_vars(buffer, filename);
+    substitute_ivars(buffer, filename);
     substitute_myvars(filename, buffer, ses);
     expand_filename(buffer, filename, lfname);
     if (ses == nullsession)

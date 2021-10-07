@@ -98,7 +98,7 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
         if (pvars)
         {
             input = get_command(input, command);
-            substitute_vars( command, result);
+            substitute_ivars( command, result);
             substitute_myvars( result, command, ses);
             nspaces=0;
             while (*input==' ')
@@ -107,7 +107,7 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
                 nspaces++;
             }
             input = get_arg_all(input, arg);
-            substitute_vars( arg, result);
+            substitute_ivars( arg, result);
             substitute_myvars( result, arg, ses);
         }
         else
@@ -550,7 +550,7 @@ const char* get_arg(const char *s, char *arg, bool allow_spaces, struct session 
 {
     const char *cptr=get_arg_in_braces(s, arg, allow_spaces);
     char tmp[BUFFER_SIZE];
-    substitute_vars(arg, tmp);
+    substitute_ivars(arg, tmp);
     substitute_myvars(tmp, arg, ses);
     return cptr;
 }
