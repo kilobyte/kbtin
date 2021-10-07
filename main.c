@@ -858,9 +858,9 @@ static void do_one_line(char *line, int nl, struct session *ses)
         t = current_time() - t;
         if (ses->line_time)
         {
-            /* A dragged average: every new line counts for 10% of the value.
-              The weight of any old line decays with half-life around 6.5. */
-            ses->line_time=(ses->line_time*9+t)/10;
+            /* A dragged average: every new line counts for 1% of the value.
+              The weight of any old line decays with half-life around 69. */
+            ses->line_time=(ses->line_time*99+t)/100;
         }
         else
             ses->line_time=t;
