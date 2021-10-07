@@ -60,7 +60,7 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
     debuglog(ses, "%s", input);
     if (!ses->server_echo && activesession == ses)
         term_echoing = true;
-    if (*input == '\0')
+    if (!*input)
     {
         if (ses!=nullsession)
         {
@@ -495,7 +495,7 @@ const char* get_arg_in_braces(const char *s, char *arg, bool allow_spaces)
         return s;
     }
     s++;
-    while (*s != '\0' && !(*s == BRACE_CLOSE && nest == 0))
+    while (*s && !(*s == BRACE_CLOSE && nest == 0))
     {
         if (*s==CHAR_VERBATIM)     /* \ */
             ;

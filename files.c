@@ -697,7 +697,7 @@ void write_command(const char *filename, struct session *ses)
     substitute_vars(buffer, fname);
     substitute_myvars(fname, buffer, ses);
     expand_filename(buffer, fname, lfname);
-    if (*filename == '\0')
+    if (!*filename)
     {
         tintin_eprintf(ses, "#ERROR: syntax is: #write <filename>");
         return;
@@ -859,7 +859,7 @@ void writesession_command(const char *filename, struct session *ses)
     substitute_vars(buffer, fname);
     substitute_myvars(fname, buffer, ses);
     expand_filename(buffer, fname, lfname);
-    if (*filename == '\0')
+    if (!*filename)
     {
         tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
         return;

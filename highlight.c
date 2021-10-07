@@ -119,10 +119,10 @@ void highlight_command(const char *arg, struct session *ses)
 
     bp = left;
     cp = bp;
-    while (*cp != '\0')
+    while (*cp)
     {
         cp++;
-        while (*cp != ',' && *cp != '\0')
+        while (*cp != ',' && *cp)
             cp++;
         while (isaspace(*bp))
             bp++;

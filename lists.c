@@ -250,7 +250,7 @@ static char* get_split_pos(char *list, int head_length)
     int i = 0;
     char temp[BUFFER_SIZE];
 
-    if ( list[0] == '\0' ) /* empty string */
+    if (!list[0]) /* empty string */
         return list;
 
     if (head_length > 0)
@@ -277,8 +277,8 @@ static char* get_split_pos(char *list, int head_length)
 static bool is_braced_atom_2(const char *beg, const char *end, struct session *ses)
 {
     /* we define where list ends */
-#define AT_END(beg, end) (((*beg) == '\0') || (beg >= end))
-#define NOT_AT_END(beg, end) (((*beg) != '\0') && (beg < end))
+#define AT_END(beg, end) (!*beg || beg >= end)
+#define NOT_AT_END(beg, end) (*beg && beg < end)
 
     int nest = 0;
 
