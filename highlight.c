@@ -182,15 +182,14 @@ void highlight_command(const char *arg, struct session *ses)
 
 void unhighlight_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], result[BUFFER_SIZE];
+    char left[BUFFER_SIZE];
     struct listnode *myhighs, *ln, *temp;
     bool flag = false;
 
     myhighs = ses->highs;
     temp = myhighs;
     arg = get_arg_in_braces(arg, left, 1);
-    substitute_ivars(left, result);
-    substitute_myvars(result, left, ses);
+    substitute_vars(left, left, ses);
     while ((ln = search_node_with_wild(temp, left)))
     {
         if (ses->mesvar[MSG_HIGHLIGHT])

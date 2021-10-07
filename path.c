@@ -44,7 +44,7 @@ void map_command(const char *arg, struct session *ses)
 
     char cmd[BUFFER_SIZE];
     get_arg_in_braces(arg, cmd, 1);
-    prepare_actionalias(cmd, cmd, ses);
+    substitute_vars(cmd, cmd, ses);
     check_insert_path(cmd, ses);
 }
 
@@ -270,7 +270,7 @@ void unpathdir_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE];
 
     arg = get_arg_in_braces(arg, left, 1);
-    prepare_actionalias(left, left, ses);
+    substitute_vars(left, left, ses);
     delete_hashlist(ses, ses->pathdirs, left,
         ses->mesvar[MSG_PATH]? "#Ok. $%s is no longer recognized as a pathdir." : 0,
         ses->mesvar[MSG_PATH]? "#THAT PATHDIR (%s) IS NOT DEFINED." : 0);

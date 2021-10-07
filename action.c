@@ -276,7 +276,7 @@ void check_all_actions(const char *line, struct session *ses)
             {
                 char buffer[BUFFER_SIZE];
 
-                prepare_actionalias(ln->right, buffer, ses);
+                substitute_vars(ln->right, buffer, ses);
                 tintin_printf(ses, "[ACTION: %s]", buffer);
             }
             debuglog(ses, "ACTION: {%s}->{%s}", line, ln->right);
@@ -312,7 +312,7 @@ void check_all_promptactions(const char *line, struct session *ses)
             {
                 char buffer[BUFFER_SIZE];
 
-                prepare_actionalias(ln->right, buffer, ses);
+                substitute_vars(ln->right, buffer, ses);
                 tintin_printf(ses, "[PROMPT-ACTION: %s]", buffer);
             }
             debuglog(ses, "PROMPTACTION: {%s}->{%s}", line, ln->right);

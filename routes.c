@@ -295,7 +295,7 @@ void unroute_command(const char *arg, struct session *ses)
 /**********************/
 void goto_command(const char *arg, struct session *ses)
 {
-    char A[BUFFER_SIZE], B[BUFFER_SIZE], tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
+    char A[BUFFER_SIZE], B[BUFFER_SIZE], cond[BUFFER_SIZE];
     int a, b, i, j, s;
     int d[MAX_LOCATIONS], ok[MAX_LOCATIONS], way[MAX_LOCATIONS];
     char *path[MAX_LOCATIONS], *locs[MAX_LOCATIONS];
@@ -348,8 +348,7 @@ void goto_command(const char *arg, struct session *ses)
             {
                 if (!*(r->cond))
                     goto good;
-                substitute_ivars(r->cond, tmp);
-                substitute_myvars(tmp, cond, ses);
+                substitute_vars(r->cond, cond, ses);
                 if (eval_expression(cond, ses))
                 {
                 good:
@@ -447,8 +446,7 @@ void dogoto_command(const char *arg, struct session *ses)
             {
                 if (!*(r->cond))
                     goto good;
-                substitute_ivars(r->cond, tmp);
-                substitute_myvars(tmp, cond, ses);
+                substitute_vars(r->cond, cond, ses);
                 if (eval_expression(cond, ses))
                 {
                 good:

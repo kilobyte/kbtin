@@ -126,7 +126,7 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
     {
         char buffer[BUFFER_SIZE];
 
-        prepare_actionalias(ses->hooks[t], buffer, ses);
+        substitute_vars(ses->hooks[t], buffer, ses);
         tintin_printf(ses, "[HOOK: %s]", buffer);
     }
     in_alias=true;

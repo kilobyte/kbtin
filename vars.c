@@ -17,6 +17,7 @@
 #include "protos/session.h"
 #include "protos/ticks.h"
 #include "protos/unicode.h"
+#include "protos/vars.h"
 
 
 /*****************************************/
@@ -66,7 +67,7 @@ static int defang_var(char *result, const char *var)
 /* copy the arg text into the result-space, but substitute the variables */
 /* %0..%9 with the real variables                                        */
 /*************************************************************************/
-void substitute_ivars(const char *arg, char *result)
+static void substitute_ivars(const char *arg, char *result)
 {
     int nest = 0;
     int numands, n;
@@ -282,8 +283,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                 specvar = true;
                 get_arg_in_braces(arg + counter, varname, 0);
                 varlen=strlen(varname);
-                substitute_ivars(varname, value);
-                substitute_myvars(value, varname, ses);      /* RECURSIVE CALL */
+                substitute_vars(varname, varname, ses);      /* RECURSIVE CALL */
             }
 
             if (specvar) varlen += 2; /* 2*DELIMITERS e.g. {} */
@@ -350,11 +350,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
 }
 
 
-/**************************************************************************/
-/* run through each of the commands on the right side of an alias/action  */
-/* expression, call substitute_text() for all commands but #alias/#action */
-/**************************************************************************/
-void prepare_actionalias(const char *string, char *result, struct session *ses)
+void substitute_vars(const char *string, char *result, struct session *ses)
 {
     char arg[BUFFER_SIZE];
 

@@ -140,7 +140,7 @@ void do_all_sub(char *line, struct session *ses)
 {
     struct listnode *ln;
     pvars_t vars, *lastpvars;
-    char result[BUFFER_SIZE], tmp1[BUFFER_SIZE], tmp2[BUFFER_SIZE];
+    char result[BUFFER_SIZE], tmp[BUFFER_SIZE];
     const char *l;
     int rlen, len;
 
@@ -158,22 +158,20 @@ void do_all_sub(char *line, struct session *ses)
                 strcpy(line, EMPTY_LINE);
                 return;
             }
-            substitute_ivars(ln->right, tmp1);
-            substitute_myvars(tmp1, tmp2, ses);
+            substitute_myvars(ln->right, tmp, ses);
             rlen=match_start-line;
             memcpy(result, line, rlen);
-            len=strlen(tmp2);
-            APPEND(tmp2);
+            len=strlen(tmp);
+            APPEND(tmp);
             while (*match_end)
                 if (check_one_action(l=match_end, ln->left, &vars, true, ses))
                 {
                     /* no gags possible here */
                     len=match_start-l;
                     APPEND(l);
-                    substitute_ivars(ln->right, tmp1);
-                    substitute_myvars(tmp1, tmp2, ses);
-                    len=strlen(tmp2);
-                    APPEND(tmp2);
+                    substitute_myvars(ln->right, tmp, ses);
+                    len=strlen(tmp);
+                    APPEND(tmp);
                 }
                 else
                 {
