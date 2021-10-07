@@ -61,9 +61,6 @@ static int find_item(const char *item, const char *list)
 {
     char temp[BUFFER_SIZE];
 
-    /*  sprintf(temp, "#searching for [%s] in list [%s]", item, list);
-        tintin_printf(0, temp);
-    */
     int i=0;
     do {
         i++;

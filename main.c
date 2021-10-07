@@ -74,10 +74,8 @@ static void sigsegv(void)
     if (ui_own_output)
         user_done();
     fflush(0);
-/*  write(2, "Segmentation fault.\n", 20);*/
     signal(SIGSEGV, SIG_DFL);
     raise(SIGSEGV);
-/*  exit(SIGSEGV);*/
 }
 
 static void sigfpe(void)
@@ -85,10 +83,8 @@ static void sigfpe(void)
     if (ui_own_output)
         user_done();
     fflush(0);
-/*  write(2, "Floating point exception.\n", 26);*/
     signal(SIGFPE, SIG_DFL);
     raise(SIGFPE);
-/*  exit(SIGFPE);*/
 }
 
 static void sighup(void)

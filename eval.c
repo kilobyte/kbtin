@@ -93,9 +93,6 @@ static bool do_inline(const char *line, num_t *res, struct session *ses)
         *ptr++=*line++;
     *ptr=0;
     line=space_out(line);
-    /*
-       tintin_printf(ses, "#executing inline command [%c%s] with [%s]", tintin_char, command, line);
-    */
     if (is_abrev(command, "finditem"))
         *res=N(finditem_inline(line, ses));
     else if (is_abrev(command, "isatom"))
@@ -217,7 +214,6 @@ static bool conv_to_nums(char *arg, struct session *ses)
                 return false; /* error */
             if (*ptr == ']')
                 tintin_eprintf(ses, "#Compare %s to what ? (only one var between [ ])", left);
-            /* fprintf(stderr, "Left argument = '%s'\n", left); */
             switch (*ptr)
             {
             case '!' :
@@ -243,8 +239,6 @@ static bool conv_to_nums(char *arg, struct session *ses)
             default : return false;
             }
 
-            /* fprintf(stderr, "%c - %s match\n", (m) ? '=' : '!', (regex) ? "regex" : "string"); */
-
             tptr=right;
             while ((*ptr) && (*ptr != ']'))
             {
@@ -253,7 +247,6 @@ static bool conv_to_nums(char *arg, struct session *ses)
                 tptr++;
             }
             *tptr='\0';
-            /* fprintf(stderr, "Right argument = '%s'\n", right); */
             if (!*ptr)
                 return false;
             if (regex)

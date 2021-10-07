@@ -283,7 +283,6 @@ void check_all_actions(const char *line, struct session *ses)
             parse_input(ln->right, true, ses);
             recursion=0;
             pvars = lastpvars;
-            /*      return;*/    /* KB: we want ALL actions to be done */
         }
     }
     if (deletedActions)
@@ -320,7 +319,6 @@ void check_all_promptactions(const char *line, struct session *ses)
             parse_input(ln->right, true, ses);
             recursion=0;
             pvars=lastpvars;
-            /*      return;*/    /* KB: we want ALL actions to be done */
         }
     }
     if (deletedActions)

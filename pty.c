@@ -135,7 +135,6 @@ ok:
     {
         for (char *d = PTYRANGE1; (p[1] = *d) != '\0'; d++)
         {
-/*          tintin_printf(0, "OpenPTY tries '%s'", PtyName);*/
             if ((master = open(PtyName, O_RDWR | O_NOCTTY)) == -1)
                 continue;
             q[0] = *l;

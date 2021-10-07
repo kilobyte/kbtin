@@ -197,7 +197,6 @@ void unhighlight_command(const char *arg, struct session *ses)
             tintin_printf(ses, "Ok. {%s} is no longer %s.", ln->left, ln->right);
         deletenode_list(myhighs, ln);
         flag = true;
-        /*temp = ln;*/
     }
     if (!flag && ses->mesvar[MSG_HIGHLIGHT])
         tintin_printf(ses, "#THAT HIGHLIGHT IS NOT DEFINED.");

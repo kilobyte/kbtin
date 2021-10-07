@@ -31,7 +31,6 @@ bool match(const char *regex, const char *string)
              * empty string) and we _still_ can't match here.  Give up.
              */
             return false;
-            /* break; not reached */
         case '\\':
             if ((ch = *rp++) != '\0')
             {

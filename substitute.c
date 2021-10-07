@@ -116,7 +116,6 @@ static void unsub(const char *arg, bool gag, struct session *ses)
         }
         deletenode_list(mysubs, ln);
         flag = true;
-        /*  temp=ln; */
     }
     if (!flag && ses->mesvar[MSG_SUBSTITUTE])
         tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
