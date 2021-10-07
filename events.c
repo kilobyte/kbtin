@@ -196,3 +196,11 @@ void unevent_command(const char *arg, struct session *ses)
 {
     undelay_command(arg, ses);
 }
+
+void kill_events(struct session *ses)
+{
+    struct eventnode *ev = ses->events;
+    while (ev)
+        remove_event(&ev);
+    ses->events = 0;
+}

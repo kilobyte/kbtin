@@ -5,6 +5,7 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
+#include "protos/events.h"
 #include "protos/glob.h"
 #include "protos/hash.h"
 #include "protos/llist.h"
@@ -89,6 +90,7 @@ void kill_all(struct session *ses, bool no_reinit)
     kill_hash(ses->pathdirs);
     kill_hash(ses->binds);
     kill_routes(ses);
+    kill_events(ses);
     if (no_reinit)
         return;
 
