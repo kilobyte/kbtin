@@ -34,10 +34,7 @@ static void list_events(const char *arg, struct session *ses)
     struct eventnode *ev;
 
     if (!ses)
-    {
-        tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
-        return;
-    }
+        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
 
     ct = current_time();
     ev = ses->events;
@@ -79,10 +76,7 @@ void delay_command(const char *arg, struct session *ses)
     struct eventnode *ev, *ptr, *ptrlast;
 
     if (!ses)
-    {
-        tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
-        return;
-    }
+        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
@@ -93,10 +87,7 @@ void delay_command(const char *arg, struct session *ses)
     }
 
     if (!*left || (delay=str2timens(left, &cptr))<0 || *cptr)
-    {
-        tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), NEGATIVE DELAY", left);
-        return;
-    }
+        return tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), NEGATIVE DELAY", left);
 
     ev = TALLOC(struct eventnode);
     ev->time = current_time() + delay;
@@ -124,7 +115,6 @@ void delay_command(const char *arg, struct session *ses)
         }
         ptrlast->next = ev;
         ev->next = NULL;
-        return;
     }
 }
 
@@ -154,18 +144,12 @@ void undelay_command(const char *arg, struct session *ses)
     struct eventnode **ev;
 
     if (!ses)
-    {
-        tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
-        return;
-    }
+        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
 
     arg = get_arg(arg, left, 1, ses);
 
     if (!*left)
-    {
-        tintin_eprintf(ses, "#ERROR: valid syntax is: #undelay {event pattern}");
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR: valid syntax is: #undelay {event pattern}");
 
     timens_t ct = current_time();
 

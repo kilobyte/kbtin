@@ -171,10 +171,8 @@ void unaction_command(const char *arg, struct session *ses)
 
     arg = get_arg_in_braces(arg, left, 1);
     if (!*left)
-    {
-        tintin_eprintf(ses, "#Syntax: #unaction <pattern>");
-        return;
-    }
+        return tintin_eprintf(ses, "#Syntax: #unaction <pattern>");
+
     ptr = &ses->actions->next;
     while (*ptr)
     {
@@ -218,10 +216,8 @@ void unpromptaction_command(const char *arg, struct session *ses)
 
     arg = get_arg_in_braces(arg, left, 1);
     if (!*left)
-    {
-        tintin_eprintf(ses, "#Syntax: #unpromptaction <pattern>");
-        return;
-    }
+        return tintin_eprintf(ses, "#Syntax: #unpromptaction <pattern>");
+
     ptr = &ses->prompts->next;
     while (*ptr)
     {
@@ -341,10 +337,7 @@ void match_command(const char *arg, struct session *ses)
     arg=get_arg_in_braces(arg, right, 0);
 
     if (!*left || !*right)
-    {
-        tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
 
     if (check_one_action(line, left, &vars, false, ses))
     {

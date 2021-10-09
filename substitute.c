@@ -192,10 +192,7 @@ void changeto_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE];
 
     if (!_)
-    {
-        tintin_eprintf(ses, "#ERROR: #change is allowed only inside an action/promptaction");
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR: #change is allowed only inside an action/promptaction");
 
     get_arg(arg, left, 1, ses);
     strcpy(_, left);
@@ -204,10 +201,7 @@ void changeto_command(const char *arg, struct session *ses)
 void gagthis_command(const char *arg, struct session *ses)
 {
     if (!_)
-    {
-        tintin_eprintf(ses, "#ERROR: #gagthis is allowed only inside an action/promptaction");
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR: #gagthis is allowed only inside an action/promptaction");
 
     strcpy(_, EMPTY_LINE);
 }
