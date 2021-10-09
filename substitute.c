@@ -17,44 +17,44 @@
 /***************************/
 /* the #substitute command */
 /***************************/
-static void parse_sub(const char *left, const char *right,  bool gag, struct session *ses)
+static void list_subs(const char *left, bool gag, struct session *ses)
 {
-    struct listnode *mysubs, *ln;
-    bool flag=false;
+    bool flag = false;
+    struct listnode *mysubs = ses->subs;
 
-    mysubs = ses->subs;
-
-    if (!*left && !*right)
-        left = "*";
-    if (!*right)
-    {
-        while ((mysubs = search_node_with_wild(mysubs, left)))
-            if (gag)
-            {
-                if (!strcmp(mysubs->right, EMPTY_LINE))
-                {
-                    if (!flag)
-                        tintin_printf(ses, "#THESE GAGS HAVE BEEN DEFINED:");
-                    tintin_printf(ses, "{%s~7~}", mysubs->left);
-                    flag=true;
-                }
-            }
-            else
+    while ((mysubs = search_node_with_wild(mysubs, left)))
+        if (gag)
+        {
+            if (!strcmp(mysubs->right, EMPTY_LINE))
             {
                 if (!flag)
-                    tintin_printf(ses, "#THESE SUBSTITUTES HAVE BEEN DEFINED:");
+                    tintin_printf(ses, "#THESE GAGS HAVE BEEN DEFINED:");
+                tintin_printf(ses, "{%s~7~}", mysubs->left);
                 flag=true;
-                shownode_list(mysubs);
             }
-        if (!flag && ses->mesvar[MSG_SUBSTITUTE])
-        {
-            if (strcmp(left, "*"))
-                tintin_printf(ses, "#THAT %s IS NOT DEFINED.", gag? "GAG":"SUBSTITUTE");
-            else
-                tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
         }
-        return;
+        else
+        {
+            if (!flag)
+                tintin_printf(ses, "#THESE SUBSTITUTES HAVE BEEN DEFINED:");
+            flag=true;
+            shownode_list(mysubs);
+        }
+    if (!flag && ses->mesvar[MSG_SUBSTITUTE])
+    {
+        if (strcmp(left, "*"))
+            tintin_printf(ses, "#THAT %s IS NOT DEFINED.", gag? "GAG":"SUBSTITUTE");
+        else
+            tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
     }
+}
+
+static void parse_sub(const char *left, const char *right,  bool gag, struct session *ses)
+{
+    struct listnode *mysubs = ses->subs, *ln;
+
+    if (!*right)
+        return list_subs(left? left : "*", gag, ses);
 
     if ((ln = searchnode_list(mysubs, left)))
         deletenode_list(mysubs, ln);
