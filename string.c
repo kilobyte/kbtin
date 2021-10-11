@@ -154,7 +154,7 @@ void strlen_command(const char *arg, struct session *ses)
     if (!*left)
         return tintin_eprintf(ses, "#Syntax: #strlen <var> <text>");
 
-    sprintf(right, "%d", FLATlen(right));
+    sprintf(right, "%d", utf8_width(right));
     set_variable(left, right, ses);
 }
 
@@ -166,7 +166,7 @@ int strlen_inline(const char *arg, struct session *ses)
     char left[BUFFER_SIZE];
 
     arg = get_arg(arg, left, 1, ses);
-    return FLATlen(left);
+    return utf8_width(left);
 }
 
 /****************************************************/
