@@ -158,7 +158,7 @@ void do_all_sub(char *line, struct session *ses)
                 strcpy(line, EMPTY_LINE);
                 return;
             }
-            substitute_myvars(ln->right, tmp, ses);
+            substitute_vars(ln->right, tmp, ses);
             rlen=match_start-line;
             memcpy(result, line, rlen);
             len=strlen(tmp);
@@ -169,7 +169,7 @@ void do_all_sub(char *line, struct session *ses)
                     /* no gags possible here */
                     len=match_start-l;
                     APPEND(l);
-                    substitute_myvars(ln->right, tmp, ses);
+                    substitute_vars(ln->right, tmp, ses);
                     len=strlen(tmp);
                     APPEND(tmp);
                 }
