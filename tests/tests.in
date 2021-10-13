@@ -840,6 +840,18 @@ xQUUX
 #THERE'S NO ACTIVE SESSION NOW.
 ===
 
+### ivars in #substitute
+<<<
+#sub {%1/%2} {%1:%2}
+#run a //selfpipe
+#act / #del 0 #end
+a/b
+>>>
+a:b
+
+#SESSION 'a' DIED.
+===
+
 ### censoring positional vars
 <<<
 #act {%1} {#showme {% %1};#showme {$ $1}}
