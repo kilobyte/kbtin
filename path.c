@@ -160,15 +160,9 @@ void return_command(const char *arg, struct session *ses)
     get_arg_in_braces(arg, how, 1);
 
     if (ses->no_return==MAX_PATH_LENGTH)
-    {
-        tintin_puts1("#Don't know how to return from here!", ses);
-        return;
-    }
+        return tintin_puts1("#Don't know how to return from here!", ses);
     if (!ses->path_length)
-    {
-        tintin_eprintf(ses, "#No place to return from!");
-        return;
-    }
+        return tintin_eprintf(ses, "#No place to return from!");
 
     if (!*how)
         n=1;
@@ -178,10 +172,7 @@ void return_command(const char *arg, struct session *ses)
     {
         n=strtol(how, &err, 10);
         if (*err || n<0)
-        {
-            tintin_eprintf(ses, "#return [<num>|all], got {%s}", how);
-            return;
-        }
+            return tintin_eprintf(ses, "#return [<num>|all], got {%s}", how);
         if (!n)     /* silently ignore "#return 0" */
             return;
     }
