@@ -840,6 +840,19 @@ xQUUX
 #THERE'S NO ACTIVE SESSION NOW.
 ===
 
+### aa
+<<<
+#sub foo FOO
+#sub foobar FOOBAR
+#run a {sh -c 'echo xfoox;echo xfoobarx'}
+>>>
+xFOOx
+xFOOBARx
+
+#SESSION 'a' DIED.
+#THERE'S NO ACTIVE SESSION NOW.
+===
+
 ### ivars in #substitute
 <<<
 #sub {%1/%2} {%1:%2}

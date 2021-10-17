@@ -302,7 +302,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->aliases = copy_hash(ses->aliases);
     newsession->actions = copy_list(ses->actions, PRIORITY);
     newsession->prompts = copy_list(ses->prompts, PRIORITY);
-    newsession->subs = copy_list(ses->subs, ALPHA);
+    newsession->subs = copy_list(ses->subs, ALPHALONGER);
     newsession->myvars = copy_hash(ses->myvars);
     newsession->highs = copy_list(ses->highs, ALPHA);
     newsession->pathdirs = copy_hash(ses->pathdirs);

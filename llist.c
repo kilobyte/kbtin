@@ -162,6 +162,25 @@ not_numeric:
     goto not_numeric;
 }
 
+/*****************************************************/
+/* strcmp() that sorts '\0' later than anything else */
+/*****************************************************/
+static int strlongercmp(const char *a, const char *b)
+{
+next:
+    if (!*a)
+        return 1;
+    if (*a==*b)
+    {
+        a++;
+        b++;
+        goto next;
+    }
+    if (!*b || ((unsigned char)*a) < ((unsigned char)*b))
+        return -1;
+    return 1;
+}
+
 /*****************************************************************/
 /* create a node containing the ltext, rtext fields and stuff it */
 /* into the list - in lexicographical order, or by numerical     */
@@ -255,6 +274,20 @@ void insertnode_list(struct listnode *listhead, const char *ltext, const char *r
         while ((nptrlast = nptr) && (nptr = nptr->next))
         {
             if (strcmp(ltext, nptr->left) <= 0)
+            {
+                newnode->next = nptr;
+                nptrlast->next = newnode;
+                return;
+            }
+        }
+        nptrlast->next = newnode;
+        newnode->next = NULL;
+        return;
+
+    case ALPHALONGER:
+        while ((nptrlast = nptr) && (nptr = nptr->next))
+        {
+            if (strlongercmp(ltext, nptr->left) <= 0)
             {
                 newnode->next = nptr;
                 nptrlast->next = newnode;

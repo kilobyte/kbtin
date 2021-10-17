@@ -155,7 +155,7 @@
 /* The stuff below here shouldn't be modified unless you know what you're */
 /* doing........                                                          */
 /**************************************************************************/
-typedef enum {PRIORITY, ALPHA, LENGTH} llist_mode_t;
+typedef enum {PRIORITY, ALPHA, LENGTH, ALPHALONGER} llist_mode_t;
 #define K_ACTION_MAGIC "#X~4~~2~~12~[This action is being deleted!]~7~X"
 
 #define BUFFER_SIZE 4096

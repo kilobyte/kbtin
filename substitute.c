@@ -58,7 +58,7 @@ static void parse_sub(const char *left, const char *right,  bool gag, struct ses
 
     if ((ln = searchnode_list(mysubs, left)))
         deletenode_list(mysubs, ln);
-    insertnode_list(mysubs, left, right, 0, ALPHA);
+    insertnode_list(mysubs, left, right, 0, ALPHALONGER);
     subnum++;
     if (ses->mesvar[MSG_SUBSTITUTE])
     {
