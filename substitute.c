@@ -54,7 +54,7 @@ static void parse_sub(const char *left, const char *right,  bool gag, struct ses
     struct listnode *mysubs = ses->subs, *ln;
 
     if (!*right)
-        return list_subs(left? left : "*", gag, ses);
+        return list_subs(*left? left : "*", gag, ses);
 
     if ((ln = searchnode_list(mysubs, left)))
         deletenode_list(mysubs, ln);
