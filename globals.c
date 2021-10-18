@@ -22,7 +22,9 @@ char *tintin_exec;
 struct session *lastdraft;
 bool aborting=false;
 bool any_closed=false;
+bool in_alias=false;
 int in_read=0;
+int recursion;
 char *_; /* incoming line being processed */
 bool real_quiet=false; /* if set, #verbose 0 will be really quiet */
 char *history[HISTORY_SIZE];

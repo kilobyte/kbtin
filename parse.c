@@ -36,9 +36,7 @@ static inline bool is_speedwalk_dirs(const char *cp);
 
 static inline const char *get_arg_stop_spaces(const char *s, char *arg);
 static const char *get_arg_all(const char *s, char *arg);
-bool in_alias=false;
 static struct hashtable *commands, *c_commands;
-int recursion;
 
 /**************************************************************************/
 /* parse input, check for TINTIN commands and aliases and send to session */
