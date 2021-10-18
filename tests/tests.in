@@ -700,6 +700,18 @@ x
 #TOO DEEP RECURSION.
 ===
 
+### infinite hook send
+<<<
+#hook send blah
+#run a cat >/dev/null
+x
+#end
+>>>
+#TOO DEEP RECURSION.
+
+#SESSION 'a' DIED.
+===
+
 ### #hook title
 <<<
 #hook close {#showme FIN;#end}

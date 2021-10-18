@@ -108,6 +108,9 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
     if (!ses->hooks[t])
         return ses;
 
+    if (inc_recursion())
+        return ses;
+
     if (blockzap)
     {
         oldclos=ses->closing;
@@ -135,6 +138,7 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
     if (blockzap)
         ses->closing=oldclos;
     pvars=lastvars;
+    recursion--;
     return ses;
 }
 

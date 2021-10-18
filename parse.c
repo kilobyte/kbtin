@@ -38,6 +38,19 @@ static inline const char *get_arg_stop_spaces(const char *s, char *arg);
 static const char *get_arg_all(const char *s, char *arg);
 static struct hashtable *commands, *c_commands;
 
+bool inc_recursion(void)
+{
+    if (++recursion>=MAX_RECURSION)
+    {
+        if (recursion==MAX_RECURSION)
+            tintin_eprintf(0, "#TOO DEEP RECURSION.");
+        recursion=MAX_RECURSION*3;
+        return true;
+    }
+
+    return false;
+}
+
 /**************************************************************************/
 /* parse input, check for TINTIN commands and aliases and send to session */
 /**************************************************************************/
@@ -46,12 +59,9 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
     char command[BUFFER_SIZE], arg[BUFFER_SIZE], *al;
     int nspaces;
 
-    if (++recursion>=MAX_RECURSION)
+    if (inc_recursion())
     {
         in_alias=false;
-        if (recursion==MAX_RECURSION)
-            tintin_eprintf(ses, "#TOO DEEP RECURSION.");
-        recursion=MAX_RECURSION*3;
         return ses;
     }
 
