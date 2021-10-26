@@ -3,7 +3,6 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
-#ifdef HAVE_REGCOMP
 #include <sys/types.h>
 #include <regex.h>
 
@@ -107,6 +106,3 @@ int grep_inline(const char *arg, struct session *ses)
     }
     return check_regexp(line, left, 0, ses);
 }
-
-
-#endif

@@ -133,11 +133,7 @@ sendchar
 timecommands
 debuglog
 logtype
-
-#ifdef HAVE_REGCOMP
 grep
-#endif
-
 retain
 *ifexists
 *ifstrequal

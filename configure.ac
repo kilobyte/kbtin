@@ -24,7 +24,7 @@ AC_C_BIGENDIAN
 # Checks for library functions.
 AC_SEARCH_LIBS(forkpty, util)
 AC_CHECK_FUNCS([getpt ptsname _getpty grantpt \
-	forkpty regcomp wcwidth posix_openpt cfmakeraw])
+	forkpty wcwidth posix_openpt cfmakeraw])
 AC_FUNC_STRLCPY
 AC_ARG_LIB(mccp, zlib, ZLIB, zlib.h, z, gzread, [
 Please install zlib and its headers.  On most systems, the package will be named
