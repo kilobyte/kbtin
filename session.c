@@ -389,7 +389,8 @@ void cleanup_session(struct session *ses)
         return;
     any_closed=true;
     ses->closing=2;
-    do_hook(act=ses, HOOK_CLOSE, 0, true);
+    if (ses!=nullsession) /* valgrind cleans null */
+        do_hook(act=ses, HOOK_CLOSE, 0, true);
 
     kill_all(ses, true);
     if (ses == sessionlist)
@@ -399,7 +400,7 @@ void cleanup_session(struct session *ses)
         for (sesptr = sessionlist; sesptr->next != ses; sesptr = sesptr->next) ;
         sesptr->next = ses->next;
     }
-    if (ses==activesession)
+    if (ses==activesession && ses!=nullsession)
     {
         user_textout_draft(0, 0);
         sprintf(buf, "%s\n", ses->last_line);
@@ -407,7 +408,8 @@ void cleanup_session(struct session *ses)
         do_in_MUD_colors(ses->last_line, false, 0);
         user_textout(ses->last_line);
     }
-    tintin_printf(0, "#SESSION '%s' DIED.", ses->name);
+    if (ses!=nullsession) /* valgrind cleans null */
+        tintin_printf(0, "#SESSION '%s' DIED.", ses->name);
     if (ses->socket && close(ses->socket) == -1)
         syserr("close in cleanup");
     if (ses->logfile)
