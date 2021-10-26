@@ -10,6 +10,7 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
+#include <unistd.h>
 #include "tintin.h"
 #include "protos/files.h"
 #include "protos/globals.h"
@@ -23,10 +24,6 @@
 
 #ifndef BADSIG
 #define BADSIG (void (*)(int))-1
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#include <arpa/inet.h>
 #endif
 #include <assert.h>
 
