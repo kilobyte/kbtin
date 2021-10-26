@@ -407,8 +407,7 @@ void cleanup_session(struct session *ses)
         do_in_MUD_colors(ses->last_line, false, 0);
         user_textout(ses->last_line);
     }
-    sprintf(buf, "#SESSION '%s' DIED.", ses->name);
-    tintin_puts(buf, NULL);
+    tintin_printf(0, "#SESSION '%s' DIED.", ses->name);
     if (ses->socket && close(ses->socket) == -1)
         syserr("close in cleanup");
     if (ses->logfile)
