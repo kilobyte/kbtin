@@ -1,6 +1,7 @@
 #include "tintin.h"
 #include "kbtree.h"
 #include "protos/print.h"
+#include "protos/utils.h"
 
 /**/ KBTREE_CODE(str, char*, strcmp)
 
@@ -41,7 +42,7 @@ kbtree_t(str) *copy_slist(kbtree_t(str) *a)
     for (; kb_itr_valid(&itr); kb_itr_next(str, a, &itr))
     {
         const char *p = kb_itr_key(char*, &itr);
-        kb_put(str, b, p);
+        kb_put(str, b, mystrdup(p));
     }
 
     return b;
