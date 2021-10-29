@@ -775,18 +775,17 @@ static void read_mud(struct session *ses)
 /**********************************************************/
 /* do all of the functions to one line of buffer          */
 /**********************************************************/
-static void do_one_line(char *line, int nl, struct session *ses)
+static void do_one_line(char *text, int nl, struct session *ses)
 {
     bool isnb;
-    char ubuf[BUFFER_SIZE];
+    char line[BUFFER_SIZE];
     timens_t t;
 
     if (nl)
         t = current_time();
     if (!ses->drafted)
         ses->linenum++;
-    convert(&ses->c_io, ubuf, line, -1);
-# define line ubuf
+    convert(&ses->c_io, line, text, -1);
     switch (ses->server_echo)
     {
     case 0:
@@ -851,7 +850,6 @@ static void do_one_line(char *line, int nl, struct session *ses)
             snoop(line, ses);
     }
     _=0;
-#undef line
 
     if (nl)
     {
