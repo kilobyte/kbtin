@@ -1,0 +1,29 @@
+#freebsd_13_task:
+#  freebsd_instance:
+#    image: freebsd-13-0-release-amd64
+#  install_script:
+#    pkg install -y automake gnutls gettext
+#  build_script:
+#    - NPROC=$(getconf _NPROCESSORS_ONLN)
+#    - ./autogen.sh
+#    - ./configure
+#    - make -j${NPROC}
+#  test_script:
+#      # run tests as user "cirrus" instead of root
+#    - pw useradd cirrus -m
+#    - chown -R cirrus:cirrus .
+#    - sudo -u cirrus make check || cat tests/testsuite.log
+
+macos_x_task:
+  macos_instance:
+    image: big-sur-xcode
+  install_script:
+    - brew update
+    - brew install automake gnutls zlib pkg-config
+  build_script:
+    - NPROC=$(getconf _NPROCESSORS_ONLN)
+    - ./autogen.sh
+    - ./configure
+    - make -j${NPROC}
+  test_script:
+    make check || cat tests/testsuite.log
