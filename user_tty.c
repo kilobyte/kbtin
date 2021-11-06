@@ -401,7 +401,6 @@ static void b_addline(void)
         if (b_current==b_screenb+1)
         {
             ++b_screenb;
-            draw_out(out_line);
             term_commit();
         }
         else
