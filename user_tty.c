@@ -384,6 +384,7 @@ static void b_scroll(int b_to)
 
 static void b_addline(void)
 {
+    tbuf+=sprintf(tbuf, "\033[0;37;40m\r\n\033[2K");
     char *new;
     while (!(new=MALLOC(o_len+1)))
         if (!b_shorten())
@@ -431,7 +432,6 @@ static inline void print_char(const WC ch)
     if (o_pos+dw-1>=COLS)
     {
         out_line[o_len++]='\r';
-        tbuf+=sprintf(tbuf, "\033[0;37;40m\r\n\033[2K");
         b_addline();
     }
     else if (o_oldcolor!=o_color) /* b_addline already updates the color */
@@ -455,10 +455,7 @@ static inline void print_char(const WC ch)
 static void form_feed(void)
 {
     for (int i=(isstatus?2:1);i<LINES;i++)
-    {
-        tbuf+=sprintf(tbuf, "\033[0;37;40m\r\n\033[2K");
         b_addline();
-    }
     tbuf+=sprintf(tbuf, "\033[f");
 }
 
@@ -485,7 +482,6 @@ static void b_textout(const char *txt)
             break;
         case '\n':
             out_line[o_len]=0;
-            tbuf+=sprintf(tbuf, "\033[0;37;40m\r\n\033[2K");
             b_addline();
             break;
         case 9:
