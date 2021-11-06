@@ -3,7 +3,6 @@
 /******************************************************************/
 #undef TELNET_DEBUG     /* define to show TELNET negotiations */
 #undef USER_DEBUG       /* debugging of the user interface */
-#undef TERM_DEBUG       /* debugging pseudo-tty stuff */
 
 #include <stdbool.h>
 

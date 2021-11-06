@@ -16,7 +16,6 @@
 extern char **environ;
 
 
-#ifdef TERM_DEBUG
 static void print_stty(int fd)
 {
     struct termios ta;
@@ -120,11 +119,10 @@ static void print_stty(int fd)
             ws.ws_col, ws.ws_row);
 }
 
-void termdebug_command(const char *arg, struct session *ses)
+void stty_command(const char *arg, struct session *ses)
 {
     print_stty(ses->socket);
 }
-#endif
 
 
 void pty_resize(int fd, int sx, int sy)

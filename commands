@@ -137,11 +137,7 @@ grep
 retain
 *ifexists
 *ifstrequal
-
-#ifdef TERM_DEBUG
-termdebug
-#endif
-
+stty
 pretick
 show_pretick
 collate
