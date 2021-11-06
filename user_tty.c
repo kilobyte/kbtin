@@ -27,6 +27,7 @@ static int o_len, o_pos, o_oldcolor, o_prevcolor, o_draftlen, o_lastprevcolor;
 #define o_color color
 #define o_lastcolor lastcolor
 static int b_first, b_current, b_last, b_bottom, b_screenb;
+static int b_pending_newline;
 static bool o_strongdraft;
 static int b_greeting;
 static char *b_output[CONSOLE_LENGTH];
@@ -382,9 +383,18 @@ static void b_scroll(int b_to)
     term_commit();
 }
 
+static void b_flush_newline(void)
+{
+    if (!b_pending_newline)
+        return;
+    tbuf+=sprintf(tbuf, "\033[0;37;40m\r\n\033[2K");
+    b_pending_newline=0;
+}
+
 static void b_addline(void)
 {
-    tbuf+=sprintf(tbuf, "\033[0;37;40m\r\n\033[2K");
+    b_flush_newline();
+    b_pending_newline=1;
     char *new;
     while (!(new=MALLOC(o_len+1)))
         if (!b_shorten())
@@ -465,6 +475,7 @@ static void b_textout(const char *txt)
 
     /* warning! terminal output can get discarded! */
     *tbuf++=27, *tbuf++='8';
+    b_flush_newline();
     tbuf=ansicolor(tbuf, o_color);
     for (;*txt;txt++)
         switch (*txt)
@@ -1620,6 +1631,7 @@ static void usertty_init(void)
 static void usertty_done(void)
 {
     ui_own_output=false;
+    b_flush_newline();
     tbuf+=sprintf(tbuf, "\033[1;%dr\033[%d;1f\033[?25h\033[?7h\033[0;37;40m", LINES, LINES);
     usertty_keypad(false);
     term_commit();
@@ -1637,6 +1649,7 @@ static void usertty_done(void)
 static void usertty_pause(void)
 {
     usertty_keypad(false);
+    b_flush_newline();
     tbuf+=sprintf(tbuf, "\033[1;%dr\033[%d;1f\033[?25h\033[?7h\033[0;37;40m", LINES, LINES);
     term_commit();
     term_restore();
