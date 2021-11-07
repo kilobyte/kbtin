@@ -443,6 +443,8 @@ static inline void print_char(const WC ch)
     {
         out_line[o_len++]='\r';
         b_addline();
+        b_flush_newline();
+        tbuf=ansicolor(tbuf, o_color);
     }
     else if (o_oldcolor!=o_color) /* b_addline already updates the color */
     {
