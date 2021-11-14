@@ -1,0 +1,3 @@
+#rem #localtime foo 1189969300;#rem #showme $foo
+#rem output for CET was: 40 01 21  16 09 2007  0 259 1
+#gmtime foo 1189969300;#showme $foo

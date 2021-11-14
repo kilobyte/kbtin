@@ -1,0 +1,7 @@
+#mess tick on
+#de 2 #end
+#run a //selfpipe
+#hook tick {#showme A;#zap;#showme B}
+#ticksize 1
+#tickon
+#showme _

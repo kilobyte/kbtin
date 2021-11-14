@@ -1,0 +1,3 @@
+#ifali {foo} {#show ✓} #else {#show ✗}
+#ali foo dupa
+#ifali {foo} {#show ✓} #else {#show ✗}

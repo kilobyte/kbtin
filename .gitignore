@@ -23,6 +23,8 @@ depcomp
 missing
 CMakeCache.txt
 CMakeFiles/
+CTestTestfile.cmake
+Testing/
 cmake_install.cmake
 VERSION
 .deps

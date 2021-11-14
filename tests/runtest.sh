@@ -1,14 +1,11 @@
 #!/bin/sh
+set -e
 
-echo "#mess all 0;#delay 5 {#showme TIMEOUT;#end}" >_be_quiet_
-rm -rf aa
+SRCDIR=$(dirname "$0")
 
-LC_ALL=`get-utf8`
+LC_ALL=`./get-utf8`
 LC_CTYPE=$LC_ALL
 export LC_ALL
 export LC_CTYPE
 
-#$PATH has the local binary first.
-KBtin -p -q _be_quiet_ $* <testin
-
-rm -rf _be_quiet_
+../KBtin -p -q setup <"$SRCDIR/data/$1".in|diff -u "$SRCDIR/data/$1".out -

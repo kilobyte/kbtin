@@ -1,0 +1,12 @@
+NORMAL
+A(bla)
+B( blah)
+NORMAL + COMBINING
+A(b́ĺá)
+B( b́ĺáh́)
+CJK
+A( ァ)
+B( ァアィイ)
+CJK + COMBINING
+A( ァ́)
+B( ァ́ア́ィ́イ́)

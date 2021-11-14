@@ -1,0 +1,7 @@
+#postpad tmp 5 abcdefgh;#showme {$tmp|}
+#postpad tmp 5 abćdęfgh;#showme {$tmp|}
+#postpad tmp 5 ab;#showme {$tmp|}
+#postpad tmp 5 ać;#showme {$tmp|}
+#var x foo
+#postpad tmp 5 {a$x};#showme {$tmp|}
+#postpad tmp 5 a ć;#showme {$tmp|}

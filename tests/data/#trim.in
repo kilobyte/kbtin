@@ -1,0 +1,2 @@
+#trim x   foo  ;#show {($x)}
+#trim x { foo };#show {($x)}

@@ -1,0 +1,30 @@
+#var x A1
+#alias foo {#alias bar {#showme $x}}
+foo
+bar
+#var x B1
+bar
+#var x C1
+foo
+#var x D1
+bar
+#var x A2
+#alias foo {#alias bar {#showme $$x}}
+foo
+bar
+#var x B2
+bar
+#var x C2
+foo
+#var x D2
+bar
+#var x A3
+#alias foo {#alias bar {#showme $$$x}}
+foo
+bar
+#var x B3
+bar
+#var x C3
+foo
+#var x D3
+bar

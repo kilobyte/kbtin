@@ -1,0 +1,11 @@
+Initial: This is b.
+#SESSION 'b' ACTIVATED.
+After #foreach: This is a.
+After #if: This is a.
+After #if #else: This is a.
+After #strcmp: This is a.
+After #ifexists: This is a.
+After #ifexists #else: This is a.
+#SESSION 'b' DIED.
+
+#SESSION 'a' DIED.

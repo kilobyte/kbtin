@@ -1,0 +1,4 @@
+#postpad x 5 ~1~abc~2~def;#showme {$x|}
+#postpad x 5 ~1~abc;#showme {$x|}
+#prepad x 5 ~1~abc~2~def;#showme {$x|}
+#prepad x 5 ~1~abc;#showme {$x|}

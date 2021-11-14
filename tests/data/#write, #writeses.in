@@ -1,0 +1,20 @@
+#var foo a
+#sub foo a
+#ali foo a
+#pro foo a
+#ant foo
+#ro foo bar e
+#run a //selfpipe
+#var bar a
+#sub bar a
+#ali bar a
+#pro bar a
+#ant bar
+#ro bar baz e
+#write f1
+#writes f2
+#sys grep -v message f1
+#show -----
+#sys grep -v message f2
+#sys rm f1 f2
+#end

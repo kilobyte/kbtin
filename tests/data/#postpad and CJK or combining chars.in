@@ -1,0 +1,12 @@
+#showme NORMAL
+#postpad tmp 3 blah;#showme A($tmp)
+#postpad tmp 5 blah;#showme B($tmp)
+#showme NORMAL + COMBINING
+#postpad tmp 3 b́ĺáh́;#showme A($tmp)
+#postpad tmp 5 b́ĺáh́;#showme B($tmp)
+#showme CJK
+#postpad tmp 3 ァアィイ;#showme A($tmp)
+#postpad tmp 9 ァアィイ;#showme B($tmp)
+#showme CJK + COMBINING
+#postpad tmp 3 ァ́ア́ィ́イ́;#showme A($tmp)
+#postpad tmp 9 ァ́ア́ィ́イ́;#showme B($tmp)

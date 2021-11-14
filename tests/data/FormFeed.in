@@ -1,0 +1,7 @@
+#chr ff 12
+#showme bare${ff}fin
+#sys {printf 'bare\014fin\n'}
+#sys {printf 'cls0\033[0Jfin\n'}
+#sys {printf 'cls1\033[1Jfin\n'}
+#sys {printf 'cls2\033[2Jfin\n'}
+#rem ]]] (dumb m4)

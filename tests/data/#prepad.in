@@ -1,0 +1,7 @@
+#prepad tmp 5 abcdefgh;#showme {$tmp|}
+#prepad tmp 5 abćdęfgh;#showme {$tmp|}
+#prepad tmp 5 ab;#showme {$tmp|}
+#prepad tmp 5 ać;#showme {$tmp|}
+#var x foo
+#prepad tmp 5 {a$x};#showme {$tmp|}
+#prepad tmp 5 a ć;#showme {$tmp|}

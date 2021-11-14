@@ -1,0 +1,4 @@
+#substr tmp 3 abcde;#showme {$tmp}
+#substr tmp 2,3 abcde;#showme {$tmp}
+#substr tmp 4,1000 abcde;#showme {$tmp}
+#substr tmp 2,4 ąbćdef;#showme {$tmp}

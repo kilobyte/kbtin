@@ -1,0 +1,22 @@
+#COMMANDS-FILE WRITTEN.
+#DELTA COMMANDS FILE WRITTEN.
+#charset {UTF-8}
+#alias {bar} {a}
+#alias {foo} {a}
+#antisub {bar}
+#antisub {foo}
+#sub {bar} {a}
+#sub {foo} {a}
+#var {bar} {a}
+#var {foo} {a}
+#route {foo} {bar} {e} 10
+#route {bar} {baz} {e} 10
+-----
+#charset {UTF-8}
+#alias {bar} {a}
+#antisub {bar}
+#sub {bar} {a}
+#var {bar} {a}
+#route {bar} {baz} {e} 10
+
+#SESSION 'a' DIED.

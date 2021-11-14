@@ -70,7 +70,7 @@ abćdę|
   a ć|
 ===
 
-### colored #post/#prepad
+### colored #post and #prepad
 <<<
 #postpad x 5 ~1~abc~2~def;#showme {$x|}
 #postpad x 5 ~1~abc;#showme {$x|}
@@ -256,7 +256,7 @@ B>C
 (c)
 ===
 
-### #end w/o sessions
+### #end without sessions
 <<<
 #end
 >>>
@@ -445,7 +445,7 @@ cls1fin
 cls2fin
 ===
 
-### #strlen and CJK/combining chars
+### #strlen and CJK or combining chars
 <<<
 #strlen tmp {sanity check};#showme $tmp
 #strlen tmp {};#showme $tmp
@@ -460,7 +460,7 @@ cls2fin
 3
 ===
 
-### #substr and CJK/combining chars
+### #substr and CJK or combining chars
 <<<
 #showme NORMAL
 #substr tmp 2,3 blah;#showme A($tmp)
@@ -509,7 +509,7 @@ D( )
 E(イ́)
 ===
 
-### #postpad and CJK/combining chars
+### #postpad and CJK or combining chars
 <<<
 #showme NORMAL
 #postpad tmp 3 blah;#showme A($tmp)
@@ -538,7 +538,7 @@ A(ァ́ )
 B(ァ́ア́ィ́イ́ )
 ===
 
-### #prepad and CJK/combining chars
+### #prepad and CJK or combining chars
 <<<
 #showme NORMAL
 #prepad tmp 3 blah;#showme A($tmp)
@@ -580,7 +580,7 @@ B( ァ́ア́ィ́イ́)
 1296000
 ===
 
-### "#logtype ttyrec" and ttyrec2ansi
+### #logtype ttyrec and ttyrec2ansi
 <<<
 #hook open {#log testlog.ttyrec;#logcomment abc}
 #hook close {#log;#system {ttyrec2ansi <testlog.ttyrec};#unlink testlog.ttyrec;#end}

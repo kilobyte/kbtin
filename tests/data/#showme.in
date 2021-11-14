@@ -1,0 +1,4 @@
+#showme abc def ghi
+#showme { blah}
+#var x foo
+#showme $x

@@ -1,0 +1,4 @@
+#foreach {a b c} {#showme}
+#foreach {A {1 2} C} {#showme}
+#foreach {a b c} {#showme x$0x}
+#forall 1 {#showme}

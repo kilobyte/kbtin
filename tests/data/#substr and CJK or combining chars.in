@@ -1,0 +1,22 @@
+#showme NORMAL
+#substr tmp 2,3 blah;#showme A($tmp)
+#substr tmp 2,4 blah;#showme B($tmp)
+#substr tmp 2,5 blah;#showme C($tmp)
+#substr tmp 4,4 blah;#showme D($tmp)
+#showme NORMAL + COMBINING
+#substr tmp 2,3 b́ĺáh́;#showme A($tmp)
+#substr tmp 2,4 b́ĺáh́;#showme B($tmp)
+#substr tmp 2,5 b́ĺáh́;#showme C($tmp)
+#substr tmp 4,4 b́ĺáh́;#showme D($tmp)
+#showme CJK
+#substr tmp 3,4 ァアィイ;#showme A($tmp)
+#substr tmp 2,5 ァアィイ;#showme B($tmp)
+#substr tmp 3,3 ァアィイ;#showme C($tmp)
+#substr tmp 8,9 ァアィイ;#showme D($tmp)
+#substr tmp 7,8 ァアィイ;#showme E($tmp)
+#showme CJK + COMBINING
+#substr tmp 3,4 ァ́ア́ィ́イ́;#showme A($tmp)
+#substr tmp 2,5 ァ́ア́ィ́イ́;#showme B($tmp)
+#substr tmp 3,3 ァ́ア́ィ́イ́;#showme C($tmp)
+#substr tmp 8,9 ァ́ア́ィ́イ́;#showme D($tmp)
+#substr tmp 7,8 ァ́ア́ィ́イ́;#showme E($tmp)
