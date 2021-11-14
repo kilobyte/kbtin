@@ -8,8 +8,8 @@ matrix:
         apt:
           packages:
           - libz-dev
-          - libglib2.0-dev
           - libgnutls28-dev
+          - cmake
     - os: linux
       arch: ppc64le
       dist: xenial
@@ -17,9 +17,9 @@ matrix:
         apt:
           packages:
           - libz-dev
-          - libglib2.0-dev
           - libgnutls28-dev
-      before_install: sudo apt update && sudo apt install -y gettext;
+          - cmake
+      before_install: sudo apt update
     - os: linux
       arch: amd64
       dist: focal
@@ -27,8 +27,8 @@ matrix:
         apt:
           packages:
           - libz-dev
-          - libglib2.0-dev
           - libgnutls28-dev
+          - cmake
     - os: linux
       arch: ppc64le
       dist: focal
@@ -36,8 +36,8 @@ matrix:
         apt:
           packages:
           - libz-dev
-          - libglib2.0-dev
           - libgnutls28-dev
+          - cmake
       before_install: sudo apt update && sudo apt install -y gettext;
     #Travis runs for FruitOS cost >25× as much as anything else.
     #- os: osx
@@ -45,5 +45,5 @@ matrix:
     #  before_install:
     #    brew update && for pkg in libtool glib gettext;do if ! brew list -1|grep -q "^${pkg}\$";then brew install "$pkg";fi;done && brew link --force gettext
 
-script: ./autogen.sh && ./configure && make check
-after_failure: cat tests/testsuite.log
+script: cmake . && make -j$(getconf _NPROCESSORS_ONLN)
+test_script: ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
