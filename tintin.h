@@ -77,7 +77,7 @@
                                              char, it will be sent 'as is'
                                              to the MUD */
 #define MAX_SESNAME_LENGTH 512 /* don't accept session names longer than this */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__OpenBSD__)
 #define MAX_RECURSION 64
 #else
 #define MAX_RECURSION 128
