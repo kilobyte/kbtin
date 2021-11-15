@@ -214,7 +214,11 @@ enum
 #include "config.h"
 #include <stdio.h>
 #include <stdint.h>
-#include <iconv.h>
+#ifdef __FreeBSD__
+# include <sys/../iconv.h>
+#else
+# include <iconv.h>
+#endif
 #include <ctype.h>
 #include <wctype.h>
 #include <stdlib.h>
