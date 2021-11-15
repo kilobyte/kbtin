@@ -1,7 +1,14 @@
 #include <stdint.h>
-#include <endian.h>
 
-#if __BYTE_ORDER == __BIG_ENDIAN
+#ifdef __APPLE__
+# include <machine/endian.h>
+#elif defined __FreeBSD__
+# include <sys/endian.h>
+#else
+# include <endian.h>
+#endif
+
+#if BYTE_ORDER == BIG_ENDIAN
 # define to_little_endian(x) ((uint32_t) ( \
     ((uint32_t)(x) &(uint32_t)0x000000ffU) << 24 | \
     ((uint32_t)(x) &(uint32_t)0x0000ff00U) <<  8 | \
