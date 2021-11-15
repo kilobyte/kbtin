@@ -83,6 +83,7 @@ else()
 endif()
 
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+include_directories(${CMAKE_BINARY_DIR})
 
 set(KBtin_sources
 	action.c

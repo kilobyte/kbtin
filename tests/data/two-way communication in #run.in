@@ -1,4 +1,4 @@
 #hook close {#showme FIN;#end}
-#run a ./pingpong
+#run a pingpong
 #act {pong %1} {#if {$1>=10} {exit} #else {#math x {$1+1};ping $x}}
 ping 1
