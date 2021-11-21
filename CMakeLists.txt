@@ -150,6 +150,12 @@ add_dependencies(KBtin protos commands.h)
 
 target_link_libraries(KBtin ${libs})
 
+add_custom_target(manual.html ALL
+	DEPENDS KBtin_help
+	BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/manual.html
+	COMMAND ${CMAKE_SOURCE_DIR}/help2ansi <${CMAKE_SOURCE_DIR}/KBtin_help|${CMAKE_SOURCE_DIR}/a2html|${CMAKE_SOURCE_DIR}/fixmanual >manual.html
+	COMMENT "HTML MANUAL")
+
 install(TARGETS KBtin DESTINATION bin)
 
 enable_testing()
