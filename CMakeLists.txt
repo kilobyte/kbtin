@@ -131,22 +131,22 @@ set(KBtin_sources
 	vars.c
 )
 
-add_custom_target(protos ALL
-    COMMAND ${CMAKE_SOURCE_DIR}/make_protos ${CMAKE_SOURCE_DIR} ${KBtin_sources}
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMENT "PROTOS")
-set_target_properties(protos
-    PROPERTIES ADDITIONAL_CLEAN_FILES protos)
+set(protos ${KBtin_sources})
+list(TRANSFORM protos REPLACE "([^;]*)\\.c" "${CMAKE_BINARY_DIR}/protos/\\1.h")
+add_custom_command(OUTPUT ${protos}
+	COMMAND ${CMAKE_SOURCE_DIR}/make_protos ${CMAKE_SOURCE_DIR} ${KBtin_sources}
+	DEPENDS make_protos ${KBtin_sources}
+	COMMENT "PROTOS")
+add_custom_target(protos DEPENDS ${protos})
 
-add_custom_target(commands.h ALL
-    DEPENDS commands make_commands
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/commands.h ${CMAKE_CURRENT_BINARY_DIR}/load_commands.h
-    COMMAND ${CMAKE_SOURCE_DIR}/make_commands <${CMAKE_SOURCE_DIR}/commands
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMENT "COMMANDS")
+add_custom_command(OUTPUT commands.h load_commands.h
+	COMMAND ${CMAKE_SOURCE_DIR}/make_commands <${CMAKE_SOURCE_DIR}/commands
+	DEPENDS commands make_commands
+	COMMENT "COMMANDS")
+add_custom_target(gen_commands DEPENDS commands.h load_commands.h)
 
 add_executable(KBtin ${KBtin_sources})
-add_dependencies(KBtin protos commands.h)
+add_dependencies(KBtin protos gen_commands)
 
 target_link_libraries(KBtin ${libs})
 
