@@ -7,15 +7,12 @@ CTestTestfile.cmake
 Testing/
 cmake_install.cmake
 VERSION
-.deps
-install-sh
 KBtin
 KBtin_help.gz
 kbtin
 kbtin-*.tar.xz
 load_commands.h
 Makefile
-Makefile.in
 manual.html
 *.o
 *.orig
