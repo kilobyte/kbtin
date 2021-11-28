@@ -11,6 +11,7 @@ VERSION
 install-sh
 KBtin
 KBtin_help.gz
+kbtin
 kbtin-*.tar.xz
 load_commands.h
 Makefile
