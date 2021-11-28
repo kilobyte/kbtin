@@ -9,6 +9,7 @@ include(CheckLibraryExists)
 include(CheckFunctionExists)
 include(FindIconv)
 include(FindGnuTLS)
+include(GNUInstallDirs)
 
 unset(VERSION)
 execute_process(COMMAND ./get_version
@@ -23,6 +24,8 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 option(MCCP "MCCP compression via zlib" ON)
 option(SSL "SSL encryption via gnutls" ON)
+set(DATA_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/kbtin"
+	CACHE PATH "Directory for data (currently help file)")
 
 set(CMAKE_C_FLAGS "-Wall -Werror=format-security ${CMAKE_C_FLAGS}")
 
@@ -150,13 +153,21 @@ add_dependencies(KBtin protos gen_commands)
 
 target_link_libraries(KBtin ${libs})
 
-add_custom_target(manual.html ALL
+add_custom_command(OUTPUT manual.html
 	DEPENDS KBtin_help
-	BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/manual.html
 	COMMAND ${CMAKE_SOURCE_DIR}/help2ansi <${CMAKE_SOURCE_DIR}/KBtin_help|${CMAKE_SOURCE_DIR}/a2html|${CMAKE_SOURCE_DIR}/fixmanual >manual.html
 	COMMENT "HTML MANUAL")
+add_custom_target(manual ALL DEPENDS manual.html)
+add_custom_command(OUTPUT KBtin_help.gz
+	DEPENDS KBtin_help
+	COMMAND gzip -9 <${CMAKE_SOURCE_DIR}/KBtin_help >KBtin_help.gz
+	COMMENT "GZIP HELP")
+add_custom_target(helpgz ALL DEPENDS KBtin_help.gz)
 
 install(TARGETS KBtin DESTINATION bin)
+install(FILES KBtin.6 kbtin.6 DESTINATION ${CMAKE_INSTALL_MANDIR}/man6)
+install(FILES ${CMAKE_BINARY_DIR}/KBtin_help.gz DESTINATION ${DATA_PATH})
+install(FILES ${CMAKE_BINARY_DIR}/manual.html DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 enable_testing()
 add_subdirectory(tests)
