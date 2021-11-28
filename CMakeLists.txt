@@ -163,11 +163,17 @@ add_custom_command(OUTPUT KBtin_help.gz
 	COMMAND gzip -9 <${CMAKE_SOURCE_DIR}/KBtin_help >KBtin_help.gz
 	COMMENT "GZIP HELP")
 add_custom_target(helpgz ALL DEPENDS KBtin_help.gz)
+add_custom_command(OUTPUT kbtin
+	DEPENDS KBtin
+	COMMAND ln -s KBtin kbtin
+	COMMENT "SYMLINK KBTIN")
+add_custom_target(symlink_kbtin ALL DEPENDS kbtin)
 
 install(TARGETS KBtin DESTINATION bin)
 install(FILES KBtin.6 kbtin.6 DESTINATION ${CMAKE_INSTALL_MANDIR}/man6)
 install(FILES ${CMAKE_BINARY_DIR}/KBtin_help.gz DESTINATION ${DATA_PATH})
 install(FILES ${CMAKE_BINARY_DIR}/manual.html DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES ${CMAKE_BINARY_DIR}/kbtin DESTINATION bin)
 
 enable_testing()
 add_subdirectory(tests)
