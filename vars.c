@@ -249,7 +249,7 @@ static int builtin_var(const char *varname, char *value, struct session *ses)
     return 1;
 }
 
-void substitute_myvars(const char *arg, char *result, struct session *ses)
+void substitute_myvars(const char *arg, char *result, struct session *ses, int recur)
 {
     char varname[BUFFER_SIZE], value[BUFFER_SIZE];
     int nest = 0;
@@ -283,7 +283,12 @@ void substitute_myvars(const char *arg, char *result, struct session *ses)
                 specvar = true;
                 get_arg_in_braces(arg + counter, varname, 0);
                 varlen=strlen(varname);
-                substitute_vars(varname, varname, ses);      /* RECURSIVE CALL */
+                if (recur < 8)
+                {
+                    substitute_ivars(varname, value);
+                    /* RECURSIVE CALL */
+                    substitute_myvars(value, varname, ses, recur + 1);
+                }
             }
 
             if (specvar) varlen += 2; /* 2*DELIMITERS e.g. {} */
@@ -355,5 +360,5 @@ void substitute_vars(const char *string, char *result, struct session *ses)
     char arg[BUFFER_SIZE];
 
     substitute_ivars(string, arg);
-    substitute_myvars(arg, result, ses);
+    substitute_myvars(arg, result, ses, 0);
 }

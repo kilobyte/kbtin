@@ -439,7 +439,7 @@ static bool check_a_action(const char *line, const char *action, bool inside, st
     for (int i = 0; i < 10; i++)
         var_len[i] = -1;
     lptr = line;
-    substitute_myvars(action, result, ses);
+    substitute_myvars(action, result, ses, 0);
     tptr = result;
     if (*tptr == '^')
     {
