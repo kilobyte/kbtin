@@ -7,3 +7,7 @@ export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 override_dh_auto_configure:
 	dpkg-parsechangelog -SVersion|rev|cut -d- -f2-|rev >VERSION
 	dh_auto_configure
+
+override_dh_auto_install:
+	dh_auto_install
+	tic terminfo.src -o $(CURDIR)/debian/kbtin/usr/share/terminfo
