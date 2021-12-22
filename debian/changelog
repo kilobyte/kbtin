@@ -1,3 +1,10 @@
+kbtin (1.0.25-1) unstable; urgency=medium
+
+  * New upstream release.
+  * The build system is now cmake.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Wed, 22 Dec 2021 21:59:52 +0100
+
 kbtin (1.0.24-1) unstable; urgency=medium
 
   * New upstream release.
