@@ -3,7 +3,7 @@ Section: text
 Priority: optional
 Maintainer: Adam Borowski <kilobyte@angband.pl>
 Build-Depends: debhelper-compat (=13), libz-dev, libgnutls28-dev, cmake
-Standards-Version: 4.5.1
+Standards-Version: 4.6.0
 Homepage: https://github.com/kilobyte/kbtin
 Vcs-Git: https://github.com/kilobyte/kbtin.git -b debian
 Vcs-Browser: https://github.com/kilobyte/kbtin/tree/debian
