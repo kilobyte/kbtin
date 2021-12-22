@@ -4,33 +4,6 @@ export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 %:
 	dh $@
 
-override_dh_autoreconf:
-	touch README
+override_dh_auto_configure:
 	dpkg-parsechangelog -SVersion|rev|cut -d- -f2-|rev >VERSION
-	dh_autoreconf ./autogen.sh
-
-override_dh_auto_build:
-	V=y dh_auto_build
-	$(MAKE) manual.html
-
-override_dh_auto_test:
-ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
-	$(MAKE) check || debian/rules testfail
-else
-	@echo Suppressing 'make check', because this is a cross build
-endif
-
-testfail:
-	@echo "!!!TESTS FAILED!!!"
-	@cat tests/testsuite.log
-	@false
-
-override_dh_auto_install:
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/kbtin
-	$(MAKE) install-terminfo DESTDIR=$(CURDIR)/debian/kbtin TERMINFODIR=/usr/share/terminfo
-
-override_dh_auto_clean:
-	rm -f tests/tests.at
-	rm -f README README.md .travis.yml
-	rm -f VERSION
-	dh_auto_clean
+	dh_auto_configure
