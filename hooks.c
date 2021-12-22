@@ -4,6 +4,7 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
+#include "protos/vars.h"
 
 
 static bool magic_close_hook=true;
@@ -107,6 +108,9 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
     if (!ses->hooks[t])
         return ses;
 
+    if (inc_recursion())
+        return ses;
+
     if (blockzap)
     {
         oldclos=ses->closing;
@@ -125,7 +129,7 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
     {
         char buffer[BUFFER_SIZE];
 
-        prepare_actionalias(ses->hooks[t], buffer, ses);
+        substitute_vars(ses->hooks[t], buffer, ses);
         tintin_printf(ses, "[HOOK: %s]", buffer);
     }
     in_alias=true;
@@ -134,6 +138,7 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
     if (blockzap)
         ses->closing=oldclos;
     pvars=lastvars;
+    recursion--;
     return ses;
 }
 

@@ -1,0 +1,3 @@
+#var x blahąęśćabc
+#reverse x $x
+#showme $x

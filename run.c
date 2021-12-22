@@ -16,7 +16,6 @@
 extern char **environ;
 
 
-#ifdef TERM_DEBUG
 static void print_stty(int fd)
 {
     struct termios ta;
@@ -69,7 +68,9 @@ static void print_stty(int fd)
         tintin_printf(0, "%s", buf);
         bptr=buf+sprintf(buf, " ~3~[%x]~7~:", ta.c_oflag);
         battr(oflag, OPOST, "opost");
+#ifdef OLCUC
         battr(oflag, OLCUC, "olcuc");
+#endif
         battr(oflag, OCRNL, "ocrnl");
         battr(oflag, ONLCR, "onlcr");
         battr(oflag, ONOCR, "onocr");
@@ -120,11 +121,10 @@ static void print_stty(int fd)
             ws.ws_col, ws.ws_row);
 }
 
-void termdebug_command(const char *arg, struct session *ses)
+void stty_command(const char *arg, struct session *ses)
 {
     print_stty(ses->socket);
 }
-#endif
 
 
 void pty_resize(int fd, int sx, int sy)

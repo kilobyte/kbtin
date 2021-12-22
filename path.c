@@ -13,11 +13,13 @@
 #include "protos/alias.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
+#include "protos/lists.h"
 #include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/path.h"
-#include "protos/variables.h"
+#include "protos/string.h"
+#include "protos/vars.h"
 
 static bool return_flag = true;
 
@@ -42,7 +44,7 @@ void map_command(const char *arg, struct session *ses)
 
     char cmd[BUFFER_SIZE];
     get_arg_in_braces(arg, cmd, 1);
-    prepare_actionalias(cmd, cmd, ses);
+    substitute_vars(cmd, cmd, ses);
     check_insert_path(cmd, ses);
 }
 
@@ -158,15 +160,9 @@ void return_command(const char *arg, struct session *ses)
     get_arg_in_braces(arg, how, 1);
 
     if (ses->no_return==MAX_PATH_LENGTH)
-    {
-        tintin_puts1("#Don't know how to return from here!", ses);
-        return;
-    }
+        return tintin_puts1("#Don't know how to return from here!", ses);
     if (!ses->path_length)
-    {
-        tintin_eprintf(ses, "#No place to return from!");
-        return;
-    }
+        return tintin_eprintf(ses, "#No place to return from!");
 
     if (!*how)
         n=1;
@@ -176,10 +172,7 @@ void return_command(const char *arg, struct session *ses)
     {
         n=strtol(how, &err, 10);
         if (*err || n<0)
-        {
-            tintin_eprintf(ses, "#return [<num>|all], got {%s}", how);
-            return;
-        }
+            return tintin_eprintf(ses, "#return [<num>|all], got {%s}", how);
         if (!n)     /* silently ignore "#return 0" */
             return;
     }
@@ -268,7 +261,7 @@ void unpathdir_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE];
 
     arg = get_arg_in_braces(arg, left, 1);
-    prepare_actionalias(left, left, ses);
+    substitute_vars(left, left, ses);
     delete_hashlist(ses, ses->pathdirs, left,
         ses->mesvar[MSG_PATH]? "#Ok. $%s is no longer recognized as a pathdir." : 0,
         ses->mesvar[MSG_PATH]? "#THAT PATHDIR (%s) IS NOT DEFINED." : 0);

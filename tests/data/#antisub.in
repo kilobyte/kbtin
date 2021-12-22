@@ -1,0 +1,5 @@
+#var todo {{#anti foo} {#unanti foo} {#anti bar;#anti baz} {#unanti b*} {#end}}
+#act GO {#show .;#split cur todo {$todo};#if 1 {$$cur};foo;bar;baz;quux;GO}
+#run a //selfpipe
+#gag {%0}
+GO

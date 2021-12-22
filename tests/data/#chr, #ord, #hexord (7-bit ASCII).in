@@ -1,0 +1,5 @@
+#chr x {98 108 97 104};#showme {$x}
+#chr x U+0062 U+006C U+0061 U+0068;#showme {$x}
+#chr x 98 0x6c 97 U+0068;#showme {$x}
+#ord x blah;#showme {$x}
+#hexord x blah;#showme {$x}

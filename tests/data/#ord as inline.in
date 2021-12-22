@@ -1,0 +1,3 @@
+#if {65==#ord A} {#show 1} #else {#show 0}
+#if {64==#ord A} {#show 1} #else {#show 0}
+#if {65=#ord} {#show 1} #else {#show 0}

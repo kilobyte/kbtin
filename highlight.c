@@ -7,7 +7,8 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
+#include "protos/vars.h"
 
 
 static struct colordef
@@ -118,10 +119,10 @@ void highlight_command(const char *arg, struct session *ses)
 
     bp = left;
     cp = bp;
-    while (*cp != '\0')
+    while (*cp)
     {
         cp++;
-        while (*cp != ',' && *cp != '\0')
+        while (*cp != ',' && *cp)
             cp++;
         while (isaspace(*bp))
             bp++;
@@ -148,10 +149,7 @@ void highlight_command(const char *arg, struct session *ses)
     }
 
     if (!puts_echoing && ses->mesvar[MSG_ERROR])
-    {
-        tintin_eprintf(ses, "#Invalid highlighting color: {%s}", left);
-        return;
-    }
+        return tintin_eprintf(ses, "#Invalid highlighting color: {%s}", left);
 
     if (strcmp(left, "list"))
         tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
@@ -181,22 +179,20 @@ void highlight_command(const char *arg, struct session *ses)
 
 void unhighlight_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], result[BUFFER_SIZE];
+    char left[BUFFER_SIZE];
     struct listnode *myhighs, *ln, *temp;
     bool flag = false;
 
     myhighs = ses->highs;
     temp = myhighs;
     arg = get_arg_in_braces(arg, left, 1);
-    substitute_vars(left, result);
-    substitute_myvars(result, left, ses);
+    substitute_vars(left, left, ses);
     while ((ln = search_node_with_wild(temp, left)))
     {
         if (ses->mesvar[MSG_HIGHLIGHT])
             tintin_printf(ses, "Ok. {%s} is no longer %s.", ln->left, ln->right);
         deletenode_list(myhighs, ln);
         flag = true;
-        /*temp = ln;*/
     }
     if (!flag && ses->mesvar[MSG_HIGHLIGHT])
         tintin_printf(ses, "#THAT HIGHLIGHT IS NOT DEFINED.");

@@ -1,0 +1,4 @@
+#hook send blah
+#run a cat >/dev/null
+x
+#end

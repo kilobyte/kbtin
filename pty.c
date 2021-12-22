@@ -131,11 +131,10 @@ ok:
         ;
     for (q = TtyName; *q != 'X'; q++)
         ;
-    for (char *l = PTYRANGE0; (*p = *l) != '\0'; l++)
+    for (char *l = PTYRANGE0; (*p = *l); l++)
     {
-        for (char *d = PTYRANGE1; (p[1] = *d) != '\0'; d++)
+        for (char *d = PTYRANGE1; (p[1] = *d); d++)
         {
-/*          tintin_printf(0, "OpenPTY tries '%s'", PtyName);*/
             if ((master = open(PtyName, O_RDWR | O_NOCTTY)) == -1)
                 continue;
             q[0] = *l;

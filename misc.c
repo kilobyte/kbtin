@@ -30,7 +30,8 @@
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
+#include "protos/vars.h"
 
 
 /* externs */
@@ -782,31 +783,43 @@ void shell_command(const char *arg, struct session *ses)
 /********************/
 struct session* zap_command(const char *arg, struct session *ses)
 {
-    bool flag=(ses==activesession);
+    struct session *target = ses;
+    char sname[BUFFER_SIZE];
 
     if (*arg)
     {
-        tintin_eprintf(ses, "#ZAP <ses> is still unimplemented."); /* FIXME */
-        return ses;
-    }
-    if (ses!=nullsession)
-    {
-        if (ses->closing)
+        get_arg(arg, sname, 1, ses);
+        target = 0;
+        for (struct session *s = sessionlist; s; s = s->next)
+            if (!strcmp(s->name, sname))
+            {
+                target = s;
+                break;
+            }
+        if (!target)
         {
-            if (ses->closing==-1)
-                tintin_eprintf(ses, "#You can't use #ZAP from here.");
+            tintin_eprintf(ses, "#THERE'S NO SESSION BY THAT NAME.");
             return ses;
         }
-        tintin_puts("#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!", ses);
-        ses->closing=1;
-        do_hook(ses, HOOK_ZAP, 0, true);
-        ses->closing=0;
-        cleanup_session(ses);
-        return flag?newactive_session():activesession;
     }
-    else
-        end_command("end", (struct session *)NULL);
-    return 0;   /* stupid lint */
+
+    if (target->closing)
+    {
+        if (target->closing==-1)
+            tintin_eprintf(ses, "#You can't use #ZAP from here.");
+        return ses;
+    }
+
+    if (target==nullsession)
+        end_command("end", (struct session *)NULL); /* no return */
+
+    bool was_active=(target==activesession);
+    tintin_puts("#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!", target);
+    target->closing=1;
+    do_hook(target, HOOK_ZAP, 0, true);
+    target->closing=0;
+    cleanup_session(target);
+    return was_active?newactive_session():activesession;
 }
 
 
@@ -965,20 +978,32 @@ void info_command(const char *arg, struct session *ses)
         if (ses->locations[i])
             locs++;
     int routes=count_routes(ses);
-    if (ses==nullsession)
+    switch (ses->sestype)
+    {
+    case SES_NULL:
         tintin_printf(ses, "Session : {%s}  (null session)", ses->name);
-    else
-        tintin_printf(ses, "Session : {%s}  Type: %s  %s : {%s}", ses->name,
-            ses->issocket?
+        break;
+
+    case SES_SOCKET:
+        tintin_printf(ses, "Session : {%s}  Type: %s  Address : {%s}", ses->name,
 #ifdef HAVE_GNUTLS
-                ses->ssl?"TCP/IP+SSL" :
+            ses->ssl?"TCP/IP+SSL" :
 #endif
-                "TCP/IP" : "pty",
-            ses->issocket?"Address":"Command line", ses->address);
+            "TCP/IP", ses->address);
 #ifdef HAVE_ZLIB
-    if (ses->issocket)
         tintin_printf(ses, "MCCP compression : %s", ses->mccp?"enabled":"disabled");
 #endif
+        break;
+
+    case SES_PTY:
+        tintin_printf(ses, "Session : {%s}  Type: pty  Command line : {%s}",
+            ses->name, ses->address);
+        break;
+
+    case SES_SELFPIPE:
+        tintin_printf(ses, "Session : {%s}  Type: self-pipe");
+    }
+
     tintin_printf(ses, "You have defined the following:");
     tintin_printf(ses, "Actions : %d  Promptactions: %d", actions, practions);
     tintin_printf(ses, "Aliases : %d", aliases);

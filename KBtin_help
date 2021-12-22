@@ -20,7 +20,7 @@ Substitutions:
    highlight  unhighlight  gag         ungag       togglesub   presub
    dosubstitutes           dohighlights            change      gagthis
 Information:
-   help        info        messages    news        version
+   help        info        messages    version
 Input:
    bind        unbind      keypad      retain
 Control statements:
@@ -38,7 +38,7 @@ Variables:
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
    substring   prepad      postpad     reverse     strlen      atoi
-   chr         ord         hexord
+   chr         ord         hexord      trim
 Time:
    ctime       time        localtime   gmtime
 Lists:
@@ -1325,6 +1325,11 @@ Converts a given <string> into the equivalent array of hex Unicode codes.
 
 Example:
 #hexord res blah      -> res = "U+0062 U+006C U+0061 U+0068"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~trim
+
+#trim <dest.var> <string>
+Removes initial and final whitespace from the <string>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~help
 

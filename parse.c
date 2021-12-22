@@ -16,7 +16,8 @@
 #include "protos/parse.h"
 #include "protos/path.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
+#include "protos/vars.h"
 
 #include "commands.h"
 typedef void (*t_command)(const char*, struct session*);
@@ -35,31 +36,39 @@ static inline bool is_speedwalk_dirs(const char *cp);
 
 static inline const char *get_arg_stop_spaces(const char *s, char *arg);
 static const char *get_arg_all(const char *s, char *arg);
-bool in_alias=false;
 static struct hashtable *commands, *c_commands;
-int recursion;
+
+bool inc_recursion(void)
+{
+    if (++recursion>=MAX_RECURSION)
+    {
+        if (recursion==MAX_RECURSION)
+            tintin_eprintf(0, "#TOO DEEP RECURSION.");
+        recursion=MAX_RECURSION*3;
+        return true;
+    }
+
+    return false;
+}
 
 /**************************************************************************/
 /* parse input, check for TINTIN commands and aliases and send to session */
 /**************************************************************************/
 struct session* parse_input(const char *input, bool override_verbatim, struct session *ses)
 {
-    char command[BUFFER_SIZE], arg[BUFFER_SIZE], result[BUFFER_SIZE], *al;
+    char command[BUFFER_SIZE], arg[BUFFER_SIZE], *al;
     int nspaces;
 
-    if (++recursion>=MAX_RECURSION)
+    if (inc_recursion())
     {
         in_alias=false;
-        if (recursion==MAX_RECURSION)
-            tintin_eprintf(ses, "#TOO DEEP RECURSION.");
-        recursion=MAX_RECURSION*3;
         return ses;
     }
 
     debuglog(ses, "%s", input);
     if (!ses->server_echo && activesession == ses)
         term_echoing = true;
-    if (*input == '\0')
+    if (!*input)
     {
         if (ses!=nullsession)
         {
@@ -94,34 +103,16 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
     {
         while (*input == ';')
             input=space_out(input+1);
-        if (pvars)
+        input = get_command(input, command);
+        substitute_vars(command, command, ses);
+        nspaces=0;
+        while (*input==' ')
         {
-            input = get_command(input, command);
-            substitute_vars( command, result);
-            substitute_myvars( result, command, ses);
-            nspaces=0;
-            while (*input==' ')
-            {
-                input++;
-                nspaces++;
-            }
-            input = get_arg_all(input, arg);
-            substitute_vars( arg, result);
-            substitute_myvars( result, arg, ses);
+            input++;
+            nspaces++;
         }
-        else
-        {
-            input = get_command(input, result);
-            substitute_myvars( result, command, ses);
-            nspaces=0;
-            while (*input==' ')
-            {
-                input++;
-                nspaces++;
-            }
-            input = get_arg_all(input, result);
-            substitute_myvars( result, arg, ses);
-        }
+        input = get_arg_all(input, arg);
+        substitute_vars(arg, arg, ses);
 
         if (in_alias)
         {
@@ -494,7 +485,7 @@ const char* get_arg_in_braces(const char *s, char *arg, bool allow_spaces)
         return s;
     }
     s++;
-    while (*s != '\0' && !(*s == BRACE_CLOSE && nest == 0))
+    while (*s && !(*s == BRACE_CLOSE && nest == 0))
     {
         if (*s==CHAR_VERBATIM)     /* \ */
             ;
@@ -548,9 +539,7 @@ static inline const char* get_arg_stop_spaces(const char *s, char *arg)
 const char* get_arg(const char *s, char *arg, bool allow_spaces, struct session *ses)
 {
     const char *cptr=get_arg_in_braces(s, arg, allow_spaces);
-    char tmp[BUFFER_SIZE];
-    substitute_vars(arg, tmp);
-    substitute_myvars(tmp, arg, ses);
+    substitute_vars(arg, arg, ses);
     return cptr;
 }
 

@@ -1,0 +1,25 @@
+freebsd_13_task:
+  freebsd_instance:
+    image: freebsd-13-0-release-amd64
+  install_script:
+    pkg install -y cmake gnutls perl5
+  build_script:
+    - cmake .
+    - make -j$(getconf _NPROCESSORS_ONLN)
+  test_script:
+      # run tests as user "cirrus" instead of root
+    - pw useradd cirrus -m
+    - chown -R cirrus:cirrus .
+    - ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
+
+macos_x_task:
+  macos_instance:
+    image: big-sur-xcode
+  install_script:
+    - brew update
+    - brew install cmake gnutls zlib
+  build_script:
+    - cmake .
+    - make -j$(getconf _NPROCESSORS_ONLN)
+  test_script:
+    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure

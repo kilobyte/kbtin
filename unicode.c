@@ -126,14 +126,11 @@ int wc_to_utf8(char *d, const wchar_t *s, int n, int maxb)
             *vb++ = ( uv        & 0x3f) | 0x80;
             continue;
         }
-#ifdef WCHAR_IS_UCS4
         if (uv < 0x10000)
         {
-#endif
             *vb++ = ( uv >> 12)         | 0xe0;
             *vb++ = ((uv >>  6) & 0x3f) | 0x80;
             *vb++ = ( uv        & 0x3f) | 0x80;
-#ifdef WCHAR_IS_UCS4
             continue;
         }
         if (uv < 0x110000)
@@ -147,7 +144,6 @@ int wc_to_utf8(char *d, const wchar_t *s, int n, int maxb)
         *vb++=0xef;
         *vb++=0xbf;
         *vb++=0xbd;
-#endif
     }
 #undef uv
 #undef vb

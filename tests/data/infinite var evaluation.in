@@ -1,0 +1,3 @@
+#var a ${a_$0}
+#foreach {$a} {#var x_$0 1}
+#show ✓

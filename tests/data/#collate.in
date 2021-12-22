@@ -1,0 +1,2 @@
+#collate x {2n n};#showme $x
+#collate x {n s e};#showme $x

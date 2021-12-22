@@ -1,0 +1,22 @@
+NORMAL
+A(la)
+B(lah)
+C(lah)
+D(h)
+NORMAL + COMBINING
+A(ĺá)
+B(ĺáh́)
+C(ĺáh́)
+D(h́)
+CJK
+A(ア)
+B( ア )
+C( )
+D( )
+E(イ)
+CJK + COMBINING
+A(ア́)
+B( ア́ )
+C( )
+D( )
+E(イ́)

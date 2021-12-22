@@ -1,3 +1,13 @@
+1.0.25:
+*	CMake based build system
+*	#zap <session>
+*	#trim
+*	colors behave as attributes not text in #substr #prepad #postpad
+*	#stty
+*	avoid wasting a line if there's no partial-line prompt
+*	lots of bugfixes
+*	lots of code reorg to add new bugs
+
 1.0.24:
 *	256-color support (instead of shoehorning to 16)
 *	auto-set #char only on first read
@@ -6,7 +16,7 @@
 *	// for fractional division
 *	% for modulo
 *	sub-second time handling
-*	make $_time working as documented
+*	make $_time work as documented
 *	$TIME, $STARTTIME, $TIMETOTICK, $RANDOM, $LINENUM, $USERIFLE
 *	drop #profile
 *	free everything if running on valgrind

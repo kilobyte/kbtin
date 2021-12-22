@@ -1,0 +1,1 @@
+#foreach {abc Abc ąbc Ąbc AOw Aow aOw aOw aów aÓw Ąów ĄÓw} {#firstu res {$0};#show $res}

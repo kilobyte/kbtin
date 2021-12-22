@@ -1,0 +1,17 @@
+#!/bin/sh
+
+cat <<'END'
+#ali setfn {#ran r 0,5;#ran g 0,5;#ran b 0,5;#var c $r$g$b}
+#ali hi {#hi $c $0}
+END
+
+for x in protos/*.h; do
+	F=$(basename ${x%.h})
+	echo setfn $F
+	grep '(' $x|grep -v '(.*('|cut -d'(' -f1|rev|cut -d' ' -f1|rev|
+		sed 's/^/hi /'
+done
+
+cat <<'END'
+#run a cat `git ls-files`
+END

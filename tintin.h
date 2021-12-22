@@ -3,7 +3,6 @@
 /******************************************************************/
 #undef TELNET_DEBUG     /* define to show TELNET negotiations */
 #undef USER_DEBUG       /* debugging of the user interface */
-#undef TERM_DEBUG       /* debugging pseudo-tty stuff */
 
 #include <stdbool.h>
 
@@ -78,7 +77,7 @@
                                              char, it will be sent 'as is'
                                              to the MUD */
 #define MAX_SESNAME_LENGTH 512 /* don't accept session names longer than this */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__OpenBSD__)
 #define MAX_RECURSION 64
 #else
 #define MAX_RECURSION 128
@@ -155,7 +154,7 @@
 /* The stuff below here shouldn't be modified unless you know what you're */
 /* doing........                                                          */
 /**************************************************************************/
-typedef enum {PRIORITY, ALPHA, LENGTH} llist_mode_t;
+typedef enum {PRIORITY, ALPHA, LENGTH, ALPHALONGER} llist_mode_t;
 #define K_ACTION_MAGIC "#X~4~~2~~12~[This action is being deleted!]~7~X"
 
 #define BUFFER_SIZE 4096
@@ -215,7 +214,11 @@ enum
 #include "config.h"
 #include <stdio.h>
 #include <stdint.h>
-#include <iconv.h>
+#ifdef __FreeBSD__
+# include <sys/../iconv.h>
+#else
+# include <iconv.h>
+#endif
 #include <ctype.h>
 #include <wctype.h>
 #include <stdlib.h>
@@ -307,6 +310,8 @@ struct charset_conv
 
 typedef enum { LOG_RAW, LOG_LF, LOG_TTYREC } logtype_t;
 
+typedef enum { SES_NULL, SES_SOCKET, SES_PTY, SES_SELFPIPE } sestype_t;
+
 struct session
 {
     struct session *next;
@@ -331,7 +336,8 @@ struct session
     struct eventnode *events;
     int path_length, no_return;
     int socket, last_term_type;
-    bool issocket, naws, ga, gas;
+    sestype_t sestype;
+    bool naws, ga, gas;
     int server_echo; /* 0=not negotiated, 1=we shouldn't echo, 2=we can echo */
     bool more_coming;
     char last_line[BUFFER_SIZE], telnet_buf[BUFFER_SIZE];
@@ -343,7 +349,7 @@ struct session
     timens_t sessionstart;
     char *hooks[NHOOKS];
     int closing;
-    int nagle;
+    int nagle; /* reused as write end of the pipe for selfpipe */
     bool halfcr_in, halfcr_log; /* \r at the end of a packet */
     int lastintitle;
     char *charset, *logcharset;
@@ -362,24 +368,6 @@ struct session
 };
 
 typedef char pvars_t[10][BUFFER_SIZE];
-
-#ifdef WORDS_BIGENDIAN
-# define to_little_endian(x) ((uint32_t) ( \
-    ((uint32_t)(x) &(uint32_t)0x000000ffU) << 24 | \
-    ((uint32_t)(x) &(uint32_t)0x0000ff00U) <<  8 | \
-    ((uint32_t)(x) &(uint32_t)0x00ff0000U) >>  8 | \
-    ((uint32_t)(x) &(uint32_t)0xff000000U) >> 24))
-#else
-# define to_little_endian(x) ((uint32_t)(x))
-#endif
-#define from_little_endian(x) to_little_endian(x)
-
-struct ttyrec_header
-{
-    uint32_t sec;
-    uint32_t usec;
-    uint32_t len;
-};
 
 #define logcs_is_special(x) ((x)==LOGCS_LOCAL || (x)==LOGCS_REMOTE)
 #define logcs_name(x) (((x)==LOGCS_LOCAL)?"local":              \

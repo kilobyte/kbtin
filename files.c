@@ -20,9 +20,16 @@
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
+#include "protos/vars.h"
+#include "ttyrec.h"
 #include <pwd.h>
 #include <fcntl.h>
+
+
+#ifndef O_BINARY
+# define O_BINARY 0
+#endif
 
 static void cfcom(FILE *f, const char *command, const char *left, const char *right, const char *pr);
 extern void char_command(const char *arg, struct session *ses);
@@ -157,8 +164,7 @@ void unlink_command(const char *arg, struct session *ses)
     if (*arg)
     {
         arg = get_arg_in_braces(arg, temp, 1);
-        substitute_vars(temp, file);
-        substitute_myvars(file, temp, ses);
+        substitute_vars(temp, temp, ses);
         expand_filename(temp, file, lstr);
         unlink(lstr);
     }
@@ -179,11 +185,9 @@ void deathlog_command(const char *arg, struct session *ses)
     {
         arg = get_arg_in_braces(arg, temp, 0);
         arg = get_arg_in_braces(arg, text, 1);
-        substitute_vars(temp, fname);
-        substitute_myvars(fname, temp, ses);
+        substitute_vars(temp, temp, ses);
         expand_filename(temp, fname, lfname);
-        substitute_vars(text, temp);
-        substitute_myvars(temp, text, ses);
+        substitute_vars(text, text, ses);
         if ((fh = fopen(lfname, "a")))
         {
             cfprintf(fh, "%s\n", text);
@@ -419,8 +423,7 @@ void condump_command(const char *arg, struct session *ses)
     if (*arg)
     {
         arg = get_arg_in_braces(arg, temp, 0);
-        substitute_vars(temp, fname);
-        substitute_myvars(fname, temp, ses);
+        substitute_vars(temp, temp, ses);
         fh=open_logfile(ses, fname,
             "#DUMPING CONSOLE TO {%s}",
             "#APPENDING CONSOLE DUMP TO {%s}",
@@ -440,7 +443,7 @@ void condump_command(const char *arg, struct session *ses)
 /********************/
 void log_command(const char *arg, struct session *ses)
 {
-    char fname[BUFFER_SIZE], temp[BUFFER_SIZE];
+    char temp[BUFFER_SIZE];
 
     if (ses!=nullsession)
     {
@@ -453,8 +456,7 @@ void log_command(const char *arg, struct session *ses)
                     tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
             }
             get_arg_in_braces(arg, temp, 1);
-            substitute_vars(temp, fname);
-            substitute_myvars(fname, temp, ses);
+            substitute_vars(temp, temp, ses);
             ses->logfile=open_logfile(ses, temp,
                 "#OK. LOGGING TO {%s} .....",
                 "#OK. APPENDING LOG TO {%s} .....",
@@ -484,7 +486,7 @@ void log_command(const char *arg, struct session *ses)
 /*************************/
 void debuglog_command(const char *arg, struct session *ses)
 {
-    char fname[BUFFER_SIZE], temp[BUFFER_SIZE];
+    char temp[BUFFER_SIZE];
 
     if (*arg)
     {
@@ -498,8 +500,7 @@ void debuglog_command(const char *arg, struct session *ses)
             ses->debuglogname = NULL;
         }
         get_arg_in_braces(arg, temp, 1);
-        substitute_vars(temp, fname);
-        substitute_myvars(fname, temp, ses);
+        substitute_vars(temp, temp, ses);
         ses->debuglogfile=open_logfile(ses, temp,
             "#OK. DEBUGLOG SET TO {%s} .....",
             "#OK. DEBUGLOG APPENDING TO {%s} .....",
@@ -656,8 +657,7 @@ struct session* read_command(const char *filename, struct session *ses)
     char buffer[BUFFER_SIZE], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
 
     get_arg_in_braces(filename, buffer, 1);
-    substitute_vars(buffer, fname);
-    substitute_myvars(fname, buffer, ses);
+    substitute_vars(buffer, buffer, ses);
     expand_filename(buffer, fname, lfname);
     if (!*filename)
     {
@@ -693,10 +693,9 @@ void write_command(const char *filename, struct session *ses)
     kbitr_t itr;
 
     get_arg_in_braces(filename, buffer, 1);
-    substitute_vars(buffer, fname);
-    substitute_myvars(fname, buffer, ses);
+    substitute_vars(buffer, buffer, ses);
     expand_filename(buffer, fname, lfname);
-    if (*filename == '\0')
+    if (!*filename)
     {
         tintin_eprintf(ses, "#ERROR: syntax is: #write <filename>");
         return;
@@ -855,10 +854,9 @@ void writesession_command(const char *filename, struct session *ses)
     }
 
     get_arg_in_braces(filename, buffer, 1);
-    substitute_vars(buffer, fname);
-    substitute_myvars(fname, buffer, ses);
+    substitute_vars(buffer, buffer, ses);
     expand_filename(buffer, fname, lfname);
-    if (*filename == '\0')
+    if (!*filename)
     {
         tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
         return;
@@ -1051,8 +1049,7 @@ void textin_command(const char *arg, struct session *ses)
     memset(&cs, 0, sizeof(cs));
 
     get_arg_in_braces(arg, buffer, 1);
-    substitute_vars(buffer, filename);
-    substitute_myvars(filename, buffer, ses);
+    substitute_vars(buffer, buffer, ses);
     expand_filename(buffer, filename, lfname);
     if (ses == nullsession)
     {

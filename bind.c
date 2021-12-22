@@ -7,7 +7,7 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/user.h"
-#include "protos/variables.h"
+#include "protos/string.h"
 
 static struct hashtable *keynames;
 

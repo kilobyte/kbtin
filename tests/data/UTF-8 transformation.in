@@ -1,0 +1,5 @@
+#hexord x abcąęśćdefабцдефгхийאבגדァアィイ;#showme {$x}
+#chr x U+20027 U+20000 U+20001 U+20002;#hexord x $x;#showme {$x}
+#var i 1;#loop 1,20 {#math i $i*2;#math l $i-1;#math r $i+1;#chr x $l $i $r;#hexord x {$x};#show $x}
+#show last test
+#chr x U+10ffff;#hexord x $x;#showme {$x}

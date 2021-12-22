@@ -11,13 +11,13 @@ bool match(const char *regex, const char *string)
     const char *rp = regex, *sp = string, *save;
     char ch;
 
-    while (*rp != '\0')
+    while (*rp)
     {
         switch (ch = *rp++)
         {
         case '*':
-            if ('\0' == *sp)           /* match empty string at end of `string' */
-                return '\0' == *rp;    /* but only if we're done with the pattern */
+            if (!*sp)           /* match empty string at end of `string' */
+                return !*rp;    /* but only if we're done with the pattern */
             /* greedy algorithm: save starting location, then find end of string */
             save = sp;
             sp += strlen(sp);
@@ -31,9 +31,8 @@ bool match(const char *regex, const char *string)
              * empty string) and we _still_ can't match here.  Give up.
              */
             return false;
-            /* break; not reached */
         case '\\':
-            if ((ch = *rp++) != '\0')
+            if ((ch = *rp++))
             {
                 /* if not end of pattern, match next char explicitly */
                 if (ch != *sp++)
@@ -51,7 +50,7 @@ bool match(const char *regex, const char *string)
      * OK, we successfully matched the pattern if we got here.  Now return
      * a match if we also reached end of string, otherwise failure
      */
-    return ('\0' == *sp);
+    return !*sp;
 }
 
 

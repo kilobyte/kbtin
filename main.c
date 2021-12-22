@@ -74,10 +74,8 @@ static void sigsegv(void)
     if (ui_own_output)
         user_done();
     fflush(0);
-/*  write(2, "Segmentation fault.\n", 20);*/
     signal(SIGSEGV, SIG_DFL);
     raise(SIGSEGV);
-/*  exit(SIGSEGV);*/
 }
 
 static void sigfpe(void)
@@ -85,10 +83,8 @@ static void sigfpe(void)
     if (ui_own_output)
         user_done();
     fflush(0);
-/*  write(2, "Floating point exception.\n", 26);*/
     signal(SIGFPE, SIG_DFL);
     raise(SIGFPE);
-/*  exit(SIGFPE);*/
 }
 
 static void sighup(void)
@@ -209,7 +205,7 @@ static void init_nullses(void)
     nullsession->highs = init_list();
     nullsession->pathdirs = init_hash();
     nullsession->socket = 0;
-    nullsession->issocket = false;
+    nullsession->sestype = SES_NULL;
     nullsession->naws = false;
 #ifdef HAVE_ZLIB
     nullsession->can_mccp = false;
@@ -547,7 +543,7 @@ static void tintin(void)
         {
             if (ses==nullsession)
                 continue;
-            if (ses->nagle)
+            if (ses->sestype==SES_SOCKET && ses->nagle)
                 flush_socket(ses);
             FD_SET(ses->socket, &readfdmask);
             if (ses->socket>maxfd)
@@ -779,18 +775,17 @@ static void read_mud(struct session *ses)
 /**********************************************************/
 /* do all of the functions to one line of buffer          */
 /**********************************************************/
-static void do_one_line(char *line, int nl, struct session *ses)
+static void do_one_line(char *text, int nl, struct session *ses)
 {
     bool isnb;
-    char ubuf[BUFFER_SIZE];
+    char line[BUFFER_SIZE];
     timens_t t;
 
     if (nl)
         t = current_time();
     if (!ses->drafted)
         ses->linenum++;
-    convert(&ses->c_io, ubuf, line, -1);
-# define line ubuf
+    convert(&ses->c_io, line, text, -1);
     switch (ses->server_echo)
     {
     case 0:
@@ -855,16 +850,15 @@ static void do_one_line(char *line, int nl, struct session *ses)
             snoop(line, ses);
     }
     _=0;
-#undef line
 
     if (nl)
     {
         t = current_time() - t;
         if (ses->line_time)
         {
-            /* A dragged average: every new line counts for 10% of the value.
-              The weight of any old line decays with half-life around 6.5. */
-            ses->line_time=(ses->line_time*9+t)/10;
+            /* A dragged average: every new line counts for 1% of the value.
+              The weight of any old line decays with half-life around 69. */
+            ses->line_time=(ses->line_time*99+t)/100;
         }
         else
             ses->line_time=t;

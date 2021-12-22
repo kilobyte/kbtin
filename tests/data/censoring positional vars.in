@@ -1,0 +1,11 @@
+#act {%1} {#showme {% %1};#showme {$ $1}}
+#gag {%1}
+#run a //selfpipe
+#de 2 #end
+#
+a;b
+{{{{
+{}{}{
+{}}}
+{}{}{}
+{{{}}}

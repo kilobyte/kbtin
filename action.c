@@ -13,7 +13,8 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
+#include "protos/vars.h"
 
 
 static int var_len[10];
@@ -170,10 +171,8 @@ void unaction_command(const char *arg, struct session *ses)
 
     arg = get_arg_in_braces(arg, left, 1);
     if (!*left)
-    {
-        tintin_eprintf(ses, "#Syntax: #unaction <pattern>");
-        return;
-    }
+        return tintin_eprintf(ses, "#Syntax: #unaction <pattern>");
+
     ptr = &ses->actions->next;
     while (*ptr)
     {
@@ -217,10 +216,8 @@ void unpromptaction_command(const char *arg, struct session *ses)
 
     arg = get_arg_in_braces(arg, left, 1);
     if (!*left)
-    {
-        tintin_eprintf(ses, "#Syntax: #unpromptaction <pattern>");
-        return;
-    }
+        return tintin_eprintf(ses, "#Syntax: #unpromptaction <pattern>");
+
     ptr = &ses->prompts->next;
     while (*ptr)
     {
@@ -253,170 +250,6 @@ void unpromptaction_command(const char *arg, struct session *ses)
         tintin_printf(ses, "#No match(es) found for {%s}", left);
 }
 
-/**************************************************************************/
-/* run through each of the commands on the right side of an alias/action  */
-/* expression, call substitute_text() for all commands but #alias/#action */
-/**************************************************************************/
-void prepare_actionalias(const char *string, char *result, struct session *ses)
-{
-    char arg[BUFFER_SIZE];
-
-    substitute_vars(string, arg);
-    substitute_myvars(arg, result, ses);
-}
-
-/*****************************************/
-/* delete ; and unpaired/underflowing {} */
-/*****************************************/
-static int defang_var(char *result, const char *var)
-{
-    int obraces=0, level=0;
-
-    for (const char *p=var; *p; p++)
-    {
-        if (*p == '{')
-            obraces++, level++;
-        else if (*p == '}')
-            if (level>0)
-                level--;
-    }
-
-    obraces -= level; /* # of unpaired */
-    level = 0;
-
-    char *r = result;
-    for (const char *p=var; *p; p++)
-    {
-        if (*p == ';')
-            ; /* no replacement */
-        else if (*p == '{')
-        {
-            *r++ = (obraces-->0)? '{' : '(';
-            level++;
-        }
-        else if (*p == '}')
-        {
-            if (level > 0)
-                *r++ = '}', level--;
-            else
-                *r++ = ')';
-        }
-        else
-            *r++ = *p;
-    }
-
-    return r - result;
-}
-
-/*************************************************************************/
-/* copy the arg text into the result-space, but substitute the variables */
-/* %0..%9 with the real variables                                        */
-/*************************************************************************/
-void substitute_vars(const char *arg, char *result)
-{
-    int nest = 0;
-    int numands, n;
-    const char *ARG=arg;
-    int valuelen, len=strlen(arg);
-
-    if (!pvars)
-    {
-        strcpy(result, arg);
-        return;
-    }
-    while (*arg)
-    {
-        if (*arg == '%')
-        {               /* substitute variable */
-            numands = 1;        /* at least one */
-            while (*(arg + numands) == '%')
-                numands++;
-            if (isadigit(*(arg + numands)) && numands == (nest + 1))
-            {
-                n = *(arg + numands) - '0';
-                valuelen=strlen((*pvars)[n]);
-                if ((len+=valuelen-numands-1) > BUFFER_SIZE-10)
-                {
-                    len-=valuelen-numands-1;
-                    if (!aborting)
-                    {
-                        tintin_eprintf(0, "#ERROR: command+vars too long in {%s}.", ARG);
-                        aborting=true;
-                    }
-                    goto novar1;
-                }
-                strcpy(result, (*pvars)[n]);
-                arg = arg + numands + 1;
-                result += valuelen;
-            }
-            else
-            {
-novar1:
-                memcpy(result, arg, numands + 1);
-                arg += numands + 1;
-                result += numands + 1;
-            }
-            in_alias=false; /* not a simple alias */
-        }
-        else if (*arg == '$')
-        {               /* substitute variable */
-            numands = 1;        /* at least one */
-            while (*(arg + numands) == '$')
-                numands++;
-            if (isadigit(*(arg + numands)) && numands == (nest + 1))
-            {
-                n = *(arg + numands) - '0';
-                valuelen=strlen((*pvars)[n]);
-                if ((len+=valuelen-numands-1) > BUFFER_SIZE-10)
-                {
-                    len-=valuelen-numands-1;
-                    if (!aborting)
-                    {
-                        tintin_eprintf(0, "#ERROR: command+vars too long in {%s}.", ARG);
-                        aborting=true;
-                    }
-                    goto novar2;
-                }
-                result += defang_var(result, (*pvars)[n]);
-                arg = arg + numands + 1;
-            }
-            else
-            {
-novar2:
-                memcpy(result, arg, numands);
-                arg += numands;
-                result += numands;
-            }
-            in_alias=false; /* not a simple alias */
-        }
-        else if (*arg == BRACE_OPEN)
-        {
-            nest++;
-            *result++ = *arg++;
-        }
-        else if (*arg == BRACE_CLOSE)
-        {
-            nest--;
-            *result++ = *arg++;
-        }
-        else if (*arg == '\\' && nest == 0)
-        {
-            while (*arg == '\\')
-                *result++ = *arg++;
-            if (*arg == '%')
-            {
-                result--;
-                *result++ = *arg++;
-                if (*arg)
-                    *result++ = *arg++;
-            }
-        }
-        else
-            *result++ = *arg++;
-    }
-    *result = '\0';
-}
-
 
 /**********************************************/
 /* check actions from a sessions against line */
@@ -439,14 +272,13 @@ void check_all_actions(const char *line, struct session *ses)
             {
                 char buffer[BUFFER_SIZE];
 
-                prepare_actionalias(ln->right, buffer, ses);
+                substitute_vars(ln->right, buffer, ses);
                 tintin_printf(ses, "[ACTION: %s]", buffer);
             }
             debuglog(ses, "ACTION: {%s}->{%s}", line, ln->right);
             parse_input(ln->right, true, ses);
             recursion=0;
             pvars = lastpvars;
-            /*      return;*/    /* KB: we want ALL actions to be done */
         }
     }
     if (deletedActions)
@@ -476,14 +308,13 @@ void check_all_promptactions(const char *line, struct session *ses)
             {
                 char buffer[BUFFER_SIZE];
 
-                prepare_actionalias(ln->right, buffer, ses);
+                substitute_vars(ln->right, buffer, ses);
                 tintin_printf(ses, "[PROMPT-ACTION: %s]", buffer);
             }
             debuglog(ses, "PROMPTACTION: {%s}->{%s}", line, ln->right);
             parse_input(ln->right, true, ses);
             recursion=0;
             pvars=lastpvars;
-            /*      return;*/    /* KB: we want ALL actions to be done */
         }
     }
     if (deletedActions)
@@ -506,10 +337,7 @@ void match_command(const char *arg, struct session *ses)
     arg=get_arg_in_braces(arg, right, 0);
 
     if (!*left || !*right)
-    {
-        tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
 
     if (check_one_action(line, left, &vars, false, ses))
     {
@@ -611,7 +439,7 @@ static bool check_a_action(const char *line, const char *action, bool inside, st
     for (int i = 0; i < 10; i++)
         var_len[i] = -1;
     lptr = line;
-    substitute_myvars(action, result, ses);
+    substitute_myvars(action, result, ses, 0);
     tptr = result;
     if (*tptr == '^')
     {

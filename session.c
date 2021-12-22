@@ -10,6 +10,7 @@
 #include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/hooks.h"
+#include "protos/lists.h"
 #include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/math.h"
@@ -21,7 +22,7 @@
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
-#include "protos/variables.h"
+#include "protos/string.h"
 #ifdef HAVE_GNUTLS
 #include "protos/ssl.h"
 #else
@@ -34,7 +35,7 @@
 # define gnutls_session_t int
 #endif
 
-static struct session *new_session(const char *name, const char *address, int fd, bool issocket, gnutls_session_t ssl, struct session *ses);
+static struct session *new_session(const char *name, const char *address, int fd, sestype_t sestype, gnutls_session_t ssl, struct session *ses);
 static void show_session(struct session *ses);
 
 static bool session_exists(char *name)
@@ -180,10 +181,10 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
             close(sock);
             return ses;
         }
-        return new_session(left, right, sock, true, sslses, ses);
+        return new_session(left, right, sock, SES_SOCKET, sslses, ses);
     }
 #endif
-    return new_session(left, right, sock, true, 0, ses);
+    return new_session(left, right, sock, SES_SOCKET, 0, ses);
 }
 
 
@@ -220,6 +221,16 @@ struct session *run_command(const char *arg, struct session *ses)
         return ses;
     }
 
+    if (!strcmp(right, "//selfpipe"))
+    {
+        int p[2];
+        if (pipe(p))
+            syserr("pipe failed");
+        ses = new_session(left, right, p[0], SES_SELFPIPE, 0, ses);
+        ses->nagle = p[1];
+        return ses;
+    }
+
     utf8_to_local(ustr, right);
     if ((sock=run(ustr, COLS, LINES-1, TERM)) == -1)
     {
@@ -227,7 +238,7 @@ struct session *run_command(const char *arg, struct session *ses)
         return ses;
     }
 
-    return new_session(left, right, sock, false, 0, ses);
+    return new_session(left, right, sock, SES_PTY, 0, ses);
 }
 
 
@@ -245,7 +256,7 @@ static void show_session(struct session *ses)
 /**********************************/
 /* find a new session to activate */
 /**********************************/
-struct session *newactive_session(void)
+struct session* newactive_session(void)
 {
     if ((activesession=sessionlist)==nullsession)
         activesession=activesession->next;
@@ -269,7 +280,7 @@ struct session *newactive_session(void)
 /**********************/
 /* open a new session */
 /**********************/
-static struct session *new_session(const char *name, const char *address, int sock, bool issocket, gnutls_session_t ssl, struct session *ses)
+static struct session *new_session(const char *name, const char *address, int sock, sestype_t sestype, gnutls_session_t ssl, struct session *ses)
 {
     struct session *newsession;
 
@@ -291,15 +302,15 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->aliases = copy_hash(ses->aliases);
     newsession->actions = copy_list(ses->actions, PRIORITY);
     newsession->prompts = copy_list(ses->prompts, PRIORITY);
-    newsession->subs = copy_list(ses->subs, ALPHA);
+    newsession->subs = copy_list(ses->subs, ALPHALONGER);
     newsession->myvars = copy_hash(ses->myvars);
     newsession->highs = copy_list(ses->highs, ALPHA);
     newsession->pathdirs = copy_hash(ses->pathdirs);
     newsession->socket = sock;
     newsession->antisubs = copy_slist(ses->antisubs);
     newsession->binds = copy_hash(ses->binds);
-    newsession->issocket = issocket;
-    newsession->naws = !issocket;
+    newsession->sestype = sestype;
+    newsession->naws = (sestype == SES_PTY);
 #ifdef HAVE_ZLIB
     newsession->can_mccp = false;
     newsession->mccp = 0;
@@ -349,7 +360,7 @@ static struct session *new_session(const char *name, const char *address, int so
         else
             newsession->hooks[i]=0;
     newsession->closing=0;
-    newsession->charset = mystrdup(issocket ? ses->charset : user_charset_name);
+    newsession->charset = mystrdup(sestype==SES_SOCKET ? ses->charset : user_charset_name);
     newsession->logcharset = logcs_is_special(ses->logcharset) ?
                               ses->logcharset : mystrdup(ses->logcharset);
     if (!new_conv(&newsession->c_io, newsession->charset, 0))
@@ -378,7 +389,8 @@ void cleanup_session(struct session *ses)
         return;
     any_closed=true;
     ses->closing=2;
-    do_hook(act=ses, HOOK_CLOSE, 0, true);
+    if (ses!=nullsession) /* valgrind cleans null */
+        do_hook(act=ses, HOOK_CLOSE, 0, true);
 
     kill_all(ses, true);
     if (ses == sessionlist)
@@ -388,7 +400,7 @@ void cleanup_session(struct session *ses)
         for (sesptr = sessionlist; sesptr->next != ses; sesptr = sesptr->next) ;
         sesptr->next = ses->next;
     }
-    if (ses==activesession)
+    if (ses==activesession && ses!=nullsession)
     {
         user_textout_draft(0, 0);
         sprintf(buf, "%s\n", ses->last_line);
@@ -396,8 +408,8 @@ void cleanup_session(struct session *ses)
         do_in_MUD_colors(ses->last_line, false, 0);
         user_textout(ses->last_line);
     }
-    sprintf(buf, "#SESSION '%s' DIED.", ses->name);
-    tintin_puts(buf, NULL);
+    if (ses!=nullsession) /* valgrind cleans null */
+        tintin_printf(0, "#SESSION '%s' DIED.", ses->name);
     if (ses->socket && close(ses->socket) == -1)
         syserr("close in cleanup");
     if (ses->logfile)
@@ -445,12 +457,8 @@ void seslist(char *result)
                 *result++=' ';
             else
                 flag=true;
-            if (isatom(sesptr->name))
-                result+=snprintf(result, BUFFER_SIZE-5+r0-result,
-                    "%s", sesptr->name);
-            else
-                result+=snprintf(result, BUFFER_SIZE-5+r0-result,
-                    "{%s}", sesptr->name);
+            result+=snprintf(result, BUFFER_SIZE-5+r0-result,
+                isatom(sesptr->name) ? "%s" : "{%s}", sesptr->name);
             if (result-r0>BUFFER_SIZE-10)
                 return; /* pathological session names */
         }

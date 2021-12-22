@@ -10,54 +10,55 @@
 #include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
-#include "protos/variables.h"
+#include "protos/string.h"
+#include "protos/vars.h"
 
 
 /***************************/
 /* the #substitute command */
 /***************************/
-static void parse_sub(const char *left, const char *right,  bool gag, struct session *ses)
+static void list_subs(const char *left, bool gag, struct session *ses)
 {
-    struct listnode *mysubs, *ln;
-    bool flag=false;
+    bool flag = false;
+    struct listnode *mysubs = ses->subs;
 
-    mysubs = ses->subs;
-
-    if (!*left && !*right)
-        left = "*";
-    if (!*right)
-    {
-        while ((mysubs = search_node_with_wild(mysubs, left)))
-            if (gag)
-            {
-                if (!strcmp(mysubs->right, EMPTY_LINE))
-                {
-                    if (!flag)
-                        tintin_printf(ses, "#THESE GAGS HAVE BEEN DEFINED:");
-                    tintin_printf(ses, "{%s~7~}", mysubs->left);
-                    flag=true;
-                }
-            }
-            else
+    while ((mysubs = search_node_with_wild(mysubs, left)))
+        if (gag)
+        {
+            if (!strcmp(mysubs->right, EMPTY_LINE))
             {
                 if (!flag)
-                    tintin_printf(ses, "#THESE SUBSTITUTES HAVE BEEN DEFINED:");
+                    tintin_printf(ses, "#THESE GAGS HAVE BEEN DEFINED:");
+                tintin_printf(ses, "{%s~7~}", mysubs->left);
                 flag=true;
-                shownode_list(mysubs);
             }
-        if (!flag && ses->mesvar[MSG_SUBSTITUTE])
-        {
-            if (strcmp(left, "*"))
-                tintin_printf(ses, "#THAT %s IS NOT DEFINED.", gag? "GAG":"SUBSTITUTE");
-            else
-                tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
         }
-        return;
+        else
+        {
+            if (!flag)
+                tintin_printf(ses, "#THESE SUBSTITUTES HAVE BEEN DEFINED:");
+            flag=true;
+            shownode_list(mysubs);
+        }
+    if (!flag && ses->mesvar[MSG_SUBSTITUTE])
+    {
+        if (strcmp(left, "*"))
+            tintin_printf(ses, "#THAT %s IS NOT DEFINED.", gag? "GAG":"SUBSTITUTE");
+        else
+            tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
     }
+}
+
+static void parse_sub(const char *left, const char *right,  bool gag, struct session *ses)
+{
+    struct listnode *mysubs = ses->subs, *ln;
+
+    if (!*right)
+        return list_subs(*left? left : "*", gag, ses);
 
     if ((ln = searchnode_list(mysubs, left)))
         deletenode_list(mysubs, ln);
-    insertnode_list(mysubs, left, right, 0, ALPHA);
+    insertnode_list(mysubs, left, right, 0, ALPHALONGER);
     subnum++;
     if (ses->mesvar[MSG_SUBSTITUTE])
     {
@@ -115,7 +116,6 @@ static void unsub(const char *arg, bool gag, struct session *ses)
         }
         deletenode_list(mysubs, ln);
         flag = true;
-        /*  temp=ln; */
     }
     if (!flag && ses->mesvar[MSG_SUBSTITUTE])
         tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
@@ -140,7 +140,7 @@ void do_all_sub(char *line, struct session *ses)
 {
     struct listnode *ln;
     pvars_t vars, *lastpvars;
-    char result[BUFFER_SIZE], tmp1[BUFFER_SIZE], tmp2[BUFFER_SIZE];
+    char result[BUFFER_SIZE], tmp[BUFFER_SIZE];
     const char *l;
     int rlen, len;
 
@@ -158,22 +158,20 @@ void do_all_sub(char *line, struct session *ses)
                 strcpy(line, EMPTY_LINE);
                 return;
             }
-            substitute_vars(ln->right, tmp1);
-            substitute_myvars(tmp1, tmp2, ses);
+            substitute_vars(ln->right, tmp, ses);
             rlen=match_start-line;
             memcpy(result, line, rlen);
-            len=strlen(tmp2);
-            APPEND(tmp2);
+            len=strlen(tmp);
+            APPEND(tmp);
             while (*match_end)
                 if (check_one_action(l=match_end, ln->left, &vars, true, ses))
                 {
                     /* no gags possible here */
                     len=match_start-l;
                     APPEND(l);
-                    substitute_vars(ln->right, tmp1);
-                    substitute_myvars(tmp1, tmp2, ses);
-                    len=strlen(tmp2);
-                    APPEND(tmp2);
+                    substitute_vars(ln->right, tmp, ses);
+                    len=strlen(tmp);
+                    APPEND(tmp);
                 }
                 else
                 {
@@ -194,10 +192,7 @@ void changeto_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE];
 
     if (!_)
-    {
-        tintin_eprintf(ses, "#ERROR: #change is allowed only inside an action/promptaction");
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR: #change is allowed only inside an action/promptaction");
 
     get_arg(arg, left, 1, ses);
     strcpy(_, left);
@@ -206,10 +201,7 @@ void changeto_command(const char *arg, struct session *ses)
 void gagthis_command(const char *arg, struct session *ses)
 {
     if (!_)
-    {
-        tintin_eprintf(ses, "#ERROR: #gagthis is allowed only inside an action/promptaction");
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR: #gagthis is allowed only inside an action/promptaction");
 
     strcpy(_, EMPTY_LINE);
 }

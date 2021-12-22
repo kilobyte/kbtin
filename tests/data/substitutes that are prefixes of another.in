@@ -1,0 +1,3 @@
+#sub foo FOO
+#sub foobar FOOBAR
+#run a {sh -c 'echo xfoox;echo xfoobarx'}

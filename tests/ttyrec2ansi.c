@@ -1,7 +1,10 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include "../tintin.h"
+#include <errno.h>
+#include "../ttyrec.h"
+
+#define BUFFER_SIZE 4096
 
 int main(void)
 {

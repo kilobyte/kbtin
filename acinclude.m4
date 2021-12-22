@@ -1,7 +1,0 @@
-m4_include([ac_ptyranges.m4])
-m4_include([ac_ucs_size.m4])
-m4_include([ac_sco.m4])
-m4_include([ac_arg_lib.m4])
-m4_include([ac_func_macro.m4])
-m4_include([ac_c_try_flag.m4])
-m4_include([ac_decl_or_zero.m4])

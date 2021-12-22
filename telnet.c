@@ -171,12 +171,16 @@ void telnet_resize_all(void)
 {
     for (struct session *sp=sessionlist; sp; sp=sp->next)
         if (sp->naws)
-        {
-            if (sp->issocket)
+            switch (sp->sestype)
+            {
+            case SES_SOCKET:
                 telnet_send_naws(sp);
-            else
+                break;
+            case SES_PTY:
                 pty_resize(sp->socket, COLS, LINES-1-!!isstatus);
-        }
+                break;
+            default:;
+            }
 }
 
 int do_telnet_protocol(const char *data, int nb, struct session *ses)

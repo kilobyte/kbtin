@@ -1,0 +1,2 @@
+#hook close {#showme FIN;#end}
+#run a echo abcąęśćdefабцдефгхийאבגדァアィイ

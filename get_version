@@ -2,6 +2,7 @@
 
 v=`git describe 2>/dev/null`
 test -n "$v" || v=`cat VERSION` || v=UNKNOWN
+[ "$v" = '$Format:%(describe)$' ] && v=UNKNOWN
 
 [ ! -d .git ] || ! which git >/dev/null || { git diff-index --quiet HEAD -- || v="$v-dirty"; }
 

@@ -5,6 +5,7 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
+#include "protos/events.h"
 #include "protos/glob.h"
 #include "protos/hash.h"
 #include "protos/llist.h"
@@ -89,6 +90,7 @@ void kill_all(struct session *ses, bool no_reinit)
     kill_hash(ses->pathdirs);
     kill_hash(ses->binds);
     kill_routes(ses);
+    kill_events(ses);
     if (no_reinit)
         return;
 
@@ -160,6 +162,25 @@ not_numeric:
     goto not_numeric;
 }
 
+/*****************************************************/
+/* strcmp() that sorts '\0' later than anything else */
+/*****************************************************/
+static int strlongercmp(const char *a, const char *b)
+{
+next:
+    if (!*a)
+        return 1;
+    if (*a==*b)
+    {
+        a++;
+        b++;
+        goto next;
+    }
+    if (!*b || ((unsigned char)*a) < ((unsigned char)*b))
+        return -1;
+    return 1;
+}
+
 /*****************************************************************/
 /* create a node containing the ltext, rtext fields and stuff it */
 /* into the list - in lexicographical order, or by numerical     */
@@ -214,7 +235,6 @@ void insertnode_list(struct listnode *listhead, const char *ltext, const char *r
         nptrlast->next = newnode;
         newnode->next = NULL;
         return;
-        break;
 
     case LENGTH:
         ln=strlen(ltext);
@@ -249,7 +269,6 @@ void insertnode_list(struct listnode *listhead, const char *ltext, const char *r
         nptrlast->next = newnode;
         newnode->next = NULL;
         return;
-        break;
 
     case ALPHA:
         while ((nptrlast = nptr) && (nptr = nptr->next))
@@ -264,7 +283,20 @@ void insertnode_list(struct listnode *listhead, const char *ltext, const char *r
         nptrlast->next = newnode;
         newnode->next = NULL;
         return;
-        break;
+
+    case ALPHALONGER:
+        while ((nptrlast = nptr) && (nptr = nptr->next))
+        {
+            if (strlongercmp(ltext, nptr->left) <= 0)
+            {
+                newnode->next = nptr;
+                nptrlast->next = newnode;
+                return;
+            }
+        }
+        nptrlast->next = newnode;
+        newnode->next = NULL;
+        return;
     }
 }
 

@@ -1,0 +1,19 @@
+#sys {rm -rf testtmp}
+#ali x #deathlog testtmp
+x abc
+x
+x def
+x
+x ghi
+x
+x
+x jkl
+x
+x {#abc;#bde}
+x ąęść
+x abc𠀧𠀀𠀁𠀂
+x
+#delay 1 #end
+#run a //selfpipe
+#text testtmp
+#unlink testtmp
