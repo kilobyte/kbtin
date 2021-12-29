@@ -1001,7 +1001,7 @@ void info_command(const char *arg, struct session *ses)
         break;
 
     case SES_SELFPIPE:
-        tintin_printf(ses, "Session : {%s}  Type: self-pipe");
+        tintin_printf(ses, "Session : {%s}  Type: self-pipe", ses->name);
     }
 
     tintin_printf(ses, "You have defined the following:");
