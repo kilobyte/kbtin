@@ -413,7 +413,7 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
 void condump_command(const char *arg, struct session *ses)
 {
     FILE *fh;
-    char fname[BUFFER_SIZE], temp[BUFFER_SIZE];
+    char temp[BUFFER_SIZE];
 
     if (!ui_con_buffer)
     {
@@ -424,7 +424,7 @@ void condump_command(const char *arg, struct session *ses)
     {
         arg = get_arg_in_braces(arg, temp, 0);
         substitute_vars(temp, temp, ses);
-        fh=open_logfile(ses, fname,
+        fh=open_logfile(ses, temp,
             "#DUMPING CONSOLE TO {%s}",
             "#APPENDING CONSOLE DUMP TO {%s}",
             "#PIPING CONSOLE DUMP TO {%s}");
