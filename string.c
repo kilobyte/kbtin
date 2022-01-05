@@ -810,3 +810,27 @@ num_t cosinus_inline(const char *line, struct session *ses)
     num_t x = eval_expression(arg, ses);
     return cos(x * M_PI / 180 / DENOM) * DENOM;
 }
+
+/********************/
+/* the #sqrt inline */
+/********************/
+num_t sqrt_inline(const char *line, struct session *ses)
+{
+    char arg[BUFFER_SIZE];
+
+    line = get_arg(line, arg, 1, ses);
+    if (!*arg)
+    {
+        tintin_eprintf(ses, "#Error: #sqrt requires an argument.");
+        return 0;
+    }
+
+    num_t x = eval_expression(arg, ses);
+    if (x < 0)
+    {
+        tintin_eprintf(ses, "#Error: you're imagining that sqrt can take arg < 0");
+        return 0;
+    }
+
+    return sqrt(x * 1.0 / DENOM) * DENOM;
+}

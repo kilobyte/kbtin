@@ -5,3 +5,5 @@ m #angle 0 1
 m #sinus 3*30
 m #cosinus 90-0
 m (450 - #angle 50 -50) % 360
+m #sqrt 0.25
+m (#sqrt 2)/0.0001

@@ -117,6 +117,8 @@ static bool do_inline(const char *line, num_t *res, struct session *ses)
         *res=sinus_inline(line, ses);
     else if (is_abrev(command, "cosinus"))
         *res=cosinus_inline(line, ses);
+    else if (is_abrev(command, "sqrt"))
+        *res=sqrt_inline(line, ses);
     else
     {
         tintin_eprintf(ses, "#Unknown inline command [%c%s]!", tintin_char, command);

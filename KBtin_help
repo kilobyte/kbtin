@@ -34,7 +34,7 @@ Comments:
    nop         remark
 Variables:
    math        random      variable    unvariable  initvariable sin cos
-   angle
+   angle       sqrt
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
    substring   prepad      postpad     reverse     strlen      atoi
@@ -1825,6 +1825,11 @@ This function returns cosinus of 360°-based angle <a>.
 
 Examples:
 #math a #cosinus 90  → 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~sqrt
+
+inline (#sqrt <x>)
+Calculates the square root of <x>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab
