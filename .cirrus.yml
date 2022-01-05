@@ -23,3 +23,57 @@ macos_x_task:
     - make -j$(getconf _NPROCESSORS_ONLN)
   test_script:
     ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
+
+ubuntu_amd64_task:
+  container:
+    image: ubuntu:focal
+  install_script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev
+  build_script:
+    - cmake .
+    - make -j$(getconf _NPROCESSORS_ONLN)
+  test_script:
+    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
+
+ubuntu_i386_task:
+  container:
+    image: ubuntu:focal
+  install_script:
+    - dpkg --add-architecture i386
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gcc-i686-linux-gnu libc6:i386 libgnutls28-dev:i386 libz-dev:i386
+  build_script:
+    - cmake -DCMAKE_C_COMPILER=i686-linux-gnu-gcc .
+    - make -j$(getconf _NPROCESSORS_ONLN)
+  test_script:
+    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
+
+ubuntu_arm64_task:
+  arm_container:
+    image: ubuntu:focal
+  install_script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev
+  build_script:
+    - cmake .
+    - make -j$(getconf _NPROCESSORS_ONLN)
+  test_script:
+    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
+
+ubuntu_armhf_task:
+  arm_container:
+    image: ubuntu:focal
+  install_script:
+    - dpkg --add-architecture armhf
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gcc-arm-linux-gnueabihf libc6:armhf libgnutls28-dev:armhf libz-dev:armhf
+  build_script:
+    - cmake -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc .
+    - make -j$(getconf _NPROCESSORS_ONLN)
+  test_script:
+    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
