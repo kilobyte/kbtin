@@ -1,4 +1,6 @@
 #ali m {#math x {$1};#strcmp {$x} {$2} {#nop} #else {#show {Error: $1 => $x expected $2}}}
+m -0.25 -0.25
+m -1.25 -1.25
 m 2+2 4
 m 2.1+2.2 4.3
 m 2*2   4

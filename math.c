@@ -27,7 +27,8 @@ num_t ndiv(num_t x, num_t y)
 
 int num2str(char *buf, num_t v)
 {
-    char *b = buf + sprintf(buf, "%"PRId64, (int64_t)(v/DENOM));
+    char *b = buf + sprintf(buf, "%s%"PRId64, (v<0 && v>-DENOM)? "-":"",
+        (int64_t)(v/DENOM));
     unsigned x = llabs(v%DENOM);
     if (!x)
         return b-buf;
@@ -62,6 +63,7 @@ num_t str2num(const char *str, char **err)
     num_t xh = strtol(str, err, 10) * DENOM;
     if (**err!='.')
         return xh;
+    bool neg = *str=='-';
     num_t y = DENOM*1000;
     num_t x = 0;
     for (str = *err+1; isadigit(*str); str++)
@@ -69,8 +71,9 @@ num_t str2num(const char *str, char **err)
         x += y * (*str-'0');
         y/=10;
     }
+    x = (x+4999)/10000;
     *err = (char*)str;
-    return xh + (x+4999)/10000;
+    return neg? xh-x : xh+x;
 }
 
 /* parse a timestamp */
@@ -79,7 +82,7 @@ timens_t str2timens(const char *str, char **err)
     timens_t t = strtol(str, err, 10) * NANO;
     if (**err!='.')
         return t;
-    num_t x = NANO;
+    num_t x = (*str=='-')? -NANO:NANO;
     for (str = *err+1; isadigit(*str); str++)
         t += (*str-'0') * (x/= 10);
     *err = (char*)str;
