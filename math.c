@@ -1,5 +1,6 @@
 #include "tintin.h"
 #include <inttypes.h>
+#include <math.h>
 
 num_t nmul(num_t x, num_t y)
 {
@@ -20,8 +21,16 @@ num_t nmul(num_t x, num_t y)
 num_t ndiv(num_t x, num_t y)
 {
     num_t zh = x/y;
-    uint64_t rem = ((uint64_t)(llabs(x)%llabs(y)))*DENOM;
+#ifdef __SIZEOF_INT128__
+    __uint128_t rem = ((__uint128_t)(llabs(x)%llabs(y)))*DENOM;
     num_t zl = rem/llabs(y) * (((x^y)>=0)?+1:-1);
+#else
+    // 128-bit floats have enough precision, and I don't care enough
+    // about 32-bit archs to optimize.  There's enough overhead
+    // elsewhere that math calculations are non-critical, anyway.
+    long double rem = ((long double)(llabs(x)%llabs(y)))*DENOM;
+    num_t zl = roundl(rem/llabs(y)) * (((x^y)>=0)?+1:-1);
+#endif
     return zh*DENOM + zl;
 }
 
