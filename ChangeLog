@@ -1,3 +1,10 @@
+1.0.26:
+*	fix tests on ancient cmake
+*	support key codes on Zutty
+*	#sqrt
+*	fix #condump
+*	bugfixes for math issues
+
 1.0.25:
 *	CMake based build system
 *	#zap <session>
