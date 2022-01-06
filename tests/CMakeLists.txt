@@ -11,6 +11,13 @@ foreach(t ${tests})
 	string(REGEX REPLACE ".*/([^/]*)\\.in$"
 		"\\1" t
 		${t})
-	add_test(NAME ${t}
+	set(tn "${t}")
+	if(CMAKE_VERSION VERSION_LESS 3.19)
+		string(REPLACE " " "_" tn "${tn}")
+		string(REPLACE "#" "♯" tn "${tn}")
+		string(REPLACE "(" "⦅" tn "${tn}")
+		string(REPLACE ")" "⦆" tn "${tn}")
+	endif()
+	add_test(NAME ${tn}
 		COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/runtest.sh "${t}")
 endforeach()

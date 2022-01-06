@@ -161,16 +161,13 @@ void unlink_command(const char *arg, struct session *ses)
 {
     char file[BUFFER_SIZE], temp[BUFFER_SIZE], lstr[BUFFER_SIZE];
 
-    if (*arg)
-    {
-        arg = get_arg_in_braces(arg, temp, 1);
-        substitute_vars(temp, temp, ses);
-        expand_filename(temp, file, lstr);
-        unlink(lstr);
-    }
-    else
-        tintin_eprintf(ses, "#ERROR: valid syntax is: #unlink <filename>");
+    if (!*arg)
+        return tintin_eprintf(ses, "#ERROR: valid syntax is: #unlink <filename>");
 
+    arg = get_arg_in_braces(arg, temp, 1);
+    substitute_vars(temp, temp, ses);
+    expand_filename(temp, file, lstr);
+    unlink(lstr);
 }
 
 /*************************/
@@ -181,23 +178,21 @@ void deathlog_command(const char *arg, struct session *ses)
     FILE *fh;
     char fname[BUFFER_SIZE], text[BUFFER_SIZE], temp[BUFFER_SIZE], lfname[BUFFER_SIZE];
 
-    if (*arg)
+    if (!*arg)
+        return tintin_eprintf(ses, "#ERROR: valid syntax is: #deathlog <file> <text>");
+
+    arg = get_arg_in_braces(arg, temp, 0);
+    arg = get_arg_in_braces(arg, text, 1);
+    substitute_vars(temp, temp, ses);
+    expand_filename(temp, fname, lfname);
+    substitute_vars(text, text, ses);
+    if ((fh = fopen(lfname, "a")))
     {
-        arg = get_arg_in_braces(arg, temp, 0);
-        arg = get_arg_in_braces(arg, text, 1);
-        substitute_vars(temp, temp, ses);
-        expand_filename(temp, fname, lfname);
-        substitute_vars(text, text, ses);
-        if ((fh = fopen(lfname, "a")))
-        {
-            cfprintf(fh, "%s\n", text);
-            fclose(fh);
-        }
-        else
-            tintin_eprintf(ses, "#ERROR: COULDN'T OPEN FILE {%s}.", fname);
+        cfprintf(fh, "%s\n", text);
+        fclose(fh);
     }
     else
-        tintin_eprintf(ses, "#ERROR: valid syntax is: #deathlog <file> <text>");
+        tintin_eprintf(ses, "#ERROR: COULDN'T OPEN FILE {%s}.", fname);
 }
 
 void log_off(struct session *ses)
@@ -291,15 +286,11 @@ void logcomment_command(const char *arg, struct session *ses)
     char text[BUFFER_SIZE];
 
     if (!arg)
-    {
-        tintin_eprintf(ses, "#Logcomment what?");
-        return;
-    }
+        return tintin_eprintf(ses, "#Logcomment what?");
+
     if (!ses->logfile)
-    {
-        tintin_eprintf(ses, "#You're not logging.");
-        return;
-    }
+        return tintin_eprintf(ses, "#You're not logging.");
+
     arg=get_arg(arg, text, 1, ses);
     write_logf(ses, text, "", "");
 }
@@ -413,29 +404,25 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
 void condump_command(const char *arg, struct session *ses)
 {
     FILE *fh;
-    char fname[BUFFER_SIZE], temp[BUFFER_SIZE];
+    char temp[BUFFER_SIZE];
 
     if (!ui_con_buffer)
+        return tintin_eprintf(ses, "#UI: No console buffer => can't dump it.");
+
+    if (!*arg)
+        return tintin_eprintf(ses, "#Syntax: #condump <file>");
+
+    arg = get_arg_in_braces(arg, temp, 0);
+    substitute_vars(temp, temp, ses);
+    fh=open_logfile(ses, temp,
+        "#DUMPING CONSOLE TO {%s}",
+        "#APPENDING CONSOLE DUMP TO {%s}",
+        "#PIPING CONSOLE DUMP TO {%s}");
+    if (fh)
     {
-        tintin_eprintf(ses, "#UI: No console buffer => can't dump it.");
-        return;
+        user_condump(fh);
+        fclose(fh);
     }
-    if (*arg)
-    {
-        arg = get_arg_in_braces(arg, temp, 0);
-        substitute_vars(temp, temp, ses);
-        fh=open_logfile(ses, fname,
-            "#DUMPING CONSOLE TO {%s}",
-            "#APPENDING CONSOLE DUMP TO {%s}",
-            "#PIPING CONSOLE DUMP TO {%s}");
-        if (fh)
-        {
-            user_condump(fh);
-            fclose(fh);
-        }
-    }
-    else
-        tintin_eprintf(ses, "#Syntax: #condump <file>");
 }
 
 /********************/
@@ -445,40 +432,37 @@ void log_command(const char *arg, struct session *ses)
 {
     char temp[BUFFER_SIZE];
 
-    if (ses!=nullsession)
-    {
-        if (*arg)
-        {
-            if (ses->logfile)
-            {
-                log_off(ses);
-                if (ses->mesvar[MSG_LOG])
-                    tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
-            }
-            get_arg_in_braces(arg, temp, 1);
-            substitute_vars(temp, temp, ses);
-            ses->logfile=open_logfile(ses, temp,
-                "#OK. LOGGING TO {%s} .....",
-                "#OK. APPENDING LOG TO {%s} .....",
-                "#OK. PIPING LOG TO {%s} .....");
-            if (ses->logfile)
-                ses->logname=mystrdup(temp);
-            if (!new_conv(&ses->c_log, logcs_charset(ses->logcharset), 1))
-                tintin_eprintf(ses, "#Warning: can't open charset: %s",
-                                    logcs_charset(ses->logcharset));
+    if (ses==nullsession)
+        return tintin_eprintf(ses, "#THERE'S NO SESSION TO LOG.");
 
-        }
-        else if (ses->logfile)
+    if (*arg)
+    {
+        if (ses->logfile)
         {
             log_off(ses);
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
         }
-        else if (ses->mesvar[MSG_LOG])
-            tintin_printf(ses, "#LOGGING ALREADY OFF.");
+        get_arg_in_braces(arg, temp, 1);
+        substitute_vars(temp, temp, ses);
+        ses->logfile=open_logfile(ses, temp,
+            "#OK. LOGGING TO {%s} .....",
+            "#OK. APPENDING LOG TO {%s} .....",
+            "#OK. PIPING LOG TO {%s} .....");
+        if (ses->logfile)
+            ses->logname=mystrdup(temp);
+        if (!new_conv(&ses->c_log, logcs_charset(ses->logcharset), 1))
+            tintin_eprintf(ses, "#Warning: can't open charset: %s",
+                                logcs_charset(ses->logcharset));
     }
-    else
-        tintin_eprintf(ses, "#THERE'S NO SESSION TO LOG.");
+    else if (ses->logfile)
+    {
+        log_off(ses);
+        if (ses->mesvar[MSG_LOG])
+            tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
+    }
+    else if (ses->mesvar[MSG_LOG])
+        tintin_printf(ses, "#LOGGING ALREADY OFF.");
 }
 
 /*************************/
@@ -696,15 +680,9 @@ void write_command(const char *filename, struct session *ses)
     substitute_vars(buffer, buffer, ses);
     expand_filename(buffer, fname, lfname);
     if (!*filename)
-    {
-        tintin_eprintf(ses, "#ERROR: syntax is: #write <filename>");
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR: syntax is: #write <filename>");
     if (!(myfile = fopen(lfname, "w")))
-    {
-        tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
 
     WFLAG("keypad", keypad, DEFAULT_KEYPAD);
     WFLAG("retain", retain, DEFAULT_RETAIN);
@@ -848,24 +826,15 @@ void writesession_command(const char *filename, struct session *ses)
     kbitr_t itr;
 
     if (ses==nullsession)
-    {
-        tintin_eprintf(ses, "#THIS IS THE NULL SESSION -- NO DELTA!");
-        return;
-    }
+        return tintin_eprintf(ses, "#THIS IS THE NULL SESSION -- NO DELTA!");
 
     get_arg_in_braces(filename, buffer, 1);
     substitute_vars(buffer, buffer, ses);
     expand_filename(buffer, fname, lfname);
     if (!*filename)
-    {
-        tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
     if (!(myfile = fopen(lfname, "w")))
-    {
-        tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
-        return;
-    }
+        return tintin_eprintf(ses, "#ERROR - COULDN'T OPEN FILE {%s}.", fname);
 
 #undef SFLAG
 #define SFLAG(name, var, dummy) WFLAG(name, ses->var, nullsession->var);
@@ -1053,14 +1022,11 @@ void textin_command(const char *arg, struct session *ses)
     expand_filename(buffer, filename, lfname);
     if (ses == nullsession)
     {
-        tintin_eprintf(ses, "#You can't read any text in without a session being active.");
-        return;
+        return tintin_eprintf(ses,
+            "#You can't read any text in without a session being active.");
     }
     if (!(myfile = fopen(lfname, "r")))
-    {
-        tintin_eprintf(ses, "ERROR: File {%s} doesn't exist.", filename);
-        return;
-    }
+        return tintin_eprintf(ses, "ERROR: File {%s} doesn't exist.", filename);
     while (fgets(buffer, sizeof(buffer), myfile))
     {
         for (cptr = buffer; *cptr && *cptr != '\n'; cptr++) ;
@@ -1088,10 +1054,7 @@ void logtype_command(const char *arg, struct session *ses)
 
     arg=get_arg(arg, left, 1, ses);
     if (!*left)
-    {
-        tintin_printf(ses, "#The log type is: %s", logtypes[ses->logtype]);
-        return;
-    }
+        return tintin_printf(ses, "#The log type is: %s", logtypes[ses->logtype]);
     for (unsigned t=0;t<sizeof(logtypes)/sizeof(char*);t++)
         if (is_abrev(left, logtypes[t]))
         {
@@ -1115,19 +1078,13 @@ void logcharset_command(const char *arg, struct session *ses)
     cset=what;
 
     if (!*cset)
-    {
-        tintin_printf(ses, "#Log charset: %s", logcs_name(ses->logcharset));
-        return;
-    }
+        return tintin_printf(ses, "#Log charset: %s", logcs_name(ses->logcharset));
     if (!strcasecmp(cset, "local"))
         cset=LOGCS_LOCAL;
     else if (!strcasecmp(cset, "remote"))
         cset=LOGCS_REMOTE;
     if (!new_conv(&nc, logcs_charset(cset), 1))
-    {
-        tintin_eprintf(ses, "#No such charset: {%s}", logcs_charset(cset));
-        return;
-    }
+        return tintin_eprintf(ses, "#No such charset: {%s}", logcs_charset(cset));
     if (!logcs_is_special(ses->logcharset))
         SFREE(ses->logcharset);
     ses->logcharset=logcs_is_special(cset) ? cset : mystrdup(cset);

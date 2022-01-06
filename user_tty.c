@@ -942,6 +942,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             bind_xterm((val[0]==0 && val[1]==115) /* konsole */
                        || val[0]==1               /* libvte, mlterm, aterm, termit */
                        || val[0]==41              /* xterm, terminology */
+                       || val[0]==64              /* zutty */
                        || val[0]==83              /* screen */
                       );
         }

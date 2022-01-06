@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.12)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
 	cmake_policy(SET CMP0075 NEW) # hush the warning, either option works
+endif()
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
 	cmake_policy(SET CMP0110 NEW)
 endif()
 project(kbtin C)

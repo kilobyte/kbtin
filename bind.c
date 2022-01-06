@@ -66,6 +66,7 @@ static const char *KEYNAMES[]=
     "ESCOQ",        "KpadDivide",
     "ESCOR",        "KpadMultiply",
     "ESCOS",        "KpadMinus",
+    "ESCOX",        "KpadEqual",
     "ESCOj",        "KpadMultiply",
     "ESCOk",        "KpadPlus",
     "ESCOl",        "KpadPlus",
