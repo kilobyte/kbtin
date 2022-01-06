@@ -48,14 +48,16 @@ int usecstr(char *buf, timens_t v)
 {
     if (!(v % NANO))
         return sprintf(buf, "%lld", v/NANO);
-    return sprintf(buf, "%lld.%06d", v/NANO, abs((int)(v%NANO/1000)));
+    return sprintf(buf, "%s%lld.%06d", (v<0 && v>-NANO)? "-":"",
+        v/NANO, abs((int)(v%NANO/1000)));
 }
 
 int nsecstr(char *buf, timens_t v)
 {
     if (!(v % NANO))
         return sprintf(buf, "%lld", v/NANO);
-    return sprintf(buf, "%lld.%09d", v/NANO, abs((int)(v%NANO)));
+    return sprintf(buf, "%s%lld.%09d", (v<0 && v>-NANO)? "-":"",
+        v/NANO, abs((int)(v%NANO)));
 }
 
 num_t str2num(const char *str, char **err)
