@@ -1,3 +1,9 @@
+kbtin (1.0.26-2) unstable; urgency=medium
+
+  * Fix a crash on ppc64el (somehow reproducible on Ubuntu only).
+
+ -- Adam Borowski <kilobyte@angband.pl>  Fri, 14 Jan 2022 00:23:57 +0100
+
 kbtin (1.0.26-1) unstable; urgency=medium
 
   * New upstream release.
