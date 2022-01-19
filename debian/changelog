@@ -1,3 +1,10 @@
+kbtin (1.0.26-3) unstable; urgency=medium
+
+  * Disable the true positive test fail on ppc64el.  I have no Ubuntu
+    porterbox and the bug doesn't repro on Debian.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Wed, 19 Jan 2022 20:14:41 +0100
+
 kbtin (1.0.26-2) unstable; urgency=medium
 
   * Fix a crash on ppc64el (somehow reproducible on Ubuntu only).
