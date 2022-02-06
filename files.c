@@ -764,14 +764,15 @@ void write_command(const char *filename, struct session *ses)
         if ((rptr=ses->routes[nr]))
             do
             {
+                num2str(num, rptr->distance);
                 cfprintf(myfile, (*(rptr->cond))
-                        ?"%croute {%s} {%s} {%s} %d {%s}\n"
-                        :"%croute {%s} {%s} {%s} %d\n",
+                        ?"%croute {%s} {%s} {%s} %s {%s}\n"
+                        :"%croute {%s} {%s} {%s} %s\n",
                         tintin_char,
                         ses->locations[nr],
                         ses->locations[rptr->dest],
                         rptr->path,
-                        rptr->distance,
+                        num,
                         rptr->cond);
             } while ((rptr=rptr->next));
 
@@ -790,7 +791,7 @@ void write_command(const char *filename, struct session *ses)
 }
 
 
-static bool route_exists(const char *A, const char *B, const char *path, int dist, const char *cond, struct session *ses)
+static bool route_exists(const char *A, const char *B, const char *path, num_t dist, const char *cond, struct session *ses)
 {
     int a, b;
 
@@ -956,15 +957,18 @@ void writesession_command(const char *filename, struct session *ses)
                                   rptr->distance,
                                   rptr->cond,
                                   nullsession))
+                {
+                    num2str(num, rptr->distance);
                     cfprintf(myfile, (*(rptr->cond))
-                            ?"%croute {%s} {%s} {%s} %d {%s}\n"
-                            :"%croute {%s} {%s} {%s} %d\n",
+                            ?"%croute {%s} {%s} {%s} %s {%s}\n"
+                            :"%croute {%s} {%s} {%s} %s\n",
                             tintin_char,
                             ses->locations[nr],
                             ses->locations[rptr->dest],
                             rptr->path,
-                            rptr->distance,
+                            num,
                             rptr->cond);
+                }
             } while ((rptr=rptr->next));
 
     nodeptr = onptr = hash2list(ses->binds, "*");

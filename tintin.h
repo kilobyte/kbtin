@@ -72,7 +72,7 @@
 #define MAX_LOCATIONS 2048
 #define DEFAULT_TINTIN_CHAR '#'           /* tintin char */
 #define DEFAULT_TICK_SIZE 60
-#define DEFAULT_ROUTE_DISTANCE 10
+#define DEFAULT_ROUTE_DISTANCE (10*DENOM)
 #define VERBATIM_CHAR '\\'                /* if an input starts with this
                                              char, it will be sent 'as is'
                                              to the MUD */
@@ -294,7 +294,7 @@ struct routenode
     struct routenode *next;
     int dest;
     char *path;
-    int distance;
+    num_t distance;
     char *cond;
 };
 

@@ -3,6 +3,7 @@
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/eval.h"
+#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
@@ -13,7 +14,7 @@
 extern struct session *if_command(const char *arg, struct session *ses);
 
 
-static void addroute(struct session *ses, int a, int b, char *way, int dist, char *cond)
+static void addroute(struct session *ses, int a, int b, char *way, num_t dist, char *cond)
 {
     struct routenode *r;
 
@@ -118,19 +119,22 @@ static void kill_unused_locations(struct session *ses)
 
 static void show_route(struct session *ses, int a, struct routenode *r)
 {
+    char num[32];
+    num2str(num, r->distance);
+
     if (*r->cond)
-        tintin_printf(ses, "~7~{%s~7~}->{%s~7~}: {%s~7~} d=%i if {%s~7~}",
+        tintin_printf(ses, "~7~{%s~7~}->{%s~7~}: {%s~7~} d=%s if {%s~7~}",
             ses->locations[a],
             ses->locations[r->dest],
             r->path,
-            r->distance,
+            num,
             r->cond);
     else
-        tintin_printf(ses, "~7~{%s~7~}->{%s~7~}: {%s~7~} d=%i",
+        tintin_printf(ses, "~7~{%s~7~}->{%s~7~}: {%s~7~} d=%s",
             ses->locations[a],
             ses->locations[r->dest],
             r->path,
-            r->distance);
+            num);
 }
 
 /***********************/
@@ -139,7 +143,8 @@ static void show_route(struct session *ses, int a, struct routenode *r)
 void route_command(const char *arg, struct session *ses)
 {
     char a[BUFFER_SIZE], b[BUFFER_SIZE], way[BUFFER_SIZE], dist[BUFFER_SIZE], cond[BUFFER_SIZE];
-    int j, d;
+    int j;
+    num_t d;
 
     arg=get_arg(arg, a, 0, ses);
     arg=get_arg(arg, b, 0, ses);
@@ -211,7 +216,7 @@ found_j:
     if (*dist)
     {
         char *err;
-        d=strtol(dist, &err, 0);
+        d=str2num(dist, &err);
         if (*err)
         {
             tintin_eprintf(ses, "#Hey! Route length has to be a number! Got {%s}.", arg);
@@ -226,19 +231,22 @@ found_j:
     addroute(ses, i, j, way, d, cond);
     if (ses->mesvar[MSG_ROUTE])
     {
+        char num[32];
+        num2str(num, d);
+
         if (*cond)
-            tintin_printf(ses, "#Ok. Way from {%s} to {%s} is now set to {%s} (distance=%i) condition:{%s}",
+            tintin_printf(ses, "#Ok. Way from {%s} to {%s} is now set to {%s} (distance=%s) condition:{%s}",
                 ses->locations[i],
                 ses->locations[j],
                 way,
-                d,
+                num,
                 cond);
         else
-            tintin_printf(ses, "#Ok. Way from {%s} to {%s} is now set to {%s} (distance=%i)",
+            tintin_printf(ses, "#Ok. Way from {%s} to {%s} is now set to {%s} (distance=%s)",
                 ses->locations[i],
                 ses->locations[j],
                 way,
-                d);
+                num);
     }
     routnum++;
 }
@@ -288,7 +296,7 @@ void unroute_command(const char *arg, struct session *ses)
         tintin_printf(ses, "#THAT ROUTE (%s) IS NOT DEFINED.", b);
 }
 
-#define INF 0x7FFFFFFF
+#define INF 0x7FFFFFFFffffffffLL
 
 /**********************/
 /* the #goto command  */
@@ -296,8 +304,9 @@ void unroute_command(const char *arg, struct session *ses)
 void goto_command(const char *arg, struct session *ses)
 {
     char A[BUFFER_SIZE], B[BUFFER_SIZE], cond[BUFFER_SIZE];
-    int a, b, i, j, s;
-    int d[MAX_LOCATIONS], ok[MAX_LOCATIONS], way[MAX_LOCATIONS];
+    int a, b, i, j;
+    num_t s, d[MAX_LOCATIONS];
+    int ok[MAX_LOCATIONS], way[MAX_LOCATIONS];
     char *path[MAX_LOCATIONS], *locs[MAX_LOCATIONS];
 
     arg=get_arg(arg, A, 0, ses);
@@ -399,8 +408,9 @@ void dogoto_command(const char *arg, struct session *ses)
     char A[BUFFER_SIZE], B[BUFFER_SIZE],
         distvar[BUFFER_SIZE], locvar[BUFFER_SIZE], pathvar[BUFFER_SIZE];
     char left[BUFFER_SIZE], right[BUFFER_SIZE], tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
-    int a, b, i, j, s;
-    int d[MAX_LOCATIONS], ok[MAX_LOCATIONS], way[MAX_LOCATIONS];
+    int a, b, i, j;
+    num_t s, d[MAX_LOCATIONS];
+    int ok[MAX_LOCATIONS], way[MAX_LOCATIONS];
     char path[BUFFER_SIZE], *pptr;
 
     arg=get_arg(arg, A, 0, ses);
@@ -455,7 +465,7 @@ void dogoto_command(const char *arg, struct session *ses)
                 }
             }
     } while (!ok[b]);
-    sprintf(tmp, "%d", d[b]);
+    num2str(tmp, d[b]);
     if (*distvar)
         set_variable(distvar, tmp, ses);
     j=0;
