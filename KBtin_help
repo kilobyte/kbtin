@@ -34,7 +34,7 @@ Comments:
    nop         remark
 Variables:
    math        random      variable    unvariable  initvariable sin cos
-   angle       sqrt
+   angle       sqrt        abs
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
    substring   prepad      postpad     reverse     strlen      atoi
@@ -1830,6 +1830,11 @@ Examples:
 
 inline (#sqrt <x>)
 Calculates the square root of <x>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~abs
+
+inline (#abs <x>)
+Returns the absolute value of <x>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab

@@ -834,3 +834,23 @@ num_t sqrt_inline(const char *line, struct session *ses)
 
     return sqrt(x * 1.0 / DENOM) * DENOM;
 }
+
+/*******************/
+/* the #abs inline */
+/*******************/
+num_t abs_inline(const char *line, struct session *ses)
+{
+    char arg[BUFFER_SIZE];
+
+    line = get_arg(line, arg, 1, ses);
+    if (!*arg)
+    {
+        tintin_eprintf(ses, "#Error: #abs requires an argument.");
+        return 0;
+    }
+
+    num_t x = eval_expression(arg, ses);
+    if (x < 0)
+        x = -x;
+    return x;
+}
