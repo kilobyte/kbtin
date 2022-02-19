@@ -121,6 +121,8 @@ static bool do_inline(const char *line, num_t *res, struct session *ses)
         *res=sqrt_inline(line, ses);
     else if (is_abrev(command, "abs"))
         *res=abs_inline(line, ses);
+    else if (is_abrev(command, "round"))
+        *res=round_inline(line, ses);
     else
     {
         tintin_eprintf(ses, "#Unknown inline command [%c%s]!", tintin_char, command);
