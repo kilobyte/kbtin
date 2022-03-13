@@ -242,7 +242,8 @@ Examples:
 #splitlist <head.var> <tail.var> {list} [<head length>]
 Divides {list} into two parts, storing items 1..<head length> into <head.var>
 and the rest into <tail.var>.  If <head length> is not specified, it is
-assumed to be 1.
+assumed to be 1.  If one of <head.var> <tail.var> is an explicit {}, that
+assignment is skipped.
 
 Example:
 #split head tail {smile {say Hi} {bounce a}} 2
