@@ -732,3 +732,39 @@ void expand_command(const char *arg, struct session *ses)
     }
     set_variable(left, (*out)?out+1:out, ses);
 }
+
+
+/******************************/
+/* the #reverselist command   */
+/******************************/
+void reverselist_command(const char *arg, struct session *ses)
+{
+    char temp[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
+    char *tab[BUFFER_SIZE];
+
+    arg=get_arg(arg, left, 0, ses);
+    get_arg(arg, right, 1, ses);
+    if (!*left)
+        return tintin_eprintf(ses, "#SYNTAX: reverselist var {list}");
+
+    int n=0;
+    arg = right;
+    while (*arg)
+    {
+        arg = get_arg_in_braces(arg, temp, 0);
+        tab[n++]=mystrdup(temp);
+    }
+
+    char *list=temp;
+    for (int i=n-1;i>=0;i--)
+    {
+        if (list!=temp)
+            *list++=' ';
+        if (*tab[i]&&isatom(tab[i]))
+            list+=sprintf(list, "%s", tab[i]);
+        else
+            list+=sprintf(list, "{%s}", tab[i]);
+    }
+    *list=0;
+    set_variable(left, temp, ses);
+}
