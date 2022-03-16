@@ -186,13 +186,11 @@ void deathlog_command(const char *arg, struct session *ses)
     substitute_vars(temp, temp, ses);
     expand_filename(temp, fname, lfname);
     substitute_vars(text, text, ses);
-    if ((fh = fopen(lfname, "a")))
-    {
-        cfprintf(fh, "%s\n", text);
-        fclose(fh);
-    }
-    else
-        tintin_eprintf(ses, "#ERROR: COULDN'T OPEN FILE {%s}.", fname);
+    if (!(fh = fopen(lfname, "a")))
+        return tintin_eprintf(ses, "#ERROR: COULDN'T OPEN FILE {%s}.", fname);
+
+    cfprintf(fh, "%s\n", text);
+    fclose(fh);
 }
 
 void log_off(struct session *ses)
