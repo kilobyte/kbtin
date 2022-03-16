@@ -49,16 +49,13 @@ static void expand_filename(const char *arg, char *result, char *lstr)
             result+=snprintf(result, BUFFER_SIZE, "%s", getenv("HOME")), arg++;
         else
         {
-            char *p;
-            char name[BUFFER_SIZE];
-            struct passwd *pwd;
-
-            p=strchr(arg+1, '/');
+            char *p=strchr(arg+1, '/');
             if (p)
             {
+                char name[BUFFER_SIZE];
                 memcpy(name, arg+1, p-arg-1);
                 name[p-arg-1]=0;
-                pwd=getpwnam(name);
+                struct passwd *pwd=getpwnam(name);
                 if (pwd)
                     result+=snprintf(result, BUFFER_SIZE, "%s", pwd->pw_dir), arg=p;
             }
@@ -315,7 +312,6 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
 {
     char fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     FILE *f;
-    int len;
 
     if (*name=='|')
     {
@@ -358,7 +354,7 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         return f;
     }
     expand_filename(name, fname, lfname);
-    len=strlen(fname);
+    int len=strlen(fname);
     const char *zip=0;
     if (len>=4 && !strcmp(fname+len-3, ".gz"))
         zip="gzip -9";
@@ -401,7 +397,6 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
 /************************/
 void condump_command(const char *arg, struct session *ses)
 {
-    FILE *fh;
     char temp[BUFFER_SIZE];
 
     if (!ui_con_buffer)
@@ -412,7 +407,7 @@ void condump_command(const char *arg, struct session *ses)
 
     arg = get_arg_in_braces(arg, temp, 0);
     substitute_vars(temp, temp, ses);
-    fh=open_logfile(ses, temp,
+    FILE *fh=open_logfile(ses, temp,
         "#DUMPING CONSOLE TO {%s}",
         "#APPENDING CONSOLE DUMP TO {%s}",
         "#PIPING CONSOLE DUMP TO {%s}");
@@ -428,8 +423,6 @@ void condump_command(const char *arg, struct session *ses)
 /********************/
 void log_command(const char *arg, struct session *ses)
 {
-    char temp[BUFFER_SIZE];
-
     if (ses==nullsession)
         return tintin_eprintf(ses, "#THERE'S NO SESSION TO LOG.");
 
@@ -441,6 +434,7 @@ void log_command(const char *arg, struct session *ses)
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
         }
+        char temp[BUFFER_SIZE];
         get_arg_in_braces(arg, temp, 1);
         substitute_vars(temp, temp, ses);
         ses->logfile=open_logfile(ses, temp,
@@ -468,8 +462,6 @@ void log_command(const char *arg, struct session *ses)
 /*************************/
 void debuglog_command(const char *arg, struct session *ses)
 {
-    char temp[BUFFER_SIZE];
-
     if (*arg)
     {
         if (ses->debuglogfile)
@@ -481,6 +473,7 @@ void debuglog_command(const char *arg, struct session *ses)
             SFREE(ses->debuglogname);
             ses->debuglogname = NULL;
         }
+        char temp[BUFFER_SIZE];
         get_arg_in_braces(arg, temp, 1);
         substitute_vars(temp, temp, ses);
         ses->debuglogfile=open_logfile(ses, temp,
