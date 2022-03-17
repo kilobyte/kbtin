@@ -25,6 +25,7 @@
 #include "ttyrec.h"
 #include <pwd.h>
 #include <fcntl.h>
+#include <sys/file.h>
 
 
 #ifndef O_BINARY
@@ -308,6 +309,18 @@ void loginputformat_command(const char *arg, struct session *ses)
             ses->loginputprefix, ses->loginputsuffix);
 }
 
+static bool lock_file(int fd, struct session *ses, const char *fname)
+{
+    if (!flock(fd, LOCK_EX|LOCK_NB))
+        return false;
+    if (errno==EWOULDBLOCK)
+        tintin_eprintf(ses, "ERROR: LOG FILE {%s} ALREADY IN USE", fname);
+    else
+        tintin_eprintf(ses, "ERROR: COULDN'T LOCK FILE {%s}: %s", fname,
+            strerror(errno));
+    return true;
+}
+
 static FILE* open_logfile(struct session *ses, const char *name, const char *filemsg, const char *appendmsg, const char *pipemsg)
 {
     char fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
@@ -336,6 +349,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
             expand_filename(++name, fname, lfname);
             if ((f=fopen(lfname, "a")))
             {
+                if (lock_file(fileno(f), ses, fname))
+                    return fclose(f), NULL;
                 if (ses->mesvar[MSG_LOG])
                     tintin_printf(ses, appendmsg, fname);
             }
@@ -346,6 +361,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         expand_filename(name, fname, lfname);
         if ((f=fopen(lfname, "w")))
         {
+            if (lock_file(fileno(f), ses, fname))
+                return fclose(f), NULL;
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, filemsg, fname);
         }
@@ -374,6 +391,9 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
             return 0;
         }
 
+        if (lock_file(fd, ses, fname))
+            return close(fd), NULL;
+
         if ((f = mypopen(zip, true, fd)))
         {
             if (ses->mesvar[MSG_LOG])
@@ -384,6 +404,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
     }
     else if ((f = fopen(lfname, "w")))
         {
+            if (lock_file(fileno(f), ses, fname))
+                return fclose(f), NULL;
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, filemsg, fname);
         }
