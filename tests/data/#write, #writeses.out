@@ -3,6 +3,8 @@
 #charset {UTF-8}
 #alias {bar} {a}
 #alias {foo} {a}
+#promptaction {bar} {a} {5}
+#promptaction {foo} {a} {5}
 #antisub {bar}
 #antisub {foo}
 #sub {bar} {a}
@@ -14,6 +16,7 @@
 -----
 #charset {UTF-8}
 #alias {bar} {a}
+#promptaction {bar} {a} {5}
 #antisub {bar}
 #sub {bar} {a}
 #var {bar} {a}

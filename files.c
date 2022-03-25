@@ -746,6 +746,10 @@ void write_command(const char *filename, struct session *ses)
     while ((nodeptr = nodeptr->next))
         cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
 
+    nodeptr = ses->prompts;
+    while ((nodeptr = nodeptr->next))
+        cfcom(myfile, "promptaction", nodeptr->left, nodeptr->right, nodeptr->pr);
+
     sl = ses->antisubs;
     for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
         cfcom(myfile, "antisub", kb_itr_key(char*, &itr), 0, 0);
@@ -908,6 +912,16 @@ void writesession_command(const char *filename, struct session *ses)
                     !strcmp(onptr->right, nodeptr->right))
                 continue;
         cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
+    }
+
+    nodeptr = ses->prompts;
+    while ((nodeptr = nodeptr->next))
+    {
+        if ((onptr=searchnode_list(nullsession->prompts, nodeptr->left)))
+            if (!strcmp(onptr->right, nodeptr->right)||
+                    !strcmp(onptr->right, nodeptr->right))
+                continue;
+        cfcom(myfile, "promptaction", nodeptr->left, nodeptr->right, nodeptr->pr);
     }
 
     sl = ses->antisubs;
