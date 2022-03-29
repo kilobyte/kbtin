@@ -89,7 +89,8 @@ void action_command(const char *arg, struct session *ses)
     bool flag;
 
     myactions = ses->actions;
-    arg = get_arg_in_braces(arg, left, 0);
+    arg = get_arg_in_braces(arg, right, 0);
+    substitute_myvars(right, left, ses, 0);
     arg = get_arg_in_braces(arg, right, 1);
     arg = get_arg_in_braces(arg, pr, 1);
     if (!*pr)
@@ -130,7 +131,8 @@ void promptaction_command(const char *arg, struct session *ses)
     bool flag;
 
     myprompts = ses->prompts;
-    arg = get_arg_in_braces(arg, left, 0);
+    arg = get_arg_in_braces(arg, right, 0);
+    substitute_myvars(right, left, ses, 0);
     arg = get_arg_in_braces(arg, right, 1);
     arg = get_arg_in_braces(arg, pr, 1);
     if (!*pr)
@@ -377,7 +379,8 @@ int match_inline(const char *arg, struct session *ses)
     pvars_t vars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE];
 
-    arg=get_arg(arg, left, 0, ses);
+    arg=get_arg(arg, line, 0, ses);
+    substitute_myvars(line, left, ses, 0); // no ivars
     arg=get_arg(arg, line, 1, ses);
 
     if (!*left)
@@ -430,17 +433,14 @@ bool check_one_action(const char *line, const char *action, pvars_t *vars, bool 
 /******************************************************************/
 static bool check_a_action(const char *line, const char *action, bool inside, struct session *ses)
 {
-    char result[BUFFER_SIZE];
-    char *temp2, *tptr;
-    const char *lptr, *lptr2;
+    const char *lptr, *lptr2, *tptr, *temp2;
     int len;
     bool flag_anchor = false;
 
     for (int i = 0; i < 10; i++)
         var_len[i] = -1;
     lptr = line;
-    substitute_myvars(action, result, ses, 0);
-    tptr = result;
+    tptr = action;
     if (*tptr == '^')
     {
         if (inside)

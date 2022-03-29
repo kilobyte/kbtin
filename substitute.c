@@ -49,8 +49,11 @@ static void list_subs(const char *left, bool gag, struct session *ses)
     }
 }
 
-static void parse_sub(const char *left, const char *right,  bool gag, struct session *ses)
+static void parse_sub(const char *left_, const char *right,  bool gag, struct session *ses)
 {
+    char left[BUFFER_SIZE];
+    substitute_myvars(left_, left, ses, 0);
+
     struct listnode *mysubs = ses->subs, *ln;
 
     if (!*right)

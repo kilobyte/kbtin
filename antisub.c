@@ -12,6 +12,7 @@
 #include "protos/parse.h"
 #include "protos/slist.h"
 #include "protos/utils.h"
+#include "protos/vars.h"
 #include "kbtree.h"
 
 /*******************************/
@@ -19,10 +20,11 @@
 /*******************************/
 void antisubstitute_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE];
+    char left[BUFFER_SIZE], tmp[BUFFER_SIZE];
     kbtree_t(str) *ass = ses->antisubs;
 
-    arg = get_arg_in_braces(arg, left, 1);
+    arg = get_arg_in_braces(arg, tmp, 1);
+    substitute_myvars(tmp, left, ses, 0);
 
     if (!*left)
     {
