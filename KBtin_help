@@ -276,14 +276,6 @@ Sorts the {list} in asciibetical order and saves the result into <dest.var>.
 Example:
 #sortlist result {c a b}            -> result = "a b c"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~reverselist
-
-#reverselist <dest.var> {list}
-Reverses the order of elements in {list}.
-
-Example
-#reversel result {foo {oh my} fi}     -> result = "fi {oh my} foo"
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~collate
 
 #collate <dest.var> {list}
@@ -1851,6 +1843,14 @@ inline (#round <x>)
 Returns the integer nearest to <x>, rounding halfway cases away from 0.
 
 N.B. to truncate towards 0, you can use integer division: x/1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~reverselist
+
+#reverselist <dest.var> {list}
+Reverses the order of elements in {list}.
+
+Example
+#reversel result {foo {oh my} fi}     -> result = "fi {oh my} foo"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab
