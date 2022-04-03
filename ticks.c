@@ -13,6 +13,7 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
+#include "protos/vars.h"
 
 
 /*********************/
@@ -50,13 +51,28 @@ void tickoff_command(const char *arg, struct session *ses)
 /***********************/
 void tickon_command(const char *arg, struct session *ses)
 {
+    char left[BUFFER_SIZE], *err;
+
     if (!ses)
         return tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
 
-    ses->tickstatus = true;
     timens_t ct = current_time();
-    if (ses->time0 == 0)
+
+    get_arg(arg, left, 1, ses);
+    substitute_vars(left, left, ses);
+    if (*left)
+    {
+        timens_t x = str2timens(left, &err);
+        if (*err || !*left)
+            return tintin_eprintf(ses, "#SYNTAX: #tickon [<offset>]");
+        if (x < 0)
+            return tintin_eprintf(ses, "#NEGATIVE TICK OFFSET");
+        ses->time0 = ct - ses->tick_size + x;
+    }
+    else if (!ses->time0)
         ses->time0 = ct;
+
+    ses->tickstatus = true;
     if (ses->time0 + ses->tick_size - ses->pretick <= ct)
         ses->time10 = ses->time0;
     if (ses->mesvar[MSG_TICK])

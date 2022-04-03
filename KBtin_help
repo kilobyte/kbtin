@@ -1074,10 +1074,14 @@ Example:
 #tick
 Shows time until next tick.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~tickon
+~tickon [<offset>]
 
 #tickon
 Turns the TinTin's ticker on.
+
+If the <offset> is given, current elapsed time is set to that value;
+otherwise, the previous clock is re-enabled as if it has never been turned off,
+if any -- or offset of 0 is assumed.
 
 At 10 (customizable by #pretick) seconds to tick, you will receive a message
 "#10 SECONDS TO TICK!!!", and when the tick actually happens, the message is
