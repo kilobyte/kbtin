@@ -291,51 +291,48 @@ static void parse_options(int argc, char **argv)
 
     for (int arg=1;arg<argc;arg++)
     {
-        if (*argv[arg]=='-' && !noargs)
+        if (*argv[arg]!='-' || noargs)
+            addnode_list(options, " ", argv[arg], 0);
+        else if (!strcmp(argv[arg], "--"))
+            noargs=true;
+        else if (!strcmp(argv[arg], "--version")) /* make autotest happy */
         {
-            if (!strcmp(argv[arg], "--"))
-                noargs=true;
-            else if (!strcmp(argv[arg], "--version")) /* make autotest happy */
-            {
-                printf("KBtin version "VERSION"\n");
-                exit(0);
-            }
-            else if (!strcmp(argv[arg], "-v"))
-                addnode_list(options, "#verbose 1", 0, 0);
-            else if (!strcmp(argv[arg], "-q"))
-                addnode_list(options, "#verbose 0", 0, 0);
-            else if (!strcmp(argv[arg], "-p"))
-                user_setdriver(0);
-            else if (!strcmp(argv[arg], "-i"))
-                user_setdriver(1);
-            else if (!strcmp(argv[arg], "-c"))
-            {
-                if (++arg==argc)
-                    opterror("Invalid option: bare -c");
-                else
-                    addnode_list(options, "c", argv[arg], 0);
-            }
-            else if (!strcmp(argv[arg], "-r"))
-            {
-                if (++arg==argc)
-                    opterror("Invalid option: bare -r");
-                else
-                    addnode_list(options, "r", argv[arg], 0);
-            }
-            else if (!strcasecmp(argv[arg], "-s"))
-            {
-                if (++arg==argc)
-                    opterror("Invalid option: bare %s", argv[arg]);
-                else if (++arg==argc)
-                    opterror("Bad option: -s needs both an address and a port number!");
-                else
-                    addnode_list(options, argv[arg-2]+1, argv[arg-1], argv[arg]);
-            }
+            printf("KBtin version "VERSION"\n");
+            exit(0);
+        }
+        else if (!strcmp(argv[arg], "-v"))
+            addnode_list(options, "#verbose 1", 0, 0);
+        else if (!strcmp(argv[arg], "-q"))
+            addnode_list(options, "#verbose 0", 0, 0);
+        else if (!strcmp(argv[arg], "-p"))
+            user_setdriver(0);
+        else if (!strcmp(argv[arg], "-i"))
+            user_setdriver(1);
+        else if (!strcmp(argv[arg], "-c"))
+        {
+            if (++arg==argc)
+                opterror("Invalid option: bare -c");
             else
-                opterror("Invalid option: {%s}", argv[arg]);
+                addnode_list(options, "c", argv[arg], 0);
+        }
+        else if (!strcmp(argv[arg], "-r"))
+        {
+            if (++arg==argc)
+                opterror("Invalid option: bare -r");
+            else
+                addnode_list(options, "r", argv[arg], 0);
+        }
+        else if (!strcasecmp(argv[arg], "-s"))
+        {
+            if (++arg==argc)
+                opterror("Invalid option: bare %s", argv[arg]);
+            else if (++arg==argc)
+                opterror("Bad option: -s needs both an address and a port number!");
+            else
+                addnode_list(options, argv[arg-2]+1, argv[arg-1], argv[arg]);
         }
         else
-            addnode_list(options, " ", argv[arg], 0);
+            opterror("Invalid option: {%s}", argv[arg]);
     }
     if (argc<=1)
         addnode_list(options, "-", 0, 0);
