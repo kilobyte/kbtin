@@ -24,6 +24,7 @@
 
 #cmakedefine HAVE_ZLIB
 #cmakedefine HAVE_GNUTLS
+#cmakedefine HAVE_HS
 
 #cmakedefine DATA_PATH "@DATA_PATH@"
 

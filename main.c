@@ -33,6 +33,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
+#ifdef HAVE_HS
+# include <hs/hs.h>
+#endif
 
 #ifndef BADSIG
 #define BADSIG (void (*)(int))-1
@@ -331,6 +334,12 @@ static void parse_options(int argc, char **argv)
             else
                 addnode_list(options, argv[arg-2]+1, argv[arg-1], argv[arg]);
         }
+        else if (!strcmp(argv[arg], "--no-simd"))
+#ifdef HAVE_HS
+            simd=false;
+#else
+            ;
+#endif
         else
             opterror("Invalid option: {%s}", argv[arg]);
     }
@@ -426,6 +435,10 @@ int main(int argc, char **argv)
     init_locale();
     user_setdriver(isatty(0)?1:0);
     parse_options(argc, argv);
+#ifdef HAVE_HS
+    if (simd && hs_valid_platform())
+        simd=false;
+#endif
     init_bind();
     hist_num=-1;
     init_parse();

@@ -30,7 +30,7 @@ ubuntu_amd64_task:
   install_script:
     - apt-get update
     - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev libhyperscan-dev
   build_script:
     - cmake .
     - make -j$(getconf _NPROCESSORS_ONLN)
