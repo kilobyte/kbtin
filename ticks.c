@@ -52,6 +52,7 @@ void tickoff_command(const char *arg, struct session *ses)
 void tickon_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], *err;
+    timens_t x;
 
     if (!ses)
         return tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
@@ -62,7 +63,7 @@ void tickon_command(const char *arg, struct session *ses)
     substitute_vars(left, left, ses);
     if (*left)
     {
-        timens_t x = str2timens(left, &err);
+        x = str2timens(left, &err);
         if (*err || !*left)
             return tintin_eprintf(ses, "#SYNTAX: #tickon [<offset>]");
         if (x < 0)
@@ -72,11 +73,22 @@ void tickon_command(const char *arg, struct session *ses)
     else if (!ses->time0)
         ses->time0 = ct;
 
+    if (ses->mesvar[MSG_TICK])
+    {
+        if (!ses->tickstatus)
+            tintin_puts("#TICKER IS NOW ON.", ses);
+        else if (!*left)
+            tintin_puts("#TICKER IS ALREADY ON.", ses);
+    }
     ses->tickstatus = true;
     if (ses->time0 + ses->tick_size - ses->pretick <= ct)
         ses->time10 = ses->time0;
     if (ses->mesvar[MSG_TICK])
-        tintin_puts("#TICKER IS NOW ON.", ses);
+        if (*left)
+        {
+            nsecstr(left, x);
+            tintin_eprintf(ses, "#TICKER SET TO %s", left);
+        }
 }
 
 
