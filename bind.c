@@ -55,6 +55,8 @@ static const char *KEYNAMES[]=
     "ESC[4~",       "End",
     "ESC[5~",       "PgUp",
     "ESC[6~",       "PgDn",
+    "ESC[7~",       "Home",
+    "ESC[8~",       "End",
     "ESC[OA",       "UpArrow",      /* alternate cursor mode */
     "ESC[OB",       "DownArrow",
     "ESC[OC",       "RightArrow",
