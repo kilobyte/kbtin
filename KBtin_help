@@ -48,7 +48,7 @@ Lists:
 Tickers:
    tick        tickon      tickoff     ticksize    pretick
 Events:
-   delay=event remove=unevent=undelay
+   delay=event remove=unevent=undelay  findevents
 Routes:
    goto        >           route       unroute     dogoto
 Misc:
@@ -1064,10 +1064,21 @@ Example:
 #remove <pattern>
 #unevent <pattern>
 #undelay <pattern>
-Kills all timed events which ~15::4~command~-1~ (not delay!) matches <pattern>.
+Kills all timed events whose ~15::4~command~-1~ (not delay!) matches <pattern>.
 
 Example:
 #action {~~-1~7~%1 leaves } {#unevent {counter $1}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~findevents
+
+#findevents <result>
+#findevents <result> <pattern>
+Finds all timed events whose ~15::4~command~-1~ (not delay!) matches <pattern>
+(or all if no <pattern> is specified, and stores a list of them with their
+time left as braced pairs.
+
+Sample result:
+{0.3 hop} {1.5 fart} {4 {kill orc}}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~tick
 

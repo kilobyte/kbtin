@@ -2,11 +2,13 @@
 #include "protos/action.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
+#include "protos/lists.h"
 #include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/vars.h"
 
 
 int msec(timens_t t)
@@ -187,4 +189,54 @@ void kill_events(struct session *ses)
     while (ev)
         remove_event(&ev);
     ses->events = 0;
+}
+
+void findevents_command(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    if (!ses)
+        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
+    if (!*left)
+    {
+        tintin_eprintf(ses, "#Syntax: #findevents <result> <pattern>");
+        return;
+    }
+
+    if (!*right)
+        strcpy(right, "*");
+
+    timens_t ct = current_time();
+
+    char buf[BUFFER_SIZE], *b=buf;
+    *buf=0;
+    struct eventnode *ev = ses->events;
+    while (ev)
+    {
+        if (match(right, arg))
+        {
+            char time[BUFFER_SIZE], this[BUFFER_SIZE];
+            // lie that overdue events are due right now
+            nsecstr(time, (ev->time>ct)? ev->time-ct : 0);
+            if (isatom(ev->event))
+                snprintf(this, sizeof this, "{%s %s}", time, ev->event);
+            else
+                snprintf(this, sizeof this, "{%s {%s}}", time, ev->event);
+
+            if (b!=buf)
+                *b++=' ';
+            b+=snprintf(b, buf-b+sizeof(buf), "%s", this);
+            if (b >= buf+BUFFER_SIZE-10)
+            {
+                tintin_eprintf(ses, "#Too many events to store.");
+                break;
+            }
+        }
+        ev = ev->next;
+    }
+
+    set_variable(left, buf, ses);
 }
