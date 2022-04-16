@@ -240,6 +240,9 @@ enum
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
 #endif
+#ifdef HAVE_HS
+# include <hs/hs.h>
+#endif
 #include "malloc.h"
 #include "unicode.h"
 #ifndef HAVE_STRLCPY
@@ -365,6 +368,11 @@ struct session
     timens_t line_time;
     unsigned long long linenum;
     bool drafted;
+#ifdef HAVE_HS
+    bool highs_dirty;
+    hs_database_t *highs_hs;
+    const char **highs_cols;
+#endif
 };
 
 typedef char pvars_t[10][BUFFER_SIZE];

@@ -104,6 +104,9 @@ void kill_all(struct session *ses, bool no_reinit)
     ses->path = init_list();
     ses->binds = init_hash();
     ses->pathdirs = init_hash();
+#ifdef HAVE_HS
+    ses->highs_dirty = true;
+#endif
     tintin_printf(ses, "#Lists cleared.");
 }
 

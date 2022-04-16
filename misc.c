@@ -352,6 +352,9 @@ void end_command(const char *arg, struct session *ses)
         cleanup_bind();
         cleanup_history();
     }
+# ifdef HAVE_HS
+    hs_free_scratch(hs_scratch);
+# endif
 #endif
     activesession = NULL;
     if (ui_own_output)

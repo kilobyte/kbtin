@@ -9,6 +9,7 @@
 #include "protos/utils.h"
 #include "protos/string.h"
 #include "protos/vars.h"
+#include <assert.h>
 
 
 static struct colordef
@@ -199,8 +200,124 @@ void unhighlight_command(const char *arg, struct session *ses)
 }
 
 
+#ifdef HAVE_HS
+static char *glob_to_regex(const char *pat)
+{
+    char buf[BUFFER_SIZE*2+3], *b=buf;
+
+    assert(*pat);
+    if (*pat=='^')
+        *b++='^', pat++;
+    else if (is7alnum(*pat))
+        *b++='\\', *b++='b';
+    for (; *pat; pat++)
+        switch (*pat)
+        {
+        case '*':
+            *b++='.';
+            *b++='*';
+            while (pat[1]=='*')
+                pat++; // eat multiple *s
+            break;
+        case '\\':
+        case '^':
+        case '$':
+        case '+':
+        case '?':
+        case '[':
+        case ']':
+        case '(':
+        case ')':
+            *b++='\\';
+        default:
+            *b++=*pat;
+        }
+    if (is7alnum(pat[-1]))
+        *b++='\\', *b++='b';
+    *b=0;
+
+    int len=b-buf+1;
+    char *txt=MALLOC(len);
+    memcpy(txt, buf, len);
+    return txt;
+}
+
+static void build_highs_hs(struct session *ses)
+{
+    hs_free_database(ses->highs_hs);
+    ses->highs_hs=0;
+    ses->highs_dirty=false;
+    free(ses->highs_cols);
+    ses->highs_cols=0;
+
+    int n = count_list(ses->highs);
+    char **pat = MALLOC(n*sizeof(void*));
+    unsigned int *flags = MALLOC(n*sizeof(int));
+    unsigned int *ids = MALLOC(n*sizeof(int));
+    const char **cols = MALLOC(n*sizeof(void*));
+    if (!pat || !flags || !ids || !cols)
+        syserr("out of memory");
+
+    struct listnode *ln = ses->highs;
+    int j=0;
+    while ((ln=ln->next))
+    {
+        char *t=glob_to_regex(ln->left);
+        tintin_printf(ses, "glob_to_regex: [%s] -> [%s]", ln->left, t);
+        pat[j]=t;
+        flags[j]=HS_FLAG_DOTALL|HS_FLAG_SOM_LEFTMOST;
+        ids[j]=j;
+        cols[j]=ln->right;
+        j++;
+    }
+    ses->highs_cols=cols;
+
+    hs_compile_error_t *error;
+    if (hs_compile_multi(pat, flags, ids, n, HS_MODE_BLOCK,
+        0, &ses->highs_hs, &error))
+    {
+        tintin_eprintf(ses, "#Error: hyperscan compilation failed for highlights: %s",
+            error->message);
+        if (error->expression>=0)
+            tintin_eprintf(ses, "#Converted bad expression was: %s",
+                           pat[error->expression]);
+        hs_free_compile_error(error);
+    }
+
+    for (int i=0; i<n; i++)
+        SFREE(pat[i]);
+    MFREE(ids, n*sizeof(int));
+    MFREE(flags, n*sizeof(int));
+    MFREE(pat, n*sizeof(void*));
+
+    if (ses->highs_hs && hs_alloc_scratch(ses->highs_hs, &hs_scratch))
+        syserr("out of memory");
+}
+
+static int *gattr;
+static int high_match(unsigned int id, unsigned long long from,
+    unsigned long long to, unsigned int flags, void *context)
+{
+    struct session *ses = context;
+    if (!get_high(ses->highs_cols[id]))
+        return 0;
+    int c=-1;
+    for (unsigned long long i = from; i<to; i++)
+        gattr[i]=highpattern[(++c)%nhighpattern];
+    return 0;
+}
+#endif
+
 void do_all_high(char *line, struct session *ses)
 {
+    if (!ses->highs->next)
+        return;
+
+#ifdef HAVE_HS
+    if (simd && ses->highs_dirty)
+        build_highs_hs(ses);
+#endif
+
     char text[BUFFER_SIZE];
     int attr[BUFFER_SIZE];
     int c, d;
@@ -224,6 +341,20 @@ void do_all_high(char *line, struct session *ses)
     };
     *txt=0;
     *atr=c;
+
+#ifdef HAVE_HS
+    if (ses->highs_hs)
+    {
+        gattr = attr;
+        hs_error_t err=hs_scan(ses->highs_hs, text, txt-text, 0, hs_scratch,
+                               high_match, ses);
+        // TODO: optimize coloring multiple matches
+        if (err)
+            tintin_eprintf(ses, "#Error in hs_scan: %d\n", err);
+        goto done;
+    }
+#endif
+
     ln=ses->highs;
     while ((ln=ln->next))
     {
@@ -243,6 +374,9 @@ void do_all_high(char *line, struct session *ses)
             txt=text+r+1;
         }
     }
+
+done:
+
     c=-1;
     pos=line;
     txt=text;

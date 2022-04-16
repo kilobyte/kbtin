@@ -33,9 +33,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
-#ifdef HAVE_HS
-# include <hs/hs.h>
-#endif
 
 #ifndef BADSIG
 #define BADSIG (void (*)(int))-1
@@ -270,6 +267,11 @@ static void init_nullses(void)
     nullsession->line_time=0;
 #ifdef HAVE_GNUTLS
     nullsession->ssl=0;
+#endif
+#ifdef HAVE_HS
+    nullsession->highs_dirty=false;
+    nullsession->highs_hs=0;
+    nullsession->highs_cols=0;
 #endif
 }
 

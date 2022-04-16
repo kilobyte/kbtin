@@ -370,6 +370,11 @@ static struct session *new_session(const char *name, const char *address, int so
 #ifdef HAVE_GNUTLS
     newsession->ssl=ssl;
 #endif
+#ifdef HAVE_HS
+    newsession->highs_dirty=true;
+    newsession->highs_hs=0;
+    newsession->highs_cols=0;
+#endif
     sessionlist = newsession;
     activesession = newsession;
 
@@ -437,6 +442,10 @@ void cleanup_session(struct session *ses)
 #ifdef HAVE_GNUTLS
     if (ses->ssl)
         gnutls_deinit(ses->ssl);
+#endif
+#ifdef HAVE_HS
+    hs_free_database(ses->highs_hs);
+    free(ses->highs_cols);
 #endif
 
     TFREE(ses, struct session);
