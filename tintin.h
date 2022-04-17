@@ -411,3 +411,8 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define VALID_TIN_CHARS "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 #define is7punct(x) strchr(VALID_TIN_CHARS, (x))
 #define N(x) ((x)*DENOM)
+
+#ifdef HAVE_HS
+// Should be in globals.h but for the typedef...
+extern hs_scratch_t *hs_scratch;
+#endif
