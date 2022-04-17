@@ -31,3 +31,10 @@ KBtin has been ported to the following systems:
 * IRIX<sup>long untested</sup>
 * SCO OpenServer<sup>long untested</sup>
 * Solaris<sup>long untested</sup>
+
+Dependencies required to build:
+
+* cmake
+* perl
+* zlib (libz-dev) [OPTIONAL]
+* gnutls (libgnutls28-dev) [OPTIONAL]
