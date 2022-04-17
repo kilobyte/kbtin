@@ -38,3 +38,4 @@ Dependencies required to build:
 * perl
 * zlib (libz-dev) [OPTIONAL]
 * gnutls (libgnutls28-dev) [OPTIONAL]
+* hyperscan/vectorscan [OPTIONAL]
