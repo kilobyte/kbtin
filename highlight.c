@@ -144,6 +144,9 @@ void highlight_command(const char *arg, struct session *ses)
             deletenode_list(myhighs, ln);
         insertnode_list(myhighs, right, left, get_fastener(right, bp), LENGTH);
         hinum++;
+#ifdef HAVE_HS
+        ses->highs_dirty = true;
+#endif
         if (ses->mesvar[MSG_HIGHLIGHT])
             tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
         return;
@@ -194,6 +197,9 @@ void unhighlight_command(const char *arg, struct session *ses)
             tintin_printf(ses, "Ok. {%s} is no longer %s.", ln->left, ln->right);
         deletenode_list(myhighs, ln);
         flag = true;
+#ifdef HAVE_HS
+        ses->highs_dirty = true;
+#endif
     }
     if (!flag && ses->mesvar[MSG_HIGHLIGHT])
         tintin_printf(ses, "#THAT HIGHLIGHT IS NOT DEFINED.");
