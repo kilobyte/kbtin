@@ -262,9 +262,7 @@ static void build_highs_hs(struct session *ses)
     int j=0;
     while ((ln=ln->next))
     {
-        char *t=glob_to_regex(ln->left);
-        tintin_printf(ses, "glob_to_regex: [%s] -> [%s]", ln->left, t);
-        pat[j]=t;
+        pat[j]=glob_to_regex(ln->left);;
         flags[j]=HS_FLAG_DOTALL|HS_FLAG_SOM_LEFTMOST;
         ids[j]=j;
         cols[j]=ln->right;
