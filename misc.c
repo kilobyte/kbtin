@@ -1007,6 +1007,10 @@ void info_command(const char *arg, struct session *ses)
         tintin_printf(ses, "Session : {%s}  Type: self-pipe", ses->name);
     }
 
+#ifdef HAVE_HS
+    tintin_printf(ses, "Using %s pattern matching.", simd? "SIMD" : "non-parallel");
+#endif
+
     tintin_printf(ses, "You have defined the following:");
     tintin_printf(ses, "Actions : %d  Promptactions: %d", actions, practions);
     tintin_printf(ses, "Aliases : %d", aliases);
