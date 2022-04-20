@@ -187,6 +187,7 @@ timens_t check_event(timens_t time, struct session *ses)
     {
         ses->events=ev->next;
         execute_event(ev, ses);
+        SFREE(ev->event);
         TFREE(ev, struct eventnode);
         if (any_closed)
             return -1;
