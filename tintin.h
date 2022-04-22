@@ -265,6 +265,8 @@ struct listnode
     char *left, *right, *pr;
 };
 
+#define LISTLEN(x) (*(intptr_t*)&((x)->right))
+
 struct hashentry
 {
     char *left;

@@ -261,6 +261,7 @@ struct listnode* hash2list(struct hashtable *h, const char *pat)
 #define NBITS ((int)sizeof(void*)*8)
     struct listnode *p[NBITS];     /* polynomial sort, O(n*log(n)) */
     struct listnode *l;
+    int count=0;
 
     for (int j=0;j<NBITS;j++)
         p[j]=0;
@@ -274,6 +275,7 @@ struct listnode* hash2list(struct hashtable *h, const char *pat)
             l->right= h->tab[i].right;
             l->pr   = 0;
             l->next = 0;
+            count++;
             int j;
             for (j=0; p[j]; j++)     /* if j>=NBITS, we have a bug anyway */
             {
@@ -287,6 +289,7 @@ struct listnode* hash2list(struct hashtable *h, const char *pat)
         l=merge_lists(p[j], l);
     p[0]=init_list();
     p[0]->next=l;
+    LISTLEN(p[0])=count;
     return p[0];
 }
 

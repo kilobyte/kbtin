@@ -13,6 +13,7 @@
 #include "protos/routes.h"
 #include "protos/slist.h"
 #include "protos/utils.h"
+#include <assert.h>
 
 
 /***************************************/
@@ -25,6 +26,7 @@ struct listnode* init_list(void)
     if (!(listhead = TALLOC(struct listnode)))
         syserr("couldn't alloc listhead");
     listhead->next = NULL;
+    listhead->right = 0;
     return listhead;
 }
 
@@ -37,6 +39,7 @@ void kill_list(struct listnode *nptr)
 
     if (!nptr)
         syserr("NULL PTR");
+    int len = LISTLEN(nptr);
     nexttodel = nptr->next;
     LFREE(nptr);
 
@@ -47,7 +50,9 @@ void kill_list(struct listnode *nptr)
         SFREE(nptr->right);
         SFREE(nptr->pr);
         LFREE(nptr);
+        len--;
     }
+    assert(!len);
 }
 
 
@@ -60,6 +65,7 @@ void zap_list(struct listnode *nptr)
 
     if (!nptr)
         syserr("NULL PTR");
+    int len = LISTLEN(nptr);
     nexttodel = nptr->next;
     LFREE(nptr);
 
@@ -67,7 +73,9 @@ void zap_list(struct listnode *nptr)
     {
         nexttodel = nptr->next;
         LFREE(nptr);
+        len--;
     }
+    assert(!len);
 }
 
 
@@ -204,6 +212,7 @@ void insertnode_list(struct listnode *listhead, const char *ltext, const char *r
     if (prtext)
         strcpy(newnode->pr, prtext);
 
+    LISTLEN(listhead)++;
     nptr = listhead;
     switch (mode)
     {
@@ -308,6 +317,7 @@ void insertnode_list(struct listnode *listhead, const char *ltext, const char *r
 /*****************************/
 void deletenode_list(struct listnode *listhead, struct listnode *nptr)
 {
+    LISTLEN(listhead)--;
     struct listnode *lastnode = listhead;
 
     while ((listhead = listhead->next))
@@ -388,8 +398,9 @@ struct listnode* search_node_with_wild(struct listnode *listhead, const char *cp
 /*********************************************************************/
 void addnode_list(struct listnode *listhead, const char *ltext, const char *rtext, const char *prtext)
 {
-    struct listnode *newnode;
+    LISTLEN(listhead)++;
 
+    struct listnode *newnode;
     if (!(newnode = TALLOC(struct listnode)))
         syserr("couldn't malloc listhead");
     newnode->left = mystrdup(ltext);
@@ -415,5 +426,6 @@ int count_list(struct listnode *listhead)
     nptr = listhead;
     while ((nptr = nptr->next))
         ++count;
+    assert(LISTLEN(listhead) == count);
     return count;
 }
