@@ -216,7 +216,7 @@ void findevents_command(const char *arg, struct session *ses)
     struct eventnode *ev = ses->events;
     while (ev)
     {
-        if (match(right, arg))
+        if (match(right, ev->event))
         {
             char time[BUFFER_SIZE], this[BUFFER_SIZE];
             // lie that overdue events are due right now
