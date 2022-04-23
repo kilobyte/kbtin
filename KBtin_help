@@ -34,7 +34,7 @@ Comments:
    nop         remark
 Variables:
    math        random      variable    unvariable  initvariable sin cos
-   angle       sqrt        abs         round
+   angle       sqrt        abs         round       findvariables
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
    substring   prepad      postpad     reverse     strlen      atoi
@@ -1810,6 +1810,11 @@ This is merely a convenience over:
 
 Example:
 #init count 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~findvariables
+
+#findvar <result> [<pattern>]
+Stores into <result> the names of all variables whose names match <pattern>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~angle
 

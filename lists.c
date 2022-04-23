@@ -1,6 +1,8 @@
 #include "tintin.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
+#include "protos/hash.h"
+#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
@@ -767,4 +769,59 @@ void reverselist_command(const char *arg, struct session *ses)
     }
     *list=0;
     set_variable(left, temp, ses);
+}
+
+
+/*****************************/
+/* the findvariables command */
+/*****************************/
+void findvariables_command(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    if (!ses)
+        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO VARS!");
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
+    if (!*left)
+    {
+        tintin_eprintf(ses, "#Syntax: #findvariables <result> <pattern>");
+        return;
+    }
+
+    if (!*right)
+        strcpy(right, "*");
+
+    if (is_literal(right))
+    {
+        if (get_hash(ses->myvars, right))
+            set_variable(left, right, ses);
+        else
+            set_variable(left, "", ses);
+        return;
+    }
+    // Otherwise, need to scan the whole hash.
+
+    char buf[BUFFER_SIZE], *b=buf;
+    *buf=0;
+
+    struct listnode *templist=hash2list(ses->myvars, right);
+    for (struct listnode *nptr=templist->next; nptr; nptr=nptr->next)
+    {
+        if (b!=buf)
+            *b++=' ';
+        if (isatom(nptr->left))
+            b+=snprintf(b, buf-b+sizeof(buf), "%s", nptr->left);
+        else
+            b+=snprintf(b, buf-b+sizeof(buf), "{%s}", nptr->left);
+        if (b >= buf+BUFFER_SIZE-10)
+        {
+            tintin_eprintf(ses, "#Too many variables to store.");
+            break;
+        }
+    }
+
+    set_variable(left, buf, ses);
+    zap_list(templist);
 }

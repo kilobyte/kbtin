@@ -1,0 +1,9 @@
+#var x 1
+#var xy 2
+#var {foo bar} 3
+#findv result
+#show {$result}
+#findv result x
+#show {$result}
+#findv result x*
+#show {$result}
