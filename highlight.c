@@ -379,7 +379,9 @@ void do_all_high(char *line, struct session *ses)
         }
     }
 
+#ifdef HAVE_HS
 done:
+#endif
 
     c=-1;
     pos=line;
