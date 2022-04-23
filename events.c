@@ -218,7 +218,7 @@ void findevents_command(const char *arg, struct session *ses)
     {
         if (match(right, ev->event))
         {
-            char time[BUFFER_SIZE], this[BUFFER_SIZE];
+            char time[BUFFER_SIZE], this[BUFFER_SIZE+10];
             // lie that overdue events are due right now
             nsecstr(time, (ev->time>ct)? ev->time-ct : 0);
             if (isatom(ev->event))
