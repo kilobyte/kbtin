@@ -1,0 +1,8 @@
+#sub ~ +
+#ali x {#doh x {$0};#dos x {$x};#show {$x}}
+#hi green foo
+#hi red foo bar
+#hi brown x*y
+x x foo baz
+x foo bar
+x y x y x
