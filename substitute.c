@@ -154,7 +154,7 @@ void do_all_sub(char *line, struct session *ses)
 
     while ((ln = ln->next))
     {
-        if (check_one_action(line, ln->left, &vars, false, ses))
+        if (check_one_action(line, ln->left, &vars, false))
         {
             if (!strcmp(ln->right, EMPTY_LINE))
             {
@@ -167,7 +167,7 @@ void do_all_sub(char *line, struct session *ses)
             len=strlen(tmp);
             APPEND(tmp);
             while (*match_end)
-                if (check_one_action(l=match_end, ln->left, &vars, true, ses))
+                if (check_one_action(l=match_end, ln->left, &vars, true))
                 {
                     /* no gags possible here */
                     len=match_start-l;

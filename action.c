@@ -25,7 +25,7 @@ static int deletedActions=0;
 const char *match_start, *match_end;
 
 extern struct session *if_command(const char *arg, struct session *ses);
-static bool check_a_action(const char *line, const char *action, bool inside, struct session *ses);
+static bool check_a_action(const char *line, const char *action, bool inside);
 
 static void kill_action(struct listnode *head, struct listnode *nptr)
 {
@@ -266,7 +266,7 @@ void check_all_actions(const char *line, struct session *ses)
 
     while ((ln = ln->next))
     {
-        if (check_one_action(line, ln->left, &vars, false, ses))
+        if (check_one_action(line, ln->left, &vars, false))
         {
             lastpvars = pvars;
             pvars = &vars;
@@ -302,7 +302,7 @@ void check_all_promptactions(const char *line, struct session *ses)
 
     while ((ln = ln->next))
     {
-        if (check_one_action(line, ln->left, &vars, false, ses))
+        if (check_one_action(line, ln->left, &vars, false))
         {
             lastpvars=pvars;
             pvars=&vars;
@@ -341,7 +341,7 @@ void match_command(const char *arg, struct session *ses)
     if (!*left || !*right)
         return tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
 
-    if (check_one_action(line, left, &vars, false, ses))
+    if (check_one_action(line, left, &vars, false))
     {
         lastpvars = pvars;
         pvars = &vars;
@@ -389,7 +389,7 @@ int match_inline(const char *arg, struct session *ses)
         return 0;
     }
 
-    return check_one_action(line, left, &vars, false, ses);
+    return check_one_action(line, left, &vars, false);
 }
 
 
@@ -409,9 +409,9 @@ static int match_a_string(const char *line, const char *mask)
     return -1;
 }
 
-bool check_one_action(const char *line, const char *action, pvars_t *vars, bool inside, struct session *ses)
+bool check_one_action(const char *line, const char *action, pvars_t *vars, bool inside)
 {
-    if (!check_a_action(line, action, inside, ses))
+    if (!check_a_action(line, action, inside))
         return false;
 
     for (int i = 0; i < 10; i++)
@@ -431,7 +431,7 @@ bool check_one_action(const char *line, const char *action, pvars_t *vars, bool 
 /* check if a text triggers an action and fill into the variables */
 /* return true if triggered                                       */
 /******************************************************************/
-static bool check_a_action(const char *line, const char *action, bool inside, struct session *ses)
+static bool check_a_action(const char *line, const char *action, bool inside)
 {
     const char *lptr, *lptr2, *tptr, *temp2;
     int len;

@@ -102,7 +102,7 @@ bool do_one_antisub(const char *line, struct session *ses)
     for (kb_itr_first(str, ass, &itr); kb_itr_valid(&itr); kb_itr_next(str, ass, &itr))
     {
         const char *p = kb_itr_key(char*, &itr);
-        if (check_one_action(line, p, &vars, false, ses))
+        if (check_one_action(line, p, &vars, false))
             return true;
     }
     return false;
