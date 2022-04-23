@@ -257,7 +257,7 @@ static void build_highs_hs(struct session *ses)
     ses->highs_cols=0;
 
     int n = count_list(ses->highs);
-    char **pat = MALLOC(n*sizeof(void*));
+    const char **pat = MALLOC(n*sizeof(void*));
     unsigned int *flags = MALLOC(n*sizeof(int));
     unsigned int *ids = MALLOC(n*sizeof(int));
     const char **cols = MALLOC(n*sizeof(void*));
@@ -289,7 +289,7 @@ static void build_highs_hs(struct session *ses)
     }
 
     for (int i=0; i<n; i++)
-        SFREE(pat[i]);
+        SFREE((char*)pat[i]);
     MFREE(ids, n*sizeof(int));
     MFREE(flags, n*sizeof(int));
     MFREE(pat, n*sizeof(void*));
