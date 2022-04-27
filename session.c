@@ -372,7 +372,15 @@ static struct session *new_session(const char *name, const char *address, int so
 #endif
 #ifdef HAVE_HS
     newsession->highs_dirty=true;
+    newsession->actions_dirty=true;
+    newsession->prompts_dirty=true;
+    newsession->subs_dirty=true;
+    newsession->antisubs_dirty=true;
     newsession->highs_hs=0;
+    newsession->actions_hs=0;
+    newsession->prompts_hs=0;
+    newsession->subs_hs=0;
+    newsession->antisubs_hs=0;
     newsession->highs_cols=0;
 #endif
     sessionlist = newsession;
@@ -445,6 +453,10 @@ void cleanup_session(struct session *ses)
 #endif
 #ifdef HAVE_HS
     hs_free_database(ses->highs_hs);
+    hs_free_database(ses->actions_hs);
+    hs_free_database(ses->prompts_hs);
+    hs_free_database(ses->subs_hs);
+    hs_free_database(ses->antisubs_hs);
     free(ses->highs_cols);
 #endif
 

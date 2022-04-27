@@ -270,7 +270,15 @@ static void init_nullses(void)
 #endif
 #ifdef HAVE_HS
     nullsession->highs_dirty=false;
+    nullsession->actions_dirty=false;
+    nullsession->prompts_dirty=false;
+    nullsession->subs_dirty=false;
+    nullsession->antisubs_dirty=false;
     nullsession->highs_hs=0;
+    nullsession->actions_hs=0;
+    nullsession->prompts_hs=0;
+    nullsession->subs_hs=0;
+    nullsession->antisubs_hs=0;
     nullsession->highs_cols=0;
 #endif
 }

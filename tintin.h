@@ -371,8 +371,8 @@ struct session
     unsigned long long linenum;
     bool drafted;
 #ifdef HAVE_HS
-    bool highs_dirty;
-    hs_database_t *highs_hs;
+    bool highs_dirty, actions_dirty, prompts_dirty, subs_dirty, antisubs_dirty;
+    hs_database_t *highs_hs, *actions_hs, *prompts_hs, *subs_hs, *antisubs_hs;
     const char **highs_cols;
 #endif
 };
