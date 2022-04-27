@@ -199,6 +199,7 @@ void unaction_command(const char *arg, struct session *ses)
                 SFREE(ln->pr);
                 LFREE(ln);
             }
+            LISTLEN(ses->actions)--;
         }
         else
             ptr=&(*ptr)->next;
@@ -244,6 +245,7 @@ void unpromptaction_command(const char *arg, struct session *ses)
                 SFREE(ln->pr);
                 LFREE(ln);
             }
+            LISTLEN(ses->prompts)--;
         }
         else
             ptr=&(*ptr)->next;
