@@ -38,6 +38,9 @@ void antisubstitute_command(const char *arg, struct session *ses)
         antisubnum++;
         if (ses->mesvar[MSG_SUBSTITUTE])
             tintin_printf(ses, "Ok. Any line with {%s} will not be subbed.", left);
+#ifdef HAVE_HS
+        ses->antisubs_dirty=true;
+#endif
     }
 }
 
@@ -88,13 +91,92 @@ void unantisubstitute_command(const char *arg, struct session *ses)
         }
     }
 
+#ifdef HAVE_HS
+    if (had_any)
+        ses->antisubs_dirty=true;
+#endif
     if (!had_any && ses->mesvar[MSG_SUBSTITUTE])
         tintin_printf(ses, "#THAT ANTISUBSTITUTE (%s) IS NOT DEFINED.", left);
 }
 
 
+#ifdef HAVE_HS
+static void build_antisubs_hs(struct session *ses)
+{
+    hs_free_database(ses->antisubs_hs);
+    ses->antisubs_hs=0;
+    ses->antisubs_dirty=false;
+
+    int n = kb_size(ses->antisubs);
+    const char **pat = MALLOC(n*sizeof(void*));
+    unsigned int *flags = MALLOC(n*sizeof(int));
+    if (!pat || !flags)
+        syserr("out of memory");
+
+    int j=0;
+    {
+        kbtree_t(str) *ass = ses->antisubs;
+        kbitr_t itr;
+
+        for (kb_itr_first(str, ass, &itr); kb_itr_valid(&itr); kb_itr_next(str, ass, &itr))
+        {
+            const char *p = kb_itr_key(char*, &itr);
+            pat[j]=action_to_regex(p);
+            flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH;
+            j++;
+        }
+    }
+
+    hs_compile_error_t *error;
+    if (hs_compile_multi(pat, flags, 0, n, HS_MODE_BLOCK,
+        0, &ses->antisubs_hs, &error))
+    {
+        tintin_eprintf(ses, "#Error: hyperscan compilation failed for antisubs: %s",
+            error->message);
+        if (error->expression>=0)
+            tintin_eprintf(ses, "#Converted bad expression was: %s",
+                           pat[error->expression]);
+        hs_free_compile_error(error);
+    }
+
+    for (int i=0; i<n; i++)
+        SFREE((char*)pat[i]);
+    MFREE(flags, n*sizeof(int));
+    MFREE(pat, n*sizeof(void*));
+
+    if (ses->antisubs_hs && hs_alloc_scratch(ses->antisubs_hs, &hs_scratch))
+        syserr("out of memory");
+}
+
+static int anti_match(unsigned int id, unsigned long long from,
+    unsigned long long to, unsigned int flags, void *context)
+{
+    return 1;
+}
+#endif
+
+
 bool do_one_antisub(const char *line, struct session *ses)
 {
+#ifdef HAVE_HS
+    if (!kb_size(ses->antisubs))
+        return false;
+
+    if (simd && ses->antisubs_dirty)
+        build_antisubs_hs(ses);
+
+    if (simd)
+    {
+        hs_error_t err=hs_scan(ses->antisubs_hs, line, strlen(line), 0,
+                               hs_scratch, anti_match, ses);
+        if (err == HS_SCAN_TERMINATED)
+            return true;
+        if (!err)
+            return false;
+        tintin_eprintf(ses, "#Error in hs_scan: %d\n", err);
+    }
+#endif
+
     kbtree_t(str) *ass = ses->antisubs;
     pvars_t vars;
     kbitr_t itr;

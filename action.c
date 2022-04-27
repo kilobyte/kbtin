@@ -15,6 +15,7 @@
 #include "protos/utils.h"
 #include "protos/string.h"
 #include "protos/vars.h"
+#include <assert.h>
 
 
 static int var_len[10];
@@ -253,6 +254,54 @@ void unpromptaction_command(const char *arg, struct session *ses)
     if (!flag && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
         tintin_printf(ses, "#No match(es) found for {%s}", left);
 }
+
+
+#ifdef HAVE_HS
+char *action_to_regex(const char *pat)
+{
+    char buf[BUFFER_SIZE*2+3], *b=buf;
+
+    assert(*pat);
+    if (*pat=='^')
+        *b++='^', pat++;
+    for (; *pat; pat++)
+        switch (*pat)
+        {
+        case '%':
+            if (isadigit(pat[1]))
+            {
+                pat++;
+                *b++='.';
+                *b++='*';
+                while (pat[1]=='%' && isadigit(pat[2]))
+                    pat++; // eat multiple *s
+                break;
+            }
+        case '\\':
+        case '^':
+        case '+':
+        case '?':
+        case '[':
+        case ']':
+        case '(':
+        case ')':
+            *b++='\\';
+        default:
+            *b++=*pat;
+        break;
+        case '$':
+            if (pat[1])
+                *b++='\\';
+            *b++='$';
+        }
+    *b=0;
+
+    int len=b-buf+1;
+    char *txt=MALLOC(len);
+    memcpy(txt, buf, len);
+    return txt;
+}
+#endif
 
 
 /**********************************************/
