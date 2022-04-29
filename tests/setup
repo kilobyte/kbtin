@@ -1,2 +1,2 @@
 #mess all 0
-#delay 5 {#showme TIMEOUT;#end}
+#delay 30 {#showme TIMEOUT;#end}
