@@ -221,7 +221,7 @@ void route_command(const char *arg, struct session *ses)
         n=ses->num_locations;
         ses->locations[i]=mystrdup(a);
     }
-found_i:
+found_i:;
     int j;
     for (j=0;j<n;j++)
         if (ses->locations[j]&&!strcmp(ses->locations[j], b))
