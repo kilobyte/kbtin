@@ -30,7 +30,7 @@ ubuntu_amd64_task:
   install_script:
     - apt-get update
     - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev libhyperscan-dev
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev libhyperscan-dev valgrind
   build_script:
     - cmake .
     - make -j$(getconf _NPROCESSORS_ONLN)
@@ -57,7 +57,7 @@ ubuntu_arm64_task:
   install_script:
     - apt-get update
     - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev valgrind
   build_script:
     - cmake .
     - make -j$(getconf _NPROCESSORS_ONLN)
@@ -71,7 +71,7 @@ ubuntu_armhf_task:
     - dpkg --add-architecture armhf
     - apt-get update
     - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gcc-arm-linux-gnueabihf libc6:armhf libgnutls28-dev:armhf libz-dev:armhf
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gcc-arm-linux-gnueabihf libc6:armhf libgnutls28-dev:armhf libz-dev:armhf valgrind:armhf
   build_script:
     - cmake -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc .
     - make -j$(getconf _NPROCESSORS_ONLN)
