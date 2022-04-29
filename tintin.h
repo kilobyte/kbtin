@@ -69,7 +69,6 @@
 #define BRACE_CLOSE '}' /*character that ends an argument */
 #define HISTORY_SIZE 128                  /* history size */
 #define MAX_PATH_LENGTH 256               /* max path length (#route) */
-#define MAX_LOCATIONS 2048
 #define DEFAULT_TINTIN_CHAR '#'           /* tintin char */
 #define DEFAULT_TICK_SIZE 60
 #define DEFAULT_ROUTE_DISTANCE (10*DENOM)
@@ -336,9 +335,10 @@ struct session
     kbtree_t(str) *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds;
     struct listnode *path;
-    struct routenode *routes[MAX_LOCATIONS];
-    char *locations[MAX_LOCATIONS];
+    struct routenode **routes;
+    char **locations;
     struct eventnode *events;
+    int num_locations;
     int path_length, no_return;
     int socket, last_term_type;
     sestype_t sestype;

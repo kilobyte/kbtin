@@ -347,11 +347,9 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->partial_line_marker = mystrdup(ses->partial_line_marker);
     for (int i=0;i<=MAX_MESVAR;i++)
         newsession->mesvar[i] = ses->mesvar[i];
-    for (int i=0;i<MAX_LOCATIONS;i++)
-    {
-        newsession->routes[i]=0;
-        newsession->locations[i]=0;
-    }
+    newsession->routes=0;
+    newsession->locations=0;
+    newsession->num_locations=0;
     copyroutes(ses, newsession);
     newsession->last_line[0]=0;
     for (int i=0;i<NHOOKS;i++)

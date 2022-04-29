@@ -777,7 +777,7 @@ void write_command(const char *filename, struct session *ses)
         cfcom(myfile, "pathdir", nodeptr->left, nodeptr->right, 0);
     zap_list(templist);
 
-    for (int nr=0;nr<MAX_LOCATIONS;nr++)
+    for (int nr=0;nr<ses->num_locations;nr++)
         if ((rptr=ses->routes[nr]))
             do
             {
@@ -812,15 +812,15 @@ static bool route_exists(const char *A, const char *B, const char *path, num_t d
 {
     int a, b;
 
-    for (a=0;a<MAX_LOCATIONS;a++)
+    for (a=0;a<ses->num_locations;a++)
         if (ses->locations[a]&&!strcmp(ses->locations[a], A))
             break;
-    if (a==MAX_LOCATIONS)
+    if (a==ses->num_locations)
         return false;
-    for (b=0;b<MAX_LOCATIONS;b++)
+    for (b=0;b<ses->num_locations;b++)
         if (ses->locations[b]&&!strcmp(ses->locations[b], B))
             break;
-    if (b==MAX_LOCATIONS)
+    if (b==ses->num_locations)
         return false;
     for (struct routenode *rptr=ses->routes[a];rptr;rptr=rptr->next)
         if ((rptr->dest==b)&&
@@ -974,7 +974,7 @@ void writesession_command(const char *filename, struct session *ses)
     }
     zap_list(onptr);
 
-    for (int nr=0;nr<MAX_LOCATIONS;nr++)
+    for (int nr=0;nr<ses->num_locations;nr++)
         if ((rptr=ses->routes[nr]))
             do
             {

@@ -224,11 +224,9 @@ static void init_nullses(void)
     nullsession->debuglogname=0;
     for (int i=0;i<HISTORY_SIZE;i++)
         history[i]=0;
-    for (int i=0;i<MAX_LOCATIONS;i++)
-    {
-        nullsession->routes[i]=0;
-        nullsession->locations[i]=0;
-    }
+    nullsession->routes=0;
+    nullsession->locations=0;
+    nullsession->num_locations=0;
     for (int i=0;i<NHOOKS;i++)
         nullsession->hooks[i]=0;
     nullsession->path = init_list();
