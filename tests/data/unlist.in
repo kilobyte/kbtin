@@ -1,0 +1,36 @@
+#ali foo x
+#ali bar y
+#ali baz z
+#unali bar
+#unali b*
+#ali
+#act foo x
+#act bar y
+#act baz z
+#unact bar
+#unact b*
+#act
+#prom foo x
+#prom bar y
+#prom baz z
+#unprom bar
+#unprom b*
+#prom
+#sub foo x
+#sub bar y
+#sub baz z
+#unsub bar
+#unsub b*
+#sub
+#antisub foo
+#antisub bar
+#antisub baz
+#unantisub bar
+#unantisub b*
+#antisub
+#ro foo x X
+#ro bar x Y
+#ro baz x Z
+#unro bar x
+#unro b* x
+#ro
