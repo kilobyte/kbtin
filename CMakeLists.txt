@@ -139,6 +139,7 @@ set(KBtin_sources
 	slist.c
 	lists.c
 	vars.c
+	tlist.c
 )
 
 set(protos ${KBtin_sources})

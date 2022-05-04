@@ -6,11 +6,13 @@
 /*********************************************************************/
 #include "tintin.h"
 #include "protos/action.h"
+#include "protos/glob.h"
 #include "protos/globals.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/string.h"
+#include "protos/tlist.h"
+#include "protos/utils.h"
 #include "protos/vars.h"
 
 
@@ -20,9 +22,12 @@
 static void list_subs(const char *left, bool gag, struct session *ses)
 {
     bool flag = false;
-    struct listnode *mysubs = ses->subs;
+    kbtree_t(trip) *sub = ses->subs;
+    kbitr_t itr;
 
-    while ((mysubs = search_node_with_wild(mysubs, left)))
+    for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
+    {
+        const trip_t mysubs = kb_itr_key(trip_t, &itr);
         if (gag)
         {
             if (!strcmp(mysubs->right, EMPTY_LINE))
@@ -38,8 +43,9 @@ static void list_subs(const char *left, bool gag, struct session *ses)
             if (!flag)
                 tintin_printf(ses, "#THESE SUBSTITUTES HAVE BEEN DEFINED:");
             flag=true;
-            shownode_list(mysubs);
+            show_trip(mysubs);
         }
+    }
     if (!flag && ses->mesvar[MSG_SUBSTITUTE])
     {
         if (strcmp(left, "*"))
@@ -54,14 +60,16 @@ static void parse_sub(const char *left_, const char *right,  bool gag, struct se
     char left[BUFFER_SIZE];
     substitute_myvars(left_, left, ses, 0);
 
-    struct listnode *mysubs = ses->subs, *ln;
-
     if (!*right)
         return list_subs(*left? left : "*", gag, ses);
 
-    if ((ln = searchnode_list(mysubs, left)))
-        deletenode_list(mysubs, ln);
-    insertnode_list(mysubs, left, right, 0, ALPHALONGER);
+    kbtree_t(trip) *sub = ses->subs;
+
+    trip_t new = MALLOC(sizeof(struct trip));
+    new->left = mystrdup(left_);
+    new->right = mystrdup(right);
+    new->pr = 0;
+    kb_put(trip, sub, new);
     subnum++;
     if (ses->mesvar[MSG_SUBSTITUTE])
     {
@@ -97,30 +105,50 @@ void gag_command(const char *arg, struct session *ses)
 static void unsub(const char *arg, bool gag, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    struct listnode *mysubs, *ln, *temp;
-    bool flag = false;
-
-    mysubs = ses->subs;
-    temp = mysubs;
     arg = get_arg_in_braces(arg, left, 1);
-    while ((ln = search_node_with_wild(temp, left)))
+    bool had_any = false;
+    kbtree_t(trip) *sub = ses->subs;
+
+    if (is_literal(left))
     {
-        if (gag && strcmp(ln->right, EMPTY_LINE))
+        struct trip srch = {left, 0, 0};
+        trip_t *t = kb_get(trip, sub, &srch);
+        had_any = t && gag==!strcmp((*t)->right, EMPTY_LINE);
+        if (had_any)
         {
-            temp=ln;
-            continue;
+            kb_del(trip, sub, &srch);
+            if (ses->mesvar[MSG_SUBSTITUTE])
+                tintin_printf(0, "#Ok. {%s} is no longer %s.", (*t)->left,
+                                 gag? "gagged":"substituted");
         }
-        if (ses->mesvar[MSG_SUBSTITUTE])
-        {
-            if (!strcmp(ln->right, EMPTY_LINE))
-                tintin_printf(ses, "#Ok. {%s} is no longer gagged.", ln->left);
-            else
-                tintin_printf(ses, "#Ok. {%s} is no longer substituted.", ln->left);
-        }
-        deletenode_list(mysubs, ln);
-        flag = true;
     }
-    if (!flag && ses->mesvar[MSG_SUBSTITUTE])
+    else
+    {
+        trip_t *todel = malloc(kb_size(sub) * sizeof(trip_t));
+        trip_t *last = todel;
+        kbitr_t itr;
+
+        for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
+        {
+            const trip_t t = kb_itr_key(trip_t, &itr);
+            if (!match(left, t->left) || gag!=!strcmp(t->right, EMPTY_LINE))
+                continue;
+            if (!had_any)
+                had_any = true;
+            if (ses->mesvar[MSG_SUBSTITUTE])
+                tintin_printf(0, "#Ok. {%s} is no longer %s.", t->left, gag? "gagged":"substituted");
+            *last++ = t;
+        }
+
+        for (trip_t *del = todel; del != last; del++)
+        {
+            kb_del(trip, sub, *del);
+            free(*del);
+        }
+        free(todel);
+    }
+
+    if (!had_any && ses->mesvar[MSG_SUBSTITUTE])
         tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
 }
 
@@ -141,7 +169,6 @@ void ungag_command(const char *arg, struct session *ses)
 
 void do_all_sub(char *line, struct session *ses)
 {
-    struct listnode *ln;
     pvars_t vars, *lastpvars;
     char result[BUFFER_SIZE], tmp[BUFFER_SIZE];
     const char *l;
@@ -150,10 +177,12 @@ void do_all_sub(char *line, struct session *ses)
     lastpvars=pvars;
     pvars=&vars;
 
-    ln = ses->subs;
+    kbtree_t(trip) *sub = ses->subs;
+    kbitr_t itr;
 
-    while ((ln = ln->next))
+    for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
     {
+        const trip_t ln = kb_itr_key(trip_t, &itr);
         if (check_one_action(line, ln->left, &vars, false))
         {
             if (!strcmp(ln->right, EMPTY_LINE))

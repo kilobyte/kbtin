@@ -252,11 +252,13 @@ size_t strlcpy(char *dst, const char *src, size_t n);
 
 typedef int64_t num_t;
 typedef int64_t timens_t;
+typedef struct trip *trip_t;
 #define NANO 1000000000LL
 
 #define ARRAYSZ(x) (sizeof(x)/sizeof((x)[0]))
 
 KBTREE_HEADER(str, char*, strcmp)
+KBTREE_HEADER(trip, trip_t, tripcmp)
 
 /************************ structures *********************/
 struct listnode
@@ -266,6 +268,11 @@ struct listnode
 };
 
 #define LISTLEN(x) (*(intptr_t*)&((x)->right))
+
+struct trip
+{
+    char *left, *right, *pr;
+};
 
 struct hashentry
 {
@@ -332,7 +339,8 @@ struct session
     char *loginputprefix, *loginputsuffix;
     logtype_t logtype;
     bool ignore;
-    struct listnode *actions, *subs, *prompts, *highs;
+    struct listnode *actions, *prompts, *highs;
+    kbtree_t(trip) *subs;
     kbtree_t(str) *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds;
     struct listnode *path;

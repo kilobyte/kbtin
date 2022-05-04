@@ -698,6 +698,7 @@ void write_command(const char *filename, struct session *ses)
     struct listnode *nodeptr, *templist;
     struct routenode *rptr;
     kbtree_t(str) *sl;
+    kbtree_t(trip) *tl;
     kbitr_t itr;
 
     get_arg_in_braces(filename, buffer, 1);
@@ -765,13 +766,14 @@ void write_command(const char *filename, struct session *ses)
     for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
         cfcom(myfile, "antisub", kb_itr_key(char*, &itr), 0, 0);
 
-    nodeptr = ses->subs;
-    while ((nodeptr = nodeptr->next))
+    tl = ses->subs;
+    for (kb_itr_first(trip, tl, &itr); kb_itr_valid(&itr); kb_itr_next(trip, tl, &itr))
     {
-        if (strcmp( nodeptr->right, EMPTY_LINE))
-            cfcom(myfile, "sub", nodeptr->left, nodeptr->right, 0);
+        trip_t n = kb_itr_key(trip_t, &itr);
+        if (strcmp(n->right, EMPTY_LINE))
+            cfcom(myfile, "sub", n->left, n->right, 0);
         else
-            cfcom(myfile, "gag", nodeptr->left, 0, 0);
+            cfcom(myfile, "gag", n->left, 0, 0);
     }
 
     nodeptr = templist = hash2list(ses->myvars, "*");
@@ -852,6 +854,7 @@ void writesession_command(const char *filename, struct session *ses)
     struct listnode *nodeptr, *onptr;
     struct routenode *rptr;
     kbtree_t(str) *sl, *orgsl;
+    kbtree_t(trip) *tl;
     kbitr_t itr;
 
     if (ses==nullsession)
@@ -944,16 +947,18 @@ void writesession_command(const char *filename, struct session *ses)
             cfcom(myfile, "antisub", p, 0, 0);
     }
 
-    nodeptr = ses->subs;
-    while ((nodeptr = nodeptr->next))
+    tl = ses->subs;
+    for (kb_itr_first(trip, tl, &itr); kb_itr_valid(&itr); kb_itr_next(trip, tl, &itr))
     {
-        if ((onptr=searchnode_list(nullsession->subs, nodeptr->left)))
-            if (!strcmp(onptr->right, nodeptr->right))
+        trip_t n = kb_itr_key(trip_t, &itr);
+        struct trip srch = {n->left, 0, 0};
+        trip_t *m = kb_get(trip, nullsession->subs, &srch);
+        if (m && !strcmp(n->right, (*m)->right))
                 continue;
-        if (strcmp( nodeptr->right, EMPTY_LINE))
-            cfcom(myfile, "sub", nodeptr->left, nodeptr->right, 0);
+        if (strcmp(n->right, EMPTY_LINE))
+            cfcom(myfile, "sub", n->left, n->right, 0);
         else
-            cfcom(myfile, "gag", nodeptr->left, 0, 0);
+            cfcom(myfile, "gag", n->left, 0, 0);
     }
 
     nodeptr = onptr = hash2list(ses->myvars, "*");

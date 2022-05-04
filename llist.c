@@ -12,6 +12,7 @@
 #include "protos/print.h"
 #include "protos/routes.h"
 #include "protos/slist.h"
+#include "protos/tlist.h"
 #include "protos/utils.h"
 #include <assert.h>
 
@@ -92,7 +93,7 @@ void kill_all(struct session *ses, bool no_reinit)
     kill_list(ses->prompts);
     kill_hash(ses->myvars);
     kill_list(ses->highs);
-    kill_list(ses->subs);
+    kill_tlist(ses->subs);
     kill_slist(ses->antisubs);
     kill_list(ses->path);
     kill_hash(ses->pathdirs);
@@ -107,7 +108,7 @@ void kill_all(struct session *ses, bool no_reinit)
     ses->prompts = init_list();
     ses->myvars = init_hash();
     ses->highs = init_list();
-    ses->subs = init_list();
+    ses->subs = init_tlist();
     ses->antisubs = init_slist();
     ses->path = init_list();
     ses->binds = init_hash();
@@ -138,7 +139,7 @@ struct listnode* copy_list(struct listnode *sourcelist, int mode)
 /* strings generally sort in ASCIIbetical order, however numbers  */
 /* sort according to their numerical values.                      */
 /******************************************************************/
-static int prioritycmp(const char *a, const char *b)
+int prioritycmp(const char *a, const char *b)
 {
     int res;
 
@@ -176,11 +177,11 @@ not_numeric:
 /*****************************************************/
 /* strcmp() that sorts '\0' later than anything else */
 /*****************************************************/
-static int strlongercmp(const char *a, const char *b)
+int strlongercmp(const char *a, const char *b)
 {
 next:
     if (!*a)
-        return 1;
+        return *b? 1 : 0;
     if (*a==*b)
     {
         a++;

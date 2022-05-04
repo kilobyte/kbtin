@@ -26,6 +26,7 @@
 #include "protos/slist.h"
 #include "protos/substitute.h"
 #include "protos/ticks.h"
+#include "protos/tlist.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
@@ -200,7 +201,7 @@ static void init_nullses(void)
     nullsession->aliases = init_hash();
     nullsession->actions = init_list();
     nullsession->prompts = init_list();
-    nullsession->subs = init_list();
+    nullsession->subs = init_tlist();
     nullsession->myvars = init_hash();
     nullsession->highs = init_list();
     nullsession->pathdirs = init_hash();

@@ -56,7 +56,7 @@ bool match(const char *regex, const char *string)
 
 bool is_literal(const char *txt)
 {
-    return !strchr(txt, '*');
+    return !strchr(txt, '*') && !strchr(txt, '\\');
 }
 
 

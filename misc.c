@@ -31,6 +31,7 @@
 #include "protos/user.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/tlist.h"
 #include "protos/vars.h"
 
 
@@ -970,7 +971,7 @@ void info_command(const char *arg, struct session *ses)
     int actions   = count_list(ses->actions);
     int practions = count_list(ses->prompts);
     int aliases   = ses->aliases->nval;
-    int subs      = count_list(ses->subs);
+    int subs      = count_tlist(ses->subs);
     int antisubs  = count_slist(ses->antisubs);
     int vars      = ses->myvars->nval;
     int highs     = count_list(ses->highs);
