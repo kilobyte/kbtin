@@ -1,0 +1,6 @@
+#hook logclose {#show Log's contents:;#sys cat $0}
+#loginputf {> }
+#run a //selfpipe
+#del 1 #end
+#log foo
+meow

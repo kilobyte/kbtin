@@ -205,6 +205,7 @@ enum
     HOOK_TITLE,
     HOOK_TICK,
     HOOK_PRETICK,
+    HOOK_LOGCLOSE,
     NHOOKS
 };
 

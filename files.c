@@ -195,9 +195,13 @@ void log_off(struct session *ses)
 {
     fclose(ses->logfile);
     ses->logfile = NULL;
-    SFREE(ses->logname);
+    char *logname = ses->logname;
     ses->logname = NULL;
     cleanup_conv(&ses->c_log);
+
+    do_hook(ses, HOOK_LOGCLOSE, logname, false);
+
+    SFREE(logname);
 }
 
 static inline void ttyrec_timestamp(struct ttyrec_header *th)
@@ -450,12 +454,19 @@ void log_command(const char *arg, struct session *ses)
 
     if (*arg)
     {
+        if (ses->closing)
+            return tintin_eprintf(ses, "THE SESSION IS BEING CLOSED.");
+
         if (ses->logfile)
         {
             log_off(ses);
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
         }
+
+        if (ses->logfile)
+            return; // tricksy buggers can #log in hook logclose
+
         char temp[BUFFER_SIZE];
         get_arg_in_braces(arg, temp, 1);
         substitute_vars(temp, temp, ses);
