@@ -403,6 +403,11 @@ void cleanup_session(struct session *ses)
     if (ses!=nullsession) /* valgrind cleans null */
         do_hook(act=ses, HOOK_CLOSE, 0, true);
 
+    if (ses->logfile)
+        log_off(ses);
+    if (ses->debuglogfile)
+        fclose(ses->debuglogfile);
+
     kill_all(ses, true);
     if (ses == sessionlist)
         sessionlist = ses->next;
@@ -423,10 +428,6 @@ void cleanup_session(struct session *ses)
         tintin_printf(0, "#SESSION '%s' DIED.", ses->name);
     if (ses->socket && close(ses->socket) == -1)
         syserr("close in cleanup");
-    if (ses->logfile)
-        log_off(ses);
-    if (ses->debuglogfile)
-        fclose(ses->debuglogfile);
     SFREE(ses->loginputprefix);
     SFREE(ses->loginputsuffix);
     for (int i=0;i<NHOOKS;i++)
