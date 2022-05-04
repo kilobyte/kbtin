@@ -5,7 +5,7 @@
 #include "protos/print.h"
 #include "protos/utils.h"
 
-static int tripcmp(const trip_t a, const trip_t b)
+static int tripcmp(const ptrip a, const ptrip b)
 {
     if (a->pr && b->pr)
     {
@@ -18,7 +18,7 @@ static int tripcmp(const trip_t a, const trip_t b)
     return strlongercmp(a->left, b->left);
 }
 
-/**/ KBTREE_CODE(trip, trip_t, tripcmp)
+/**/ KBTREE_CODE(trip, ptrip, tripcmp)
 
 kbtree_t(trip)* init_tlist(void)
 {
@@ -31,7 +31,7 @@ void kill_tlist(kbtree_t(trip) *l)
 
     for (kb_itr_first(trip, l, &itr); kb_itr_valid(&itr); kb_itr_next(trip, l, &itr))
     {
-        trip_t i = kb_itr_key(trip_t, &itr);
+        ptrip i = kb_itr_key(ptrip, &itr);
         free(i->left);
         free(i->right);
         free(i->pr);
@@ -41,7 +41,7 @@ void kill_tlist(kbtree_t(trip) *l)
     kb_destroy(trip, l);
 }
 
-void show_trip(const trip_t t)
+void show_trip(const ptrip t)
 {
     if (t->pr)
         tintin_printf(0, "~7~{%s~7~}={%s~7~} @ {%s}", t->left, t->right, t->pr);
@@ -54,7 +54,7 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
     if (pat && is_literal(pat))
     {
         struct trip srch = {(char*)pat, 0, 0};
-        const trip_t t = *kb_get(trip, l, &srch);
+        const ptrip t = *kb_get(trip, l, &srch);
         if (!t)
             return false;
         if (msg)
@@ -68,7 +68,7 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
 
     for (kb_itr_first(trip, l, &itr); kb_itr_valid(&itr); kb_itr_next(trip, l, &itr))
     {
-        const trip_t t = kb_itr_key(trip_t, &itr);
+        const ptrip t = kb_itr_key(ptrip, &itr);
         if (pat && !match(t->left, pat))
             continue;
         if (!had_any)
@@ -88,7 +88,7 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
     if (pat && is_literal(pat))
     {
         struct trip srch = {(char*)pat, 0, 0};
-        trip_t t = kb_del(trip, l, &srch);
+        ptrip t = kb_del(trip, l, &srch);
         if (!t)
             return false;
         if (msg)
@@ -101,7 +101,7 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
 
     for (kb_itr_first(trip, l, &itr); kb_itr_valid(&itr); kb_itr_next(trip, l, &itr))
     {
-        const trip_t t = kb_itr_key(trip_t, &itr);
+        const ptrip t = kb_itr_key(ptrip, &itr);
         if (pat && !match(pat, t->left))
             continue;
         if (!had_any)
@@ -122,8 +122,8 @@ kbtree_t(trip) *copy_tlist(kbtree_t(trip) *a)
     kb_itr_first(trip, a, &itr);
     for (kb_itr_first(trip, a, &itr); kb_itr_valid(&itr); kb_itr_next(trip, a, &itr))
     {
-        const trip_t old = kb_itr_key(trip_t, &itr);
-        trip_t new = MALLOC(sizeof(struct trip));
+        const ptrip old = kb_itr_key(ptrip, &itr);
+        ptrip new = MALLOC(sizeof(struct trip));
         new->left = mystrdup(old->left);
         new->right = mystrdup(old->right);
         new->pr = mystrdup(old->pr);

@@ -27,7 +27,7 @@ static void list_subs(const char *left, bool gag, struct session *ses)
 
     for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
     {
-        const trip_t mysubs = kb_itr_key(trip_t, &itr);
+        const ptrip mysubs = kb_itr_key(ptrip, &itr);
         if (gag)
         {
             if (!strcmp(mysubs->right, EMPTY_LINE))
@@ -65,10 +65,12 @@ static void parse_sub(const char *left_, const char *right,  bool gag, struct se
 
     kbtree_t(trip) *sub = ses->subs;
 
-    trip_t new = MALLOC(sizeof(struct trip));
+    ptrip new = MALLOC(sizeof(struct trip));
     new->left = mystrdup(left_);
     new->right = mystrdup(right);
     new->pr = 0;
+    if (kb_get(trip, sub, new))
+        kb_del(trip, sub, new);
     kb_put(trip, sub, new);
     subnum++;
     if (ses->mesvar[MSG_SUBSTITUTE])
@@ -112,11 +114,11 @@ static void unsub(const char *arg, bool gag, struct session *ses)
     if (is_literal(left))
     {
         struct trip srch = {left, 0, 0};
-        trip_t *t = kb_get(trip, sub, &srch);
+        ptrip *t = kb_get(trip, sub, &srch);
         had_any = t && gag==!strcmp((*t)->right, EMPTY_LINE);
         if (had_any)
         {
-            trip_t d = *t;
+            ptrip d = *t;
             kb_del(trip, sub, &srch);
             if (ses->mesvar[MSG_SUBSTITUTE])
                 tintin_printf(0, "#Ok. {%s} is no longer %s.", d->left,
@@ -128,13 +130,13 @@ static void unsub(const char *arg, bool gag, struct session *ses)
     }
     else
     {
-        trip_t *todel = malloc(kb_size(sub) * sizeof(trip_t));
-        trip_t *last = todel;
+        ptrip *todel = malloc(kb_size(sub) * sizeof(ptrip));
+        ptrip *last = todel;
         kbitr_t itr;
 
         for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
         {
-            const trip_t t = kb_itr_key(trip_t, &itr);
+            const ptrip t = kb_itr_key(ptrip, &itr);
             if (!match(left, t->left) || gag!=!strcmp(t->right, EMPTY_LINE))
                 continue;
             if (!had_any)
@@ -144,7 +146,7 @@ static void unsub(const char *arg, bool gag, struct session *ses)
             *last++ = t;
         }
 
-        for (trip_t *del = todel; del != last; del++)
+        for (ptrip *del = todel; del != last; del++)
         {
             kb_del(trip, sub, *del);
             free((*del)->left);
@@ -188,7 +190,7 @@ void do_all_sub(char *line, struct session *ses)
 
     for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
     {
-        const trip_t ln = kb_itr_key(trip_t, &itr);
+        const ptrip ln = kb_itr_key(ptrip, &itr);
         if (check_one_action(line, ln->left, &vars, false))
         {
             if (!strcmp(ln->right, EMPTY_LINE))

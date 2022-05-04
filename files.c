@@ -769,7 +769,7 @@ void write_command(const char *filename, struct session *ses)
     tl = ses->subs;
     for (kb_itr_first(trip, tl, &itr); kb_itr_valid(&itr); kb_itr_next(trip, tl, &itr))
     {
-        trip_t n = kb_itr_key(trip_t, &itr);
+        ptrip n = kb_itr_key(ptrip, &itr);
         if (strcmp(n->right, EMPTY_LINE))
             cfcom(myfile, "sub", n->left, n->right, 0);
         else
@@ -950,9 +950,9 @@ void writesession_command(const char *filename, struct session *ses)
     tl = ses->subs;
     for (kb_itr_first(trip, tl, &itr); kb_itr_valid(&itr); kb_itr_next(trip, tl, &itr))
     {
-        trip_t n = kb_itr_key(trip_t, &itr);
+        ptrip n = kb_itr_key(ptrip, &itr);
         struct trip srch = {n->left, 0, 0};
-        trip_t *m = kb_get(trip, nullsession->subs, &srch);
+        ptrip *m = kb_get(trip, nullsession->subs, &srch);
         if (m && !strcmp(n->right, (*m)->right))
                 continue;
         if (strcmp(n->right, EMPTY_LINE))

@@ -251,13 +251,13 @@ size_t strlcpy(char *dst, const char *src, size_t n);
 
 typedef int64_t num_t;
 typedef int64_t timens_t;
-typedef struct trip *trip_t;
+typedef struct trip *ptrip;
 #define NANO 1000000000LL
 
 #define ARRAYSZ(x) (sizeof(x)/sizeof((x)[0]))
 
 KBTREE_HEADER(str, char*, strcmp)
-KBTREE_HEADER(trip, trip_t, tripcmp)
+KBTREE_HEADER(trip, ptrip, tripcmp)
 
 /************************ structures *********************/
 struct listnode
