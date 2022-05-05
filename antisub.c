@@ -78,13 +78,13 @@ void unantisubstitute_command(const char *arg, struct session *ses)
     }
     else /* single item deletion */
     {
-        char *str = *kb_get(str, ass, left);
+        char **str = kb_get(str, ass, left);
         if ((had_any = !!str))
         {
             if (ses->mesvar[MSG_SUBSTITUTE])
                 tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", left);
             kb_del(str, ass, left);
-            free(str);
+            free(*str);
         }
     }
 
