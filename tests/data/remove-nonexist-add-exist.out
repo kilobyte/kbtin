@@ -1,5 +1,16 @@
 #THESE ANTISUBSTITUTES HAS BEEN DEFINED:
 {x}
+#THESE SUBSTITUTES HAVE BEEN DEFINED:
+{x}={2}
+#THESE HIGHLIGHTS HAVE BEEN DEFINED:
+{x}={red}
+#Defined actions:
+{x}={2} @ {5}
+#Defined prompts:
+{x}={2} @ {5}
 **********
 #THESE ANTISUBSTITUTES HAS BEEN DEFINED:
+#THESE HIGHLIGHTS HAVE BEEN DEFINED:
+#Defined actions:
+#Defined prompts:
 **********

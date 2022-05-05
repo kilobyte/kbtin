@@ -2,7 +2,31 @@
 #unanti y
 #anti x
 #anti
+#sub x 1
+#unsub y
+#sub x 2
+#sub
+#high green x
+#unhi y
+#high red x
+#hi
+#act x 1
+#unact y
+#act x 2
+#act
+#prom x 1
+#unprom y
+#prom x 2
+#prom
 #show **********
 #unanti x
 #anti
+#unsub x
+#sub
+#unhi x
+#hi
+#unact x
+#act
+#unprom x
+#prom
 #show **********
