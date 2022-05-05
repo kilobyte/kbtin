@@ -27,16 +27,12 @@ kbtree_t(trip)* init_tlist(void)
 
 void kill_tlist(kbtree_t(trip) *l)
 {
-    kbitr_t itr;
-
-    for (kb_itr_first(trip, l, &itr); kb_itr_valid(&itr); kb_itr_next(trip, l, &itr))
-    {
-        ptrip i = kb_itr_key(ptrip, &itr);
+    TRIP_ITER(l, i)
         free(i->left);
         free(i->right);
         free(i->pr);
         free(i);
-    }
+    ENDITER
 
     kb_destroy(trip, l);
 }
@@ -64,11 +60,8 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
     }
 
     bool had_any = false;
-    kbitr_t itr;
 
-    for (kb_itr_first(trip, l, &itr); kb_itr_valid(&itr); kb_itr_next(trip, l, &itr))
-    {
-        const ptrip t = kb_itr_key(ptrip, &itr);
+    TRIP_ITER(l, t)
         if (pat && !match(t->left, pat))
             continue;
         if (!had_any)
@@ -78,7 +71,7 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
                 tintin_printf(0, msg);
         }
         show_trip(t);
-    }
+    ENDITER
 
     return had_any;
 }
@@ -97,11 +90,8 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
     }
 
     bool had_any = false;
-    kbitr_t itr;
 
-    for (kb_itr_first(trip, l, &itr); kb_itr_valid(&itr); kb_itr_next(trip, l, &itr))
-    {
-        const ptrip t = kb_itr_key(ptrip, &itr);
+    TRIP_ITER(l, t)
         if (pat && !match(pat, t->left))
             continue;
         if (!had_any)
@@ -109,7 +99,7 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
         if (msg)
             tintin_printf(0, msg, t->left);
         kb_del(trip, l, t);
-    }
+    ENDITER
 
     return had_any;
 }
@@ -117,18 +107,14 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
 kbtree_t(trip) *copy_tlist(kbtree_t(trip) *a)
 {
     kbtree_t(trip) *b = kb_init(trip, KB_DEFAULT_SIZE);
-    kbitr_t itr;
 
-    kb_itr_first(trip, a, &itr);
-    for (kb_itr_first(trip, a, &itr); kb_itr_valid(&itr); kb_itr_next(trip, a, &itr))
-    {
-        const ptrip old = kb_itr_key(ptrip, &itr);
+    TRIP_ITER(a, old)
         ptrip new = MALLOC(sizeof(struct trip));
         new->left = mystrdup(old->left);
         new->right = mystrdup(old->right);
         new->pr = mystrdup(old->pr);
         kb_put(trip, b, new);
-    }
+    ENDITER
 
     return b;
 }

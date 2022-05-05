@@ -23,11 +23,8 @@ static void list_subs(const char *left, bool gag, struct session *ses)
 {
     bool flag = false;
     kbtree_t(trip) *sub = ses->subs;
-    kbitr_t itr;
 
-    for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
-    {
-        const ptrip mysubs = kb_itr_key(ptrip, &itr);
+    TRIP_ITER(sub, mysubs)
         if (gag)
         {
             if (!strcmp(mysubs->right, EMPTY_LINE))
@@ -45,7 +42,8 @@ static void list_subs(const char *left, bool gag, struct session *ses)
             flag=true;
             show_trip(mysubs);
         }
-    }
+    ENDITER
+
     if (!flag && ses->mesvar[MSG_SUBSTITUTE])
     {
         if (strcmp(left, "*"))
@@ -132,11 +130,8 @@ static void unsub(const char *arg, bool gag, struct session *ses)
     {
         ptrip *todel = malloc(kb_size(sub) * sizeof(ptrip));
         ptrip *last = todel;
-        kbitr_t itr;
 
-        for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
-        {
-            const ptrip t = kb_itr_key(ptrip, &itr);
+        TRIP_ITER(sub, t)
             if (!match(left, t->left) || gag!=!strcmp(t->right, EMPTY_LINE))
                 continue;
             if (!had_any)
@@ -144,7 +139,7 @@ static void unsub(const char *arg, bool gag, struct session *ses)
             if (ses->mesvar[MSG_SUBSTITUTE])
                 tintin_printf(0, "#Ok. {%s} is no longer %s.", t->left, gag? "gagged":"substituted");
             *last++ = t;
-        }
+        ENDITER
 
         for (ptrip *del = todel; del != last; del++)
         {
@@ -185,12 +180,7 @@ void do_all_sub(char *line, struct session *ses)
     lastpvars=pvars;
     pvars=&vars;
 
-    kbtree_t(trip) *sub = ses->subs;
-    kbitr_t itr;
-
-    for (kb_itr_first(trip, sub, &itr); kb_itr_valid(&itr); kb_itr_next(trip, sub, &itr))
-    {
-        const ptrip ln = kb_itr_key(ptrip, &itr);
+    TRIP_ITER(ses->subs, ln)
         if (check_one_action(line, ln->left, &vars, false))
         {
             if (!strcmp(ln->right, EMPTY_LINE))
@@ -222,7 +212,7 @@ void do_all_sub(char *line, struct session *ses)
             memcpy(line, result, rlen);
             line[rlen]=0;
         }
-    }
+    ENDITER
 
     pvars=lastpvars;
 }

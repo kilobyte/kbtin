@@ -55,16 +55,13 @@ void unantisubstitute_command(const char *arg, struct session *ses)
 
     if (strchr(left, '*')) /* wildcard deletion -- have to check all */
     {
-        kbitr_t itr;
         char **todel = malloc(kb_size(ass) * sizeof(char*));
         char **last = todel;
 
-        for (kb_itr_first(str, ass, &itr); kb_itr_valid(&itr); kb_itr_next(str, ass, &itr))
-        {
-            char *p = kb_itr_key(char*, &itr);
+        STR_ITER(ass, p)
             if (match(left, p))
-                *last++ = p;
-        }
+                *last++ = (char*)p;
+        ENDITER
 
         if (last!=todel)
         {
@@ -115,16 +112,11 @@ static void build_antisubs_hs(struct session *ses)
 
     int j=0;
     {
-        kbtree_t(str) *ass = ses->antisubs;
-        kbitr_t itr;
-
-        for (kb_itr_first(str, ass, &itr); kb_itr_valid(&itr); kb_itr_next(str, ass, &itr))
-        {
-            const char *p = kb_itr_key(char*, &itr);
+        STR_ITER(ses->antisubs, p)
             pat[j]=action_to_regex(p);
             flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH;
             j++;
-        }
+        ENDITER
     }
 
     hs_compile_error_t *error;
@@ -177,15 +169,10 @@ bool do_one_antisub(const char *line, struct session *ses)
     }
 #endif
 
-    kbtree_t(str) *ass = ses->antisubs;
     pvars_t vars;
-    kbitr_t itr;
-
-    for (kb_itr_first(str, ass, &itr); kb_itr_valid(&itr); kb_itr_next(str, ass, &itr))
-    {
-        const char *p = kb_itr_key(char*, &itr);
+    STR_ITER(ses->antisubs, p)
         if (check_one_action(line, p, &vars, false))
             return true;
-    }
+    ENDITER
     return false;
 }

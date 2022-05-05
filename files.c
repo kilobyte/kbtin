@@ -697,9 +697,6 @@ void write_command(const char *filename, struct session *ses)
     char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct listnode *nodeptr, *templist;
     struct routenode *rptr;
-    kbtree_t(str) *sl;
-    kbtree_t(trip) *tl;
-    kbitr_t itr;
 
     get_arg_in_braces(filename, buffer, 1);
     substitute_vars(buffer, buffer, ses);
@@ -762,19 +759,16 @@ void write_command(const char *filename, struct session *ses)
     while ((nodeptr = nodeptr->next))
         cfcom(myfile, "promptaction", nodeptr->left, nodeptr->right, nodeptr->pr);
 
-    sl = ses->antisubs;
-    for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
-        cfcom(myfile, "antisub", kb_itr_key(char*, &itr), 0, 0);
+    STR_ITER(ses->antisubs, s)
+        cfcom(myfile, "antisub", s, 0, 0);
+    ENDITER
 
-    tl = ses->subs;
-    for (kb_itr_first(trip, tl, &itr); kb_itr_valid(&itr); kb_itr_next(trip, tl, &itr))
-    {
-        ptrip n = kb_itr_key(ptrip, &itr);
+    TRIP_ITER(ses->subs, n)
         if (strcmp(n->right, EMPTY_LINE))
             cfcom(myfile, "sub", n->left, n->right, 0);
         else
             cfcom(myfile, "gag", n->left, 0, 0);
-    }
+    ENDITER
 
     nodeptr = templist = hash2list(ses->myvars, "*");
     while ((nodeptr = nodeptr->next))
@@ -853,9 +847,7 @@ void writesession_command(const char *filename, struct session *ses)
     char buffer[BUFFER_SIZE*4], *val, num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct listnode *nodeptr, *onptr;
     struct routenode *rptr;
-    kbtree_t(str) *sl, *orgsl;
-    kbtree_t(trip) *tl;
-    kbitr_t itr;
+    kbtree_t(str) *sl;
 
     if (ses==nullsession)
         return tintin_eprintf(ses, "#THIS IS THE NULL SESSION -- NO DELTA!");
@@ -938,19 +930,13 @@ void writesession_command(const char *filename, struct session *ses)
         cfcom(myfile, "promptaction", nodeptr->left, nodeptr->right, nodeptr->pr);
     }
 
-    sl = ses->antisubs;
-    orgsl = nullsession->antisubs;
-    for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
-    {
-        char *p = kb_itr_key(char*, &itr);
-        if (!kb_get(str, orgsl, p))
+    sl = nullsession->antisubs;
+    STR_ITER(ses->antisubs, p)
+        if (!kb_get(str, sl, p))
             cfcom(myfile, "antisub", p, 0, 0);
-    }
+    ENDITER
 
-    tl = ses->subs;
-    for (kb_itr_first(trip, tl, &itr); kb_itr_valid(&itr); kb_itr_next(trip, tl, &itr))
-    {
-        ptrip n = kb_itr_key(ptrip, &itr);
+    TRIP_ITER(ses->subs, n)
         struct trip srch = {n->left, 0, 0};
         ptrip *m = kb_get(trip, nullsession->subs, &srch);
         if (m && !strcmp(n->right, (*m)->right))
@@ -959,7 +945,7 @@ void writesession_command(const char *filename, struct session *ses)
             cfcom(myfile, "sub", n->left, n->right, 0);
         else
             cfcom(myfile, "gag", n->left, 0, 0);
-    }
+    ENDITER
 
     nodeptr = onptr = hash2list(ses->myvars, "*");
     while ((nodeptr = nodeptr->next))

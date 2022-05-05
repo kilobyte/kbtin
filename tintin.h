@@ -259,6 +259,13 @@ typedef struct trip *ptrip;
 KBTREE_HEADER(str, char*, strcmp)
 KBTREE_HEADER(trip, ptrip, tripcmp)
 
+#define TYPE_ITER(kind, type, tree, ip) {kbitr_t itr; kbtree_t(kind) *itrtr = (tree); \
+    for (kb_itr_first(kind, itrtr, &itr); kb_itr_valid(&itr); kb_itr_next(kind, itrtr, &itr)) \
+    { const type ip = kb_itr_key(type, &itr);
+#define STR_ITER(tree, ip) TYPE_ITER(str, char*, (tree), ip)
+#define TRIP_ITER(tree, ip) TYPE_ITER(trip, ptrip, (tree), ip)
+#define ENDITER }}
+
 /************************ structures *********************/
 struct listnode
 {
