@@ -766,6 +766,7 @@ void reverselist_command(const char *arg, struct session *ses)
             list+=sprintf(list, "%s", tab[i]);
         else
             list+=sprintf(list, "{%s}", tab[i]);
+        free(tab[i]);
     }
     *list=0;
     set_variable(left, temp, ses);
