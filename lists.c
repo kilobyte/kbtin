@@ -656,7 +656,7 @@ void collate_command(const char *arg, struct session *ses)
     if (!*left)
         return tintin_eprintf(ses, "#Error - Syntax: #collate {dest var} {list}");
 
-    strcpy(last, K_ACTION_MAGIC);
+    strcpy(last, "#X~4~~2~~12~[This is a sentinel!]~7~X");
     *(outptr=out)=0;
     get_arg(arg, list, 1, ses);
     arg = list;

@@ -378,8 +378,7 @@ void show_list(struct listnode *listhead)
 void show_list_action(struct listnode *listhead)
 {
     while ((listhead = listhead->next))
-        if (strcmp(listhead->left, K_ACTION_MAGIC))
-            shownode_list_action(listhead);
+        shownode_list_action(listhead);
 }
 
 struct listnode* search_node_with_wild(struct listnode *listhead, const char *cptr)

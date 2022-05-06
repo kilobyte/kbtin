@@ -23,56 +23,44 @@ static const char *var_ptr[10];
 
 static bool inActions=false;
 static int deletedActions=0;
+static char **stray_strings=0;
+static int max_strays=0;
 const char *match_start, *match_end;
 
 extern struct session *if_command(const char *arg, struct session *ses);
 static bool check_a_action(const char *line, const char *action, bool inside);
 
-static void kill_action(struct listnode *head, struct listnode *nptr)
+static void save_action(char **right)
 {
-    if (inActions)
+    if (!inActions)
+        return;
+
+    if (deletedActions==max_strays)
     {
-        if (!strcmp(nptr->left, K_ACTION_MAGIC))
-            return;
-        SFREE(nptr->left);
-        nptr->left=MALLOC(strlen(K_ACTION_MAGIC)+1);
-        strcpy(nptr->left, K_ACTION_MAGIC);
-        deletedActions++;
+        if (!max_strays)
+            max_strays=16;
+        else
+            max_strays*=2;
+        stray_strings = realloc(stray_strings, max_strays*sizeof(char*));
     }
-    else
-        deletenode_list(head, nptr);
+    stray_strings[deletedActions] = *right;
+    *right=0;
+    deletedActions++;
 }
 
-static void zap_actions(struct session *ses)
+static void kill_action(struct listnode *head, struct listnode *nptr)
 {
-    struct listnode *l, *ln, *ol;
+    save_action(&nptr->right);
+    deletenode_list(head, nptr);
+}
 
-    ln =(ol=ses->actions)->next;
-    while (ln)
-        if (strcmp(ln->left, K_ACTION_MAGIC))
-            ln=(ol=ln)->next;
-        else
-        {
-            l=ln;
-            ol->next=ln=ln->next;
-            SFREE(l->left);
-            SFREE(l->right);
-            SFREE(l->pr);
-            LFREE(l);
-        }
-    ln =(ol=ses->prompts)->next;
-    while (ln)
-        if (strcmp(ln->left, K_ACTION_MAGIC))
-            ln=(ol=ln)->next;
-        else
-        {
-            l=ln;
-            ol->next=ln=ln->next;
-            SFREE(l->left);
-            SFREE(l->right);
-            SFREE(l->pr);
-            LFREE(l);
-        }
+static void zap_actions(void)
+{
+    for (int i=0;i<deletedActions;i++)
+        free(stray_strings[i]);
+    free(stray_strings);
+    stray_strings=0;
+    max_strays=0;
     deletedActions=0;
 }
 
@@ -105,8 +93,7 @@ void action_command(const char *arg, struct session *ses)
     {
         flag=false;
         while ((myactions = search_node_with_wild(myactions, left)))
-            if (strcmp(myactions->left, K_ACTION_MAGIC))
-                shownode_list_action(myactions), flag=true;
+            shownode_list_action(myactions), flag=true;
         if (!flag && ses->mesvar[MSG_ACTION])
             tintin_printf(ses, "#That action (%s) is not defined.", left);
     }
@@ -147,8 +134,7 @@ void promptaction_command(const char *arg, struct session *ses)
     {
         flag=false;
         while ((myprompts = search_node_with_wild(myprompts, left)))
-            if (strcmp(myprompts->left, K_ACTION_MAGIC))
-                shownode_list_action(myprompts), flag=true;
+            shownode_list_action(myprompts), flag=true;
         if (!flag && ses->mesvar[MSG_ACTION])
             tintin_printf(ses, "#That promptaction (%s) is not defined.", left);
     }
@@ -180,26 +166,17 @@ void unaction_command(const char *arg, struct session *ses)
     while (*ptr)
     {
         ln=*ptr;
-        if (strcmp(ln->left, K_ACTION_MAGIC)&&match(left, ln->left))
+        if (match(left, ln->left))
         {
             flag=true;
             if (ses->mesvar[MSG_ACTION])
                 tintin_printf(ses, "#Ok. {%s} is no longer an action.", ln->left);
+            save_action(&ln->right);
+            *ptr=ln->next;
             SFREE(ln->left);
-            if (inActions)
-            {
-                ln->left=MALLOC(strlen(K_ACTION_MAGIC)+1);
-                strcpy(ln->left, K_ACTION_MAGIC);
-                deletedActions++;
-                ptr=&(*ptr)->next;
-            }
-            else
-            {
-                *ptr=ln->next;
-                SFREE(ln->right);
-                SFREE(ln->pr);
-                LFREE(ln);
-            }
+            SFREE(ln->right);
+            SFREE(ln->pr);
+            LFREE(ln);
             LISTLEN(ses->actions)--;
         }
         else
@@ -226,26 +203,17 @@ void unpromptaction_command(const char *arg, struct session *ses)
     while (*ptr)
     {
         ln=*ptr;
-        if (strcmp(ln->left, K_ACTION_MAGIC)&&match(left, ln->left))
+        if (match(left, ln->left))
         {
             flag=true;
             if (ses->mesvar[MSG_ACTION])
                 tintin_printf(ses, "#Ok. {%s} is no longer a promptaction.", ln->left);
+            save_action(&ln->right);
+            *ptr=ln->next;
             SFREE(ln->left);
-            if (inActions)
-            {
-                ln->left=MALLOC(strlen(K_ACTION_MAGIC)+1);
-                strcpy(ln->left, K_ACTION_MAGIC);
-                deletedActions++;
-                ptr=&(*ptr)->next;
-            }
-            else
-            {
-                *ptr=ln->next;
-                SFREE(ln->right);
-                SFREE(ln->pr);
-                LFREE(ln);
-            }
+            SFREE(ln->right);
+            SFREE(ln->pr);
+            LFREE(ln);
             LISTLEN(ses->prompts)--;
         }
         else
@@ -335,7 +303,7 @@ void check_all_actions(const char *line, struct session *ses)
         }
     }
     if (deletedActions)
-        zap_actions(ses);
+        zap_actions();
     inActions=false;
 }
 
@@ -371,7 +339,7 @@ void check_all_promptactions(const char *line, struct session *ses)
         }
     }
     if (deletedActions)
-        zap_actions(ses);
+        zap_actions();
     inActions=false;
 }
 
