@@ -116,10 +116,14 @@ static void unsub(const char *arg, bool gag, struct session *ses)
         had_any = t && gag==!strcmp((*t)->right, EMPTY_LINE);
         if (had_any)
         {
+            trip_t d = *t;
             kb_del(trip, sub, &srch);
             if (ses->mesvar[MSG_SUBSTITUTE])
-                tintin_printf(0, "#Ok. {%s} is no longer %s.", (*t)->left,
+                tintin_printf(0, "#Ok. {%s} is no longer %s.", d->left,
                                  gag? "gagged":"substituted");
+            free(d->left);
+            free(d->right);
+            free(d);
         }
     }
     else
@@ -143,6 +147,8 @@ static void unsub(const char *arg, bool gag, struct session *ses)
         for (trip_t *del = todel; del != last; del++)
         {
             kb_del(trip, sub, *del);
+            free((*del)->left);
+            free((*del)->right);
             free(*del);
         }
         free(todel);
