@@ -102,57 +102,29 @@ void gag_command(const char *arg, struct session *ses)
 /*****************************/
 /* the #unsubstitute command */
 /*****************************/
+static bool is_not_gag(char **right)
+{
+    return strcmp(*right, EMPTY_LINE);
+}
+
+static bool is_gag(char **right)
+{
+    return !strcmp(*right, EMPTY_LINE);
+}
+
 static void unsub(const char *arg, bool gag, struct session *ses)
 {
     char left[BUFFER_SIZE];
     arg = get_arg_in_braces(arg, left, 1);
-    bool had_any = false;
-    kbtree_t(trip) *sub = ses->subs;
 
-    if (is_literal(left))
+    if (!delete_tlist(ses->subs, left, ses->mesvar[MSG_SUBSTITUTE]?
+        gag? "#Ok. {%s} is no longer gagged." :
+        "#Ok. {%s} is no longer substituted." : 0,
+        gag? is_not_gag : is_gag)
+        && ses->mesvar[MSG_SUBSTITUTE])
     {
-        struct trip srch = {left, 0, 0};
-        ptrip *t = kb_get(trip, sub, &srch);
-        had_any = t && gag==!strcmp((*t)->right, EMPTY_LINE);
-        if (had_any)
-        {
-            ptrip d = *t;
-            kb_del(trip, sub, &srch);
-            if (ses->mesvar[MSG_SUBSTITUTE])
-                tintin_printf(0, "#Ok. {%s} is no longer %s.", d->left,
-                                 gag? "gagged":"substituted");
-            free(d->left);
-            free(d->right);
-            free(d);
-        }
-    }
-    else
-    {
-        ptrip *todel = malloc(kb_size(sub) * sizeof(ptrip));
-        ptrip *last = todel;
-
-        TRIP_ITER(sub, t)
-            if (!match(left, t->left) || gag!=!strcmp(t->right, EMPTY_LINE))
-                continue;
-            if (!had_any)
-                had_any = true;
-            if (ses->mesvar[MSG_SUBSTITUTE])
-                tintin_printf(0, "#Ok. {%s} is no longer %s.", t->left, gag? "gagged":"substituted");
-            *last++ = t;
-        ENDITER
-
-        for (ptrip *del = todel; del != last; del++)
-        {
-            kb_del(trip, sub, *del);
-            free((*del)->left);
-            free((*del)->right);
-            free(*del);
-        }
-        free(todel);
-    }
-
-    if (!had_any && ses->mesvar[MSG_SUBSTITUTE])
         tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
+    }
 }
 
 void unsubstitute_command(const char *arg, struct session *ses)
