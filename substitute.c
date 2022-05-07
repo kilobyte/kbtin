@@ -67,8 +67,15 @@ static void parse_sub(const char *left_, const char *right,  bool gag, struct se
     new->left = mystrdup(left_);
     new->right = mystrdup(right);
     new->pr = 0;
-    if (kb_get(trip, sub, new))
+    ptrip *t = kb_get(trip, sub, new);
+    if (t)
+    {
+        ptrip d = *t;
         kb_del(trip, sub, new);
+        free(d->left);
+        free(d->right);
+        free(d);
+    }
     kb_put(trip, sub, new);
     subnum++;
     if (ses->mesvar[MSG_SUBSTITUTE])
