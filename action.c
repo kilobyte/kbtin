@@ -14,6 +14,7 @@
 #include "protos/parse.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/tlist.h"
 #include "protos/vars.h"
 #include <assert.h>
 
@@ -30,11 +31,8 @@ const char *match_start, *match_end;
 extern struct session *if_command(const char *arg, struct session *ses);
 static bool check_a_action(const char *line, const char *action, bool inside);
 
-static void save_action(char **right)
+static bool save_action(char **right)
 {
-    if (!inActions)
-        return;
-
     if (deletedActions==max_strays)
     {
         if (!max_strays)
@@ -46,12 +44,8 @@ static void save_action(char **right)
     stray_strings[deletedActions] = *right;
     *right=0;
     deletedActions++;
-}
 
-static void kill_action(struct listnode *head, struct listnode *nptr)
-{
-    save_action(&nptr->right);
-    deletenode_list(head, nptr);
+    return false;
 }
 
 static void zap_actions(void)
@@ -68,16 +62,11 @@ static void zap_actions(void)
 /* the #action command */
 /***********************/
 
-/*  Priority code added by Joann Ellsworth 2/2/94 */
-
-void action_command(const char *arg, struct session *ses)
+static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l, const char *what)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     char pr[BUFFER_SIZE];
-    struct listnode *myactions, *ln;
-    bool flag;
 
-    myactions = ses->actions;
     arg = get_arg_in_braces(arg, right, 0);
     substitute_myvars(right, left, ses, 0);
     arg = get_arg_in_braces(arg, right, 1);
@@ -86,26 +75,43 @@ void action_command(const char *arg, struct session *ses)
         strcpy(pr, "5"); /* defaults priority to 5 if no value given */
     if (!*left)
     {
-        tintin_printf(ses, "#Defined actions:");
-        show_list_action(myactions);
+        tintin_printf(ses, "#Defined %ss:", what);
+        show_tlist(l, 0, 0);
     }
     else if (*left && !*right)
     {
-        flag=false;
-        while ((myactions = search_node_with_wild(myactions, left)))
-            shownode_list_action(myactions), flag=true;
-        if (!flag && ses->mesvar[MSG_ACTION])
-            tintin_printf(ses, "#That action (%s) is not defined.", left);
+        if (!show_tlist(l, left, 0) && ses->mesvar[MSG_ACTION])
+            tintin_printf(ses, "#That %s (%s) is not defined.", what, left);
     }
     else
     {
-        if ((ln = searchnode_list(myactions, left)))
-            kill_action(myactions, ln);
-        insertnode_list(myactions, left, right, pr, PRIORITY);
+        ptrip new = MALLOC(sizeof(struct trip));
+        new->left = mystrdup(left);
+        new->right = mystrdup(right);
+        new->pr = 0;
+        ptrip *old = kb_get(trip, l, new);
+        if (old)
+        {
+            ptrip del = *old;
+            kb_del(trip, l, new);
+            if (inActions)
+                save_action(&del->right);
+            free(del->left);
+            free(del->right);
+            free(del->pr);
+            free(del);
+        }
+        new->pr = mystrdup(pr);
+        kb_put(trip, l, new);
         if (ses->mesvar[MSG_ACTION])
             tintin_printf(ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
         acnum++;
     }
+}
+
+void action_command(const char *arg, struct session *ses)
+{
+    parse_action(arg, ses, ses->actions, "action");
 }
 
 /*****************************/
@@ -113,39 +119,7 @@ void action_command(const char *arg, struct session *ses)
 /*****************************/
 void promptaction_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE];
-    char pr[BUFFER_SIZE];
-    struct listnode *myprompts, *ln;
-    bool flag;
-
-    myprompts = ses->prompts;
-    arg = get_arg_in_braces(arg, right, 0);
-    substitute_myvars(right, left, ses, 0);
-    arg = get_arg_in_braces(arg, right, 1);
-    arg = get_arg_in_braces(arg, pr, 1);
-    if (!*pr)
-        strcpy(pr, "5"); /* defaults priority to 5 if no value given */
-    if (!*left)
-    {
-        tintin_printf(ses, "#Defined prompts:");
-        show_list_action(myprompts);
-    }
-    else if (*left && !*right)
-    {
-        flag=false;
-        while ((myprompts = search_node_with_wild(myprompts, left)))
-            shownode_list_action(myprompts), flag=true;
-        if (!flag && ses->mesvar[MSG_ACTION])
-            tintin_printf(ses, "#That promptaction (%s) is not defined.", left);
-    }
-    else
-    {
-        if ((ln = searchnode_list(myprompts, left)))
-            kill_action(myprompts, ln);
-        insertnode_list(myprompts, left, right, pr, PRIORITY);
-        if (ses->mesvar[MSG_ACTION])
-            tintin_printf(ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
-    }
+    parse_action(arg, ses, ses->prompts, "promptaction");
 }
 
 
@@ -155,35 +129,18 @@ void promptaction_command(const char *arg, struct session *ses)
 void unaction_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    struct listnode **ptr, *ln;
-    bool flag=false;
 
     arg = get_arg_in_braces(arg, left, 1);
     if (!*left)
         return tintin_eprintf(ses, "#Syntax: #unaction <pattern>");
 
-    ptr = &ses->actions->next;
-    while (*ptr)
+    if (!delete_tlist(ses->actions, left, ses->mesvar[MSG_ACTION]?
+            "#Ok. {%s} is no longer an action." : 0,
+            inActions? save_action : 0)
+        && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
     {
-        ln=*ptr;
-        if (match(left, ln->left))
-        {
-            flag=true;
-            if (ses->mesvar[MSG_ACTION])
-                tintin_printf(ses, "#Ok. {%s} is no longer an action.", ln->left);
-            save_action(&ln->right);
-            *ptr=ln->next;
-            SFREE(ln->left);
-            SFREE(ln->right);
-            SFREE(ln->pr);
-            LFREE(ln);
-            LISTLEN(ses->actions)--;
-        }
-        else
-            ptr=&(*ptr)->next;
-    }
-    if (!flag && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
         tintin_printf(ses, "#No match(es) found for {%s}", left);
+    }
 }
 
 /*******************************/
@@ -192,35 +149,18 @@ void unaction_command(const char *arg, struct session *ses)
 void unpromptaction_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    struct listnode **ptr, *ln;
-    bool flag=false;
 
     arg = get_arg_in_braces(arg, left, 1);
     if (!*left)
         return tintin_eprintf(ses, "#Syntax: #unpromptaction <pattern>");
 
-    ptr = &ses->prompts->next;
-    while (*ptr)
+    if (!delete_tlist(ses->prompts, left, ses->mesvar[MSG_ACTION]?
+            "#Ok. {%s} is no longer a promptaction." : 0,
+            inActions? save_action : 0)
+        && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
     {
-        ln=*ptr;
-        if (match(left, ln->left))
-        {
-            flag=true;
-            if (ses->mesvar[MSG_ACTION])
-                tintin_printf(ses, "#Ok. {%s} is no longer a promptaction.", ln->left);
-            save_action(&ln->right);
-            *ptr=ln->next;
-            SFREE(ln->left);
-            SFREE(ln->right);
-            SFREE(ln->pr);
-            LFREE(ln);
-            LISTLEN(ses->prompts)--;
-        }
-        else
-            ptr=&(*ptr)->next;
-    }
-    if (!flag && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
         tintin_printf(ses, "#No match(es) found for {%s}", left);
+    }
 }
 
 
@@ -277,14 +217,11 @@ char *action_to_regex(const char *pat)
 /**********************************************/
 void check_all_actions(const char *line, struct session *ses)
 {
-    struct listnode *ln;
     pvars_t vars, *lastpvars;
 
-    ln = ses->actions;
     inActions=true;
 
-    while ((ln = ln->next))
-    {
+    TRIP_ITER(ses->actions, ln)
         if (check_one_action(line, ln->left, &vars, false))
         {
             lastpvars = pvars;
@@ -301,7 +238,8 @@ void check_all_actions(const char *line, struct session *ses)
             recursion=0;
             pvars = lastpvars;
         }
-    }
+    ENDITER
+
     if (deletedActions)
         zap_actions();
     inActions=false;
@@ -313,14 +251,11 @@ void check_all_actions(const char *line, struct session *ses)
 /**********************************************/
 void check_all_promptactions(const char *line, struct session *ses)
 {
-    struct listnode *ln;
     pvars_t vars, *lastpvars;
 
-    ln = ses->prompts;
     inActions=true;
 
-    while ((ln = ln->next))
-    {
+    TRIP_ITER(ses->prompts, ln)
         if (check_one_action(line, ln->left, &vars, false))
         {
             lastpvars=pvars;
@@ -337,7 +272,8 @@ void check_all_promptactions(const char *line, struct session *ses)
             recursion=0;
             pvars=lastpvars;
         }
-    }
+    ENDITER
+
     if (deletedActions)
         zap_actions();
     inActions=false;

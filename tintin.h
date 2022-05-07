@@ -345,8 +345,8 @@ struct session
     char *loginputprefix, *loginputsuffix;
     logtype_t logtype;
     bool ignore;
-    struct listnode *actions, *prompts, *highs;
-    kbtree_t(trip) *subs;
+    struct listnode *highs;
+    kbtree_t(trip) *subs, *actions, *prompts;
     kbtree_t(str) *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds;
     struct listnode *path;

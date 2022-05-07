@@ -13,7 +13,6 @@
 #include "protos/slist.h"
 #include "protos/utils.h"
 #include "protos/vars.h"
-#include "kbtree.h"
 
 /*******************************/
 /* the #antisubstitute command */

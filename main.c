@@ -199,8 +199,8 @@ static void init_nullses(void)
     nullsession->ignore = DEFAULT_IGNORE;
     nullsession->partial_line_marker = mystrdup(DEFAULT_PARTIAL_LINE_MARKER);
     nullsession->aliases = init_hash();
-    nullsession->actions = init_list();
-    nullsession->prompts = init_list();
+    nullsession->actions = init_tlist();
+    nullsession->prompts = init_tlist();
     nullsession->subs = init_tlist();
     nullsession->myvars = init_hash();
     nullsession->highs = init_list();

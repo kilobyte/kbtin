@@ -2,7 +2,7 @@
 {foo}={x}
 #Defined actions:
 {foo}={x} @ {5}
-#Defined prompts:
+#Defined promptactions:
 {foo}={x} @ {5}
 #THESE SUBSTITUTES HAVE BEEN DEFINED:
 {foo}={x}

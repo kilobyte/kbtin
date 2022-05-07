@@ -6,7 +6,6 @@
 /*                    New code by Bill Reiss 1993                     */
 /**********************************************************************/
 #include "tintin.h"
-#include "kbtree.h"
 #include "protos/action.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
@@ -751,13 +750,13 @@ void write_command(const char *filename, struct session *ses)
         cfcom(myfile, "alias", nodeptr->left, nodeptr->right, 0);
     zap_list(templist);
 
-    nodeptr = ses->actions;
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
+    TRIP_ITER(ses->actions, n)
+        cfcom(myfile, "action", n->left, n->right, n->pr);
+    ENDITER
 
-    nodeptr = ses->prompts;
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "promptaction", nodeptr->left, nodeptr->right, nodeptr->pr);
+    TRIP_ITER(ses->prompts, n)
+        cfcom(myfile, "promptaction", n->left, n->right, n->pr);
+    ENDITER
 
     STR_ITER(ses->antisubs, s)
         cfcom(myfile, "antisub", s, 0, 0);
@@ -910,25 +909,21 @@ void writesession_command(const char *filename, struct session *ses)
     }
     zap_list(onptr);
 
-    nodeptr = ses->actions;
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((onptr=searchnode_list(nullsession->actions, nodeptr->left)))
-            if (!strcmp(onptr->right, nodeptr->right)||
-                    !strcmp(onptr->right, nodeptr->right))
-                continue;
-        cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
-    }
+    TRIP_ITER(ses->actions, n)
+        struct trip srch = {n->left, 0, 0};
+        ptrip *m = kb_get(trip, nullsession->actions, &srch);
+        if (m && !strcmp(n->right, (*m)->right) && !strcmp(n->pr, (*m)->pr))
+            continue;
+        cfcom(myfile, "action", n->left, n->right, n->pr);
+    ENDITER
 
-    nodeptr = ses->prompts;
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((onptr=searchnode_list(nullsession->prompts, nodeptr->left)))
-            if (!strcmp(onptr->right, nodeptr->right)||
-                    !strcmp(onptr->right, nodeptr->right))
-                continue;
-        cfcom(myfile, "promptaction", nodeptr->left, nodeptr->right, nodeptr->pr);
-    }
+    TRIP_ITER(ses->prompts, n)
+        struct trip srch = {n->left, 0, 0};
+        ptrip *m = kb_get(trip, nullsession->prompts, &srch);
+        if (m && !strcmp(n->right, (*m)->right) && !strcmp(n->pr, (*m)->pr))
+            continue;
+        cfcom(myfile, "promptaction", n->left, n->right, n->pr);
+    ENDITER
 
     sl = nullsession->antisubs;
     STR_ITER(ses->antisubs, p)

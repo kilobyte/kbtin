@@ -968,8 +968,8 @@ void tab_delete(char *arg, struct session *ses)
 void info_command(const char *arg, struct session *ses)
 {
     char buffer[BUFFER_SIZE], *bptr;
-    int actions   = count_list(ses->actions);
-    int practions = count_list(ses->prompts);
+    int actions   = count_tlist(ses->actions);
+    int practions = count_tlist(ses->prompts);
     int aliases   = ses->aliases->nval;
     int subs      = count_tlist(ses->subs);
     int antisubs  = count_slist(ses->antisubs);

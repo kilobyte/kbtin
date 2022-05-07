@@ -89,8 +89,8 @@ void kill_all(struct session *ses, bool no_reinit)
         return;
 
     kill_hash(ses->aliases);
-    kill_list(ses->actions);
-    kill_list(ses->prompts);
+    kill_tlist(ses->actions);
+    kill_tlist(ses->prompts);
     kill_hash(ses->myvars);
     kill_list(ses->highs);
     kill_tlist(ses->subs);
@@ -104,8 +104,8 @@ void kill_all(struct session *ses, bool no_reinit)
         return;
 
     ses->aliases = init_hash();
-    ses->actions = init_list();
-    ses->prompts = init_list();
+    ses->actions = init_tlist();
+    ses->prompts = init_tlist();
     ses->myvars = init_hash();
     ses->highs = init_list();
     ses->subs = init_tlist();

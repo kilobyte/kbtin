@@ -301,8 +301,8 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->loginputsuffix = mystrdup(ses->loginputsuffix);
     newsession->ignore = ses->ignore;
     newsession->aliases = copy_hash(ses->aliases);
-    newsession->actions = copy_list(ses->actions, PRIORITY);
-    newsession->prompts = copy_list(ses->prompts, PRIORITY);
+    newsession->actions = copy_tlist(ses->actions);
+    newsession->prompts = copy_tlist(ses->prompts);
     newsession->subs = copy_tlist(ses->subs);
     newsession->myvars = copy_hash(ses->myvars);
     newsession->highs = copy_list(ses->highs, ALPHA);

@@ -1,5 +1,4 @@
 #include "tintin.h"
-#include "kbtree.h"
 #include "protos/glob.h"
 #include "protos/llist.h"
 #include "protos/print.h"
@@ -9,8 +8,7 @@ static int tripcmp(const ptrip a, const ptrip b)
 {
     if (a->pr && b->pr)
     {
-        // we should assert that either or none have a priority,
-        // but pattern searches don't supply a priority.
+        // Searches/replacement match any priority.
         int r=prioritycmp(a->pr, b->pr);
         if (r)
             return r;
@@ -76,32 +74,51 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
     return had_any;
 }
 
-bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
+bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*checkright)(char **right))
 {
     if (pat && is_literal(pat))
     {
         struct trip srch = {(char*)pat, 0, 0};
-        ptrip t = kb_del(trip, l, &srch);
-        if (!t)
+        ptrip *d = kb_get(trip, l, &srch);
+        if (!d)
             return false;
+        ptrip t = *d;
+        if (checkright && checkright(&t->right))
+            return false;
+        kb_del(trip, l, &srch);
         if (msg)
             tintin_printf(0, msg, t->left);
+        free(t->left);
+        free(t->right);
+        free(t->pr);
+        free(t);
         return true;
     }
 
-    bool had_any = false;
+    ptrip *todel = malloc(kb_size(l) * sizeof(ptrip));
+    ptrip *last = todel;
 
     TRIP_ITER(l, t)
         if (pat && !match(pat, t->left))
             continue;
-        if (!had_any)
-            had_any = true;
-        if (msg)
-            tintin_printf(0, msg, t->left);
-        kb_del(trip, l, t);
+        if (checkright && checkright(&t->right))
+            continue;
+        *last++ = t;
     ENDITER
 
-    return had_any;
+    for (ptrip *del = todel; del != last; del++)
+    {
+        if (msg)
+            tintin_printf(0, msg, (*del)->left);
+        kb_del(trip, l, *del);
+        free((*del)->left);
+        free((*del)->right);
+        free((*del)->pr);
+        free(*del);
+    }
+
+    free(todel);
+    return last == todel;
 }
 
 kbtree_t(trip) *copy_tlist(kbtree_t(trip) *a)
