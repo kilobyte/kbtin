@@ -13,7 +13,7 @@ kbtree_t(str)* init_slist(void)
 void kill_slist(kbtree_t(str) *l)
 {
     STR_ITER(l, p)
-        free(p);
+        free((char*)p);
     ENDITER
 
     kb_destroy(str, l);
