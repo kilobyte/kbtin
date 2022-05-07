@@ -48,12 +48,12 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
     if (pat && is_literal(pat))
     {
         struct trip srch = {(char*)pat, 0, 0};
-        const ptrip t = *kb_get(trip, l, &srch);
+        const ptrip *t = kb_get(trip, l, &srch);
         if (!t)
             return false;
         if (msg)
             tintin_printf(0, msg);
-        show_trip(t);
+        show_trip(*t);
         return true;
     }
 
