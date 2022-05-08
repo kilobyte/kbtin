@@ -40,7 +40,6 @@ void kill_list(struct listnode *nptr)
 
     if (!nptr)
         syserr("NULL PTR");
-    int len = LISTLEN(nptr);
     nexttodel = nptr->next;
     LFREE(nptr);
 
@@ -51,9 +50,7 @@ void kill_list(struct listnode *nptr)
         SFREE(nptr->right);
         SFREE(nptr->pr);
         LFREE(nptr);
-        len--;
     }
-    assert(!len);
 }
 
 
@@ -66,7 +63,6 @@ void zap_list(struct listnode *nptr)
 
     if (!nptr)
         syserr("NULL PTR");
-    int len = LISTLEN(nptr);
     nexttodel = nptr->next;
     LFREE(nptr);
 
@@ -74,9 +70,7 @@ void zap_list(struct listnode *nptr)
     {
         nexttodel = nptr->next;
         LFREE(nptr);
-        len--;
     }
-    assert(!len);
 }
 
 
@@ -124,7 +118,6 @@ void kill_all(struct session *ses, bool no_reinit)
 /*****************************/
 void deletenode_list(struct listnode *listhead, struct listnode *nptr)
 {
-    LISTLEN(listhead)--;
     struct listnode *lastnode = listhead;
 
     while ((listhead = listhead->next))
@@ -140,7 +133,6 @@ void deletenode_list(struct listnode *listhead, struct listnode *nptr)
         }
         lastnode = listhead;
     }
-    return;
 }
 
 /*************************************/
@@ -166,8 +158,6 @@ void show_list(struct listnode *listhead)
 /*********************************************************************/
 void addnode_list(struct listnode *listhead, const char *ltext, const char *rtext, const char *prtext)
 {
-    LISTLEN(listhead)++;
-
     struct listnode *newnode;
     if (!(newnode = TALLOC(struct listnode)))
         syserr("couldn't malloc listhead");

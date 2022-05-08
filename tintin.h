@@ -271,8 +271,6 @@ struct listnode
     char *left, *right, *pr;
 };
 
-#define LISTLEN(x) (*(intptr_t*)&((x)->right))
-
 struct trip
 {
     char *left, *right, *pr;

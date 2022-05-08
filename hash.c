@@ -289,7 +289,6 @@ struct listnode* hash2list(struct hashtable *h, const char *pat)
         l=merge_lists(p[j], l);
     p[0]=init_list();
     p[0]->next=l;
-    LISTLEN(p[0])=count;
     return p[0];
 }
 
