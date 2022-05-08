@@ -119,21 +119,6 @@ void kill_all(struct session *ses, bool no_reinit)
     tintin_printf(ses, "#Lists cleared.");
 }
 
-/***********************************************/
-/* make a copy of a list - return: ptr to copy */
-/***********************************************/
-struct listnode* copy_list(struct listnode *sourcelist, int mode)
-{
-    struct listnode *resultlist;
-
-    resultlist = init_list();
-    while ((sourcelist = sourcelist->next))
-        insertnode_list(resultlist, sourcelist->left, sourcelist->right,
-                        sourcelist->pr, mode);
-
-    return resultlist;
-}
-
 /******************************************************************/
 /* compare priorities of a and b in a semi-lexicographical order: */
 /* strings generally sort in ASCIIbetical order, however numbers  */
@@ -193,126 +178,6 @@ next:
     return 1;
 }
 
-/*****************************************************************/
-/* create a node containing the ltext, rtext fields and stuff it */
-/* into the list - in lexicographical order, or by numerical     */
-/* priority (dependent on mode) - Mods by Joann Ellsworth 2/2/94 */
-/*****************************************************************/
-void insertnode_list(struct listnode *listhead, const char *ltext, const char *rtext, const char *prtext, llist_mode_t mode)
-{
-    struct listnode *nptr, *nptrlast, *newnode;
-    int lo, ln;
-
-    if (!(newnode = (TALLOC(struct listnode))))
-        syserr("couldn't malloc listhead");
-    newnode->left = (char *)MALLOC(strlen(ltext) + 1);
-    newnode->right = (char *)MALLOC(strlen(rtext) + 1);
-    newnode->pr = prtext? (char *)MALLOC(strlen(prtext) + 1) : 0;
-    strcpy(newnode->left, ltext);
-    strcpy(newnode->right, rtext);
-    if (prtext)
-        strcpy(newnode->pr, prtext);
-
-    LISTLEN(listhead)++;
-    nptr = listhead;
-    switch (mode)
-    {
-    case PRIORITY:
-        while ((nptrlast = nptr) && (nptr = nptr->next))
-        {
-            if (prioritycmp(prtext, nptr->pr) < 0)
-            {
-                newnode->next = nptr;
-                nptrlast->next = newnode;
-                return;
-            }
-            else if (prioritycmp(prtext, nptr->pr) == 0)
-            {
-                while ((nptrlast) && (nptr) &&
-                        (prioritycmp(prtext, nptr->pr) == 0))
-                {
-                    if (prioritycmp(ltext, nptr->left) <= 0)
-                    {
-                        newnode->next = nptr;
-                        nptrlast->next = newnode;
-                        return;
-                    }
-                    nptrlast = nptr;
-                    nptr = nptr->next;
-                }
-                nptrlast->next = newnode;
-                newnode->next = nptr;
-                return;
-            }
-        }
-        nptrlast->next = newnode;
-        newnode->next = NULL;
-        return;
-
-    case LENGTH:
-        ln=strlen(ltext);
-        while ((nptrlast = nptr) && (nptr = nptr->next))
-        {
-            lo=strlen(nptr->left);
-            if (ln<lo)
-            {
-                newnode->next = nptr;
-                nptrlast->next = newnode;
-                return;
-            }
-            else if (ln==lo)
-            {
-                while ((nptrlast) && (nptr) &&
-                        (ln==lo))
-                {
-                    if (prioritycmp(ltext, nptr->left) <= 0)
-                    {
-                        newnode->next = nptr;
-                        nptrlast->next = newnode;
-                        return;
-                    }
-                    nptrlast = nptr;
-                    nptr = nptr->next;
-                }
-                nptrlast->next = newnode;
-                newnode->next = nptr;
-                return;
-            }
-        }
-        nptrlast->next = newnode;
-        newnode->next = NULL;
-        return;
-
-    case ALPHA:
-        while ((nptrlast = nptr) && (nptr = nptr->next))
-        {
-            if (strcmp(ltext, nptr->left) <= 0)
-            {
-                newnode->next = nptr;
-                nptrlast->next = newnode;
-                return;
-            }
-        }
-        nptrlast->next = newnode;
-        newnode->next = NULL;
-        return;
-
-    case ALPHALONGER:
-        while ((nptrlast = nptr) && (nptr = nptr->next))
-        {
-            if (strlongercmp(ltext, nptr->left) <= 0)
-            {
-                newnode->next = nptr;
-                nptrlast->next = newnode;
-                return;
-            }
-        }
-        nptrlast->next = newnode;
-        newnode->next = NULL;
-        return;
-    }
-}
-
 /*****************************/
 /* delete a node from a list */
 /*****************************/
@@ -337,33 +202,12 @@ void deletenode_list(struct listnode *listhead, struct listnode *nptr)
     return;
 }
 
-/********************************************************/
-/* search for a node containing the ltext in left-field */
-/* return: ptr to node on success / NULL on failure     */
-/********************************************************/
-struct listnode* searchnode_list(struct listnode *listhead, const char *cptr)
-{
-    int i;
-
-    while ((listhead = listhead->next))
-    {
-        if ((i = strcmp(listhead->left, cptr)) == 0)
-            return listhead;
-    }
-    return NULL;
-}
-
 /*************************************/
 /* show contents of a node on screen */
 /*************************************/
-void shownode_list(struct listnode *nptr)
+static void shownode_list(struct listnode *nptr)
 {
     tintin_printf(0, "~7~{%s~7~}={%s~7~}", nptr->left, nptr->right);
-}
-
-void shownode_list_action(struct listnode *nptr)
-{
-    tintin_printf(0, "~7~{%s~7~}={%s~7~} @ {%s}", nptr->left, nptr->right, nptr->pr);
 }
 
 /*************************************/
@@ -374,23 +218,6 @@ void show_list(struct listnode *listhead)
     while ((listhead = listhead->next))
         shownode_list(listhead);
 }
-
-void show_list_action(struct listnode *listhead)
-{
-    while ((listhead = listhead->next))
-        shownode_list_action(listhead);
-}
-
-struct listnode* search_node_with_wild(struct listnode *listhead, const char *cptr)
-{
-    while ((listhead = listhead->next))
-    {
-        if (match(cptr, listhead->left))
-            return listhead;
-    }
-    return NULL;
-}
-
 
 /*********************************************************************/
 /* create a node containing the ltext, rtext fields and place at the */
@@ -416,16 +243,4 @@ void addnode_list(struct listnode *listhead, const char *ltext, const char *rtex
     while (listhead->next)
         listhead = listhead->next;
     listhead->next = newnode;
-}
-
-int count_list(struct listnode *listhead)
-{
-    int count = 0;
-    struct listnode *nptr;
-
-    nptr = listhead;
-    while ((nptr = nptr->next))
-        ++count;
-    assert(LISTLEN(listhead) == count);
-    return count;
 }

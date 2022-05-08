@@ -153,8 +153,6 @@
 /* The stuff below here shouldn't be modified unless you know what you're */
 /* doing........                                                          */
 /**************************************************************************/
-typedef enum {PRIORITY, ALPHA, LENGTH, ALPHALONGER} llist_mode_t;
-
 #define BUFFER_SIZE 4096
 #define INPUT_CHUNK 1536
 
