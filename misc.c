@@ -974,7 +974,7 @@ void info_command(const char *arg, struct session *ses)
     int subs      = count_tlist(ses->subs);
     int antisubs  = count_slist(ses->antisubs);
     int vars      = ses->myvars->nval;
-    int highs     = count_list(ses->highs);
+    int highs     = count_tlist(ses->highs);
     int binds     = ses->binds->nval;
     int pathdirs  = ses->pathdirs->nval;
     int locs = 0;

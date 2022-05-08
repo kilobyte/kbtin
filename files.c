@@ -774,9 +774,9 @@ void write_command(const char *filename, struct session *ses)
         cfcom(myfile, "var", nodeptr->left, nodeptr->right, 0);
     zap_list(templist);
 
-    nodeptr = ses->highs;
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "highlight", nodeptr->right, nodeptr->left, 0);
+    TRIP_ITER(ses->highs, n)
+        cfcom(myfile, "highlight", n->right, n->left, 0);
+    ENDITER
 
     nodeptr = templist = hash2list(ses->pathdirs, "*");
     while ((nodeptr = nodeptr->next))
@@ -952,14 +952,13 @@ void writesession_command(const char *filename, struct session *ses)
     }
     zap_list(onptr);
 
-    nodeptr = ses->highs;
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((onptr=searchnode_list(nullsession->highs, nodeptr->left)))
-            if (!strcmp(onptr->right, nodeptr->right))
-                continue;
-        cfcom(myfile, "highlight", nodeptr->right, nodeptr->left, 0);
-    }
+    TRIP_ITER(ses->highs, n)
+        struct trip srch = {n->left, 0, 0};
+        ptrip *m = kb_get(trip, nullsession->highs, &srch);
+        if (m && !strcmp(n->right, (*m)->right))
+            continue;
+        cfcom(myfile, "highlight", n->left, n->right, 0);
+    ENDITER
 
     nodeptr = onptr = hash2list(ses->pathdirs, "*");
     while ((nodeptr = nodeptr->next))

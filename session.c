@@ -305,7 +305,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->prompts = copy_tlist(ses->prompts);
     newsession->subs = copy_tlist(ses->subs);
     newsession->myvars = copy_hash(ses->myvars);
-    newsession->highs = copy_list(ses->highs, ALPHA);
+    newsession->highs = copy_tlist(ses->highs);
     newsession->pathdirs = copy_hash(ses->pathdirs);
     newsession->socket = sock;
     newsession->antisubs = copy_slist(ses->antisubs);

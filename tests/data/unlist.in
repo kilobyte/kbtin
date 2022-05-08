@@ -33,6 +33,13 @@
 #unantisub quux
 #unantisub b*
 #antisub
+#hi red foo
+#hi red bar
+#hi red baz
+#hi red quux
+#unhi quux
+#unhi b*
+#hi
 #ro foo x X
 #ro bar x Y
 #ro baz x Z

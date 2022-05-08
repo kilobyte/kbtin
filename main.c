@@ -203,7 +203,7 @@ static void init_nullses(void)
     nullsession->prompts = init_tlist();
     nullsession->subs = init_tlist();
     nullsession->myvars = init_hash();
-    nullsession->highs = init_list();
+    nullsession->highs = init_tlist();
     nullsession->pathdirs = init_hash();
     nullsession->socket = 0;
     nullsession->sestype = SES_NULL;
