@@ -10,7 +10,6 @@
 #include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/hooks.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/math.h"
 #include "protos/net.h"

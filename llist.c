@@ -53,27 +53,6 @@ void kill_list(struct listnode *nptr)
     }
 }
 
-
-/***********************************************************/
-/* zap only the list structure, without freeing the string */
-/***********************************************************/
-void zap_list(struct listnode *nptr)
-{
-    struct listnode *nexttodel;
-
-    if (!nptr)
-        syserr("NULL PTR");
-    nexttodel = nptr->next;
-    LFREE(nptr);
-
-    for (nptr = nexttodel; nptr; nptr = nexttodel)
-    {
-        nexttodel = nptr->next;
-        LFREE(nptr);
-    }
-}
-
-
 /********************************************************************
 **   This function will clear all lists associated with a session  **
 ********************************************************************/
@@ -133,23 +112,6 @@ void deletenode_list(struct listnode *listhead, struct listnode *nptr)
         }
         lastnode = listhead;
     }
-}
-
-/*************************************/
-/* show contents of a node on screen */
-/*************************************/
-static void shownode_list(struct listnode *nptr)
-{
-    tintin_printf(0, "~7~{%s~7~}={%s~7~}", nptr->left, nptr->right);
-}
-
-/*************************************/
-/* list contents of a list on screen */
-/*************************************/
-void show_list(struct listnode *listhead)
-{
-    while ((listhead = listhead->next))
-        shownode_list(listhead);
 }
 
 /*********************************************************************/
