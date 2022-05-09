@@ -1,6 +1,5 @@
 #include "tintin.h"
 #include "protos/glob.h"
-#include "protos/llist.h"
 #include "protos/utils.h"
 
 #define DELETED_HASHENTRY ((char*)init_hash)
@@ -208,47 +207,6 @@ bool delete_hash(struct hashtable *h, const char *key)
 }
 
 
-/*****************************************************/
-/* merge two sorted llists (without heads!) into one */
-/*****************************************************/
-static struct listnode* merge_lists(struct listnode* a, struct listnode* b)
-{
-    struct listnode* c=0, *c0;
-
-    if (!a)
-        return b;
-    if (!b)
-        return a;
-    if (strcmp(a->left, b->left)<=0)
-    {
-        c0=c=a;
-        a=a->next;
-    }
-    else
-    {
-        c0=c=b;
-        b=b->next;
-    }
-    while (a && b)
-        if (strcmp(a->left, b->left)<=0)
-        {
-            c->next=a;
-            c=a;
-            a=a->next;
-        }
-        else
-        {
-            c->next=b;
-            c=b;
-            b=b->next;
-        }
-    if (a)
-        c->next=a;
-    else
-        c->next=b;
-    return c0;
-}
-
 /**************************************************************************/
 /* create a sorted llist containing all entries of the table matching pat */
 /**************************************************************************/
@@ -256,40 +214,33 @@ static struct listnode* merge_lists(struct listnode* a, struct listnode* b)
 /* deleting from a list, we should show the entries in a sorted order,    */
 /* however screen output is slow anyways, so we can sort it on the fly.   */
 /**************************************************************************/
-struct listnode* hash2list(struct hashtable *h, const char *pat)
+static int paircmp(const void *a, const void *b)
 {
-#define NBITS ((int)sizeof(void*)*8)
-    struct listnode *p[NBITS];     /* polynomial sort, O(n*log(n)) */
-    struct listnode *l;
-    int count=0;
+    return strcmp(((struct pair*)a)->left, ((struct pair*)b)->left);
+}
 
-    for (int j=0;j<NBITS;j++)
-        p[j]=0;
+typedef int (*compar_t)(const void*, const void*);
+
+struct pairlist* hash2list(struct hashtable *h, const char *pat)
+{
+    int n = h->nval;
+    struct pairlist *pl = MALLOC((n*2+1)*sizeof(void*));
+    struct pair *p = &pl->pairs[0];
+
     for (int i=0;i<h->size;i++)
         if (h->tab[i].left && (h->tab[i].left!=DELETED_HASHENTRY)
-            && match(pat, h->tab[i].left))
+            && (!pat || match(pat, h->tab[i].left)))
         {
-            if (!(l=TALLOC(struct listnode)))
-                syserr("couldn't malloc listhead");
-            l->left = h->tab[i].left;
-            l->right= h->tab[i].right;
-            l->pr   = 0;
-            l->next = 0;
-            count++;
-            int j;
-            for (j=0; p[j]; j++)     /* if j>=NBITS, we have a bug anyway */
-            {
-                l=merge_lists(p[j], l);
-                p[j]=0;
-            }
-            p[j]=l;
+            p->left = h->tab[i].left;
+            p->right= h->tab[i].right;
+            p++;
         }
-    l=0;
-    for (int j=0; j<NBITS; j++)
-        l=merge_lists(p[j], l);
-    p[0]=init_list();
-    p[0]->next=l;
-    return p[0];
+
+    n = p-&pl->pairs[0];
+    qsort(&pl->pairs[0], n, sizeof(struct pair), paircmp);
+    pl->size = n;
+
+    return pl;
 }
 
 

@@ -694,7 +694,8 @@ void write_command(const char *filename, struct session *ses)
 {
     FILE *myfile;
     char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
-    struct listnode *nodeptr, *templist;
+    struct pairlist *hl;
+    struct pair *end;
     struct routenode *rptr;
 
     get_arg_in_braces(filename, buffer, 1);
@@ -745,10 +746,12 @@ void write_command(const char *filename, struct session *ses)
         cfprintf(myfile, "%ccharset {%s}\n", tintin_char, ses->charset);
     if (strcmp(logcs_name(DEFAULT_LOGCHARSET), logcs_name(ses->logcharset)))
         cfprintf(myfile, "%clogcharset {%s}\n", tintin_char, logcs_name(ses->logcharset));
-    nodeptr = templist = hash2list(ses->aliases, "*");
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "alias", nodeptr->left, nodeptr->right, 0);
-    zap_list(templist);
+
+    hl = hash2list(ses->aliases, 0);
+    end = &hl->pairs[0] + hl->size;
+    for (struct pair *n = &hl->pairs[0]; n<end; n++)
+        cfcom(myfile, "alias", n->left, n->right, 0);
+    free(hl);
 
     TRIP_ITER(ses->actions, n)
         cfcom(myfile, "action", n->left, n->right, n->pr);
@@ -769,19 +772,21 @@ void write_command(const char *filename, struct session *ses)
             cfcom(myfile, "gag", n->left, 0, 0);
     ENDITER
 
-    nodeptr = templist = hash2list(ses->myvars, "*");
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "var", nodeptr->left, nodeptr->right, 0);
-    zap_list(templist);
+    hl = hash2list(ses->myvars, 0);
+    end = &hl->pairs[0] + hl->size;
+    for (struct pair *n = &hl->pairs[0]; n<end; n++)
+        cfcom(myfile, "var", n->left, n->right, 0);
+    free(hl);
 
     TRIP_ITER(ses->highs, n)
         cfcom(myfile, "highlight", n->right, n->left, 0);
     ENDITER
 
-    nodeptr = templist = hash2list(ses->pathdirs, "*");
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "pathdir", nodeptr->left, nodeptr->right, 0);
-    zap_list(templist);
+    hl = hash2list(ses->pathdirs, 0);
+    end = &hl->pairs[0] + hl->size;
+    for (struct pair *n = &hl->pairs[0]; n<end; n++)
+        cfcom(myfile, "pathdir", n->left, n->right, 0);
+    free(hl);
 
     for (int nr=0;nr<ses->num_locations;nr++)
         if ((rptr=ses->routes[nr]))
@@ -799,10 +804,11 @@ void write_command(const char *filename, struct session *ses)
                         rptr->cond);
             } while ((rptr=rptr->next));
 
-    nodeptr = templist = hash2list(ses->binds, "*");
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "bind", nodeptr->left, nodeptr->right, 0);
-    zap_list(templist);
+    hl = hash2list(ses->binds, 0);
+    end = &hl->pairs[0] + hl->size;
+    for (struct pair *n = &hl->pairs[0]; n<end; n++)
+        cfcom(myfile, "bind", n->left, n->right, 0);
+    free(hl);
 
     for (int nr=0;nr<NHOOKS;nr++)
         if (ses->hooks[nr])
@@ -837,14 +843,28 @@ static bool route_exists(const char *A, const char *B, const char *path, num_t d
     return false;
 }
 
+static void ws_hash(struct hashtable *h1, struct hashtable *h0, const char *what, FILE *f)
+{
+    struct pairlist *pl = hash2list(h1, 0);
+    struct pair *end = &pl->pairs[0] + pl->size;
+    for (struct pair *n = &pl->pairs[0]; n<end; n++)
+    {
+        char *val;
+        if ((val=get_hash(h0, n->left)))
+            if (!strcmp(val, n->right))
+                continue;
+        cfcom(f, what, n->left, n->right, 0);
+    }
+    free(pl);
+}
+
 /*****************************/
 /* the #writesession command */
 /*****************************/
 void writesession_command(const char *filename, struct session *ses)
 {
     FILE *myfile;
-    char buffer[BUFFER_SIZE*4], *val, num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
-    struct listnode *nodeptr, *onptr;
+    char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct routenode *rptr;
     kbtree_t(str) *sl;
 
@@ -899,15 +919,7 @@ void writesession_command(const char *filename, struct session *ses)
     if (strcmp(logcs_name(nullsession->logcharset), logcs_name(ses->logcharset)))
         cfprintf(myfile, "%clogcharset {%s}\n", tintin_char, logcs_name(ses->logcharset));
 
-    nodeptr = onptr = hash2list(ses->aliases, "*");
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((val=get_hash(nullsession->aliases, nodeptr->left)))
-            if (!strcmp(val, nodeptr->right))
-                continue;
-        cfcom(myfile, "alias", nodeptr->left, nodeptr->right, 0);
-    }
-    zap_list(onptr);
+    ws_hash(ses->aliases, nullsession->aliases, "alias", myfile);
 
     TRIP_ITER(ses->actions, n)
         struct trip srch = {n->left, 0, 0};
@@ -942,15 +954,7 @@ void writesession_command(const char *filename, struct session *ses)
             cfcom(myfile, "gag", n->left, 0, 0);
     ENDITER
 
-    nodeptr = onptr = hash2list(ses->myvars, "*");
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((val=get_hash(nullsession->myvars, nodeptr->left)))
-            if (!strcmp(val, nodeptr->right))
-                continue;
-        cfcom(myfile, "var", nodeptr->left, nodeptr->right, 0);
-    }
-    zap_list(onptr);
+    ws_hash(ses->myvars, nullsession->myvars, "var", myfile);
 
     TRIP_ITER(ses->highs, n)
         struct trip srch = {n->left, 0, 0};
@@ -960,15 +964,7 @@ void writesession_command(const char *filename, struct session *ses)
         cfcom(myfile, "highlight", n->left, n->right, 0);
     ENDITER
 
-    nodeptr = onptr = hash2list(ses->pathdirs, "*");
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((val=get_hash(nullsession->pathdirs, nodeptr->left)))
-            if (!strcmp(val, nodeptr->right))
-                continue;
-        cfcom(myfile, "pathdirs", nodeptr->left, nodeptr->right, 0);
-    }
-    zap_list(onptr);
+    ws_hash(ses->pathdirs, nullsession->pathdirs, "pathdir", myfile);
 
     for (int nr=0;nr<ses->num_locations;nr++)
         if ((rptr=ses->routes[nr]))
@@ -994,15 +990,7 @@ void writesession_command(const char *filename, struct session *ses)
                 }
             } while ((rptr=rptr->next));
 
-    nodeptr = onptr = hash2list(ses->binds, "*");
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((val=get_hash(nullsession->binds, nodeptr->left)))
-            if (!strcmp(val, nodeptr->right))
-                continue;
-        cfcom(myfile, "bind", nodeptr->left, nodeptr->right, 0);
-    }
-    zap_list(onptr);
+    ws_hash(ses->binds, nullsession->binds, "bind", myfile);
 
     for (int nr=0;nr<NHOOKS;nr++)
         if (ses->hooks[nr])

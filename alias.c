@@ -8,7 +8,6 @@
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
@@ -18,25 +17,28 @@ extern struct session *if_command(const char *arg, struct session *ses);
 
 void show_hashlist(struct session *ses, struct hashtable *h, const char *pat, const char *msg_all, const char *msg_none)
 {
-    struct listnode *templist;
+    struct pairlist *pl;
 
     if (!*pat)
     {
         tintin_printf(ses, msg_all);
-        templist=hash2list(h, "*");
+        pl=hash2list(h, 0);
     }
     else
-        templist=hash2list(h, pat);
-    show_list(templist);
-    if (*pat && !templist->next)
+        pl=hash2list(h, pat);
+    if (pl->size)
+    {
+        struct pair *end = &pl->pairs[0] + pl->size;
+        for (struct pair *n = &pl->pairs[0]; n<end; n++)
+            tintin_printf(ses, "~7~{%s~7~}={%s~7~}", n->left, n->right);
+    }
+    else if (*pat)
         tintin_printf(ses, msg_none, pat);
-    zap_list(templist);
+    free(pl);
 }
 
 void delete_hashlist(struct session *ses, struct hashtable *h, const char *pat, const char *msg_ok, const char *msg_none)
 {
-    struct listnode *templist;
-
     if (is_literal(pat))
     {
         if (delete_hash(h, pat))
@@ -51,16 +53,17 @@ void delete_hashlist(struct session *ses, struct hashtable *h, const char *pat, 
         }
         return;
     }
-    templist=hash2list(h, pat);
-    for (struct listnode *ln=templist->next; ln; ln=ln->next)
+    struct pairlist *pl = hash2list(h, pat);
+    struct pair *end = &pl->pairs[0] + pl->size;
+    for (struct pair *ln = &pl->pairs[0]; ln<end; ln++)
     {
         if (msg_ok)
             tintin_printf(ses, msg_ok, ln->left);
         delete_hash(h, ln->left);
     }
-    if (msg_none && !templist->next)
+    if (msg_none && !pl->size)
         tintin_printf(ses, msg_none, pat);
-    zap_list(templist);
+    free(pl);
 }
 
 

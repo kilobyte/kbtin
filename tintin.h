@@ -312,6 +312,18 @@ struct routenode
     char *cond;
 };
 
+struct pair
+{
+    const char *left;
+    const char *right;
+};
+
+struct pairlist
+{
+    int size;
+    struct pair pairs[];
+};
+
 typedef enum { CM_ISO8859_1, CM_UTF8, CM_ICONV, CM_ASCII } conv_mode_t;
 
 struct charset_conv

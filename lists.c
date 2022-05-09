@@ -807,8 +807,9 @@ void findvariables_command(const char *arg, struct session *ses)
     char buf[BUFFER_SIZE], *b=buf;
     *buf=0;
 
-    struct listnode *templist=hash2list(ses->myvars, right);
-    for (struct listnode *nptr=templist->next; nptr; nptr=nptr->next)
+    struct pairlist *pl = hash2list(ses->myvars, right);
+    struct pair *end = &pl->pairs[0] + pl->size;
+    for (struct pair *nptr = &pl->pairs[0]; nptr<end; nptr++)
     {
         if (b!=buf)
             *b++=' ';
@@ -824,5 +825,5 @@ void findvariables_command(const char *arg, struct session *ses)
     }
 
     set_variable(left, buf, ses);
-    zap_list(templist);
+    free(pl);
 }
