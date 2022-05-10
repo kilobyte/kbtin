@@ -26,9 +26,6 @@ static bool return_flag = true;
 
 void mark_command(const char *arg, struct session *ses)
 {
-    if (ses==nullsession)
-        return tintin_puts("#No session active => NO PATH!", ses);
-
     kill_list(ses->path);
     ses->path = init_list();
     ses->path_length = 0;
@@ -39,9 +36,6 @@ void mark_command(const char *arg, struct session *ses)
 
 void map_command(const char *arg, struct session *ses)
 {
-    if (ses==nullsession)
-        return tintin_printf(ses, "#No session active => NO PATH!");
-
     char cmd[BUFFER_SIZE];
     get_arg_in_braces(arg, cmd, 1);
     substitute_vars(cmd, cmd, ses);
@@ -50,9 +44,6 @@ void map_command(const char *arg, struct session *ses)
 
 void savepath_command(const char *arg, struct session *ses)
 {
-    if (ses==nullsession)
-        return tintin_printf(ses, "#No session active => NO PATH TO SAVE!");
-
     char alias[BUFFER_SIZE], result[BUFFER_SIZE], *r=result;
     get_arg_in_braces(arg, alias, 1);
     if (!*arg)
@@ -85,13 +76,6 @@ void savepath_command(const char *arg, struct session *ses)
 
 void path2var(char *var, struct session *ses)
 {
-    if (ses==nullsession)
-    {
-        tintin_printf(ses, "#No session active => NO PATH!");
-        *var=0;
-        return;
-    }
-
     char *r;
     struct listnode *ln = ses->path;
     int dirlen, len = 0;
@@ -127,9 +111,6 @@ void path2var(char *var, struct session *ses)
 
 void path_command(const char *arg, struct session *ses)
 {
-    if (ses==nullsession)
-        return tintin_puts("#No session active => NO PATH!", ses);
-
     struct listnode *ln = ses->path;
     char mypath[BUFFER_SIZE];
 
@@ -151,9 +132,6 @@ void path_command(const char *arg, struct session *ses)
 
 void return_command(const char *arg, struct session *ses)
 {
-    if (ses==nullsession)
-        return tintin_puts("#No session active => NO PATH!", ses);
-
     int n;
     char *err, how[BUFFER_SIZE];
 
@@ -201,9 +179,6 @@ void return_command(const char *arg, struct session *ses)
 
 void unmap_command(const char *arg, struct session *ses)
 {
-    if (ses==nullsession)
-        return tintin_puts("#No session active => NO PATH!", ses);
-
     if (!ses->path_length)
         return tintin_puts("#No move to forget!", ses);
 
