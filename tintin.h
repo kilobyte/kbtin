@@ -356,12 +356,12 @@ struct session
     kbtree_t(trip) *subs, *actions, *prompts, *highs;
     kbtree_t(str) *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds;
-    struct listnode *path;
+    struct pair path[MAX_PATH_LENGTH];
     struct routenode **routes;
     char **locations;
     struct eventnode *events;
     int num_locations;
-    int path_length, no_return;
+    int path_begin, path_length;
     int socket, last_term_type;
     sestype_t sestype;
     bool naws, ga, gas;

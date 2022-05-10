@@ -68,7 +68,8 @@ void kill_all(struct session *ses, bool no_reinit)
     kill_tlist(ses->highs);
     kill_tlist(ses->subs);
     kill_slist(ses->antisubs);
-    kill_list(ses->path);
+    for (int i=0; i<MAX_PATH_LENGTH; i++)
+        free((char*)ses->path[i].left), free((char*)ses->path[i].right);
     kill_hash(ses->pathdirs);
     kill_hash(ses->binds);
     kill_routes(ses);
@@ -83,8 +84,9 @@ void kill_all(struct session *ses, bool no_reinit)
     ses->highs = init_tlist();
     ses->subs = init_tlist();
     ses->antisubs = init_slist();
-    ses->path = init_list();
     ses->binds = init_hash();
+    ses->path_begin = ses->path_length = 0;
+    bzero(ses->path, sizeof(ses->path));
     ses->pathdirs = init_hash();
 #ifdef HAVE_HS
     ses->highs_dirty = true;

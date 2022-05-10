@@ -5,31 +5,26 @@
 /*                    coded by peter unold 1992                      */
 /*                  recoded by Jeremy C. Jack 1994                   */
 /*********************************************************************/
-/* the path is implemented as a fix-sized queue. It gets a bit messy */
-/* here and there, but it should work....                            */
-/*********************************************************************/
 #include "tintin.h"
 #include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/lists.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/path.h"
 #include "protos/string.h"
+#include "protos/utils.h"
 #include "protos/vars.h"
+
+#define PATHP(i) (&ses->path[(ses->path_begin+(i))%MAX_PATH_LENGTH])
 
 static bool return_flag = true;
 
-
 void mark_command(const char *arg, struct session *ses)
 {
-    kill_list(ses->path);
-    ses->path = init_list();
     ses->path_length = 0;
-    ses->no_return = 0;
     if (ses->mesvar[MSG_PATH])
         tintin_puts("#Beginning of path marked.", ses);
 }
@@ -49,8 +44,6 @@ void savepath_command(const char *arg, struct session *ses)
     if (!*arg)
         return tintin_eprintf(ses, "#Syntax: savepath <alias>");
 
-    struct listnode *ln = ses->path;
-
     if (!ses->path_length)
     {
         tintin_eprintf(ses, "#No path to save!");
@@ -58,8 +51,9 @@ void savepath_command(const char *arg, struct session *ses)
     }
 
     r+=snprintf(r, BUFFER_SIZE, "%calias {%s} {", tintin_char, alias);
-    while ((ln = ln->next))
+    for (int i=0; i<ses->path_length; i++)
     {
+        struct pair *ln = PATHP(i);
         int dirlen = strlen(ln->left);
         if (r-result + dirlen >= BUFFER_SIZE - 10)
         {
@@ -67,7 +61,7 @@ void savepath_command(const char *arg, struct session *ses)
             break;
         }
         else
-            r += sprintf(r, "%s%s", ln->left, ln->next?";":"");
+            r += sprintf(r, "%s%s", ln->left, (i==ses->path_length-1)?";":"");
     }
     *r++='}', *r=0;
     parse_input(result, true, ses);
@@ -77,7 +71,6 @@ void savepath_command(const char *arg, struct session *ses)
 void path2var(char *var, struct session *ses)
 {
     char *r;
-    struct listnode *ln = ses->path;
     int dirlen, len = 0;
 
     if (!ses->path_length)
@@ -89,14 +82,15 @@ void path2var(char *var, struct session *ses)
     len = 0;
     r=var;
 
-    while ((ln = ln->next))
+    for (int i=0; i<ses->path_length; i++)
     {
+        struct pair *ln = PATHP(i);
         dirlen = strlen(ln->left);
         if (dirlen + len < BUFFER_SIZE - 10)
         {
             r+=sprintf(r, isatom(ln->left)? "%s" : "{%s}" , ln->left);
             len += dirlen + 1;
-            if (ln->next)
+            if (i<ses->path_length-1)
                 *r++=' ';
         }
         else
@@ -111,12 +105,12 @@ void path2var(char *var, struct session *ses)
 
 void path_command(const char *arg, struct session *ses)
 {
-    struct listnode *ln = ses->path;
     char mypath[BUFFER_SIZE];
 
     char *r=mypath+sprintf(mypath, "#Path:  ");
-    while ((ln = ln->next))
+    for (int i=0; i<ses->path_length; i++)
     {
+        struct pair *ln = PATHP(i);
         int dirlen = strlen(ln->left);
         if (r-mypath + dirlen > (COLS?COLS:BUFFER_SIZE)-10)
         {
@@ -137,8 +131,6 @@ void return_command(const char *arg, struct session *ses)
 
     get_arg_in_braces(arg, how, 1);
 
-    if (ses->no_return==MAX_PATH_LENGTH)
-        return tintin_puts1("#Don't know how to return from here!", ses);
     if (!ses->path_length)
         return tintin_eprintf(ses, "#No place to return from!");
 
@@ -154,27 +146,19 @@ void return_command(const char *arg, struct session *ses)
         if (!n)     /* silently ignore "#return 0" */
             return;
     }
-    if (n>ses->path_length)
-        n=ses->path_length;
 
+    return_flag = false; /* temporarily turn off path tracking */
     while (n--)
     {
-        struct listnode *ln = ses->path;
         char command[BUFFER_SIZE];
 
-        if (ses->no_return==MAX_PATH_LENGTH)
+        if (!ses->path_length)
             break;
-        ses->path_length--;
-        if (ses->no_return)
-            ses->no_return++;
-        while (ln->next)
-            (ln = ln->next);
+        struct pair *ln = PATHP(--ses->path_length);
         strcpy(command, ln->right);
-        return_flag = false; /* temporarily turn off path tracking */
         parse_input(command, false, ses);
-        return_flag = true;  /* restore path tracking */
-        deletenode_list(ses->path, ln);
     }
+    return_flag = true;  /* restore path tracking */
 }
 
 void unmap_command(const char *arg, struct session *ses)
@@ -182,32 +166,28 @@ void unmap_command(const char *arg, struct session *ses)
     if (!ses->path_length)
         return tintin_puts("#No move to forget!", ses);
 
-    struct listnode *ln = ses->path;
-
     ses->path_length--;
-    while (ln->next)
-        (ln = ln->next);
-    deletenode_list(ses->path, ln);
     if (ses->mesvar[MSG_PATH])
         tintin_puts("#Ok.  Forgot that move.", ses);
 }
 
 void check_insert_path(const char *command, struct session *ses)
 {
-    char *ret;
-
     if (!return_flag)
         return;
 
-    if (!(ret=get_hash(ses->pathdirs, command)))
+    char *ret=get_hash(ses->pathdirs, command);
+    if (!ret)
         return;
     if (ses->path_length != MAX_PATH_LENGTH)
         ses->path_length++;
-    else if (ses->path_length)
-        deletenode_list(ses->path, ses->path->next);
-    addnode_list(ses->path, command, ret, 0);
-    if (ses->no_return)
-        ses->no_return--;
+    else
+        ses->path_begin++;
+    struct pair *p = PATHP(ses->path_length-1);
+    free((char*)p->left);
+    free((char*)p->right);
+    p->left =mystrdup(command);
+    p->right=mystrdup(ret);
 }
 
 void pathdir_command(const char *arg, struct session *ses)

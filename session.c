@@ -339,9 +339,9 @@ void init_nullses(void)
     nullsession->num_locations=0;
     for (int i=0;i<NHOOKS;i++)
         nullsession->hooks[i]=0;
-    nullsession->path = init_list();
-    nullsession->no_return = 0;
+    nullsession->path_begin = 0;
     nullsession->path_length = 0;
+    bzero(nullsession->path, sizeof(nullsession->path));
     nullsession->last_line[0] = 0;
     nullsession->linenum = 0;
     nullsession->events = NULL;
@@ -437,9 +437,9 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->telnet_buflen = 0;
     newsession->last_term_type = 0;
     newsession->next = sessionlist;
-    newsession->path = init_list();
-    newsession->no_return = 0;
+    newsession->path_begin = 0;
     newsession->path_length = 0;
+    bzero(newsession->path, sizeof(newsession->path));
     newsession->more_coming = false;
     newsession->events = NULL;
     newsession->verbose = ses->verbose;
