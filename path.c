@@ -201,7 +201,7 @@ void pathdir_command(const char *arg, struct session *ses)
     {
         set_hash(ses->pathdirs, left, right);
         if (ses->mesvar[MSG_PATH])
-            tintin_printf(ses, "#Ok.  {%s} is marked in #path. {%s} is it's #return.",
+            tintin_printf(ses, "#Ok.  {%s} is marked in #path. {%s} is its #return.",
                     left, right);
         pdnum++;
         return;
