@@ -105,7 +105,6 @@ set(KBtin_sources
 	highlight.c
 	history.c
 	eval.c
-	llist.c
 	main.c
 	misc.c
 	net.c

@@ -265,12 +265,6 @@ KBTREE_HEADER(trip, ptrip, tripcmp)
 #define ENDITER }}
 
 /************************ structures *********************/
-struct listnode
-{
-    struct listnode *next;
-    char *left, *right, *pr;
-};
-
 struct trip
 {
     char *left, *right, *pr;

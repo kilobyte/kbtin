@@ -6,12 +6,12 @@
 /*********************************************************************/
 #include "tintin.h"
 #include "protos/colors.h"
+#include "protos/events.h"
 #include "protos/files.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/hooks.h"
 #include "protos/lists.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/math.h"
 #include "protos/net.h"
@@ -275,6 +275,48 @@ struct session* newactive_session(void)
         tintin_puts1("#THERE'S NO ACTIVE SESSION NOW.", activesession);
         return do_hook(activesession, HOOK_ACTIVATE, 0, false);
     }
+}
+
+
+/*********************************************/
+/* clear all lists associated with a session */
+/*********************************************/
+void kill_all(struct session *ses, bool no_reinit)
+{
+    if (!ses) // can't happen
+        return;
+
+    kill_hash(ses->aliases);
+    kill_tlist(ses->actions);
+    kill_tlist(ses->prompts);
+    kill_hash(ses->myvars);
+    kill_tlist(ses->highs);
+    kill_tlist(ses->subs);
+    kill_slist(ses->antisubs);
+    for (int i=0; i<MAX_PATH_LENGTH; i++)
+        free((char*)ses->path[i].left), free((char*)ses->path[i].right);
+    kill_hash(ses->pathdirs);
+    kill_hash(ses->binds);
+    kill_routes(ses);
+    kill_events(ses);
+    if (no_reinit)
+        return;
+
+    ses->aliases = init_hash();
+    ses->actions = init_tlist();
+    ses->prompts = init_tlist();
+    ses->myvars = init_hash();
+    ses->highs = init_tlist();
+    ses->subs = init_tlist();
+    ses->antisubs = init_slist();
+    ses->binds = init_hash();
+    ses->path_begin = ses->path_length = 0;
+    bzero(ses->path, sizeof(ses->path));
+    ses->pathdirs = init_hash();
+#ifdef HAVE_HS
+    ses->highs_dirty = true;
+#endif
+    tintin_printf(ses, "#Lists cleared.");
 }
 
 

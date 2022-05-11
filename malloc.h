@@ -9,7 +9,6 @@
 # define TFREE(x,t)     g_slice_free(t, x)
 # define CFREE(x,n,t)   g_slice_free1(n*sizeof(t), x)
 # define SFREE(x)       {if (x) g_slice_free1(strlen(x)+1, x);}
-# define LFREE(x)       TFREE(x, struct listnode)
 #else
 # define MALLOC(s)      malloc(s)
 # define TALLOC(t)      ((t*)malloc(sizeof(t)))
@@ -18,5 +17,4 @@
 # define TFREE(x,t)     free(x)
 # define CFREE(x,n,t)   free(x)
 # define SFREE(x)       free(x) /* string */
-# define LFREE(x)       free(x) /* struct listnode */
 #endif

@@ -2,7 +2,6 @@
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
