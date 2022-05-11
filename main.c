@@ -16,7 +16,6 @@
 #include "protos/highlight.h"
 #include "protos/history.h"
 #include "protos/hooks.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/math.h"
 #include "protos/misc.h"
@@ -183,18 +182,19 @@ static void opterror(const char *msg, ...)
     exit(1);
 }
 
-static struct listnode *options;
+static struct trip *options;
 
 static void parse_options(int argc, char **argv)
 {
     bool noargs=false;
 
-    options=init_list();
+    options=MALLOC(argc*sizeof(struct trip));
+    struct trip *o = options;
 
     for (int arg=1;arg<argc;arg++)
     {
         if (*argv[arg]!='-' || noargs)
-            addnode_list(options, " ", argv[arg], 0);
+            o->left=" ", o++->right=argv[arg];
         else if (!strcmp(argv[arg], "--"))
             noargs=true;
         else if (!strcmp(argv[arg], "--version")) /* make autotest happy */
@@ -203,9 +203,9 @@ static void parse_options(int argc, char **argv)
             exit(0);
         }
         else if (!strcmp(argv[arg], "-v"))
-            addnode_list(options, "#verbose 1", 0, 0);
+            o++->left="#verbose 1";
         else if (!strcmp(argv[arg], "-q"))
-            addnode_list(options, "#verbose 0", 0, 0);
+            o++->left="#verbose 0";
         else if (!strcmp(argv[arg], "-p"))
             user_setdriver(0);
         else if (!strcmp(argv[arg], "-i"))
@@ -215,14 +215,14 @@ static void parse_options(int argc, char **argv)
             if (++arg==argc)
                 opterror("Invalid option: bare -c");
             else
-                addnode_list(options, "c", argv[arg], 0);
+                o->left="c", o++->right=argv[arg];
         }
         else if (!strcmp(argv[arg], "-r"))
         {
             if (++arg==argc)
                 opterror("Invalid option: bare -r");
             else
-                addnode_list(options, "r", argv[arg], 0);
+                o->left="r", o++->right=argv[arg];
         }
         else if (!strcasecmp(argv[arg], "-s"))
         {
@@ -231,7 +231,7 @@ static void parse_options(int argc, char **argv)
             else if (++arg==argc)
                 opterror("Bad option: -s needs both an address and a port number!");
             else
-                addnode_list(options, argv[arg-2]+1, argv[arg-1], argv[arg]);
+                o->left=argv[arg-2]+1, o->right=argv[arg-1], o++->pr=argv[arg];
         }
         else if (!strcmp(argv[arg], "--no-simd"))
 #ifdef HAVE_HS
@@ -243,7 +243,8 @@ static void parse_options(int argc, char **argv)
             opterror("Invalid option: {%s}", argv[arg]);
     }
     if (argc<=1)
-        addnode_list(options, "-", 0, 0);
+        o++->left="-";
+    o->left=0;
 }
 
 static void apply_options(void)
@@ -255,12 +256,12 @@ static void apply_options(void)
 # define DO_INPUT(str,iv) local_to_utf8(ustr, str, BUFFER_SIZE, 0);\
                           activesession=parse_input(str, iv, activesession);
 
-    for (struct listnode *opt=options->next; opt; opt=opt->next)
+    for (struct trip *opt=options; opt->left; opt++)
     {
         switch (*opt->left)
         {
         case '#':
-            *opt->left=tintin_char;
+            snprintf(ustr, sizeof(ustr), "%c%s", tintin_char, opt->left+1);
             activesession=parse_input(opt->left, true, activesession);
             break;
         case 'c':
@@ -322,7 +323,7 @@ static void apply_options(void)
         }
     }
 
-    kill_list(options);
+    free(options);
 }
 
 /**************************************************************************/
