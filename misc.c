@@ -1066,7 +1066,7 @@ void info_command(const char *arg, struct session *ses)
             ses->line_time/NANO, ses->line_time%NANO/1000,
             1/(ses->line_time*0.000000001));
     if (ses->closing)
-        tintin_printf(ses, "The session has it's closing mark set to %d!", ses->closing);
+        tintin_printf(ses, "The session has its closing mark set to %d!", ses->closing);
 }
 
 bool isnotblank(const char *line, bool magic_only)

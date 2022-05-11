@@ -246,7 +246,7 @@
 *	workaround for dorky bg color handling in PuTTY and screen.  Will
         slow down innocent xterm users, too :(
 *	information about logging in #info
-*	the echo for player's input has it's own color (#define ECHO_COLOR)
+*	the echo for player's input has its own color (#define ECHO_COLOR)
 *	#collate
 *	#expand
 *	#hook/#unhook
