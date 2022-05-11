@@ -254,7 +254,7 @@ static void apply_options(void)
     const char *home;
     FILE *f;
 # define DO_INPUT(str,iv) local_to_utf8(ustr, str, BUFFER_SIZE, 0);\
-                          activesession=parse_input(str, iv, activesession);
+                          activesession=parse_input(ustr, iv, activesession);
 
     for (struct trip *opt=options; opt->left; opt++)
     {
