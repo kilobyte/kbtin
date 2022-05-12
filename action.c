@@ -83,19 +83,21 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
     }
     else
     {
-        ptrip new = MALLOC(sizeof(struct trip));
-        new->left = mystrdup(left);
-
         // FIXME: O(n²)
         TRIP_ITER(l, old)
             if (!strcmp(old->left, left))
             {
-                new->pr = old->pr;
-                kb_del(trip, l, new);
+                kb_del(trip, l, old);
+                free(old->left);
+                free(old->right);
+                free(old->pr);
+                free(old);
                 break;
             }
         ENDITER
 
+        ptrip new = MALLOC(sizeof(struct trip));
+        new->left = mystrdup(left);
         new->right = mystrdup(right);
         new->pr = mystrdup(pr);
         kb_put(trip, l, new);
