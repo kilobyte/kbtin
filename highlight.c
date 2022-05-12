@@ -201,7 +201,7 @@ void unhighlight_command(const char *arg, struct session *ses)
         return tintin_eprintf(ses, "#Syntax: #unhighlight <pattern>");
 
     if (delete_tlist(ses->highs, left, ses->mesvar[MSG_HIGHLIGHT]?
-            "#Ok. {%s} is no longer highlighted." : 0, 0))
+            "#Ok. {%s} is no longer highlighted." : 0, 0, true))
     {
 #ifdef HAVE_HS
         ses->highs_dirty = true;

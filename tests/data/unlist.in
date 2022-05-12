@@ -8,6 +8,7 @@
 #act foo x
 #act bar y
 #act baz z
+#act quux ?
 #act quux !
 #unact quux
 #unact b*
@@ -15,6 +16,7 @@
 #prom foo x
 #prom bar y
 #prom baz z
+#prom quux ?
 #prom quux !
 #unprom quux
 #unprom b*

@@ -60,7 +60,6 @@ static void zap_actions(void)
 /***********************/
 /* the #action command */
 /***********************/
-
 static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l, const char *what)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
@@ -86,20 +85,18 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
     {
         ptrip new = MALLOC(sizeof(struct trip));
         new->left = mystrdup(left);
+
+        // FIXME: O(n²)
+        TRIP_ITER(l, old)
+            if (!strcmp(old->left, left))
+            {
+                new->pr = old->pr;
+                kb_del(trip, l, new);
+                break;
+            }
+        ENDITER
+
         new->right = mystrdup(right);
-        new->pr = 0;
-        ptrip *old = kb_get(trip, l, new);
-        if (old)
-        {
-            ptrip del = *old;
-            kb_del(trip, l, new);
-            if (inActions)
-                save_action(&del->right);
-            free(del->left);
-            free(del->right);
-            free(del->pr);
-            free(del);
-        }
         new->pr = mystrdup(pr);
         kb_put(trip, l, new);
         if (ses->mesvar[MSG_ACTION])
@@ -135,7 +132,7 @@ void unaction_command(const char *arg, struct session *ses)
 
     if (!delete_tlist(ses->actions, left, ses->mesvar[MSG_ACTION]?
             "#Ok. {%s} is no longer an action." : 0,
-            inActions? save_action : 0)
+            inActions? save_action : 0, false)
         && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
     {
         tintin_printf(ses, "#No match(es) found for {%s}", left);
@@ -155,7 +152,7 @@ void unpromptaction_command(const char *arg, struct session *ses)
 
     if (!delete_tlist(ses->prompts, left, ses->mesvar[MSG_ACTION]?
             "#Ok. {%s} is no longer a promptaction." : 0,
-            inActions? save_action : 0)
+            inActions? save_action : 0, false)
         && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
     {
         tintin_printf(ses, "#No match(es) found for {%s}", left);

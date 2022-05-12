@@ -929,9 +929,8 @@ void writesession_command(const char *filename, struct session *ses)
     ENDITER
 
     TRIP_ITER(ses->prompts, n)
-        struct trip srch = {n->left, 0, 0};
-        ptrip *m = kb_get(trip, nullsession->prompts, &srch);
-        if (m && !strcmp(n->right, (*m)->right) && !strcmp(n->pr, (*m)->pr))
+        ptrip *m = kb_get(trip, nullsession->prompts, n);
+        if (m && !strcmp(n->right, (*m)->right))
             continue;
         cfcom(myfile, "promptaction", n->left, n->right, n->pr);
     ENDITER

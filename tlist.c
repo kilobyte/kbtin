@@ -2,6 +2,7 @@
 #include "protos/glob.h"
 #include "protos/print.h"
 #include "protos/utils.h"
+#include <assert.h>
 
 
 /******************************************************************/
@@ -65,9 +66,9 @@ next:
 
 static int tripcmp(const ptrip a, const ptrip b)
 {
-    if (a->pr && b->pr)
+    if (a->pr)
     {
-        // Searches/replacement match any priority.
+        assert(b->pr);
         int r=prioritycmp(a->pr, b->pr);
         if (r)
             return r;
@@ -133,9 +134,9 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
     return had_any;
 }
 
-bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*checkright)(char **right))
+bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*checkright)(char **right), bool no_pr)
 {
-    if (pat && is_literal(pat))
+    if (no_pr && pat && is_literal(pat))
     {
         struct trip srch = {(char*)pat, 0, 0};
         ptrip *d = kb_get(trip, l, &srch);

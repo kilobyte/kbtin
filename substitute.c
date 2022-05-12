@@ -127,7 +127,7 @@ static void unsub(const char *arg, bool gag, struct session *ses)
     if (!delete_tlist(ses->subs, left, ses->mesvar[MSG_SUBSTITUTE]?
         gag? "#Ok. {%s} is no longer gagged." :
         "#Ok. {%s} is no longer substituted." : 0,
-        gag? is_not_gag : is_gag)
+        gag? is_not_gag : is_gag, true)
         && ses->mesvar[MSG_SUBSTITUTE])
     {
         tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
