@@ -242,8 +242,6 @@ static void parse_options(int argc, char **argv)
         else
             opterror("Invalid option: {%s}", argv[arg]);
     }
-    if (argc<=1)
-        o++->left="-";
     o->left=0;
 }
 
@@ -251,7 +249,6 @@ static void apply_options(void)
 {
     char temp[BUFFER_SIZE], sname[BUFFER_SIZE];
     char ustr[BUFFER_SIZE];
-    const char *home;
     FILE *f;
 # define DO_INPUT(str,iv) local_to_utf8(ustr, str, BUFFER_SIZE, 0);\
                           activesession=parse_input(ustr, iv, activesession);
@@ -299,31 +296,38 @@ static void apply_options(void)
             else
                 tintin_eprintf(0, "#FILE NOT FOUND: {%s}", ustr);
             break;
-        case '-':
-            if (!strcmp(DEFAULT_FILE_DIR, "HOME"))
-                if ((home = getenv("HOME")))
-                    strcpy(temp, home);
-                else
-                    *temp = '\0';
-            else
-                strcpy(temp, DEFAULT_FILE_DIR);
-
-            strcat(temp, "/.tintinrc");
-            local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
-            if ((f=fopen(temp, "r")))
-                activesession = do_read(f, ustr, activesession);
-            else if ((home = getenv("HOME")))
-            {
-                strcpy(temp, home);
-                strcat(temp, "/.tintinrc");
-                local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
-                if ((f=fopen(temp, "r")))
-                    activesession = do_read(f, ustr, activesession);
-            }
         }
     }
 
     free(options);
+}
+
+static void read_rc(void)
+{
+    char temp[BUFFER_SIZE], ustr[BUFFER_SIZE];
+    const char *home;
+    FILE *f;
+
+    if (!strcmp(DEFAULT_FILE_DIR, "HOME"))
+        if ((home = getenv("HOME")))
+            strcpy(temp, home);
+        else
+            *temp = '\0';
+    else
+        strcpy(temp, DEFAULT_FILE_DIR);
+
+    strcat(temp, "/.tintinrc");
+    local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
+    if ((f=fopen(temp, "r")))
+        activesession = do_read(f, ustr, activesession);
+    else if ((home = getenv("HOME")))
+    {
+        strcpy(temp, home);
+        strcat(temp, "/.tintinrc");
+        local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
+        if ((f=fopen(temp, "r")))
+            activesession = do_read(f, ustr, activesession);
+    }
 }
 
 /**************************************************************************/
@@ -378,6 +382,7 @@ ever wants to read -- that is what docs are for.
     setup_signals();
     setup_ulimit();
     init_nullses();
+    read_rc();
     apply_options();
     tintin();
     return 0;
