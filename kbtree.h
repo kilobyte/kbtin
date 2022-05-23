@@ -332,6 +332,27 @@ typedef struct {
 			itr->p->x = __KB_PTR(b, x)[0]; itr->p->i = 0; \
 		} \
 	} \
+	void kb_itr_afterp_##name(kbtree_##name##_t *b, kbitr_t *itr, const key_t * __restrict k) \
+	{ \
+		itr->p = 0; \
+		if (b->n_keys == 0) return; \
+		itr->p = itr->stack; \
+		int r = 0; \
+		itr->p->x = b->root; \
+		while (1) { \
+			itr->p->i = __kb_getp_aux_##name(itr->p->x, k, &r); \
+			if (itr->p->i >= 0 && r == 0) return (void)kb_itr_next_##name(b, itr); \
+			if (!itr->p->x->is_internal) return (void)kb_itr_next_##name(b, itr);; \
+			itr->p->i++; \
+			kbnode_t *x = __KB_PTR(b, itr->p->x)[itr->p->i]; \
+			if (!x) return; \
+			(++itr->p)->x = x; \
+		} \
+	} \
+	void kb_itr_after_##name(kbtree_##name##_t *b, kbitr_t *itr, const key_t k) \
+	{ \
+		kb_itr_afterp_##name(b, itr, &k); \
+	} \
 	int kb_itr_get_##name(kbtree_##name##_t *b, const key_t * __restrict k, kbitr_t *itr) \
 	{ \
 		int i, r = 0; \
@@ -392,6 +413,8 @@ typedef struct {
 	key_t kb_delp_##name(kbtree_##name##_t *b, const key_t * __restrict k);\
 	key_t kb_del_##name(kbtree_##name##_t *b, const key_t k);\
 	void kb_itr_first_##name(kbtree_##name##_t *b, kbitr_t *itr);\
+	void kb_itr_after_##name(kbtree_##name##_t *b, kbitr_t *itr, const key_t k);\
+	void kb_itr_afterp_##name(kbtree_##name##_t *b, kbitr_t *itr, const key_t * __restrict k);\
 	int kb_itr_get_##name(kbtree_##name##_t *b, const key_t * __restrict k, kbitr_t *itr);\
 	int kb_itr_next_##name(kbtree_##name##_t *b, kbitr_t *itr);\
 
@@ -410,6 +433,8 @@ typedef struct {
 #define kb_intervalp(name, b, k, l, u) kb_intervalp_##name(b, k, l, u)
 
 #define kb_itr_first(name, b, i) kb_itr_first_##name(b, i)
+#define kb_itr_after(name, b, i, k) kb_itr_after_##name(b, i, k)
+#define kb_itr_afterp(name, b, i, k) kb_itr_after_##name(b, i, k)
 #define kb_itr_get(name, b, k, i) kb_itr_get_##name(b, k, i)
 #define kb_itr_next(name, b, i) kb_itr_next_##name(b, i)
 #define kb_itr_key(type, itr) __KB_KEY(type, (itr)->p->x)[(itr)->p->i]
