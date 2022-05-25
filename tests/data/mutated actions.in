@@ -1,0 +1,8 @@
+#act abc #show first
+#act zxy {#show last;#end}
+#loop 1,1000 {#act b$0 #rem mid}
+#act b500 #unact b*
+#run a //selfpipe
+b500
+abc
+zxy

@@ -1,0 +1,8 @@
+#pro abc #show first
+#pro zxy {#show last;#end}
+#loop 1,1000 {#pro b$0 #rem mid}
+#pro b500 #unpro b*
+#run a //selfpipe
+b500
+abc
+zxy

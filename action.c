@@ -22,6 +22,7 @@ static int var_len[10];
 static const char *var_ptr[10];
 
 static bool inActions=false;
+static bool mutatedActions;
 static int deletedActions=0;
 static char **stray_strings=0;
 static int max_strays=0;
@@ -104,6 +105,7 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
         if (ses->mesvar[MSG_ACTION])
             tintin_printf(ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
         acnum++;
+        mutatedActions = true;
     }
 }
 
@@ -139,6 +141,8 @@ void unaction_command(const char *arg, struct session *ses)
     {
         tintin_printf(ses, "#No match(es) found for {%s}", left);
     }
+
+    mutatedActions = true;
 }
 
 /*******************************/
@@ -159,6 +163,8 @@ void unpromptaction_command(const char *arg, struct session *ses)
     {
         tintin_printf(ses, "#No match(es) found for {%s}", left);
     }
+
+    mutatedActions = true;
 }
 
 
@@ -219,9 +225,14 @@ void check_all_actions(const char *line, struct session *ses)
 
     inActions=true;
 
+    mutatedActions = false;
     TRIP_ITER(ses->actions, ln)
         if (check_one_action(line, ln->left, &vars, false))
         {
+            char mleft[BUFFER_SIZE], mpr[BUFFER_SIZE];
+            strlcpy(mleft, ln->left, sizeof mleft);
+            strlcpy(mpr, ln->pr, sizeof mpr);
+
             lastpvars = pvars;
             pvars = &vars;
             if (ses->mesvar[MSG_ACTION] && activesession == ses)
@@ -235,6 +246,12 @@ void check_all_actions(const char *line, struct session *ses)
             parse_input(ln->right, true, ses);
             recursion=0;
             pvars = lastpvars;
+
+            if (mutatedActions)
+            {
+                struct trip srch = {mleft, 0, mpr};
+                kb_itr_after(trip, ses->actions, &itr, &srch);
+            }
         }
     ENDITER
 
@@ -253,9 +270,14 @@ void check_all_promptactions(const char *line, struct session *ses)
 
     inActions=true;
 
+    mutatedActions = false;
     TRIP_ITER(ses->prompts, ln)
         if (check_one_action(line, ln->left, &vars, false))
         {
+            char mleft[BUFFER_SIZE], mpr[BUFFER_SIZE];
+            strlcpy(mleft, ln->left, sizeof mleft);
+            strlcpy(mpr, ln->pr, sizeof mpr);
+
             lastpvars=pvars;
             pvars=&vars;
             if (ses->mesvar[MSG_ACTION] && activesession == ses)
@@ -269,6 +291,12 @@ void check_all_promptactions(const char *line, struct session *ses)
             parse_input(ln->right, true, ses);
             recursion=0;
             pvars=lastpvars;
+
+            if (mutatedActions)
+            {
+                struct trip srch = {mleft, 0, mpr};
+                kb_itr_after(trip, ses->prompts, &itr, &srch);
+            }
         }
     ENDITER
 
