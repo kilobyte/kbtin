@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "kbtree.h"
+#include "../kbtree.h"
 
 typedef int64_t num;
 
