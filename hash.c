@@ -2,7 +2,7 @@
 #include "protos/glob.h"
 #include "protos/utils.h"
 
-#define DELETED_HASHENTRY ((char*)init_hash)
+#define DELETED_HASHENTRY ((char*)-1)
 
 // Jenkins hash
 static uint32_t hash(const char *key)
