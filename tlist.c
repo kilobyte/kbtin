@@ -120,7 +120,7 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
     bool had_any = false;
 
     TRIP_ITER(l, t)
-        if (pat && !match(t->left, pat))
+        if (pat && !match(pat, t->left))
             continue;
         if (!had_any)
         {
