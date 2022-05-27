@@ -104,13 +104,11 @@ void set_hash(struct hashtable *h, const char *key, const char *value)
 {
     if (h->nent*5 > h->size*4)
         rehash(h, h->nval*3);
-    int j=-1;
     int i=hash(key)%h->size;
     while (h->tab[i].left)
     {
         if (h->tab[i].left==DELETED_HASHENTRY)
-            if (j==-1)
-                j=i;
+            goto found_tombstone;
         if (!strcmp(h->tab[i].left, key))
         {
             SFREE(h->tab[i].right);
@@ -121,10 +119,8 @@ void set_hash(struct hashtable *h, const char *key, const char *value)
             i=h->size;
         i--;
     }
-    if (j!=-1)
-        i=j;
-    else
-        h->nent++;
+    h->nent++;
+found_tombstone:
     h->tab[i].left = mystrdup(key);
     h->tab[i].right= mystrdup(value);
     h->nval++;
@@ -135,13 +131,11 @@ void set_hash_nostring(struct hashtable *h, const char *key, const char *value)
 {
     if (h->nent*5 > h->size*4)
         rehash(h, h->nval*3);
-    int j=-1;
     int i=hash(key)%h->size;
     while (h->tab[i].left)
     {
         if (h->tab[i].left==DELETED_HASHENTRY)
-            if (j==-1)
-                j=i;
+            goto found_tombstone;
         if (!strcmp(h->tab[i].left, key))
         {
             h->tab[i].right=(char*)value;
@@ -151,10 +145,8 @@ void set_hash_nostring(struct hashtable *h, const char *key, const char *value)
             i=h->size;
         i--;
     }
-    if (j!=-1)
-        i=j;
-    else
-        h->nent++;
+    h->nent++;
+found_tombstone:
     h->tab[i].left = mystrdup(key);
     h->tab[i].right= (char*)value;
     h->nval++;
