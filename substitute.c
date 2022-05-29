@@ -78,7 +78,7 @@ static void parse_sub(const char *left_, const char *right,  bool gag, struct se
     }
     kb_put(trip, sub, new);
     subnum++;
-#if HAVE_HS
+#ifdef HAVE_HS
     ses->subs_dirty=true;
 #endif
     if (ses->mesvar[MSG_SUBSTITUTE])
