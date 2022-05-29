@@ -390,6 +390,8 @@ struct session
     bool highs_dirty, actions_dirty, prompts_dirty, subs_dirty, antisubs_dirty;
     hs_database_t *highs_hs, *actions_hs, *prompts_hs, *subs_hs, *antisubs_hs;
     const char **highs_cols;
+    ptrip *subs_data;
+    int subs_omni_first, subs_omni_last;
 #endif
 };
 

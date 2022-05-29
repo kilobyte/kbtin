@@ -286,6 +286,11 @@ void kill_all(struct session *ses, bool no_reinit)
     if (!ses) // can't happen
         return;
 
+    // subs abuse pr as a marker
+    TRIP_ITER(ses->subs, p)
+        p->pr=0;
+    ENDITER
+
     kill_hash(ses->aliases);
     kill_tlist(ses->actions);
     kill_tlist(ses->prompts);
@@ -430,6 +435,7 @@ void init_nullses(void)
     nullsession->subs_hs=0;
     nullsession->antisubs_hs=0;
     nullsession->highs_cols=0;
+    nullsession->subs_data=0;
 #endif
 }
 
@@ -537,6 +543,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->subs_hs=0;
     newsession->antisubs_hs=0;
     newsession->highs_cols=0;
+    newsession->subs_data=0;
 #endif
     sessionlist = newsession;
     activesession = newsession;
@@ -614,6 +621,7 @@ void cleanup_session(struct session *ses)
     hs_free_database(ses->subs_hs);
     hs_free_database(ses->antisubs_hs);
     free(ses->highs_cols);
+    free(ses->subs_data);
 #endif
 
     TFREE(ses, struct session);
