@@ -219,14 +219,15 @@ char *action_to_regex(const char *pat)
 /**********************************************/
 /* check actions from a sessions against line */
 /**********************************************/
-void check_all_actions(const char *line, struct session *ses)
+static void check_all_act(const char *line, struct session *ses, bool act)
 {
+    kbtree_t(trip) *acts = act? ses->actions : ses->prompts;
     pvars_t vars, *lastpvars;
 
     inActions=true;
 
     mutatedActions = false;
-    TRIP_ITER(ses->actions, ln)
+    TRIP_ITER(acts, ln)
         if (check_one_action(line, ln->left, &vars, false))
         {
             char mleft[BUFFER_SIZE], mpr[BUFFER_SIZE];
@@ -240,9 +241,10 @@ void check_all_actions(const char *line, struct session *ses)
                 char buffer[BUFFER_SIZE];
 
                 substitute_vars(ln->right, buffer, ses);
-                tintin_printf(ses, "[ACTION: %s]", buffer);
+                tintin_printf(ses, "[%sACTION: %s]", act? "":"PROMPT", buffer);
             }
-            debuglog(ses, "ACTION: {%s}->{%s}", line, ln->right);
+            debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line,
+                ln->right);
             parse_input(ln->right, true, ses);
             recursion=0;
             pvars = lastpvars;
@@ -250,7 +252,7 @@ void check_all_actions(const char *line, struct session *ses)
             if (mutatedActions)
             {
                 struct trip srch = {mleft, 0, mpr};
-                kb_itr_after(trip, ses->actions, &itr, &srch);
+                kb_itr_after(trip, acts, &itr, &srch);
             }
         }
     ENDITER
@@ -260,49 +262,14 @@ void check_all_actions(const char *line, struct session *ses)
     inActions=false;
 }
 
+void check_all_actions(const char *line, struct session *ses)
+{
+    check_all_act(line, ses, 1);
+}
 
-/**********************************************/
-/* check actions from a sessions against line */
-/**********************************************/
 void check_all_promptactions(const char *line, struct session *ses)
 {
-    pvars_t vars, *lastpvars;
-
-    inActions=true;
-
-    mutatedActions = false;
-    TRIP_ITER(ses->prompts, ln)
-        if (check_one_action(line, ln->left, &vars, false))
-        {
-            char mleft[BUFFER_SIZE], mpr[BUFFER_SIZE];
-            strlcpy(mleft, ln->left, sizeof mleft);
-            strlcpy(mpr, ln->pr, sizeof mpr);
-
-            lastpvars=pvars;
-            pvars=&vars;
-            if (ses->mesvar[MSG_ACTION] && activesession == ses)
-            {
-                char buffer[BUFFER_SIZE];
-
-                substitute_vars(ln->right, buffer, ses);
-                tintin_printf(ses, "[PROMPT-ACTION: %s]", buffer);
-            }
-            debuglog(ses, "PROMPTACTION: {%s}->{%s}", line, ln->right);
-            parse_input(ln->right, true, ses);
-            recursion=0;
-            pvars=lastpvars;
-
-            if (mutatedActions)
-            {
-                struct trip srch = {mleft, 0, mpr};
-                kb_itr_after(trip, ses->prompts, &itr, &srch);
-            }
-        }
-    ENDITER
-
-    if (deletedActions)
-        zap_actions();
-    inActions=false;
+    check_all_act(line, ses, 0);
 }
 
 
