@@ -231,13 +231,17 @@ static void build_subs_hs(struct session *ses)
     ses->subs_dirty=false;
     free(ses->subs_data);
     ses->subs_data=0;
+    free(ses->subs_markers);
+    ses->subs_markers=0;
 
     int n = count_tlist(ses->subs);
     const char **pat = MALLOC(n*sizeof(void*));
     unsigned int *flags = MALLOC(n*sizeof(int));
     unsigned int *ids = MALLOC(n*sizeof(int));
     ptrip *data = MALLOC(n*sizeof(ptrip));
-    if (!pat || !flags || !ids || !data)
+    uintptr_t *markers = MALLOC(n*sizeof(uintptr_t));
+
+    if (!pat || !flags || !ids || !data || !markers)
         syserr("out of memory");
 
     ses->subs_omni_last=ses->subs_omni_first=n;
@@ -257,6 +261,8 @@ static void build_subs_hs(struct session *ses)
         j++;
     ENDITER
     ses->subs_data=data;
+    bzero(markers, n*sizeof(uintptr_t));
+    ses->subs_markers=markers;
 
     if (!ses->subs_omni_first)
         goto done;
@@ -330,11 +336,11 @@ static void do_all_sub_simd(char *line, struct session *ses)
         if (!longest_len[i])
             continue;
         ptrip ln = ses->subs_data[longest_id[i]];
-        if (ln->pr == (char*)marker)
+        if (ses->subs_markers[longest_id[i]] == marker)
             continue; // already done
         if (do_one_sub(line, ln, ses))
             goto gagged;
-        ln->pr=(char*)marker;
+        ses->subs_markers[longest_id[i]] = marker;
     }
 
     for (int i=ses->subs_omni_first; i<ses->subs_omni_last; i++)

@@ -392,6 +392,7 @@ struct session
     const char **highs_cols;
     ptrip *subs_data;
     int subs_omni_first, subs_omni_last;
+    uintptr_t *subs_markers;
 #endif
 };
 
