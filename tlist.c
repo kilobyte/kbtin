@@ -178,7 +178,7 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*ch
     }
 
     free(todel);
-    return last == todel;
+    return last != todel;
 }
 
 kbtree_t(trip) *copy_tlist(kbtree_t(trip) *a)
