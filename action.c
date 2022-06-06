@@ -321,7 +321,7 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
             lastpr=ln->pr;
         else if (strcmp(ln->pr, lastpr))
         {
-last:
+last:;
             struct acts *a = MALLOC(sizeof(struct acts));
             a->pr = mystrdup(lastpr);
             a->n = j-base;
