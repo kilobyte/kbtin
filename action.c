@@ -31,6 +31,36 @@ const char *match_start, *match_end;
 extern struct session *if_command(const char *arg, struct session *ses);
 static bool check_a_action(const char *line, const char *action, bool inside);
 
+#ifdef HAVE_HS
+struct acts
+{
+    char *pr;
+    hs_database_t *hs;
+    int n;
+};
+
+static int actcmp(void *a, void *b)
+{
+    return prioritycmp(((pacts)a)->pr, ((pacts)b)->pr);
+}
+
+/**/ KBTREE_CODE(acts, pacts, actcmp)
+
+void kill_acts(struct session *ses, bool act)
+{
+    if (!ses->acts_hs[act])
+        return;
+
+    ACTS_ITER(ses->acts_hs[act], p)
+        free(p->pr);
+        hs_free_database(p->hs);
+    ENDITER
+
+    kb_destroy(acts, ses->acts_hs[act]);
+    ses->acts_hs[act]=0;
+}
+#endif
+
 static bool save_action(char **right)
 {
     if (deletedActions==max_strays)
@@ -42,6 +72,7 @@ static bool save_action(char **right)
         stray_strings = realloc(stray_strings, max_strays*sizeof(char*));
     }
     stray_strings[deletedActions] = *right;
+    **right=0;
     *right=0;
     deletedActions++;
 
@@ -61,7 +92,7 @@ static void zap_actions(void)
 /***********************/
 /* the #action command */
 /***********************/
-static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l, const char *what)
+static void parse_action(const char *arg, struct session *ses, bool act, kbtree_t(trip) *l, const char *what)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     char pr[BUFFER_SIZE];
@@ -106,12 +137,15 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
             tintin_printf(ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
         acnum++;
         mutatedActions = true;
+#ifdef HAVE_HS
+        ses->act_dirty[l == ses->actions] = true;
+#endif
     }
 }
 
 void action_command(const char *arg, struct session *ses)
 {
-    parse_action(arg, ses, ses->actions, "action");
+    parse_action(arg, ses, 1, ses->actions, "action");
 }
 
 /*****************************/
@@ -119,7 +153,7 @@ void action_command(const char *arg, struct session *ses)
 /*****************************/
 void promptaction_command(const char *arg, struct session *ses)
 {
-    parse_action(arg, ses, ses->prompts, "promptaction");
+    parse_action(arg, ses, 0, ses->prompts, "promptaction");
 }
 
 
@@ -143,6 +177,9 @@ void unaction_command(const char *arg, struct session *ses)
     }
 
     mutatedActions = true;
+#ifdef HAVE_HS
+    ses->act_dirty[1] = true;
+#endif
 }
 
 /*******************************/
@@ -165,6 +202,9 @@ void unpromptaction_command(const char *arg, struct session *ses)
     }
 
     mutatedActions = true;
+#ifdef HAVE_HS
+    ses->act_dirty[0] = true;
+#endif
 }
 
 
@@ -219,14 +259,10 @@ char *action_to_regex(const char *pat)
 /**********************************************/
 /* check actions from a sessions against line */
 /**********************************************/
-static void check_all_act(const char *line, struct session *ses, bool act)
+static void check_all_act_serially(const char *line, struct session *ses, kbtree_t(trip) *acts, bool act)
 {
-    kbtree_t(trip) *acts = act? ses->actions : ses->prompts;
     pvars_t vars, *lastpvars;
 
-    inActions=true;
-
-    mutatedActions = false;
     TRIP_ITER(acts, ln)
         if (check_one_action(line, ln->left, &vars, false))
         {
@@ -251,11 +287,170 @@ static void check_all_act(const char *line, struct session *ses, bool act)
 
             if (mutatedActions)
             {
+                mutatedActions=false;
                 struct trip srch = {mleft, 0, mpr};
                 kb_itr_after(trip, acts, &itr, &srch);
             }
         }
     ENDITER
+}
+
+#ifdef HAVE_HS
+static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
+{
+    kill_acts(ses, act);
+    ses->act_dirty[act]=false;
+    free(ses->acts_data[act]);
+    ses->acts_data[act]=0;
+    ses->acts_hs[act] = kb_init(acts, KB_DEFAULT_SIZE);
+
+    int n = count_tlist(acts);
+    const char **pat = MALLOC(n*sizeof(void*));
+    unsigned int *flags = MALLOC(n*sizeof(int));
+    unsigned int *ids = MALLOC(n*sizeof(int));
+    ptrip *data = MALLOC(n*sizeof(ptrip));
+
+    if (!pat || !flags || !ids || !data)
+        syserr("out of memory");
+
+    int j=0, base=0;
+    char *lastpr = 0;
+    TRIP_ITER(acts, ln)
+        if (!lastpr)
+            lastpr=ln->pr;
+        else if (strcmp(ln->pr, lastpr))
+        {
+last:
+            struct acts *a = MALLOC(sizeof(struct acts));
+            a->pr = lastpr;
+            a->n = j-base;
+
+            hs_compile_error_t *error;
+            if (hs_compile_multi(pat+base, flags+base, ids+base, j-base, HS_MODE_BLOCK,
+                0, &a->hs, &error))
+            {
+                tintin_eprintf(ses, "#Error: hyperscan compilation failed for %s: %s",
+                    act? "actions" : "promptactions", error->message);
+                if (error->expression>=0)
+                    tintin_eprintf(ses, "#Converted bad expression was: %s",
+                                   pat[error->expression]);
+                hs_free_compile_error(error);
+            }
+            else if (hs_alloc_scratch(a->hs, &hs_scratch))
+                syserr("out of memory");
+            kb_put(acts, ses->acts_hs[act], a);
+            if (!acts)
+                goto out;
+            lastpr = ln->pr;
+            base=j;
+        }
+
+        pat[j]=action_to_regex(ln->left);
+        flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH|HS_FLAG_ALLOWEMPTY;
+        ids[j]=j;
+        data[j]=ln;
+        j++;
+    ENDITER
+    acts=0;
+    goto last;
+out:
+    ses->acts_data[act]=data;
+
+    for (int i=0; i<n; i++)
+        SFREE((char*)pat[i]);
+    MFREE(ids, n*sizeof(int));
+    MFREE(flags, n*sizeof(int));
+    MFREE(pat, n*sizeof(void*));
+}
+
+static int act_match(unsigned int id, unsigned long long from,
+    unsigned long long to, unsigned int flags, void *context)
+{
+    unsigned **nid=context;
+    *(*nid)++=id;
+    return 0;
+}
+
+static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(trip) *acts, bool act)
+{
+    if (ses->act_dirty[act])
+        build_act_hs(acts, ses, act);
+
+    pvars_t vars, *lastpvars;
+    lastpvars = pvars;
+    pvars = &vars;
+
+    ACTS_ITER(ses->acts_hs[act], a)
+        char mpr[BUFFER_SIZE];
+        strlcpy(mpr, a->pr, sizeof mpr);
+        unsigned *ids=malloc(a->n * sizeof(unsigned));
+        unsigned *nid=ids;
+        hs_error_t err=hs_scan(a->hs, line, strlen(line), 0, hs_scratch,
+            act_match, &nid);
+        if (err)
+        {
+            tintin_eprintf(ses, "#Error in hs_scan: %d\n", err);
+            free(ids);
+            continue;
+        }
+
+        // Copy all triggered actions, in case of a mutation.
+        int n = nid-ids;
+        ptrip *data=ses->acts_data[act];
+        struct trip *trips=malloc(n*sizeof(struct trip));
+        for (int i=0; i<n; i++)
+        {
+            ptrip ln = data[ids[i]];
+            trips[i]=*ln;
+        }
+        free(ids);
+
+        for (int i=0; i<n; i++)
+        {
+            struct trip ln = trips[i];
+            if (check_one_action(line, ln.left, &vars, false))
+            {
+                if (ses->mesvar[MSG_ACTION] && activesession == ses)
+                {
+                    char buffer[BUFFER_SIZE];
+
+                    substitute_vars(ln.right, buffer, ses);
+                    tintin_printf(ses, "[%sACTION: %s]", act? "":"PROMPT", buffer);
+                }
+                debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line,
+                    ln.right);
+                parse_input(ln.right, true, ses);
+                recursion=0;
+            }
+        }
+        free(trips);
+
+        if (mutatedActions)
+        {
+            mutatedActions=false;
+            struct acts srch = {mpr, 0, 0};
+            kb_itr_after(acts, itrtr, &itr, &srch);
+        }
+    ENDITER
+    pvars = lastpvars;
+}
+#endif
+
+static void check_all_act(const char *line, struct session *ses, bool act)
+{
+    kbtree_t(trip) *acts = act? ses->actions : ses->prompts;
+    if (!kb_size(acts))
+        return;
+
+    assert(!inActions);
+    inActions=true;
+    mutatedActions = false;
+
+#ifdef HAVE_HS
+    if (simd)
+        return check_all_act_simd(line, ses, acts, act);
+#endif
+    check_all_act_serially(line, ses, acts, act);
 
     if (deletedActions)
         zap_actions();
@@ -359,6 +554,9 @@ static int match_a_string(const char *line, const char *mask)
 
 bool check_one_action(const char *line, const char *action, pvars_t *vars, bool inside)
 {
+    if (!*action) // marker of a deleted action
+        return false;
+
     if (!check_a_action(line, action, inside))
         return false;
 

@@ -5,6 +5,7 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
+#include "protos/action.h"
 #include "protos/colors.h"
 #include "protos/events.h"
 #include "protos/files.h"
@@ -420,13 +421,11 @@ void init_nullses(void)
 #endif
 #ifdef HAVE_HS
     nullsession->highs_dirty=false;
-    nullsession->actions_dirty=false;
-    nullsession->prompts_dirty=false;
+    nullsession->act_dirty[0]=nullsession->act_dirty[1]=false;
     nullsession->subs_dirty=false;
     nullsession->antisubs_dirty=false;
     nullsession->highs_hs=0;
-    nullsession->actions_hs=0;
-    nullsession->prompts_hs=0;
+    nullsession->acts_hs[0]=nullsession->acts_hs[1]=0;
     nullsession->subs_hs=0;
     nullsession->antisubs_hs=0;
     nullsession->highs_cols=0;
@@ -529,13 +528,11 @@ static struct session *new_session(const char *name, const char *address, int so
 #endif
 #ifdef HAVE_HS
     newsession->highs_dirty=true;
-    newsession->actions_dirty=true;
-    newsession->prompts_dirty=true;
+    newsession->act_dirty[0]=newsession->act_dirty[1]=true;
     newsession->subs_dirty=true;
     newsession->antisubs_dirty=true;
     newsession->highs_hs=0;
-    newsession->actions_hs=0;
-    newsession->prompts_hs=0;
+    newsession->acts_hs[0]=newsession->acts_hs[1]=0;
     newsession->subs_hs=0;
     newsession->antisubs_hs=0;
     newsession->highs_cols=0;
@@ -613,8 +610,8 @@ void cleanup_session(struct session *ses)
 #endif
 #ifdef HAVE_HS
     hs_free_database(ses->highs_hs);
-    hs_free_database(ses->actions_hs);
-    hs_free_database(ses->prompts_hs);
+    kill_acts(ses, 0);
+    kill_acts(ses, 1);
     hs_free_database(ses->subs_hs);
     hs_free_database(ses->antisubs_hs);
     free(ses->highs_cols);

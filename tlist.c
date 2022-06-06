@@ -10,7 +10,7 @@
 /* strings generally sort in ASCIIbetical order, however numbers  */
 /* sort according to their numerical values.                      */
 /******************************************************************/
-static int prioritycmp(const char *a, const char *b)
+int prioritycmp(const char *a, const char *b)
 {
     int res;
 
