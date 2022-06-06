@@ -20,7 +20,7 @@
 static int var_len[10];
 static const char *var_ptr[10];
 
-static bool inActions=false;
+static int inActions=0;
 static bool mutatedActions;
 static int deletedActions=0;
 static char **stray_strings=0;
@@ -264,6 +264,9 @@ static void check_all_act_serially(const char *line, struct session *ses, kbtree
     pvars_t vars, *lastpvars;
 
     TRIP_ITER(acts, ln)
+        if (!*ln->right) // marker for deleted actions
+            continue;
+
         if (check_one_action(line, ln->left, &vars, false))
         {
             char mleft[BUFFER_SIZE], mpr[BUFFER_SIZE];
@@ -408,6 +411,8 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
         for (int i=0; i<n; i++)
         {
             struct trip ln = trips[i];
+            if (!*ln.right) // marker for deleted
+                continue;
             if (check_one_action(line, ln.left, &vars, false))
             {
                 if (ses->mesvar[MSG_ACTION] && activesession == ses)
@@ -429,7 +434,7 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
         {
             mutatedActions=false;
             struct acts srch = {mpr, 0, 0};
-            kb_itr_after(acts, itrtr, &itr, &srch);
+            kb_itr_after(acts, ses->acts_hs[act], &itr, &srch);
         }
     ENDITER
     pvars = lastpvars;
@@ -442,8 +447,8 @@ static void check_all_act(const char *line, struct session *ses, bool act)
     if (!kb_size(acts))
         return;
 
-    assert(!inActions);
-    inActions=true;
+    inActions++;
+    bool oldMutated = mutatedActions;
     mutatedActions = false;
 
 #ifdef HAVE_HS
@@ -453,9 +458,10 @@ static void check_all_act(const char *line, struct session *ses, bool act)
 #endif
     check_all_act_serially(line, ses, acts, act);
 
-    if (deletedActions)
+    mutatedActions = oldMutated;
+    inActions--;
+    if (deletedActions && !inActions)
         zap_actions();
-    inActions=false;
 }
 
 void check_all_actions(const char *line, struct session *ses)
@@ -555,9 +561,6 @@ static int match_a_string(const char *line, const char *mask)
 
 bool check_one_action(const char *line, const char *action, pvars_t *vars, bool inside)
 {
-    if (!*action) // marker of a deleted action
-        return false;
-
     if (!check_a_action(line, action, inside))
         return false;
 
