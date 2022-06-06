@@ -1,5 +1,4 @@
 #include "tintin.h"
-#include "assert.h"
 #include "protos/action.h"
 #include "protos/glob.h"
 #include "protos/globals.h"

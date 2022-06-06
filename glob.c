@@ -4,7 +4,6 @@
  */
 
 #include "tintin.h"
-#include <assert.h>
 
 bool match(const char *regex, const char *string)
 {

@@ -438,6 +438,8 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define is7punct(x) strchr(VALID_TIN_CHARS, (x))
 #define N(x) ((x)*DENOM)
 
+#define assert(p) do if (!(p)){fprintf(stderr, "ASSERT FAILED in %s:%u : "#p "\n", __FILE__, __LINE__);abort();}while(0)
+
 #ifdef HAVE_HS
 // Should be in globals.h but for the typedef...
 extern hs_scratch_t *hs_scratch;

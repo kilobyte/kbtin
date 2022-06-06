@@ -5,7 +5,6 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
-#include <assert.h>
 #include "protos/events.h"
 #include "protos/globals.h"
 #include "protos/hooks.h"

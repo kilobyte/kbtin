@@ -10,7 +10,6 @@
 #ifdef HAVE_TERMIOS_H
 # include <termios.h>
 #endif
-#include <assert.h>
 #include <sys/ioctl.h>
 #ifdef HAVE_VALGRIND_VALGRIND_H
 #include <valgrind/valgrind.h>

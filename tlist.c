@@ -2,7 +2,6 @@
 #include "protos/glob.h"
 #include "protos/print.h"
 #include "protos/utils.h"
-#include <assert.h>
 
 
 /******************************************************************/

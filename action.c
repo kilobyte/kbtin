@@ -15,7 +15,6 @@
 #include "protos/string.h"
 #include "protos/tlist.h"
 #include "protos/vars.h"
-#include <assert.h>
 
 
 static int var_len[10];
