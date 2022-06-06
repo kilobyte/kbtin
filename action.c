@@ -54,6 +54,7 @@ void kill_acts(struct session *ses, bool act)
     ACTS_ITER(ses->acts_hs[act], p)
         free(p->pr);
         hs_free_database(p->hs);
+        free(p);
     ENDITER
 
     kb_destroy(acts, ses->acts_hs[act]);
@@ -322,7 +323,7 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
         {
 last:
             struct acts *a = MALLOC(sizeof(struct acts));
-            a->pr = lastpr;
+            a->pr = mystrdup(lastpr);
             a->n = j-base;
 
             hs_compile_error_t *error;

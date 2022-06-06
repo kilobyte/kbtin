@@ -431,6 +431,7 @@ void init_nullses(void)
     nullsession->highs_cols=0;
     nullsession->subs_data=0;
     nullsession->subs_markers=0;
+    nullsession->acts_data[0]=nullsession->acts_data[1]=0;
 #endif
 }
 
@@ -538,6 +539,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->highs_cols=0;
     newsession->subs_data=0;
     newsession->subs_markers=0;
+    newsession->acts_data[0]=newsession->acts_data[1]=0;
 #endif
     sessionlist = newsession;
     activesession = newsession;
@@ -617,6 +619,8 @@ void cleanup_session(struct session *ses)
     free(ses->highs_cols);
     free(ses->subs_data);
     free(ses->subs_markers);
+    free(ses->acts_data[0]);
+    free(ses->acts_data[1]);
 #endif
 
     TFREE(ses, struct session);
