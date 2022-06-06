@@ -449,7 +449,8 @@ static void check_all_act(const char *line, struct session *ses, bool act)
 
 #ifdef HAVE_HS
     if (simd)
-        return check_all_act_simd(line, ses, acts, act);
+        check_all_act_simd(line, ses, acts, act);
+    else
 #endif
     check_all_act_serially(line, ses, acts, act);
 
