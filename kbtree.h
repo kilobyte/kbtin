@@ -341,8 +341,8 @@ typedef struct {
 		itr->p->x = b->root; \
 		while (1) { \
 			itr->p->i = __kb_getp_aux_##name(itr->p->x, k, &r); \
-			if (itr->p->i >= 0 && r == 0) return (void)kb_itr_next_##name(b, itr); \
-			if (!itr->p->x->is_internal) return (void)kb_itr_next_##name(b, itr);; \
+			if (itr->p->i >= 0 && r == 0) return; \
+			if (!itr->p->x->is_internal) return; \
 			itr->p->i++; \
 			kbnode_t *x = __KB_PTR(b, itr->p->x)[itr->p->i]; \
 			if (!x) return; \

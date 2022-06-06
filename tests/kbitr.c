@@ -24,6 +24,7 @@ int main()
         {
             kbitr_t itr;
             kb_itr_after(num, elm, &itr, k);
+            kb_itr_next(num, elm, &itr);
             if (kb_itr_valid(&itr))
             {
                 num j = kb_itr_key(num, &itr);
