@@ -694,7 +694,7 @@ static void do_one_line(char *text, int nl, struct session *ses)
 {
     bool isnb;
     char line[BUFFER_SIZE];
-    timens_t t;
+    timens_t t=0;
 
     if (nl)
         t = current_time();
