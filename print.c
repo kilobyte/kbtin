@@ -65,19 +65,19 @@ void tintin_printf(struct session *ses, const char *format, ...)
     va_list ap;
     char buf[BUFFER_SIZE];
 
-    if ((ses == activesession || ses == nullsession || !ses) && puts_echoing)
+    if ((ses != activesession && ses != nullsession && ses) || !puts_echoing)
+        return;
+
+    va_start(ap, format);
+    int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
+    if (n>BUFFER_SIZE-2)
     {
-        va_start(ap, format);
-        int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
-        if (n>BUFFER_SIZE-2)
-        {
-            buf[BUFFER_SIZE-3]='>';
-            n=BUFFER_SIZE-2;
-        }
-        va_end(ap);
-        strcpy(buf+n, "\n");
-        user_textout(buf);
+        buf[BUFFER_SIZE-3]='>';
+        n=BUFFER_SIZE-2;
     }
+    va_end(ap);
+    strcpy(buf+n, "\n");
+    user_textout(buf);
 }
 
 void tintin_eprintf(struct session *ses, const char *format, ...)
@@ -86,18 +86,20 @@ void tintin_eprintf(struct session *ses, const char *format, ...)
     char buf[BUFFER_SIZE];
 
     /* note: the behavior on !ses is wrong */
-    if ((ses == activesession || ses == nullsession || !ses)
-        && (puts_echoing||!ses||ses->mesvar[MSG_ERROR]))
+    if ((ses != activesession && ses != nullsession && ses)
+        || (!puts_echoing && ses && !ses->mesvar[MSG_ERROR]))
     {
-        va_start(ap, format);
-        int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
-        if (n>BUFFER_SIZE-2)
-        {
-            buf[BUFFER_SIZE-3]='>';
-            n=BUFFER_SIZE-2;
-        }
-        va_end(ap);
-        strcpy(buf+n, "\n");
-        user_textout(buf);
+        return;
     }
+
+    va_start(ap, format);
+    int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
+    if (n>BUFFER_SIZE-2)
+    {
+        buf[BUFFER_SIZE-3]='>';
+        n=BUFFER_SIZE-2;
+    }
+    va_end(ap);
+    strcpy(buf+n, "\n");
+    user_textout(buf);
 }
