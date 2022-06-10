@@ -540,7 +540,7 @@ void debuglog(struct session *ses, const char *format, ...)
     if (vsnprintf(buf, BUFFER_SIZE-1, format, ap)>BUFFER_SIZE-2)
         buf[BUFFER_SIZE-3]='>';
     va_end(ap);
-    cfprintf(ses->debuglogfile, "%4lld.%06lld: %s\n", t/NANO, t%NANO, buf);
+    cfprintf(ses->debuglogfile, "%4lld.%06lld: %s\n", t/NANO, t%NANO/1000, buf);
 }
 
 
