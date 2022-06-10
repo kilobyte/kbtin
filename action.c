@@ -302,6 +302,7 @@ static void check_all_act_serially(const char *line, struct session *ses, kbtree
 #ifdef HAVE_HS
 static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
 {
+    debuglog(ses, "SIMD: building %sactions", act?"":"prompt");
     kill_acts(ses, act);
     ses->act_dirty[act]=false;
     free(ses->acts_data[act]);
@@ -329,6 +330,7 @@ last:;
             a->pr = mystrdup(lastpr);
             a->n = j-base;
 
+            debuglog(ses, "SIMD: compiling for pr=%s", lastpr);
             hs_compile_error_t *error;
             if (hs_compile_multi(pat+base, flags+base, ids+base, j-base, HS_MODE_BLOCK,
                 0, &a->hs, &error))
@@ -342,6 +344,7 @@ last:;
             }
             else if (hs_alloc_scratch(a->hs, &hs_scratch))
                 syserr("out of memory");
+            debuglog(ses, "SIMD: compiled for pr=%s", lastpr);
             kb_put(acts, ses->acts_hs[act], a);
             if (!acts)
                 goto out;
@@ -365,6 +368,7 @@ out:
     MFREE(ids, n*sizeof(int));
     MFREE(flags, n*sizeof(int));
     MFREE(pat, n*sizeof(void*));
+    debuglog(ses, "SIMD: rebuilt %sactions", act?"":"prompt");
 }
 
 static int act_match(unsigned int id, unsigned long long from,

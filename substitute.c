@@ -6,6 +6,7 @@
 /*********************************************************************/
 #include "tintin.h"
 #include "protos/action.h"
+#include "protos/files.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/print.h"
@@ -226,6 +227,7 @@ static bool is_omni_regex(const char *pat)
 
 static void build_subs_hs(struct session *ses)
 {
+    debuglog(ses, "SIMD: building subs");
     hs_free_database(ses->subs_hs);
     ses->subs_hs=0;
     ses->subs_dirty=false;
@@ -267,6 +269,7 @@ static void build_subs_hs(struct session *ses)
     if (!ses->subs_omni_first)
         goto done;
 
+    debuglog(ses, "SIMD: compiling subs");
     hs_compile_error_t *error;
     if (hs_compile_multi(pat, flags, ids, ses->subs_omni_first, HS_MODE_BLOCK,
         0, &ses->subs_hs, &error))
@@ -280,6 +283,7 @@ static void build_subs_hs(struct session *ses)
     }
 
 done:
+    debuglog(ses, "SIMD: rebuilt subs");
     for (int i=0; i<n; i++)
         SFREE((char*)pat[i]);
     MFREE(ids, n*sizeof(int));

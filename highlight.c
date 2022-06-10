@@ -1,6 +1,7 @@
 #include "tintin.h"
 #include "protos/action.h"
 #include "protos/colors.h"
+#include "protos/files.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/print.h"
@@ -255,6 +256,7 @@ static char *glob_to_regex(const char *pat)
 
 static void build_highs_hs(struct session *ses)
 {
+    debuglog(ses, "SIMD: building highs");
     hs_free_database(ses->highs_hs);
     ses->highs_hs=0;
     ses->highs_dirty=false;
@@ -279,6 +281,7 @@ static void build_highs_hs(struct session *ses)
     ENDITER
     ses->highs_cols=cols;
 
+    debuglog(ses, "SIMD: compiling highs");
     hs_compile_error_t *error;
     if (hs_compile_multi(pat, flags, ids, n, HS_MODE_BLOCK,
         0, &ses->highs_hs, &error))
@@ -290,6 +293,7 @@ static void build_highs_hs(struct session *ses)
                            pat[error->expression]);
         hs_free_compile_error(error);
     }
+    debuglog(ses, "SIMD: rebuilt highs");
 
     for (int i=0; i<n; i++)
         SFREE((char*)pat[i]);
