@@ -101,5 +101,18 @@ void tintin_eprintf(struct session *ses, const char *format, ...)
     }
     va_end(ap);
     strcpy(buf+n, "\n");
-    user_textout(buf);
+
+    char out[BUFFER_SIZE];
+    char *cptr=buf, *optr=out;
+
+    while (*cptr)
+    {
+        if ((*optr++=*cptr++)=='~')
+            *optr++='~', *optr++=':', *optr++='~';
+        if (optr-out > BUFFER_SIZE-1)
+            break;
+    }
+    *optr=0;
+
+    user_textout(out);
 }
