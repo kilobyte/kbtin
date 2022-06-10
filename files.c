@@ -1076,7 +1076,7 @@ void logtype_command(const char *arg, struct session *ses)
                 tintin_printf(ses, "#Ok, log type is now %s.", logtypes[t]);
             return;
         }
-    tintin_eprintf(ses, "#No such logtype: {%s}\n", left);
+    tintin_eprintf(ses, "#No such logtype: {%s}", left);
 }
 
 /***************************/

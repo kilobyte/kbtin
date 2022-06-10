@@ -164,7 +164,7 @@ bool do_one_antisub(const char *line, struct session *ses)
             return true;
         if (!err)
             return false;
-        tintin_eprintf(ses, "#Error in hs_scan: %d\n", err);
+        tintin_eprintf(ses, "#Error in hs_scan: %d", err);
     }
 #endif
 

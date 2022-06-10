@@ -326,7 +326,7 @@ static void do_all_sub_simd(char *line, struct session *ses)
     hs_error_t err=hs_scan(ses->subs_hs, line, len, 0, hs_scratch,
                            sub_match, ses);
     if (err)
-        return tintin_eprintf(ses, "#Error in hs_scan: %d\n", err);
+        return tintin_eprintf(ses, "#Error in hs_scan: %d", err);
 
     pvars_t vars, *lastpvars;
     lastpvars=pvars;

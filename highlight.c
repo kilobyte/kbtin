@@ -360,7 +360,7 @@ void do_all_high(char *line, struct session *ses)
                                high_match, ses);
         // TODO: optimize coloring multiple matches
         if (err)
-            tintin_eprintf(ses, "#Error in hs_scan: %d\n", err);
+            tintin_eprintf(ses, "#Error in hs_scan: %d", err);
         goto done;
     }
 #endif

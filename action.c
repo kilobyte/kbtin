@@ -397,7 +397,7 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
             act_match, &nid);
         if (err)
         {
-            tintin_eprintf(ses, "#Error in hs_scan: %d\n", err);
+            tintin_eprintf(ses, "#Error in hs_scan: %d", err);
             free(ids);
             continue;
         }
