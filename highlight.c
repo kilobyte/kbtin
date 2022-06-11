@@ -240,6 +240,7 @@ static char *glob_to_regex(const char *pat)
         case ']':
         case '(':
         case ')':
+        case '|':
             *b++='\\';
         default:
             *b++=*pat;

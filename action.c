@@ -238,6 +238,7 @@ char *action_to_regex(const char *pat)
         case ']':
         case '(':
         case ')':
+        case '|':
             *b++='\\';
         default:
             *b++=*pat;
