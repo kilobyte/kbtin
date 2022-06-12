@@ -921,9 +921,8 @@ void writesession_command(const char *filename, struct session *ses)
     ws_hash(ses->aliases, nullsession->aliases, "alias", myfile);
 
     TRIP_ITER(ses->actions, n)
-        struct trip srch = {n->left, 0, 0};
-        ptrip *m = kb_get(trip, nullsession->actions, &srch);
-        if (m && !strcmp(n->right, (*m)->right) && !strcmp(n->pr, (*m)->pr))
+        ptrip *m = kb_get(trip, nullsession->actions, n);
+        if (m && !strcmp(n->right, (*m)->right))
             continue;
         cfcom(myfile, "action", n->left, n->right, n->pr);
     ENDITER
@@ -942,8 +941,7 @@ void writesession_command(const char *filename, struct session *ses)
     ENDITER
 
     TRIP_ITER(ses->subs, n)
-        struct trip srch = {n->left, 0, 0};
-        ptrip *m = kb_get(trip, nullsession->subs, &srch);
+        ptrip *m = kb_get(trip, nullsession->subs, n);
         if (m && !strcmp(n->right, (*m)->right))
                 continue;
         if (strcmp(n->right, EMPTY_LINE))
@@ -955,8 +953,7 @@ void writesession_command(const char *filename, struct session *ses)
     ws_hash(ses->myvars, nullsession->myvars, "var", myfile);
 
     TRIP_ITER(ses->highs, n)
-        struct trip srch = {n->left, 0, 0};
-        ptrip *m = kb_get(trip, nullsession->highs, &srch);
+        ptrip *m = kb_get(trip, nullsession->highs, n);
         if (m && !strcmp(n->right, (*m)->right))
             continue;
         cfcom(myfile, "highlight", n->left, n->right, 0);
