@@ -149,11 +149,12 @@ start:
             return false;
         if (*to==-1)
             *to=strlen(text)-(a-txt)-1;
-        txt=a+strlen(pat);
+        int len=strlen(pat);
+        txt=a+len;
         if (b)
             pat=b;
         else
-            pat=strchr(pat, 0);
+            pat+=len;
     } while (*pat);
     return true;
 }

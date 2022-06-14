@@ -322,8 +322,7 @@ static void read_rc(void)
         activesession = do_read(f, ustr, activesession);
     else if ((home = getenv("HOME")))
     {
-        strcpy(temp, home);
-        strcat(temp, "/.tintinrc");
+        strcat(stpcpy(temp, home), "/.tintinrc");
         local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
         if ((f=fopen(temp, "r")))
             activesession = do_read(f, ustr, activesession);
@@ -626,8 +625,7 @@ static void read_mud(struct session *ses)
     }
 
     cpsource = buffer;
-    strcpy(linebuffer, ses->last_line);
-    cpdest = strchr(linebuffer, '\0');
+    cpdest = stpcpy(linebuffer, ses->last_line);
 
     if (ses->halfcr_in)
     {
@@ -744,7 +742,7 @@ static void do_one_line(char *text, int nl, struct session *ses)
                     user_passwd(false);
                     gotpassword=0;
                 }
-                sprintf(strchr(line, 0), "\n");
+                strcat(line, "\n");
                 user_textout_draft(0, 0);
                 user_textout(line);
                 lastdraft=0;
@@ -755,7 +753,7 @@ static void do_one_line(char *text, int nl, struct session *ses)
                 {
                     isnb = ses->gas ? ses->ga : iscompleteprompt(line);
                     if (ses->partial_line_marker)
-                        sprintf(strchr(line, 0), "%s", ses->partial_line_marker);
+                        strcat(line, ses->partial_line_marker);
                     user_textout_draft(line, isnb);
                 }
                 lastdraft=ses;

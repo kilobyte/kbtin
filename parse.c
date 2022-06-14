@@ -242,7 +242,7 @@ static bool do_goto(const char *txt, struct session *ses)
 
     if (!(ch=strchr(txt, GOTO_CHAR)))
         return false;
-    if (ch+1>=strchr(txt, 0))
+    if (!ch[1])
         return false;
     if (ch!=txt)
     {
@@ -328,10 +328,9 @@ static void add_command(struct hashtable *h, const char *command, t_command func
         fprintf(stderr, "Cannot add command: {%s}.\n", command);
         exit(1);
     }
-    strcpy(cmd, command);
-    for (int n=strlen(cmd); n; n--)
+    for (char *end=stpcpy(cmd, command); end>cmd; end--)
     {
-        cmd[n]=0;
+        *end=0;
         if (!get_hash(c_commands, cmd) && !get_hash(commands, cmd))
             set_hash_nostring(h, cmd, (char*)func);
     }
