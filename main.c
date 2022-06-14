@@ -302,31 +302,25 @@ static void apply_options(void)
     free(options);
 }
 
-static void read_rc(void)
+static bool read_rc_file(const char *path)
 {
     char temp[BUFFER_SIZE], ustr[BUFFER_SIZE];
-    const char *home;
-    FILE *f;
-
-    if (!strcmp(DEFAULT_FILE_DIR, "HOME"))
-        if ((home = getenv("HOME")))
-            strcpy(temp, home);
-        else
-            *temp = '\0';
-    else
-        strcpy(temp, DEFAULT_FILE_DIR);
-
-    strcat(temp, "/.tintinrc");
+    snprintf(temp, sizeof temp, "%s/.tintinrc", path);
+    FILE *f = fopen(temp, "r");
+    if (!f)
+        return false;
     local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
-    if ((f=fopen(temp, "r")))
-        activesession = do_read(f, ustr, activesession);
-    else if ((home = getenv("HOME")))
-    {
-        strcat(stpcpy(temp, home), "/.tintinrc");
-        local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
-        if ((f=fopen(temp, "r")))
-            activesession = do_read(f, ustr, activesession);
-    }
+    activesession = do_read(f, ustr, activesession);
+    return true;
+}
+
+static void read_rc(void)
+{
+    if (!strcmp(DEFAULT_FILE_DIR, "HOME") && read_rc_file(DEFAULT_FILE_DIR))
+        return;
+    const char *home = getenv("HOME");
+    if (home)
+        read_rc_file(home);
 }
 
 /**************************************************************************/
