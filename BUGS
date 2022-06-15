@@ -1,5 +1,3 @@
-*	pattern-matching routines are SLOOOW (inherited from TinTin++)
-
 *	spawned pseudoterminal (on #run) is not checked for echo on/off
 
 *	undocumented feature: ~-1~ -- document it? remove at all? change?
@@ -16,7 +14,5 @@
 
 *	tintin's messages should use ~7~, not the previous colour,
         while still preserving whatever the colour was
-
-*	Unicode combining chars are not supported by the TTY driver
 
 *	no bidi support
