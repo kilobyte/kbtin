@@ -712,12 +712,21 @@ static enum
     TS_VERBATIM,
 #endif
 } state=TS_NORMAL;
-static bool escesc = false;
+static int bits = 0;
 #define MAXNVAL 10
 static int val[MAXNVAL], nval;
 static bool usertty_process_kbd(struct session *ses, WC ch)
 {
     char txt[16];
+
+#ifdef KEYBOARD_DEBUG
+    if (ch==27)
+        tintin_printf(ses, "~5~[~13~ESC~5~]~7~");
+    else if (ch<=' ' || ch>=127)
+        tintin_printf(ses, "~5~[~13~\\x%02x~5~]~7~", ch);
+    else
+        tintin_printf(ses, "~5~[~13~%c~5~]~7~", ch);
+#endif
 
     switch (state)
     {
@@ -729,8 +738,21 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
 #endif
     //-----------------------------------------------------------------------
     case TS_ESC_O:              /* ESC O */
+        if (isadigit(ch))
+        {
+            val[nval]=val[nval]*10+(ch-'0');
+            break;
+        }
+        else if (ch==';')
+        {
+            if (nval<MAXNVAL)
+                val[++nval]=0;
+            break;
+        }
+        if (val[0]>=2 && val[0]<=8) // modifier keys
+            bits=val[0]-1;
         state=TS_NORMAL;
-        if (!escesc)
+        if (!bits)
             switch (ch)
             {
             case 'A':
@@ -748,24 +770,33 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             }
         touch_bottom();
         sprintf(txt, "ESCO"WCC, (WCI)ch);
-        find_bind(txt, escesc, 1, ses);
+        find_bind(txt, bits, 1, ses);
         break;
     //-----------------------------------------------------------------------
     case TS_ESC_S_S:            /* ESC [ [ */
         state=TS_NORMAL;
         touch_bottom();
         sprintf(txt, "ESC[["WCC, (WCI)ch);
-        find_bind(txt, escesc, 1, ses);
+        find_bind(txt, bits, 1, ses);
         break;
     //-----------------------------------------------------------------------
     case TS_ESC_S:              /* ESC [ */
-        state=TS_NORMAL;
         if (isadigit(ch))
         {
             val[nval]=val[nval]*10+(ch-'0');
-            state=TS_ESC_S;
+            break;
         }
-        else if (ch>='A' && ch <='Z' && !escesc)
+        else if (ch==';')
+        {
+            if (nval<MAXNVAL)
+                val[++nval]=0;
+            break;
+        }
+
+        if (val[0] && val[1]>=2 && val[1]<=8) // modifier keys
+            bits=val[1]-1;
+        state=TS_NORMAL;
+        if (ch>='A' && ch <='Z' && !bits)
         {
             switch (ch)
             {
@@ -853,15 +884,15 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 break;
             }
         }
-        else if (ch>='A' && ch <='Z') // && escesc
+        else if (ch>='A' && ch <='Z') // && bits
         {
             touch_bottom();
             sprintf(txt, "ESC["WCC, (WCI)ch);
-            find_bind(txt, 1, 1, ses);
+            find_bind(txt, bits, 1, ses);
         }
         else if (ch=='[')
             state=TS_ESC_S_S;
-        else if (ch=='~' && !escesc)
+        else if (ch=='~' && !bits)
             switch (val[0])
             {
             case 5:         /* [PgUp] */
@@ -932,11 +963,11 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 find_bind(txt, 0, 1, ses);
                 break;
             }
-        else if (ch=='~') // && escesc
+        else if (ch=='~') // && bits
         {
             touch_bottom();
             sprintf(txt, "ESC[%i~", val[0]);
-            find_bind(txt, 1, 1, ses);
+            find_bind(txt, bits, 1, ses);
         }
         else if (ch=='>')
             state=TS_ESC_S_G;
@@ -968,17 +999,17 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
     case TS_ESC:                /* ESC */
         if (ch=='[')
         {
-            state=TS_ESC_S; val[nval=0]=0;
+            state=TS_ESC_S; val[nval=0]=val[1]=0;
             break;
         }
         if (ch=='O')
         {
-            state=TS_ESC_O; val[nval=0]=0;
+            state=TS_ESC_O; val[nval=0]=val[1]=0;
             break;
         }
-        if (ch==27 && !escesc)
+        if (ch==27 && !bits)
         {
-            escesc = 1;
+            bits = BIT_ALT;
             break;
         }
         state=TS_NORMAL;
@@ -1177,7 +1208,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         break;
     //-----------------------------------------------------------------------
     case TS_NORMAL:
-        escesc=0;
+        bits=0;
         switch (ch)
         {
         case '\n':

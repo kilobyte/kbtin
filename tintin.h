@@ -3,6 +3,7 @@
 /******************************************************************/
 #undef TELNET_DEBUG     /* define to show TELNET negotiations */
 #undef USER_DEBUG       /* debugging of the user interface */
+#undef KEYBOARD_DEBUG
 
 #include <stdbool.h>
 
@@ -31,6 +32,10 @@
 #define C_STRIKETHRU	8
 
 #define DENOM (1000000LL*3*3*3*7*2*5*2)
+
+#define BIT_SHIFT	1
+#define BIT_ALT		2
+#define BIT_CTRL	4
 
 /*************************/
 /* telnet protocol stuff */

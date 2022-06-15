@@ -47,7 +47,9 @@ static const char *KEYNAMES[]=
     "ESC[C",        "RightArrow",
     "ESC[D",        "LeftArrow",
     "ESC[E",        "MidArrow",
+    "ESC[F",        "PgDn",
     "ESC[G",        "MidArrow",
+    "ESC[H",        "Home",
     "ESC[P",        "Pause",
     "ESC[1~",       "Home",
     "ESC[2~",       "Ins",
@@ -161,7 +163,11 @@ static const char *bitted(const char *key, uint8_t bits)
         return key;
 
     static char esckey[64];
-    snprintf(esckey, sizeof(esckey), "%s%s", bits&1? "Alt-" : "", key);
+    snprintf(esckey, sizeof(esckey), "%s%s%s%s",
+        bits&4? "Ctrl-" : "",
+        bits&2? "Alt-" : "",
+        bits&1? "Shift-" : "",
+        key);
     return esckey;
 }
 
@@ -170,6 +176,9 @@ bool find_bind(const char *key, uint8_t bits, int msg, struct session *ses)
 {
     char *val;
 
+#ifdef KEYBOARD_DEBUG
+    tintin_printf(ses, "~3~[~11~%s~3~]~7~", bitted(key, bits));
+#endif
     if ((val=get_hash(ses->binds, bitted(key, bits))))
     {          /* search twice, both for raw key code and key name */
         parse_input(val, true, ses);
@@ -179,6 +188,9 @@ bool find_bind(const char *key, uint8_t bits, int msg, struct session *ses)
     if ((val=get_hash(keynames, key)))
     {
         key=val;
+#ifdef KEYBOARD_DEBUG
+        tintin_printf(ses, "~3~→ [~11~%s~3~]~7~", bitted(key, bits));
+#endif
         if ((val=get_hash(ses->binds, bitted(key, bits))))
         {
             parse_input(val, true, ses);
