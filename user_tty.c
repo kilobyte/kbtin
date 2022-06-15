@@ -688,6 +688,18 @@ static bool ret(bool r)
     return true;
 }
 
+static void swap_inputs(void)
+{
+    WC buf[BUFFER_SIZE];
+    ret(false);
+    WCcpy(buf, k_input);
+    WCcpy(k_input, tk_input);
+    WCcpy(tk_input, buf);
+    int i=k_pos; k_pos=tk_pos; tk_pos=i;
+    i=k_scrl; k_scrl=tk_scrl; tk_scrl=i;
+    i=k_len; k_len=tk_len; tk_len=i;
+}
+
 static enum
 {
     TS_NORMAL,
@@ -986,7 +998,9 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         switch (ch)
         {
         case 9:         /* Alt-Tab */
-            goto key_alt_tab;
+            swap_inputs();
+            redraw_in();
+            break;
         case '<':       /* Alt-< */
             touch_bottom();
             if (ret(false))
@@ -1243,17 +1257,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         case 9:                 /* [Tab], ^[I] */
             if (find_bind("Tab", 0, 0, ses)||find_bind("^I", 0, 0, ses))
                 break;
-            {
-                WC buf[BUFFER_SIZE];
-key_alt_tab:
-                ret(false);
-                WCcpy(buf, k_input);
-                WCcpy(k_input, tk_input);
-                WCcpy(tk_input, buf);
-                int i=k_pos; k_pos=tk_pos; tk_pos=i;
-                i=k_scrl; k_scrl=tk_scrl; tk_scrl=i;
-                i=k_len; k_len=tk_len; tk_len=i;
-            }
+            swap_inputs();
             redraw_in();
             break;
         case 11:                /* ^[K] */
