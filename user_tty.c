@@ -1168,8 +1168,8 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             break;
         default:
             find_bind(txt, 0, 1, ses); /* FIXME: we want just the message */
-    }
-    break;
+        }
+        break;
     case TS_NORMAL:
         escesc=0;
         switch (ch)
