@@ -546,7 +546,7 @@ void debuglog(struct session *ses, const char *format, ...)
 
 struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
 {
-    char line[BUFFER_SIZE], buffer[BUFFER_SIZE], lstr[BUFFER_SIZE], *cptr;
+    char line[BUFFER_SIZE], buffer[BUFFER_SIZE], lstr[BUFFER_SIZE], *cptr, *eptr;
     bool want_tt_char, ignore_lines;
     int nl;
     mbstate_t cs;
@@ -590,12 +590,11 @@ struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
         }
         for (cptr = line; *cptr && *cptr != '\n' && *cptr!='\r'; cptr++) ;
         *cptr = '\0';
-        char *end = cptr;
 
         if (isaspace(*line) && *buffer && (*buffer==tintin_char))
         {
             cptr=(char*)space_out(line);
-            if (ignore_lines || (end-cptr+strlen(buffer) >= BUFFER_SIZE/2))
+            if (ignore_lines || (strlen(cptr)+strlen(buffer) >= BUFFER_SIZE/2))
             {
                 puts_echoing=true;
                 tintin_eprintf(ses, "#ERROR! LINE %d TOO LONG IN %s, TRUNCATING", nl, filename);
@@ -605,14 +604,11 @@ struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
             }
             else
             {
-                if (*cptr
-                    && !isspace(end[-1])
-                    && end[-1]!=';'
-                    && *cptr!=BRACE_CLOSE
-                    && (*cptr!=tintin_char || end[-1]!=BRACE_OPEN))
-                {
+                if (*cptr &&
+                    !isspace(*(eptr=strchr(buffer, 0)-1)) &&
+                    (*eptr!=';') && (*cptr!=BRACE_CLOSE) &&
+                    (*cptr!=tintin_char || *eptr!=BRACE_OPEN))
                     strcat(buffer, " ");
-                }
                 strcat(buffer, cptr);
                 continue;
             }
