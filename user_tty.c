@@ -727,6 +727,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         goto insert_verbatim;
         break;
 #endif
+    //-----------------------------------------------------------------------
     case TS_ESC_O:              /* ESC O */
         state=TS_NORMAL;
         if (!escesc)
@@ -749,12 +750,14 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         sprintf(txt, "ESCO"WCC, (WCI)ch);
         find_bind(txt, escesc, 1, ses);
         break;
+    //-----------------------------------------------------------------------
     case TS_ESC_S_S:            /* ESC [ [ */
         state=TS_NORMAL;
         touch_bottom();
         sprintf(txt, "ESC[["WCC, (WCI)ch);
         find_bind(txt, escesc, 1, ses);
         break;
+    //-----------------------------------------------------------------------
     case TS_ESC_S:              /* ESC [ */
         state=TS_NORMAL;
         if (isadigit(ch))
@@ -938,6 +941,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         else if (ch=='>')
             state=TS_ESC_S_G;
         break;
+    //-----------------------------------------------------------------------
     case TS_ESC_S_G:            /* ESC [ > */
         if (isadigit(ch))
             val[nval]=val[nval]*10+(ch-'0');
@@ -960,6 +964,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         else
             state=TS_NORMAL;
         break;
+    //-----------------------------------------------------------------------
     case TS_ESC:                /* ESC */
         if (ch=='[')
         {
@@ -1170,6 +1175,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             find_bind(txt, 0, 1, ses); /* FIXME: we want just the message */
         }
         break;
+    //-----------------------------------------------------------------------
     case TS_NORMAL:
         escesc=0;
         switch (ch)
