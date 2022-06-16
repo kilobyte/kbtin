@@ -1,0 +1,25 @@
+#ali m {#math x $0;#show $0 → $x}
+m #round 0
+m #round 1
+m #round 1.0
+m #round 1.1
+m #round 0.1
+m #round 0.9
+m #round -1.0
+m #round -0.1
+m #round -0.9
+m #round -0.1
+m #round 0.4999999
+m #round 0.5
+m #round 0.5000001
+m #round 1.4999999
+m #round 1.5
+m #round 1.5000001
+m #round -0.4999999
+m #round -0.5
+m #round -0.5000001
+m #round -1.4999999
+m #round -1.5
+m #round -1.5000001
+m #round 2147483647
+m #round -2147483648

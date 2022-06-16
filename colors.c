@@ -258,10 +258,20 @@ void do_in_MUD_colors(char *txt, bool quotetype, struct session *ses)
     for (out=OUT;*txt;txt++)
         switch (*txt)
         {
+                 case  1: case  2: case  3: case  4: case  5: case  6:
+        case  8:                   case 11:          case 13: case 14: case 15:
+        case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23:
+        case 24: case 25: case 26:          case 28: case 29: case 30: case 31:
+            // Unicode control pictures, U+2400+c
+            *out++=0xe2; *out++=0x90; *out++=0x80+*txt;
+            break;
+        case 127:
+            // ␡
+            *out++=0xe2; *out++=0x90; *out++=0xa1;
         case 27:
             if (*(txt+1)=='[')
             {
-                back=txt++;
+                back=++txt;
                 if (*(txt+1)=='?')
                 {
                     txt++;
@@ -440,6 +450,8 @@ again:
                 default:
 error:
                     txt=back;
+                    // ␛
+                    *out++=0xe2; *out++=0x90; *out++=0x9b;
                 }
             }
             else if (*(txt+1)=='%' && *(txt+2)=='G')

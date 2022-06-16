@@ -10,7 +10,6 @@
 #ifdef HAVE_TERMIOS_H
 # include <termios.h>
 #endif
-#include <assert.h>
 #include <sys/ioctl.h>
 #ifdef HAVE_VALGRIND_VALGRIND_H
 #include <valgrind/valgrind.h>
@@ -689,6 +688,18 @@ static bool ret(bool r)
     return true;
 }
 
+static void swap_inputs(void)
+{
+    WC buf[BUFFER_SIZE];
+    ret(false);
+    WCcpy(buf, k_input);
+    WCcpy(k_input, tk_input);
+    WCcpy(tk_input, buf);
+    int i=k_pos; k_pos=tk_pos; tk_pos=i;
+    i=k_scrl; k_scrl=tk_scrl; tk_scrl=i;
+    i=k_len; k_len=tk_len; tk_len=i;
+}
+
 static enum
 {
     TS_NORMAL,
@@ -701,12 +712,21 @@ static enum
     TS_VERBATIM,
 #endif
 } state=TS_NORMAL;
-static bool escesc = false;
+static int bits = 0;
 #define MAXNVAL 10
 static int val[MAXNVAL], nval;
 static bool usertty_process_kbd(struct session *ses, WC ch)
 {
     char txt[16];
+
+#ifdef KEYBOARD_DEBUG
+    if (ch==27)
+        tintin_printf(ses, "~5~[~13~ESC~5~]~7~");
+    else if (ch<=' ' || ch>=127)
+        tintin_printf(ses, "~5~[~13~\\x%02x~5~]~7~", ch);
+    else
+        tintin_printf(ses, "~5~[~13~%c~5~]~7~", ch);
+#endif
 
     switch (state)
     {
@@ -716,9 +736,23 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         goto insert_verbatim;
         break;
 #endif
+    //-----------------------------------------------------------------------
     case TS_ESC_O:              /* ESC O */
+        if (isadigit(ch))
+        {
+            val[nval]=val[nval]*10+(ch-'0');
+            break;
+        }
+        else if (ch==';')
+        {
+            if (nval<MAXNVAL)
+                val[++nval]=0;
+            break;
+        }
+        if (val[0]>=2 && val[0]<=8) // modifier keys
+            bits=val[0]-1;
         state=TS_NORMAL;
-        if (!escesc)
+        if (!bits)
             switch (ch)
             {
             case 'A':
@@ -736,22 +770,33 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             }
         touch_bottom();
         sprintf(txt, "ESCO"WCC, (WCI)ch);
-        find_bind(txt, escesc, 1, ses);
+        find_bind(txt, bits, 1, ses);
         break;
+    //-----------------------------------------------------------------------
     case TS_ESC_S_S:            /* ESC [ [ */
         state=TS_NORMAL;
         touch_bottom();
         sprintf(txt, "ESC[["WCC, (WCI)ch);
-        find_bind(txt, escesc, 1, ses);
+        find_bind(txt, bits, 1, ses);
         break;
+    //-----------------------------------------------------------------------
     case TS_ESC_S:              /* ESC [ */
-        state=TS_NORMAL;
         if (isadigit(ch))
         {
             val[nval]=val[nval]*10+(ch-'0');
-            state=TS_ESC_S;
+            break;
         }
-        else if (ch>='A' && ch <='Z' && !escesc)
+        else if (ch==';')
+        {
+            if (nval<MAXNVAL)
+                val[++nval]=0;
+            break;
+        }
+
+        if (val[0] && val[1]>=2 && val[1]<=8) // modifier keys
+            bits=val[1]-1;
+        state=TS_NORMAL;
+        if (ch>='A' && ch <='Z' && !bits)
         {
             switch (ch)
             {
@@ -839,15 +884,15 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 break;
             }
         }
-        else if (ch>='A' && ch <='Z') // && escesc
+        else if (ch>='A' && ch <='Z') // && bits
         {
             touch_bottom();
             sprintf(txt, "ESC["WCC, (WCI)ch);
-            find_bind(txt, 1, 1, ses);
+            find_bind(txt, bits, 1, ses);
         }
         else if (ch=='[')
             state=TS_ESC_S_S;
-        else if (ch=='~' && !escesc)
+        else if (ch=='~' && !bits)
             switch (val[0])
             {
             case 5:         /* [PgUp] */
@@ -918,15 +963,16 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 find_bind(txt, 0, 1, ses);
                 break;
             }
-        else if (ch=='~') // && escesc
+        else if (ch=='~') // && bits
         {
             touch_bottom();
             sprintf(txt, "ESC[%i~", val[0]);
-            find_bind(txt, 1, 1, ses);
+            find_bind(txt, bits, 1, ses);
         }
         else if (ch=='>')
             state=TS_ESC_S_G;
         break;
+    //-----------------------------------------------------------------------
     case TS_ESC_S_G:            /* ESC [ > */
         if (isadigit(ch))
             val[nval]=val[nval]*10+(ch-'0');
@@ -949,20 +995,21 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         else
             state=TS_NORMAL;
         break;
+    //-----------------------------------------------------------------------
     case TS_ESC:                /* ESC */
         if (ch=='[')
         {
-            state=TS_ESC_S; val[nval=0]=0;
+            state=TS_ESC_S; val[nval=0]=val[1]=0;
             break;
         }
         if (ch=='O')
         {
-            state=TS_ESC_O; val[nval=0]=0;
+            state=TS_ESC_O; val[nval=0]=val[1]=0;
             break;
         }
-        if (ch==27 && !escesc)
+        if (ch==27 && !bits)
         {
-            escesc = 1;
+            bits = BIT_ALT;
             break;
         }
         state=TS_NORMAL;
@@ -987,7 +1034,9 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         switch (ch)
         {
         case 9:         /* Alt-Tab */
-            goto key_alt_tab;
+            swap_inputs();
+            redraw_in();
+            break;
         case '<':       /* Alt-< */
             touch_bottom();
             if (ret(false))
@@ -1155,10 +1204,11 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             break;
         default:
             find_bind(txt, 0, 1, ses); /* FIXME: we want just the message */
-    }
-    break;
+        }
+        break;
+    //-----------------------------------------------------------------------
     case TS_NORMAL:
-        escesc=0;
+        bits=0;
         switch (ch)
         {
         case '\n':
@@ -1244,17 +1294,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         case 9:                 /* [Tab], ^[I] */
             if (find_bind("Tab", 0, 0, ses)||find_bind("^I", 0, 0, ses))
                 break;
-            {
-                WC buf[BUFFER_SIZE];
-key_alt_tab:
-                ret(false);
-                WCcpy(buf, k_input);
-                WCcpy(k_input, tk_input);
-                WCcpy(tk_input, buf);
-                int i=k_pos; k_pos=tk_pos; tk_pos=i;
-                i=k_scrl; k_scrl=tk_scrl; tk_scrl=i;
-                i=k_len; k_len=tk_len; tk_len=i;
-            }
+            swap_inputs();
             redraw_in();
             break;
         case 11:                /* ^[K] */

@@ -25,7 +25,6 @@
 #ifndef BADSIG
 #define BADSIG (void (*)(int))-1
 #endif
-#include <assert.h>
 
 
 static void alarm_func(int);

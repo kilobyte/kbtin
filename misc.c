@@ -17,7 +17,6 @@
 #include "protos/highlight.h"
 #include "protos/history.h"
 #include "protos/hooks.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/math.h"
 #include "protos/net.h"
@@ -31,6 +30,7 @@
 #include "protos/user.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/tlist.h"
 #include "protos/vars.h"
 
 
@@ -352,6 +352,9 @@ void end_command(const char *arg, struct session *ses)
         cleanup_bind();
         cleanup_history();
     }
+# ifdef HAVE_HS
+    hs_free_scratch(hs_scratch);
+# endif
 #endif
     activesession = NULL;
     if (ui_own_output)
@@ -964,17 +967,17 @@ void tab_delete(char *arg, struct session *ses)
 void info_command(const char *arg, struct session *ses)
 {
     char buffer[BUFFER_SIZE], *bptr;
-    int actions   = count_list(ses->actions);
-    int practions = count_list(ses->prompts);
+    int actions   = count_tlist(ses->actions);
+    int practions = count_tlist(ses->prompts);
     int aliases   = ses->aliases->nval;
-    int subs      = count_list(ses->subs);
+    int subs      = count_tlist(ses->subs);
     int antisubs  = count_slist(ses->antisubs);
     int vars      = ses->myvars->nval;
-    int highs     = count_list(ses->highs);
+    int highs     = count_tlist(ses->highs);
     int binds     = ses->binds->nval;
     int pathdirs  = ses->pathdirs->nval;
     int locs = 0;
-    for (int i=0;i<MAX_LOCATIONS;i++)
+    for (int i=0;i<ses->num_locations;i++)
         if (ses->locations[i])
             locs++;
     int routes=count_routes(ses);
@@ -1003,6 +1006,10 @@ void info_command(const char *arg, struct session *ses)
     case SES_SELFPIPE:
         tintin_printf(ses, "Session : {%s}  Type: self-pipe", ses->name);
     }
+
+#ifdef HAVE_HS
+    tintin_printf(ses, "Using %s pattern matching.", simd? "SIMD" : "non-parallel");
+#endif
 
     tintin_printf(ses, "You have defined the following:");
     tintin_printf(ses, "Actions : %d  Promptactions: %d", actions, practions);
@@ -1059,7 +1066,7 @@ void info_command(const char *arg, struct session *ses)
             ses->line_time/NANO, ses->line_time%NANO/1000,
             1/(ses->line_time*0.000000001));
     if (ses->closing)
-        tintin_printf(ses, "The session has it's closing mark set to %d!", ses->closing);
+        tintin_printf(ses, "The session has its closing mark set to %d!", ses->closing);
 }
 
 bool isnotblank(const char *line, bool magic_only)

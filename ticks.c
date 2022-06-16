@@ -5,7 +5,6 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
-#include <assert.h>
 #include "protos/events.h"
 #include "protos/globals.h"
 #include "protos/hooks.h"
@@ -13,6 +12,7 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
+#include "protos/vars.h"
 
 
 /*********************/
@@ -50,17 +50,43 @@ void tickoff_command(const char *arg, struct session *ses)
 /***********************/
 void tickon_command(const char *arg, struct session *ses)
 {
+    char left[BUFFER_SIZE], *err;
+    timens_t x=0;
+
     if (!ses)
         return tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
 
-    ses->tickstatus = true;
     timens_t ct = current_time();
-    if (ses->time0 == 0)
+
+    get_arg(arg, left, 1, ses);
+    substitute_vars(left, left, ses);
+    if (*left)
+    {
+        x = str2timens(left, &err);
+        if (*err || !*left)
+            return tintin_eprintf(ses, "#SYNTAX: #tickon [<offset>]");
+        if (x < 0)
+            return tintin_eprintf(ses, "#NEGATIVE TICK OFFSET");
+        ses->time0 = ct - ses->tick_size + x;
+    }
+    else if (!ses->time0)
         ses->time0 = ct;
+
+    if (ses->mesvar[MSG_TICK])
+    {
+        if (!ses->tickstatus)
+            tintin_puts("#TICKER IS NOW ON.", ses);
+        else if (!*left)
+            tintin_puts("#TICKER IS ALREADY ON.", ses);
+    }
+    ses->tickstatus = true;
     if (ses->time0 + ses->tick_size - ses->pretick <= ct)
         ses->time10 = ses->time0;
-    if (ses->mesvar[MSG_TICK])
-        tintin_puts("#TICKER IS NOW ON.", ses);
+    if (*left && ses->mesvar[MSG_TICK])
+    {
+        nsecstr(left, x);
+        tintin_eprintf(ses, "#TICKER SET TO %s", left);
+    }
 }
 
 
@@ -159,6 +185,7 @@ timens_t check_event(timens_t time, struct session *ses)
     {
         ses->events=ev->next;
         execute_event(ev, ses);
+        SFREE(ev->event);
         TFREE(ev, struct eventnode);
         if (any_closed)
             return -1;

@@ -1,0 +1,5 @@
+#act x #unact x
+#pro x #unpro x
+#run a //selfpipe
+x
+#del 1 #end

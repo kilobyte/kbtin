@@ -16,7 +16,6 @@
 #include "protos/highlight.h"
 #include "protos/history.h"
 #include "protos/hooks.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/math.h"
 #include "protos/misc.h"
@@ -26,6 +25,7 @@
 #include "protos/slist.h"
 #include "protos/substitute.h"
 #include "protos/ticks.h"
+#include "protos/tlist.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
@@ -171,105 +171,6 @@ static void setup_ulimit(void)
     setrlimit(RLIMIT_STACK, &rlim);
 }
 
-static void init_nullses(void)
-{
-    start_time = idle_since = current_time();
-
-    nullsession=TALLOC(struct session);
-    nullsession->name=mystrdup("main");
-    nullsession->address=0;
-    nullsession->tickstatus = false;
-    nullsession->tick_size = DEFAULT_TICK_SIZE*NANO;
-    nullsession->pretick = DEFAULT_PRETICK*NANO;
-    nullsession->time0 = 0;
-    nullsession->snoopstatus = true;
-    nullsession->logfile = 0;
-    nullsession->logname = 0;
-    nullsession->logtype = DEFAULT_LOGTYPE;
-    nullsession->loginputprefix=mystrdup(LOG_INPUT_PREFIX);
-    nullsession->loginputsuffix=mystrdup(LOG_INPUT_SUFFIX);
-    nullsession->blank = DEFAULT_DISPLAY_BLANK;
-    nullsession->echo = ui_sep_input?DEFAULT_ECHO_SEPINPUT
-                                    :DEFAULT_ECHO_NOSEPINPUT;
-    nullsession->speedwalk = DEFAULT_SPEEDWALK;
-    nullsession->togglesubs = DEFAULT_TOGGLESUBS;
-    nullsession->presub = DEFAULT_PRESUB;
-    nullsession->verbatim = false;
-    nullsession->ignore = DEFAULT_IGNORE;
-    nullsession->partial_line_marker = mystrdup(DEFAULT_PARTIAL_LINE_MARKER);
-    nullsession->aliases = init_hash();
-    nullsession->actions = init_list();
-    nullsession->prompts = init_list();
-    nullsession->subs = init_list();
-    nullsession->myvars = init_hash();
-    nullsession->highs = init_list();
-    nullsession->pathdirs = init_hash();
-    nullsession->socket = 0;
-    nullsession->sestype = SES_NULL;
-    nullsession->naws = false;
-#ifdef HAVE_ZLIB
-    nullsession->can_mccp = false;
-    nullsession->mccp = 0;
-    nullsession->mccp_more = false;
-#endif
-    nullsession->last_term_type=0;
-    nullsession->server_echo = 0;
-    nullsession->nagle = false;
-    nullsession->antisubs = init_slist();
-    nullsession->binds = init_hash();
-    nullsession->next = 0;
-    nullsession->sessionstart = nullsession->idle_since =
-        nullsession->server_idle_since = start_time;
-    nullsession->debuglogfile=0;
-    nullsession->debuglogname=0;
-    for (int i=0;i<HISTORY_SIZE;i++)
-        history[i]=0;
-    for (int i=0;i<MAX_LOCATIONS;i++)
-    {
-        nullsession->routes[i]=0;
-        nullsession->locations[i]=0;
-    }
-    for (int i=0;i<NHOOKS;i++)
-        nullsession->hooks[i]=0;
-    nullsession->path = init_list();
-    nullsession->no_return = 0;
-    nullsession->path_length = 0;
-    nullsession->last_line[0] = 0;
-    nullsession->linenum = 0;
-    nullsession->events = NULL;
-    nullsession->verbose=false;
-    nullsession->closing=false;
-    nullsession->drafted=false;
-    sessionlist = nullsession;
-    activesession = nullsession;
-    pvars=0;
-
-    nullsession->mesvar[MSG_ALIAS] = DEFAULT_ALIAS_MESS;
-    nullsession->mesvar[MSG_ACTION] = DEFAULT_ACTION_MESS;
-    nullsession->mesvar[MSG_SUBSTITUTE] = DEFAULT_SUB_MESS;
-    nullsession->mesvar[MSG_EVENT] = DEFAULT_EVENT_MESS;
-    nullsession->mesvar[MSG_HIGHLIGHT] = DEFAULT_HIGHLIGHT_MESS;
-    nullsession->mesvar[MSG_VARIABLE] = DEFAULT_VARIABLE_MESS;
-    nullsession->mesvar[MSG_ROUTE] = DEFAULT_ROUTE_MESS;
-    nullsession->mesvar[MSG_GOTO] = DEFAULT_GOTO_MESS;
-    nullsession->mesvar[MSG_BIND] = DEFAULT_BIND_MESS;
-    nullsession->mesvar[MSG_SYSTEM] = DEFAULT_SYSTEM_MESS;
-    nullsession->mesvar[MSG_PATH]= DEFAULT_PATH_MESS;
-    nullsession->mesvar[MSG_ERROR]= DEFAULT_ERROR_MESS;
-    nullsession->mesvar[MSG_HOOK]= DEFAULT_HOOK_MESS;
-    nullsession->mesvar[MSG_LOG]= DEFAULT_LOG_MESS;
-    nullsession->mesvar[MSG_TICK]= DEFAULT_TICK_MESS;
-    nullsession->charset=mystrdup(DEFAULT_CHARSET);
-    nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
-                              DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
-    nullify_conv(&nullsession->c_io);
-    nullify_conv(&nullsession->c_log);
-    nullsession->line_time=0;
-#ifdef HAVE_GNUTLS
-    nullsession->ssl=0;
-#endif
-}
-
 static void opterror(const char *msg, ...)
 {
     va_list ap;
@@ -281,81 +182,83 @@ static void opterror(const char *msg, ...)
     exit(1);
 }
 
-static struct listnode *options;
+static struct trip *options;
 
 static void parse_options(int argc, char **argv)
 {
     bool noargs=false;
 
-    options=init_list();
+    options=MALLOC(argc*sizeof(struct trip));
+    struct trip *o = options;
 
     for (int arg=1;arg<argc;arg++)
     {
-        if (*argv[arg]=='-' && !noargs)
+        if (*argv[arg]!='-' || noargs)
+            o->left=" ", o++->right=argv[arg];
+        else if (!strcmp(argv[arg], "--"))
+            noargs=true;
+        else if (!strcmp(argv[arg], "--version")) /* make autotest happy */
         {
-            if (!strcmp(argv[arg], "--"))
-                noargs=true;
-            else if (!strcmp(argv[arg], "--version")) /* make autotest happy */
-            {
-                printf("KBtin version "VERSION"\n");
-                exit(0);
-            }
-            else if (!strcmp(argv[arg], "-v"))
-                addnode_list(options, "#verbose 1", 0, 0);
-            else if (!strcmp(argv[arg], "-q"))
-                addnode_list(options, "#verbose 0", 0, 0);
-            else if (!strcmp(argv[arg], "-p"))
-                user_setdriver(0);
-            else if (!strcmp(argv[arg], "-i"))
-                user_setdriver(1);
-            else if (!strcmp(argv[arg], "-c"))
-            {
-                if (++arg==argc)
-                    opterror("Invalid option: bare -c");
-                else
-                    addnode_list(options, "c", argv[arg], 0);
-            }
-            else if (!strcmp(argv[arg], "-r"))
-            {
-                if (++arg==argc)
-                    opterror("Invalid option: bare -r");
-                else
-                    addnode_list(options, "r", argv[arg], 0);
-            }
-            else if (!strcasecmp(argv[arg], "-s"))
-            {
-                if (++arg==argc)
-                    opterror("Invalid option: bare %s", argv[arg]);
-                else if (++arg==argc)
-                    opterror("Bad option: -s needs both an address and a port number!");
-                else
-                    addnode_list(options, argv[arg-2]+1, argv[arg-1], argv[arg]);
-            }
-            else
-                opterror("Invalid option: {%s}", argv[arg]);
+            printf("KBtin version "VERSION"\n");
+            exit(0);
         }
+        else if (!strcmp(argv[arg], "-v"))
+            o++->left="#verbose 1";
+        else if (!strcmp(argv[arg], "-q"))
+            o++->left="#verbose 0";
+        else if (!strcmp(argv[arg], "-p"))
+            user_setdriver(0);
+        else if (!strcmp(argv[arg], "-i"))
+            user_setdriver(1);
+        else if (!strcmp(argv[arg], "-c"))
+        {
+            if (++arg==argc)
+                opterror("Invalid option: bare -c");
+            else
+                o->left="c", o++->right=argv[arg];
+        }
+        else if (!strcmp(argv[arg], "-r"))
+        {
+            if (++arg==argc)
+                opterror("Invalid option: bare -r");
+            else
+                o->left="r", o++->right=argv[arg];
+        }
+        else if (!strcasecmp(argv[arg], "-s"))
+        {
+            if (++arg==argc)
+                opterror("Invalid option: bare %s", argv[arg]);
+            else if (++arg==argc)
+                opterror("Bad option: -s needs both an address and a port number!");
+            else
+                o->left=argv[arg-2]+1, o->right=argv[arg-1], o++->pr=argv[arg];
+        }
+        else if (!strcmp(argv[arg], "--no-simd"))
+#ifdef HAVE_HS
+            simd=false;
+#else
+            ;
+#endif
         else
-            addnode_list(options, " ", argv[arg], 0);
+            opterror("Invalid option: {%s}", argv[arg]);
     }
-    if (argc<=1)
-        addnode_list(options, "-", 0, 0);
+    o->left=0;
 }
 
 static void apply_options(void)
 {
     char temp[BUFFER_SIZE], sname[BUFFER_SIZE];
     char ustr[BUFFER_SIZE];
-    const char *home;
     FILE *f;
 # define DO_INPUT(str,iv) local_to_utf8(ustr, str, BUFFER_SIZE, 0);\
-                          activesession=parse_input(str, iv, activesession);
+                          activesession=parse_input(ustr, iv, activesession);
 
-    for (struct listnode *opt=options->next; opt; opt=opt->next)
+    for (struct trip *opt=options; opt->left; opt++)
     {
         switch (*opt->left)
         {
         case '#':
-            *opt->left=tintin_char;
+            snprintf(ustr, sizeof(ustr), "%c%s", tintin_char, opt->left+1);
             activesession=parse_input(opt->left, true, activesession);
             break;
         case 'c':
@@ -393,31 +296,31 @@ static void apply_options(void)
             else
                 tintin_eprintf(0, "#FILE NOT FOUND: {%s}", ustr);
             break;
-        case '-':
-            if (!strcmp(DEFAULT_FILE_DIR, "HOME"))
-                if ((home = getenv("HOME")))
-                    strcpy(temp, home);
-                else
-                    *temp = '\0';
-            else
-                strcpy(temp, DEFAULT_FILE_DIR);
-
-            strcat(temp, "/.tintinrc");
-            local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
-            if ((f=fopen(temp, "r")))
-                activesession = do_read(f, ustr, activesession);
-            else if ((home = getenv("HOME")))
-            {
-                strcpy(temp, home);
-                strcat(temp, "/.tintinrc");
-                local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
-                if ((f=fopen(temp, "r")))
-                    activesession = do_read(f, ustr, activesession);
-            }
         }
     }
 
-    kill_list(options);
+    free(options);
+}
+
+static bool read_rc_file(const char *path)
+{
+    char temp[BUFFER_SIZE], ustr[BUFFER_SIZE];
+    snprintf(temp, sizeof temp, "%s/.tintinrc", path);
+    FILE *f = fopen(temp, "r");
+    if (!f)
+        return false;
+    local_to_utf8(ustr, temp, BUFFER_SIZE, 0);
+    activesession = do_read(f, ustr, activesession);
+    return true;
+}
+
+static void read_rc(void)
+{
+    if (!strcmp(DEFAULT_FILE_DIR, "HOME") && read_rc_file(DEFAULT_FILE_DIR))
+        return;
+    const char *home = getenv("HOME");
+    if (home)
+        read_rc_file(home);
 }
 
 /**************************************************************************/
@@ -429,6 +332,10 @@ int main(int argc, char **argv)
     init_locale();
     user_setdriver(isatty(0)?1:0);
     parse_options(argc, argv);
+#ifdef HAVE_HS
+    if (simd && hs_valid_platform())
+        simd=false;
+#endif
     init_bind();
     hist_num=-1;
     init_parse();
@@ -468,6 +375,7 @@ ever wants to read -- that is what docs are for.
     setup_signals();
     setup_ulimit();
     init_nullses();
+    read_rc();
     apply_options();
     tintin();
     return 0;
@@ -711,8 +619,7 @@ static void read_mud(struct session *ses)
     }
 
     cpsource = buffer;
-    strcpy(linebuffer, ses->last_line);
-    cpdest = strchr(linebuffer, '\0');
+    cpdest = stpcpy(linebuffer, ses->last_line);
 
     if (ses->halfcr_in)
     {
@@ -779,7 +686,7 @@ static void do_one_line(char *text, int nl, struct session *ses)
 {
     bool isnb;
     char line[BUFFER_SIZE];
-    timens_t t;
+    timens_t t=0;
 
     if (nl)
         t = current_time();
@@ -829,7 +736,7 @@ static void do_one_line(char *text, int nl, struct session *ses)
                     user_passwd(false);
                     gotpassword=0;
                 }
-                sprintf(strchr(line, 0), "\n");
+                strcat(line, "\n");
                 user_textout_draft(0, 0);
                 user_textout(line);
                 lastdraft=0;
@@ -840,7 +747,7 @@ static void do_one_line(char *text, int nl, struct session *ses)
                 {
                     isnb = ses->gas ? ses->ga : iscompleteprompt(line);
                     if (ses->partial_line_marker)
-                        sprintf(strchr(line, 0), "%s", ses->partial_line_marker);
+                        strcat(line, ses->partial_line_marker);
                     user_textout_draft(line, isnb);
                 }
                 lastdraft=ses;

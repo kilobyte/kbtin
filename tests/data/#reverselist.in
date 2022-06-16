@@ -1,0 +1,4 @@
+#reversel r a b c
+#showme $r
+#reversel r {{a b} {c d} e}
+#showme $r

@@ -26,11 +26,11 @@ macos_x_task:
 
 ubuntu_amd64_task:
   container:
-    image: ubuntu:focal
+    image: ubuntu:jammy
   install_script:
     - apt-get update
     - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev libhyperscan-dev valgrind
   build_script:
     - cmake .
     - make -j$(getconf _NPROCESSORS_ONLN)
@@ -39,7 +39,7 @@ ubuntu_amd64_task:
 
 ubuntu_i386_task:
   container:
-    image: ubuntu:focal
+    image: ubuntu:jammy
   install_script:
     - dpkg --add-architecture i386
     - apt-get update
@@ -53,11 +53,11 @@ ubuntu_i386_task:
 
 ubuntu_arm64_task:
   arm_container:
-    image: ubuntu:focal
+    image: ubuntu:jammy
   install_script:
     - apt-get update
     - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake libgnutls28-dev libz-dev valgrind libvectorscan-dev
   build_script:
     - cmake .
     - make -j$(getconf _NPROCESSORS_ONLN)
@@ -66,7 +66,7 @@ ubuntu_arm64_task:
 
 ubuntu_armhf_task:
   arm_container:
-    image: ubuntu:focal
+    image: ubuntu:jammy
   install_script:
     - dpkg --add-architecture armhf
     - apt-get update

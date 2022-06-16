@@ -4,7 +4,6 @@
  */
 
 #include "tintin.h"
-#include <assert.h>
 
 bool match(const char *regex, const char *string)
 {
@@ -56,7 +55,7 @@ bool match(const char *regex, const char *string)
 
 bool is_literal(const char *txt)
 {
-    return !strchr(txt, '*');
+    return !strchr(txt, '*') && !strchr(txt, '\\');
 }
 
 
@@ -150,11 +149,12 @@ start:
             return false;
         if (*to==-1)
             *to=strlen(text)-(a-txt)-1;
-        txt=a+strlen(pat);
+        int len=strlen(pat);
+        txt=a+len;
         if (b)
             pat=b;
         else
-            pat=strchr(pat, 0);
+            pat+=len;
     } while (*pat);
     return true;
 }

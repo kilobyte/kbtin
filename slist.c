@@ -1,5 +1,4 @@
 #include "tintin.h"
-#include "kbtree.h"
 #include "protos/print.h"
 #include "protos/utils.h"
 
@@ -12,38 +11,27 @@ kbtree_t(str)* init_slist(void)
 
 void kill_slist(kbtree_t(str) *l)
 {
-    kbitr_t itr;
-
-    kb_itr_first(str, l, &itr);
-    for (; kb_itr_valid(&itr); kb_itr_next(str, l, &itr))
-        free(kb_itr_key(char*, &itr));
+    STR_ITER(l, p)
+        free((char*)p);
+    ENDITER
 
     kb_destroy(str, l);
 }
 
 void show_slist(kbtree_t(str) *l)
 {
-    kbitr_t itr;
-
-    kb_itr_first(str, l, &itr);
-    for (; kb_itr_valid(&itr); kb_itr_next(str, l, &itr))
-    {
-        const char *p = kb_itr_key(char*, &itr);
+    STR_ITER(l, p)
         tintin_printf(0, "~7~{%s~7~}", p);
-    }
+    ENDITER
 }
 
 kbtree_t(str) *copy_slist(kbtree_t(str) *a)
 {
     kbtree_t(str) *b = kb_init(str, KB_DEFAULT_SIZE);
-    kbitr_t itr;
 
-    kb_itr_first(str, a, &itr);
-    for (; kb_itr_valid(&itr); kb_itr_next(str, a, &itr))
-    {
-        const char *p = kb_itr_key(char*, &itr);
+    STR_ITER(a, p)
         kb_put(str, b, mystrdup(p));
-    }
+    ENDITER
 
     return b;
 }

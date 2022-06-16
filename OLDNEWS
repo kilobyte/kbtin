@@ -1,202 +1,145 @@
-0.2.4:
-* boolean toggles: can be set/reset in addition to toggle (#blank 1 and so on)
-  Boolean values: 1/0, TRUE/FALSE, ON/OFF, YES/NO
-* more things allowed before starting a session
-* #route <from> <to> <path> [<distance>] and #goto <from> <to> commands added
-* #goto <from> <to> can be abbreviated as from>to
+1.0.20:
+* bugfixes: ~user, MidArrow on some terminals
 
-0.2.4a:
-* #remark does the same as #nop. I found myself writing #rem in my config
-  files way too often *yawn*.
-* conditional routes: #route <from> <to> <length> <condition>
+1.0.19:
+* bugfixes
+* fix regressed handling of 256-color codes
 
-0.2.4.0:
-* Jakub Narebski (jnareb@jester.ds2.uw.edu.pl) joins KBtin development team
+1.0.18:
+* idle/serveridle in #info
+* ansi2txt, ansi2html, ttyrec2ansi and pipetty have been moved to a separate
+  package "colorized-logs"
+* password star-out doesn't stay too long in some cases
 
-0.2.4.1:
-* Added help from Tintin ver. 1.5 with little changes; ALL COMMANDS are listed
-  there, some of them to be added to help, news and NEWS soon. This help is
-  in file .tt_help.txt. Putting compressed file (.tt_help.txt.Z) in home
-  directory will allow to use #help command
-* help from Tintin 3.0 to be added; KBtin changes to be added.
+1.0.17:
+* a new tool: pipetty to redirect colors of programs that use color only on
+  terminals
+* massive improvements to ansi2html
+* support for overstrike and some color codes
+* #hook title for when a program/MUD tries to set window title
+* #sendchar for sending some special characters like ^C
+* $SERVERIDLE pseudovar: time since last output from the server
 
-0.2.4.2:
-* added code from Happy Tintin++ by Sverre Normann (sverreno@stud.ntnu.no)
-  x 'simulation' of secstotick variable: $secstotick will return number
-    of seconds to tick (from tt's internal counter) provided no variable
-    named 'secstotick' already exists
-  - ${<string>} format to allow use of non-alpha characters in variable
-    name
-  - #listlength {destination variable} {list} command added
-  - #getitem {destination variable} {item number} {list} command added;
-    an item is either a word, or grouped words in {} braces;
-    FORTRAN type indices (first element has index '1' not '0')
-  - #reverse {destination variable} {string} command added 
-  - #postpad {destination variable} {length} {text} command added, 
-    truncates text to length and pads with spaces at the end if necessary
-  - #prepad {destination variable} {length} {text} command added
-* #isatom {destination variable} {list} command added; to be substituted
-  by #if test
-* #splitlist {head destination variable} {tail destination variable} 
-  {list} [{number of elements head will have}] command added, with default
-  head size = 1
+1.0.16:
+* #initvar for one-time variable initialization
+* #info includes processing speed.
 
-0.2.5:
-* #time and #ctime can be used also to give the representation of an
-  arbitrary point of time: #[c]time <dest. variable> <time>
-  Time can be given as a number of seconds, or in format '5y 3d 10h 6m 42s'.
-* characters with codes 128-255 no longer display as weird blinking reversed
-  things. Note that their usage should be strongly discouraged as these
-  codes can have different meaning in different OSes/fonts, but some people
-  seem to cannot type 'Baruk-Khazad Dum' instead of 'Barûk-Khazâd Dûm'.
-* new editing keys:
-  - Tab allows you to temporarily suspend typing a longer command-line until
-    next use of Tab.
-  - Esc clears the current input line.
-* #finditem {dest. variable} {item} {list} command gives the index of 'item'
-  in the 'list'. Result of 0 means that 'item' was not found.
-* inline commands: #finditem and #listlength can be used inside expressions.
-  Example: #if {#find $1 $enemies} {kill $1}
+1.0.15:
+* #loginputformat allows decorating input data in logs.
 
-0.2.6:
-* several bugfixes
-* #deleteitem <dest. variable> <list> <item> command
+1.0.14:
+* proper handling of line wrap when screen width changes and in #condump
 
-0.2.7:                                           Sun May 07 02:20:36 CET 2000
-* low-level text display completely rewritten, now uses ANSI codes instead
-  of ncurses library
+1.0.13:
+* The month and day-of-year starts from 1 in #localtime and #gmtime.
+* some yTin compatibility: pseudovars: _random, _time, _clock, _msec, HOME
+  and #ctoi (Chinese numerals)
+* SSL support: #sslsession
 
-0.2.8:                                           Mon Jul 10 19:54:26 CET 2000
-* #writesession now properly writes all changes (everything that differs
-  from aliases/actions/etc. loaded before starting current session)
-* multi-color highlights (#high 6/4 asshole)
-* try appending .gz to the log name and see what happens :)
+1.0.12:
+* #localtime and #gmtime for easier parsing by your scripts.
+* bugfixes/portability changes
 
-0.2.9:                                           Mon Jan  1 21:01:00 CET 2001
-* #margin <left> <right> to help writing mails, etc
-* actions, delays and binds ignore #verbatim mode now
-* #bind <key> <function> allows you to assign function keys
+1.0.11:
+* bugfixes
+* a workaround for some issues with gnome-terminal, before they're fixed
+  on their side
 
-0.3.0:                                           Wed Jan 24 19:55:00 CET 2001
-* actions, substitutes and highlights are now guaranteed to fire
-* number of color codes extended from 16 to 256 (backgrounds and blink)
+1.0.10:
+* support for CJK
+* "clear screen" ANSI codes, some MUDs apparently use them
+* if glib is available, it's used for a speed increase
+* brand new ansi2html, using CSS instead of ugly and buggy table hacks
+* other minor changes and bugfixes
 
-0.3.1:                                           Mon Feb  5 23:13:00 CET 2001
-* new system of background color codes. The color code syntax is: ~n~,
-  n=0..255, or ~[a][:[b][:[c]]]~, a=0..15, b=0..7, c=0..1.
-  Examples:
-    14          yellow letters on black
-    15:4        white letters on red background
-    13:         pink letters, still red background
-    14:0:1      blinking yellow letters on black
-    ::0         yellow letters on black, no longer blinking
-* #promptaction, actions which work for uncompleted lines
+1.0.9:
+* MCCP compression.
+* #keypad on gnome-terminal and some xterms
 
-0.3.2:                                           Tue Mar 20 20:17:00 CET 2001
-* #index now uses 1-based indices - for consistency with other commands
-* #foreach {list} <command>
-  Examples:
-     #foreach {Omm Consola Murre Aethia} rescue
+1.0.8:
+* Just a minor bugfix release.
+* #doactions, #dopromptactions for simulating actions.
+* #chr, #ord, #hexord for working with ASCII codes.
 
-     #alias cc {#var message {$0};#foreach {$clan} {tell $0 [cc] $message}}
+1.0.7:
+* Character set support.  Terminal input/output and all file access uses
+  your system locale; the remote side is expected to use whatever you set
+  with #charset (ISO-8859-1 by default for MUDs, system locale for #run).
+* Logging can be done either with the proper local charset (#logcharset
+  local), as-is (#logcharset remote) or even with an arbitrary other set.
+* IPv6 support.
+* KBtin should be now more friendly to screen readers (untested).
 
-0.3.3:                                           Mon Mar 26 23:00:00 CET 2001
-* pseudovariables $COLS and $LINES can be used to query the size of terminal
-  window.  Note: size given is the raw window size (like 80x25), without
-  subtracting one line for the input box and another for the status line.
-* #strlen <var> <text> gives you the length of text.  It's an inline, too.
-* #explode <var> <delimiter> <text> converts a text to a list
-     {a,b,c d,e}      ---","--->    {a b {c d} e}
-* #implode <var> <delimiter> <text> 
-     {a b {c d} e}    ---","--->    {a,b,c d,e}
-* #substr <var> <l>[,<r>] <text> instead of #index
-* digits and underscores are now allowed in variable names
-* $PATH pseudovariable queries the current path
-* documentation - #help <command>
+1.0.6a:
+* Oops... #log didn't obey $variables.
 
-0.3.4:                                           Wed Mar 28 13:34:00 CET 2001
-* #var, #math, #tolower, etc. work instantly now, instead of taking effect
-  with the beginning of the next alias
-* #foreach can now support more complex argument substitution.  Example:
-     #foreach {{a 1} {b 2} {c 3}} {#var $1 $2}
-* You can now split long lines in files read by #read:
-  #alias abc {
-                 a;
-                 b;
-                 c
-             }
+1.0.6:
+* Commands are now case-insensitive, for zMud compatibility.
+* Bugfixes, as always.
+* KBtin should be more responsive when under heavy local load or when the
+  server suffers from CPU lag.
+* #gagthis, to remove the current line from within an action (just like
+  zMud's #gag).
+* Logging enhancements:
+	+ appending to a log (>>logfile)
+	+ logging to a pipe (|logger)
+	+ logging through bzip2 (logfile.bz2)
+	+ #logtype, allowing you to switch between cr/lf, lf (previously
+	  a compile-time option) and ttyrec.
+* Added ttyrec2ansi, a filter to strip the timing information from ttyrec
+  files.
 
-0.3.5:                                           Thu Apr  5 15:21:42 CET 2001
-* "#var a {$b}" instead of "#var a {$$b}".  Quite a lot of commands required
-  double dollar marks instead of one... Now only #alias, #action and the like
-  show that behavior (because of quite obvious reasons).
-* events can be now removed (#unevent)
+1.0.5:
+* Bugfixes, bugfixes, bugfixes.  Even a remote buffer overflow fixed.
+* You can start a new session (-s, -r) or execute a command (-c) when
+  invoking KBtin -- peruse the new, shiny man page.
+* #pretick -- control the '#10 SECONDS TO TICK' messages
+* New inlines: #grep, #match and #strcmp can be used in expressions.
+* #collate and #expand can save you writing hairy scripts when converting
+  to and from TMI2 style (3ne,4e,s) and ;-based (10n;10n;e;s;e) aliases.
+* You can add '#hook's to be notified of events such as:
+  OPEN		session opening,
+  CLOSE		session closing (so you can save your config)
+  ZAP           session being aborted (#zap, #end, ^C, etc)
+  SEND          text being sent to the MUD (so you can use it for mapping
+                without having to alias everything).
+  ACTIVATE      switching sessions
+  DEACTIVATE       ''        ''
+* #logcomment, for writing things to the log
 
-0.3.6:                                           Wed Apr 11 12:59:35 CET 2001
-* loads of bugfixes
-* #dosubstitutes <var> <text> applies all substitutes to a line of text
-* #dohighlights <var> <text> does the same with highlights
+1.0.4:
+* #grep, true regexp match.
+* #retain, zMud-like behaviour of the input box.
 
-0.3.7:                                           Fri Apr 20 23:59:33 CET 2001
-* #sortlist <var> <list>
-* #match <action-like pattern> <text> <command> [#else <command if no match>]
-* #decolorize <var> <text> removes all the color codes from <text>
+1.0.3:
+* #timecommand can help profile your scripts.
+* The "Esc" key will no longer work.  In fact, it can produce bad keycodes.
+  Sorry, but due to ancient VT100 design quirks, Esc conflicts with a lot of
+  other keys.  Besides, almost no Unix programs handle it correctly anyway.
+  If this bothers you, you can define BARE_ESC in tintin.h; that will
+  break all key sequences involving Alt.
+* A number of new editing keys has been added.
+* You can now #bind Alt-Key.
 
-0.3.8:                                           Mon Jul  9 13:14:49 CET 2001
-* error messages are now more verbose, to make debugging scripts easier
-* #shell <command> works as #system, allowing using full-screen programs
-  Examples:
-     #sys {echo '#var kills' `cat kills|wc -l` >tmp}
-     #shell {mc}
+1.0.2:
+* Tons of bugfixes.
+* The allowed level of recursion is limited to 256.  Yeah, this can
+  break some functionality, but it's better to cut off a run-away alias
+  than to get a segfault.
+* If your terminal happens to support underline and/or italics, you
+  can use them in your highlights/whatever.  Of course, if the MUD
+  happens to use these codes, they'll work, too.
 
-0.3.9:                                           Fri Aug 31 22:01:31 CET 2001
-* you can give multiple config files to #read on the command line
-  Example:
-     KBtin main pal bashes gags
-     --will act as #read main;#read pal;#read bashes;#read gags
-* #substitute changes only the matched part of line.
-  Example:
-     #sub A B
-     before: xxxAyyy -> B
-     now:    xxxAyyy -> xxxByyy
-  To get the old behavior, use %# pattern, like #sub {%0A%0} B
-* substitutes can trigger multiple times per line:
-  #sub A B will result in xAxAxAxA -> xBxBxBxB
+1.0.1:
+* Fixed a problem with all input being hidden on MUDs like Genesis or
+  Arkadia due to telnet echo settings.
+* Fixed a bug where highlights before/after a letter character didn't
+  work properly ("#highlight red /d/mordor/" failed to highlight both
+  "/testmud/d/mordor/" and "/d/mordor/morannon/").  Highlights inside
+  a word are still suppressed, though (no "ash" inside of "Bashgeroy").
 
-0.4.0:                                           Mon Sep 17 04:50:54 CET 2001
-* TELNET protocol support.  KBtin can negotiate about terminal type, window
-  size and echoing.
-* "make install" should work.  At least it does so on my Debian Linux.
-
-0.4.1:                                           Sun Jan 13 17:52:02 CET 2002
-* #atoi <var> <text> can convert 42xyz -> 42
-* #verbatim <line>, almost same as \<line> except for variable substitution
-* #strcmp <string1> <string2> <command> [#else <command>], to cope with
-  limitations of #if {[string1==string2]} (the latter doesn't allow =s, !s
-  and ]s inside the strings)
-
-0.4.2:                                           Wed Mar 27 19:37:35 CET 2002
-* variable substitution, aliases and command parsing use faster data
-  structures (O(1) instead of O(n)).  This usually causes your scripts
-  to work at least an order of magnitude faster.
-* #unpathdir was missing.  Duh.
-* bugfixes, bugfixes, bugfixes
-* A warning is printed if you try to define an alias containing spaces.
-
-0.4.3:                                           May 15 23:03 CET 2002
-* action/promptaction priority of 10 no longer sorts between 1 and 2
-* new #message type: error.  Turn it on to prevent error messages from
-  being lost even if their appropriate message type is hidden.
-* #verbose allows turning the -v flag on and off
-* #verbatim, #blank, #echo, #speedwalk, #togglesub, #presub and #message
-  are now local to each session.
-
-0.4.4:                                           Sep  2 22:25 CET 2002
-* #dogoto <from> <to> [<distvar> <locvar> <pathvar>] [#else ...] will
-  run a simulated #goto and retrieve the path length, visited locations
-  and on-path commands.  Or, you can use "#dogoto <from> <to>" to display
-  the path.
-* ansi2txt and ansi2html have been moved into the main tarball
+1.0.0:
+* first public release
 
 0.4.5:                                           Sep 11 02:51 CET 2002
 * $IDLETIME will tell you how long your character has been idle
@@ -222,145 +165,202 @@
   #alias {w} {#math x {$x-1};#send {w}}, without having to resort to really
   hairy tricks.
 
-1.0.0:
-* first public release
+0.4.4:                                           Sep  2 22:25 CET 2002
+* #dogoto <from> <to> [<distvar> <locvar> <pathvar>] [#else ...] will
+  run a simulated #goto and retrieve the path length, visited locations
+  and on-path commands.  Or, you can use "#dogoto <from> <to>" to display
+  the path.
+* ansi2txt and ansi2html have been moved into the main tarball
 
-1.0.1:
-* Fixed a problem with all input being hidden on MUDs like Genesis or
-  Arkadia due to telnet echo settings.
-* Fixed a bug where highlights before/after a letter character didn't
-  work properly ("#highlight red /d/mordor/" failed to highlight both
-  "/testmud/d/mordor/" and "/d/mordor/morannon/").  Highlights inside
-  a word are still suppressed, though (no "ash" inside of "Bashgeroy").
+0.4.3:                                           May 15 23:03 CET 2002
+* action/promptaction priority of 10 no longer sorts between 1 and 2
+* new #message type: error.  Turn it on to prevent error messages from
+  being lost even if their appropriate message type is hidden.
+* #verbose allows turning the -v flag on and off
+* #verbatim, #blank, #echo, #speedwalk, #togglesub, #presub and #message
+  are now local to each session.
 
-1.0.2:
-* Tons of bugfixes.
-* The allowed level of recursion is limited to 256.  Yeah, this can
-  break some functionality, but it's better to cut off a run-away alias
-  than to get a segfault.
-* If your terminal happens to support underline and/or italics, you
-  can use them in your highlights/whatever.  Of course, if the MUD
-  happens to use these codes, they'll work, too.
+0.4.2:                                           Wed Mar 27 19:37:35 CET 2002
+* variable substitution, aliases and command parsing use faster data
+  structures (O(1) instead of O(n)).  This usually causes your scripts
+  to work at least an order of magnitude faster.
+* #unpathdir was missing.  Duh.
+* bugfixes, bugfixes, bugfixes
+* A warning is printed if you try to define an alias containing spaces.
 
-1.0.3:
-* #timecommand can help profile your scripts.
-* The "Esc" key will no longer work.  In fact, it can produce bad keycodes.
-  Sorry, but due to ancient VT100 design quirks, Esc conflicts with a lot of
-  other keys.  Besides, almost no Unix programs handle it correctly anyway.
-  If this bothers you, you can define BARE_ESC in tintin.h; that will
-  break all key sequences involving Alt.
-* A number of new editing keys has been added.
-* You can now #bind Alt-Key.
+0.4.1:                                           Sun Jan 13 17:52:02 CET 2002
+* #atoi <var> <text> can convert 42xyz -> 42
+* #verbatim <line>, almost same as \<line> except for variable substitution
+* #strcmp <string1> <string2> <command> [#else <command>], to cope with
+  limitations of #if {[string1==string2]} (the latter doesn't allow =s, !s
+  and ]s inside the strings)
 
-1.0.4:
-* #grep, true regexp match.
-* #retain, zMud-like behaviour of the input box.
+0.4.0:                                           Mon Sep 17 04:50:54 CET 2001
+* TELNET protocol support.  KBtin can negotiate about terminal type, window
+  size and echoing.
+* "make install" should work.  At least it does so on my Debian Linux.
 
-1.0.5:
-* Bugfixes, bugfixes, bugfixes.  Even a remote buffer overflow fixed.
-* You can start a new session (-s, -r) or execute a command (-c) when
-  invoking KBtin -- peruse the new, shiny man page.
-* #pretick -- control the '#10 SECONDS TO TICK' messages
-* New inlines: #grep, #match and #strcmp can be used in expressions.
-* #collate and #expand can save you writing hairy scripts when converting
-  to and from TMI2 style (3ne,4e,s) and ;-based (10n;10n;e;s;e) aliases.
-* You can add '#hook's to be notified of events such as:
-  OPEN		session opening,
-  CLOSE		session closing (so you can save your config)
-  ZAP           session being aborted (#zap, #end, ^C, etc)
-  SEND          text being sent to the MUD (so you can use it for mapping
-                without having to alias everything).
-  ACTIVATE      switching sessions
-  DEACTIVATE       ''        ''
-* #logcomment, for writing things to the log
+0.3.9:                                           Fri Aug 31 22:01:31 CET 2001
+* you can give multiple config files to #read on the command line
+  Example:
+     KBtin main pal bashes gags
+     --will act as #read main;#read pal;#read bashes;#read gags
+* #substitute changes only the matched part of line.
+  Example:
+     #sub A B
+     before: xxxAyyy -> B
+     now:    xxxAyyy -> xxxByyy
+  To get the old behavior, use %# pattern, like #sub {%0A%0} B
+* substitutes can trigger multiple times per line:
+  #sub A B will result in xAxAxAxA -> xBxBxBxB
 
-1.0.6:
-* Commands are now case-insensitive, for zMud compatibility.
-* Bugfixes, as always.
-* KBtin should be more responsive when under heavy local load or when the
-  server suffers from CPU lag.
-* #gagthis, to remove the current line from within an action (just like
-  zMud's #gag).
-* Logging enhancements:
-	+ appending to a log (>>logfile)
-	+ logging to a pipe (|logger)
-	+ logging through bzip2 (logfile.bz2)
-	+ #logtype, allowing you to switch between cr/lf, lf (previously
-	  a compile-time option) and ttyrec.
-* Added ttyrec2ansi, a filter to strip the timing information from ttyrec
-  files.
+0.3.8:                                           Mon Jul  9 13:14:49 CET 2001
+* error messages are now more verbose, to make debugging scripts easier
+* #shell <command> works as #system, allowing using full-screen programs
+  Examples:
+     #sys {echo '#var kills' `cat kills|wc -l` >tmp}
+     #shell {mc}
 
-1.0.6a:
-* Oops... #log didn't obey $variables.
+0.3.7:                                           Fri Apr 20 23:59:33 CET 2001
+* #sortlist <var> <list>
+* #match <action-like pattern> <text> <command> [#else <command if no match>]
+* #decolorize <var> <text> removes all the color codes from <text>
 
-1.0.7:
-* Character set support.  Terminal input/output and all file access uses
-  your system locale; the remote side is expected to use whatever you set
-  with #charset (ISO-8859-1 by default for MUDs, system locale for #run).
-* Logging can be done either with the proper local charset (#logcharset
-  local), as-is (#logcharset remote) or even with an arbitrary other set.
-* IPv6 support.
-* KBtin should be now more friendly to screen readers (untested).
+0.3.6:                                           Wed Apr 11 12:59:35 CET 2001
+* loads of bugfixes
+* #dosubstitutes <var> <text> applies all substitutes to a line of text
+* #dohighlights <var> <text> does the same with highlights
 
-1.0.8:
-* Just a minor bugfix release.
-* #doactions, #dopromptactions for simulating actions.
-* #chr, #ord, #hexord for working with ASCII codes.
+0.3.5:                                           Thu Apr  5 15:21:42 CET 2001
+* "#var a {$b}" instead of "#var a {$$b}".  Quite a lot of commands required
+  double dollar marks instead of one... Now only #alias, #action and the like
+  show that behavior (because of quite obvious reasons).
+* events can be now removed (#unevent)
 
-1.0.9:
-* MCCP compression.
-* #keypad on gnome-terminal and some xterms
+0.3.4:                                           Wed Mar 28 13:34:00 CET 2001
+* #var, #math, #tolower, etc. work instantly now, instead of taking effect
+  with the beginning of the next alias
+* #foreach can now support more complex argument substitution.  Example:
+     #foreach {{a 1} {b 2} {c 3}} {#var $1 $2}
+* You can now split long lines in files read by #read:
+  #alias abc {
+                 a;
+                 b;
+                 c
+             }
 
-1.0.10:
-* support for CJK
-* "clear screen" ANSI codes, some MUDs apparently use them
-* if glib is available, it's used for a speed increase
-* brand new ansi2html, using CSS instead of ugly and buggy table hacks
-* other minor changes and bugfixes
+0.3.3:                                           Mon Mar 26 23:00:00 CET 2001
+* pseudovariables $COLS and $LINES can be used to query the size of terminal
+  window.  Note: size given is the raw window size (like 80x25), without
+  subtracting one line for the input box and another for the status line.
+* #strlen <var> <text> gives you the length of text.  It's an inline, too.
+* #explode <var> <delimiter> <text> converts a text to a list
+     {a,b,c d,e}      ---","--->    {a b {c d} e}
+* #implode <var> <delimiter> <text>
+     {a b {c d} e}    ---","--->    {a,b,c d,e}
+* #substr <var> <l>[,<r>] <text> instead of #index
+* digits and underscores are now allowed in variable names
+* $PATH pseudovariable queries the current path
+* documentation - #help <command>
 
-1.0.11:
-* bugfixes
-* a workaround for some issues with gnome-terminal, before they're fixed
-  on their side
+     #alias cc {#var message {$0};#foreach {$clan} {tell $0 [cc] $message}}
 
-1.0.12:
-* #localtime and #gmtime for easier parsing by your scripts.
-* bugfixes/portability changes
+0.3.2:                                           Tue Mar 20 20:17:00 CET 2001
+* #index now uses 1-based indices - for consistency with other commands
+* #foreach {list} <command>
+  Examples:
+     #foreach {Omm Consola Murre Aethia} rescue
 
-1.0.13:
-* The month and day-of-year starts from 1 in #localtime and #gmtime.
-* some yTin compatibility: pseudovars: _random, _time, _clock, _msec, HOME
-  and #ctoi (Chinese numerals)
-* SSL support: #sslsession
+0.3.1:                                           Mon Feb  5 23:13:00 CET 2001
+* new system of background color codes. The color code syntax is: ~n~,
+  n=0..255, or ~[a][:[b][:[c]]]~, a=0..15, b=0..7, c=0..1.
+  Examples:
+    14          yellow letters on black
+    15:4        white letters on red background
+    13:         pink letters, still red background
+    14:0:1      blinking yellow letters on black
+    ::0         yellow letters on black, no longer blinking
+* #promptaction, actions which work for uncompleted lines
 
-1.0.14:
-* proper handling of line wrap when screen width changes and in #condump
+0.3.0:                                           Wed Jan 24 19:55:00 CET 2001
+* actions, substitutes and highlights are now guaranteed to fire
+* number of color codes extended from 16 to 256 (backgrounds and blink)
 
-1.0.15:
-* #loginputformat allows decorating input data in logs.
+0.2.9:                                           Mon Jan  1 21:01:00 CET 2001
+* #margin <left> <right> to help writing mails, etc
+* actions, delays and binds ignore #verbatim mode now
+* #bind <key> <function> allows you to assign function keys
 
-1.0.16:
-* #initvar for one-time variable initialization
-* #info includes processing speed.
+0.2.8:                                           Mon Jul 10 19:54:26 CET 2000
+* #writesession now properly writes all changes (everything that differs
+  from aliases/actions/etc. loaded before starting current session)
+* multi-color highlights (#high 6/4 asshole)
+* try appending .gz to the log name and see what happens :)
 
-1.0.17:
-* a new tool: pipetty to redirect colors of programs that use color only on
-  terminals
-* massive improvements to ansi2html
-* support for overstrike and some color codes
-* #hook title for when a program/MUD tries to set window title
-* #sendchar for sending some special characters like ^C
-* $SERVERIDLE pseudovar: time since last output from the server
+0.2.7:                                           Sun May 07 02:20:36 CET 2000
+* low-level text display completely rewritten, now uses ANSI codes instead
+  of ncurses library
 
-1.0.18:
-* idle/serveridle in #info
-* ansi2txt, ansi2html, ttyrec2ansi and pipetty have been moved to a separate
-  package "colorized-logs"
-* password star-out doesn't stay too long in some cases
+0.2.6:
+* several bugfixes
+* #deleteitem <dest. variable> <list> <item> command
 
-1.0.19:
-* bugfixes
-* fix regressed handling of 256-color codes
+0.2.5:
+* #time and #ctime can be used also to give the representation of an
+  arbitrary point of time: #[c]time <dest. variable> <time>
+  Time can be given as a number of seconds, or in format '5y 3d 10h 6m 42s'.
+* characters with codes 128-255 no longer display as weird blinking reversed
+  things. Note that their usage should be strongly discouraged as these
+  codes can have different meaning in different OSes/fonts, but some people
+  seem to cannot type 'Baruk-Khazad Dum' instead of 'Barûk-Khazâd Dûm'.
+* new editing keys:
+  - Tab allows you to temporarily suspend typing a longer command-line until
+    next use of Tab.
+  - Esc clears the current input line.
+* #finditem {dest. variable} {item} {list} command gives the index of 'item'
+  in the 'list'. Result of 0 means that 'item' was not found.
+* inline commands: #finditem and #listlength can be used inside expressions.
+  Example: #if {#find $1 $enemies} {kill $1}
 
-1.0.20:
-* bugfixes: ~user, MidArrow on some terminals
+0.2.4.2:
+* added code from Happy Tintin++ by Sverre Normann (sverreno@stud.ntnu.no)
+  x 'simulation' of secstotick variable: $secstotick will return number
+    of seconds to tick (from tt's internal counter) provided no variable
+    named 'secstotick' already exists
+  - ${<string>} format to allow use of non-alpha characters in variable
+    name
+  - #listlength {destination variable} {list} command added
+  - #getitem {destination variable} {item number} {list} command added;
+    an item is either a word, or grouped words in {} braces;
+    FORTRAN type indices (first element has index '1' not '0')
+  - #reverse {destination variable} {string} command added
+  - #postpad {destination variable} {length} {text} command added,
+    truncates text to length and pads with spaces at the end if necessary
+  - #prepad {destination variable} {length} {text} command added
+* #isatom {destination variable} {list} command added; to be substituted
+  by #if test
+* #splitlist {head destination variable} {tail destination variable}
+  {list} [{number of elements head will have}] command added, with default
+  head size = 1
+
+0.2.4.1:
+* Added help from Tintin ver. 1.5 with little changes; ALL COMMANDS are listed
+  there, some of them to be added to help, news and NEWS soon. This help is
+  in file .tt_help.txt. Putting compressed file (.tt_help.txt.Z) in home
+  directory will allow to use #help command
+* help from Tintin 3.0 to be added; KBtin changes to be added.
+
+0.2.4.0:
+* Jakub Narebski (jnareb@jester.ds2.uw.edu.pl) joins KBtin development team
+
+0.2.4a:
+* #remark does the same as #nop. I found myself writing #rem in my config
+  files way too often *yawn*.
+* conditional routes: #route <from> <to> <length> <condition>
+
+0.2.4:
+* boolean toggles: can be set/reset in addition to toggle (#blank 1 and so on)
+  Boolean values: 1/0, TRUE/FALSE, ON/OFF, YES/NO
+* more things allowed before starting a session
+* #route <from> <to> <path> [<distance>] and #goto <from> <to> commands added
+* #goto <from> <to> can be abbreviated as from>to

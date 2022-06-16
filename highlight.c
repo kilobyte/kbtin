@@ -1,13 +1,14 @@
 #include "tintin.h"
 #include "protos/action.h"
 #include "protos/colors.h"
+#include "protos/files.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/tlist.h"
 #include "protos/vars.h"
 
 
@@ -101,19 +102,17 @@ static bool get_high(const char *hig)
 void highlight_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
-    struct listnode *myhighs, *ln;
     bool colflag = true;
     char *pright, *bp, *cp, buf[BUFFER_SIZE];
 
     pright = right;
     *pright = '\0';
-    myhighs = ses->highs;
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
     if (!*left)
     {
         tintin_printf(ses, "#THESE HIGHLIGHTS HAVE BEEN DEFINED:");
-        show_list(myhighs);
+        show_tlist(ses->highs, 0, 0);
         return;
     }
 
@@ -139,10 +138,25 @@ void highlight_command(const char *arg, struct session *ses)
                 tintin_eprintf(ses, "#Highlight WHAT?");
             return;
         }
-        if ((ln = searchnode_list(myhighs, right)))
-            deletenode_list(myhighs, ln);
-        insertnode_list(myhighs, right, left, get_fastener(right, bp), LENGTH);
+
+        ptrip new = MALLOC(sizeof(struct trip));
+        new->left = mystrdup(right);
+        new->right = mystrdup(left);
+        new->pr = 0;
+        ptrip *old = kb_get(trip, ses->highs, new);
+        if (old)
+        {
+            ptrip del = *old;
+            kb_del(trip, ses->highs, new);
+            free(del->left);
+            free(del->right);
+            free(del);
+        }
+        kb_put(trip, ses->highs, new);
         hinum++;
+#ifdef HAVE_HS
+        ses->highs_dirty = true;
+#endif
         if (ses->mesvar[MSG_HIGHLIGHT])
             tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
         return;
@@ -180,34 +194,148 @@ void highlight_command(const char *arg, struct session *ses)
 void unhighlight_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    struct listnode *myhighs, *ln, *temp;
-    bool flag = false;
 
-    myhighs = ses->highs;
-    temp = myhighs;
     arg = get_arg_in_braces(arg, left, 1);
     substitute_vars(left, left, ses);
-    while ((ln = search_node_with_wild(temp, left)))
+    if (!*left)
+        return tintin_eprintf(ses, "#Syntax: #unhighlight <pattern>");
+
+    if (delete_tlist(ses->highs, left, ses->mesvar[MSG_HIGHLIGHT]?
+            "#Ok. {%s} is no longer highlighted." : 0, 0, true))
     {
-        if (ses->mesvar[MSG_HIGHLIGHT])
-            tintin_printf(ses, "Ok. {%s} is no longer %s.", ln->left, ln->right);
-        deletenode_list(myhighs, ln);
-        flag = true;
+#ifdef HAVE_HS
+        ses->highs_dirty = true;
+#endif
     }
-    if (!flag && ses->mesvar[MSG_HIGHLIGHT])
+    else if (ses->mesvar[MSG_ACTION])
         tintin_printf(ses, "#THAT HIGHLIGHT IS NOT DEFINED.");
 }
 
 
+#ifdef HAVE_HS
+static char *glob_to_regex(const char *pat)
+{
+    char buf[BUFFER_SIZE*2+3], *b=buf;
+
+    assert(*pat);
+    if (*pat=='^')
+        *b++='^', pat++;
+    else if (is7alnum(*pat))
+        *b++='\\', *b++='b';
+    for (; *pat; pat++)
+        switch (*pat)
+        {
+        case '*':
+            *b++='.';
+            *b++='*';
+            while (pat[1]=='*')
+                pat++; // eat multiple *s
+            break;
+        case '\\':
+        case '^':
+        case '$':
+        case '+':
+        case '?':
+        case '[':
+        case ']':
+        case '(':
+        case ')':
+        case '|':
+            *b++='\\';
+        default:
+            *b++=*pat;
+        }
+    if (is7alnum(pat[-1]))
+        *b++='\\', *b++='b';
+    *b=0;
+
+    int len=b-buf+1;
+    char *txt=MALLOC(len);
+    memcpy(txt, buf, len);
+    return txt;
+}
+
+static void build_highs_hs(struct session *ses)
+{
+    debuglog(ses, "SIMD: building highs");
+    hs_free_database(ses->highs_hs);
+    ses->highs_hs=0;
+    ses->highs_dirty=false;
+    free(ses->highs_cols);
+    ses->highs_cols=0;
+
+    int n = count_tlist(ses->highs);
+    const char **pat = MALLOC(n*sizeof(void*));
+    unsigned int *flags = MALLOC(n*sizeof(int));
+    unsigned int *ids = MALLOC(n*sizeof(int));
+    const char **cols = MALLOC(n*sizeof(void*));
+    if (!pat || !flags || !ids || !cols)
+        syserr("out of memory");
+
+    int j=0;
+    TRIP_ITER(ses->highs, ln)
+        pat[j]=glob_to_regex(ln->left);;
+        flags[j]=HS_FLAG_DOTALL|HS_FLAG_SOM_LEFTMOST;
+        ids[j]=j;
+        cols[j]=ln->right;
+        j++;
+    ENDITER
+    ses->highs_cols=cols;
+
+    debuglog(ses, "SIMD: compiling highs");
+    hs_compile_error_t *error;
+    if (hs_compile_multi(pat, flags, ids, n, HS_MODE_BLOCK,
+        0, &ses->highs_hs, &error))
+    {
+        tintin_eprintf(ses, "#Error: hyperscan compilation failed for highlights: %s",
+            error->message);
+        if (error->expression>=0)
+            tintin_eprintf(ses, "#Converted bad expression was: %s",
+                           pat[error->expression]);
+        hs_free_compile_error(error);
+    }
+    debuglog(ses, "SIMD: rebuilt highs");
+
+    for (int i=0; i<n; i++)
+        SFREE((char*)pat[i]);
+    MFREE(ids, n*sizeof(int));
+    MFREE(flags, n*sizeof(int));
+    MFREE(pat, n*sizeof(void*));
+
+    if (ses->highs_hs && hs_alloc_scratch(ses->highs_hs, &hs_scratch))
+        syserr("out of memory");
+}
+
+static int *gattr;
+static int high_match(unsigned int id, unsigned long long from,
+    unsigned long long to, unsigned int flags, void *context)
+{
+    struct session *ses = context;
+    if (!get_high(ses->highs_cols[id]))
+        return 0;
+    int c=-1;
+    for (unsigned long long i = from; i<to; i++)
+        gattr[i]=highpattern[(++c)%nhighpattern];
+    return 0;
+}
+#endif
+
 void do_all_high(char *line, struct session *ses)
 {
+    if (!count_tlist(ses->highs))
+        return;
+
+#ifdef HAVE_HS
+    if (simd && ses->highs_dirty)
+        build_highs_hs(ses);
+#endif
+
     char text[BUFFER_SIZE];
     int attr[BUFFER_SIZE];
     int c, d;
     char *pos, *txt;
     int *atr;
     int l, r;
-    struct listnode *ln;
 
     c=-1;
     txt=text;
@@ -224,9 +352,21 @@ void do_all_high(char *line, struct session *ses)
     };
     *txt=0;
     *atr=c;
-    ln=ses->highs;
-    while ((ln=ln->next))
+
+#ifdef HAVE_HS
+    if (ses->highs_hs)
     {
+        gattr = attr;
+        hs_error_t err=hs_scan(ses->highs_hs, text, txt-text, 0, hs_scratch,
+                               high_match, ses);
+        // TODO: optimize coloring multiple matches
+        if (err)
+            tintin_eprintf(ses, "#Error in hs_scan: %d", err);
+        goto done;
+    }
+#endif
+
+    TRIP_ITER(ses->highs, ln)
         txt=text;
         while (*txt&&find(txt, ln->left, &l, &r, ln->pr))
         {
@@ -242,7 +382,12 @@ void do_all_high(char *line, struct session *ses)
                     attr[i]=highpattern[(++c)%nhighpattern];
             txt=text+r+1;
         }
-    }
+    ENDITER
+
+#ifdef HAVE_HS
+done:
+#endif
+
     c=-1;
     pos=line;
     txt=text;

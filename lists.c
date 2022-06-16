@@ -1,6 +1,7 @@
 #include "tintin.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
+#include "protos/hash.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
@@ -654,7 +655,7 @@ void collate_command(const char *arg, struct session *ses)
     if (!*left)
         return tintin_eprintf(ses, "#Error - Syntax: #collate {dest var} {list}");
 
-    strcpy(last, K_ACTION_MAGIC);
+    strcpy(last, "#X~4~~2~~12~[This is a sentinel!]~7~X");
     *(outptr=out)=0;
     get_arg(arg, list, 1, ses);
     arg = list;
@@ -731,4 +732,97 @@ void expand_command(const char *arg, struct session *ses)
         }
     }
     set_variable(left, (*out)?out+1:out, ses);
+}
+
+
+/******************************/
+/* the #reverselist command   */
+/******************************/
+void reverselist_command(const char *arg, struct session *ses)
+{
+    char temp[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
+    char *tab[BUFFER_SIZE];
+
+    arg=get_arg(arg, left, 0, ses);
+    get_arg(arg, right, 1, ses);
+    if (!*left)
+        return tintin_eprintf(ses, "#SYNTAX: reverselist var {list}");
+
+    int n=0;
+    arg = right;
+    while (*arg)
+    {
+        arg = get_arg_in_braces(arg, temp, 0);
+        tab[n++]=mystrdup(temp);
+    }
+
+    char *list=temp;
+    for (int i=n-1;i>=0;i--)
+    {
+        if (list!=temp)
+            *list++=' ';
+        if (*tab[i]&&isatom(tab[i]))
+            list+=sprintf(list, "%s", tab[i]);
+        else
+            list+=sprintf(list, "{%s}", tab[i]);
+        free(tab[i]);
+    }
+    *list=0;
+    set_variable(left, temp, ses);
+}
+
+
+/*****************************/
+/* the findvariables command */
+/*****************************/
+void findvariables_command(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    if (!ses)
+        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO VARS!");
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
+    if (!*left)
+    {
+        tintin_eprintf(ses, "#Syntax: #findvariables <result> <pattern>");
+        return;
+    }
+
+    if (!*right)
+        strcpy(right, "*");
+
+    if (is_literal(right))
+    {
+        if (get_hash(ses->myvars, right))
+            set_variable(left, right, ses);
+        else
+            set_variable(left, "", ses);
+        return;
+    }
+    // Otherwise, need to scan the whole hash.
+
+    char buf[BUFFER_SIZE], *b=buf;
+    *buf=0;
+
+    struct pairlist *pl = hash2list(ses->myvars, right);
+    struct pair *end = &pl->pairs[0] + pl->size;
+    for (struct pair *nptr = &pl->pairs[0]; nptr<end; nptr++)
+    {
+        if (b!=buf)
+            *b++=' ';
+        if (isatom(nptr->left))
+            b+=snprintf(b, buf-b+sizeof(buf), "%s", nptr->left);
+        else
+            b+=snprintf(b, buf-b+sizeof(buf), "{%s}", nptr->left);
+        if (b >= buf+BUFFER_SIZE-10)
+        {
+            tintin_eprintf(ses, "#Too many variables to store.");
+            break;
+        }
+    }
+
+    set_variable(left, buf, ses);
+    free(pl);
 }

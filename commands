@@ -161,3 +161,6 @@ loginputformat
 initvariable
 *ifaliasexists
 bold
+reverselist
+findevents
+findvariables

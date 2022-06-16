@@ -21,6 +21,7 @@ const char *hook_names[]=
     "title",
     "tick",
     "pretick",
+    "logclose",
 };
 
 /*********************/

@@ -1,0 +1,8 @@
+#act rep {#path;#show $PATH;#ret all;#map s;#map e;#map s;#path;#ret;#ret;#del 1 #end}
+#pathd n s
+#pathd s n
+#run a //selfpipe
+n
+n
+s
+rep

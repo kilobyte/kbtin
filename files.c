@@ -6,12 +6,10 @@
 /*                    New code by Bill Reiss 1993                     */
 /**********************************************************************/
 #include "tintin.h"
-#include "kbtree.h"
 #include "protos/action.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/hooks.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/math.h"
 #include "protos/net.h"
@@ -25,6 +23,7 @@
 #include "ttyrec.h"
 #include <pwd.h>
 #include <fcntl.h>
+#include <sys/file.h>
 
 
 #ifndef O_BINARY
@@ -49,16 +48,13 @@ static void expand_filename(const char *arg, char *result, char *lstr)
             result+=snprintf(result, BUFFER_SIZE, "%s", getenv("HOME")), arg++;
         else
         {
-            char *p;
-            char name[BUFFER_SIZE];
-            struct passwd *pwd;
-
-            p=strchr(arg+1, '/');
+            char *p=strchr(arg+1, '/');
             if (p)
             {
+                char name[BUFFER_SIZE];
                 memcpy(name, arg+1, p-arg-1);
                 name[p-arg-1]=0;
-                pwd=getpwnam(name);
+                struct passwd *pwd=getpwnam(name);
                 if (pwd)
                     result+=snprintf(result, BUFFER_SIZE, "%s", pwd->pw_dir), arg=p;
             }
@@ -186,22 +182,24 @@ void deathlog_command(const char *arg, struct session *ses)
     substitute_vars(temp, temp, ses);
     expand_filename(temp, fname, lfname);
     substitute_vars(text, text, ses);
-    if ((fh = fopen(lfname, "a")))
-    {
-        cfprintf(fh, "%s\n", text);
-        fclose(fh);
-    }
-    else
-        tintin_eprintf(ses, "#ERROR: COULDN'T OPEN FILE {%s}.", fname);
+    if (!(fh = fopen(lfname, "a")))
+        return tintin_eprintf(ses, "#ERROR: COULDN'T OPEN FILE {%s}.", fname);
+
+    cfprintf(fh, "%s\n", text);
+    fclose(fh);
 }
 
 void log_off(struct session *ses)
 {
     fclose(ses->logfile);
     ses->logfile = NULL;
-    SFREE(ses->logname);
+    char *logname = ses->logname;
     ses->logname = NULL;
     cleanup_conv(&ses->c_log);
+
+    do_hook(ses, HOOK_LOGCLOSE, logname, false);
+
+    SFREE(logname);
 }
 
 static inline void ttyrec_timestamp(struct ttyrec_header *th)
@@ -313,11 +311,22 @@ void loginputformat_command(const char *arg, struct session *ses)
             ses->loginputprefix, ses->loginputsuffix);
 }
 
+static bool lock_file(int fd, struct session *ses, const char *fname)
+{
+    if (!flock(fd, LOCK_EX|LOCK_NB))
+        return false;
+    if (errno==EWOULDBLOCK)
+        tintin_eprintf(ses, "ERROR: LOG FILE {%s} ALREADY IN USE", fname);
+    else
+        tintin_eprintf(ses, "ERROR: COULDN'T LOCK FILE {%s}: %s", fname,
+            strerror(errno));
+    return true;
+}
+
 static FILE* open_logfile(struct session *ses, const char *name, const char *filemsg, const char *appendmsg, const char *pipemsg)
 {
     char fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     FILE *f;
-    int len;
 
     if (*name=='|')
     {
@@ -342,6 +351,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
             expand_filename(++name, fname, lfname);
             if ((f=fopen(lfname, "a")))
             {
+                if (lock_file(fileno(f), ses, fname))
+                    return fclose(f), NULL;
                 if (ses->mesvar[MSG_LOG])
                     tintin_printf(ses, appendmsg, fname);
             }
@@ -352,6 +363,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         expand_filename(name, fname, lfname);
         if ((f=fopen(lfname, "w")))
         {
+            if (lock_file(fileno(f), ses, fname))
+                return fclose(f), NULL;
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, filemsg, fname);
         }
@@ -360,7 +373,7 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         return f;
     }
     expand_filename(name, fname, lfname);
-    len=strlen(fname);
+    int len=strlen(fname);
     const char *zip=0;
     if (len>=4 && !strcmp(fname+len-3, ".gz"))
         zip="gzip -9";
@@ -380,6 +393,9 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
             return 0;
         }
 
+        if (lock_file(fd, ses, fname))
+            return close(fd), NULL;
+
         if ((f = mypopen(zip, true, fd)))
         {
             if (ses->mesvar[MSG_LOG])
@@ -390,6 +406,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
     }
     else if ((f = fopen(lfname, "w")))
         {
+            if (lock_file(fileno(f), ses, fname))
+                return fclose(f), NULL;
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, filemsg, fname);
         }
@@ -403,7 +421,6 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
 /************************/
 void condump_command(const char *arg, struct session *ses)
 {
-    FILE *fh;
     char temp[BUFFER_SIZE];
 
     if (!ui_con_buffer)
@@ -414,7 +431,7 @@ void condump_command(const char *arg, struct session *ses)
 
     arg = get_arg_in_braces(arg, temp, 0);
     substitute_vars(temp, temp, ses);
-    fh=open_logfile(ses, temp,
+    FILE *fh=open_logfile(ses, temp,
         "#DUMPING CONSOLE TO {%s}",
         "#APPENDING CONSOLE DUMP TO {%s}",
         "#PIPING CONSOLE DUMP TO {%s}");
@@ -430,19 +447,25 @@ void condump_command(const char *arg, struct session *ses)
 /********************/
 void log_command(const char *arg, struct session *ses)
 {
-    char temp[BUFFER_SIZE];
-
     if (ses==nullsession)
         return tintin_eprintf(ses, "#THERE'S NO SESSION TO LOG.");
 
     if (*arg)
     {
+        if (ses->closing)
+            return tintin_eprintf(ses, "THE SESSION IS BEING CLOSED.");
+
         if (ses->logfile)
         {
             log_off(ses);
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
         }
+
+        if (ses->logfile)
+            return; // tricksy buggers can #log in hook logclose
+
+        char temp[BUFFER_SIZE];
         get_arg_in_braces(arg, temp, 1);
         substitute_vars(temp, temp, ses);
         ses->logfile=open_logfile(ses, temp,
@@ -470,8 +493,6 @@ void log_command(const char *arg, struct session *ses)
 /*************************/
 void debuglog_command(const char *arg, struct session *ses)
 {
-    char temp[BUFFER_SIZE];
-
     if (*arg)
     {
         if (ses->debuglogfile)
@@ -483,6 +504,7 @@ void debuglog_command(const char *arg, struct session *ses)
             SFREE(ses->debuglogname);
             ses->debuglogname = NULL;
         }
+        char temp[BUFFER_SIZE];
         get_arg_in_braces(arg, temp, 1);
         substitute_vars(temp, temp, ses);
         ses->debuglogfile=open_logfile(ses, temp,
@@ -518,7 +540,7 @@ void debuglog(struct session *ses, const char *format, ...)
     if (vsnprintf(buf, BUFFER_SIZE-1, format, ap)>BUFFER_SIZE-2)
         buf[BUFFER_SIZE-3]='>';
     va_end(ap);
-    cfprintf(ses->debuglogfile, "%4lld.%06lld: %s\n", t/NANO, t%NANO, buf);
+    cfprintf(ses->debuglogfile, "%4lld.%06lld: %s\n", t/NANO, t%NANO/1000, buf);
 }
 
 
@@ -671,10 +693,9 @@ void write_command(const char *filename, struct session *ses)
 {
     FILE *myfile;
     char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
-    struct listnode *nodeptr, *templist;
+    struct pairlist *hl;
+    struct pair *end;
     struct routenode *rptr;
-    kbtree_t(str) *sl;
-    kbitr_t itr;
 
     get_arg_in_braces(filename, buffer, 1);
     substitute_vars(buffer, buffer, ses);
@@ -724,61 +745,69 @@ void write_command(const char *filename, struct session *ses)
         cfprintf(myfile, "%ccharset {%s}\n", tintin_char, ses->charset);
     if (strcmp(logcs_name(DEFAULT_LOGCHARSET), logcs_name(ses->logcharset)))
         cfprintf(myfile, "%clogcharset {%s}\n", tintin_char, logcs_name(ses->logcharset));
-    nodeptr = templist = hash2list(ses->aliases, "*");
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "alias", nodeptr->left, nodeptr->right, 0);
-    zap_list(templist);
 
-    nodeptr = ses->actions;
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
+    hl = hash2list(ses->aliases, 0);
+    end = &hl->pairs[0] + hl->size;
+    for (struct pair *n = &hl->pairs[0]; n<end; n++)
+        cfcom(myfile, "alias", n->left, n->right, 0);
+    free(hl);
 
-    sl = ses->antisubs;
-    for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
-        cfcom(myfile, "antisub", kb_itr_key(char*, &itr), 0, 0);
+    TRIP_ITER(ses->actions, n)
+        cfcom(myfile, "action", n->left, n->right, n->pr);
+    ENDITER
 
-    nodeptr = ses->subs;
-    while ((nodeptr = nodeptr->next))
-    {
-        if (strcmp( nodeptr->right, EMPTY_LINE))
-            cfcom(myfile, "sub", nodeptr->left, nodeptr->right, 0);
+    TRIP_ITER(ses->prompts, n)
+        cfcom(myfile, "promptaction", n->left, n->right, n->pr);
+    ENDITER
+
+    STR_ITER(ses->antisubs, s)
+        cfcom(myfile, "antisub", s, 0, 0);
+    ENDITER
+
+    TRIP_ITER(ses->subs, n)
+        if (strcmp(n->right, EMPTY_LINE))
+            cfcom(myfile, "sub", n->left, n->right, 0);
         else
-            cfcom(myfile, "gag", nodeptr->left, 0, 0);
-    }
+            cfcom(myfile, "gag", n->left, 0, 0);
+    ENDITER
 
-    nodeptr = templist = hash2list(ses->myvars, "*");
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "var", nodeptr->left, nodeptr->right, 0);
-    zap_list(templist);
+    hl = hash2list(ses->myvars, 0);
+    end = &hl->pairs[0] + hl->size;
+    for (struct pair *n = &hl->pairs[0]; n<end; n++)
+        cfcom(myfile, "var", n->left, n->right, 0);
+    free(hl);
 
-    nodeptr = ses->highs;
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "highlight", nodeptr->right, nodeptr->left, 0);
+    TRIP_ITER(ses->highs, n)
+        cfcom(myfile, "highlight", n->right, n->left, 0);
+    ENDITER
 
-    nodeptr = templist = hash2list(ses->pathdirs, "*");
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "pathdir", nodeptr->left, nodeptr->right, 0);
-    zap_list(templist);
+    hl = hash2list(ses->pathdirs, 0);
+    end = &hl->pairs[0] + hl->size;
+    for (struct pair *n = &hl->pairs[0]; n<end; n++)
+        cfcom(myfile, "pathdir", n->left, n->right, 0);
+    free(hl);
 
-    for (int nr=0;nr<MAX_LOCATIONS;nr++)
+    for (int nr=0;nr<ses->num_locations;nr++)
         if ((rptr=ses->routes[nr]))
             do
             {
+                num2str(num, rptr->distance);
                 cfprintf(myfile, (*(rptr->cond))
-                        ?"%croute {%s} {%s} {%s} %d {%s}\n"
-                        :"%croute {%s} {%s} {%s} %d\n",
+                        ?"%croute {%s} {%s} {%s} %s {%s}\n"
+                        :"%croute {%s} {%s} {%s} %s\n",
                         tintin_char,
                         ses->locations[nr],
                         ses->locations[rptr->dest],
                         rptr->path,
-                        rptr->distance,
+                        num,
                         rptr->cond);
             } while ((rptr=rptr->next));
 
-    nodeptr = templist = hash2list(ses->binds, "*");
-    while ((nodeptr = nodeptr->next))
-        cfcom(myfile, "bind", nodeptr->left, nodeptr->right, 0);
-    zap_list(templist);
+    hl = hash2list(ses->binds, 0);
+    end = &hl->pairs[0] + hl->size;
+    for (struct pair *n = &hl->pairs[0]; n<end; n++)
+        cfcom(myfile, "bind", n->left, n->right, 0);
+    free(hl);
 
     for (int nr=0;nr<NHOOKS;nr++)
         if (ses->hooks[nr])
@@ -790,19 +819,19 @@ void write_command(const char *filename, struct session *ses)
 }
 
 
-static bool route_exists(const char *A, const char *B, const char *path, int dist, const char *cond, struct session *ses)
+static bool route_exists(const char *A, const char *B, const char *path, num_t dist, const char *cond, struct session *ses)
 {
     int a, b;
 
-    for (a=0;a<MAX_LOCATIONS;a++)
+    for (a=0;a<ses->num_locations;a++)
         if (ses->locations[a]&&!strcmp(ses->locations[a], A))
             break;
-    if (a==MAX_LOCATIONS)
+    if (a==ses->num_locations)
         return false;
-    for (b=0;b<MAX_LOCATIONS;b++)
+    for (b=0;b<ses->num_locations;b++)
         if (ses->locations[b]&&!strcmp(ses->locations[b], B))
             break;
-    if (b==MAX_LOCATIONS)
+    if (b==ses->num_locations)
         return false;
     for (struct routenode *rptr=ses->routes[a];rptr;rptr=rptr->next)
         if ((rptr->dest==b)&&
@@ -813,17 +842,30 @@ static bool route_exists(const char *A, const char *B, const char *path, int dis
     return false;
 }
 
+static void ws_hash(struct hashtable *h1, struct hashtable *h0, const char *what, FILE *f)
+{
+    struct pairlist *pl = hash2list(h1, 0);
+    struct pair *end = &pl->pairs[0] + pl->size;
+    for (struct pair *n = &pl->pairs[0]; n<end; n++)
+    {
+        char *val;
+        if ((val=get_hash(h0, n->left)))
+            if (!strcmp(val, n->right))
+                continue;
+        cfcom(f, what, n->left, n->right, 0);
+    }
+    free(pl);
+}
+
 /*****************************/
 /* the #writesession command */
 /*****************************/
 void writesession_command(const char *filename, struct session *ses)
 {
     FILE *myfile;
-    char buffer[BUFFER_SIZE*4], *val, num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
-    struct listnode *nodeptr, *onptr;
+    char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct routenode *rptr;
-    kbtree_t(str) *sl, *orgsl;
-    kbitr_t itr;
+    kbtree_t(str) *sl;
 
     if (ses==nullsession)
         return tintin_eprintf(ses, "#THIS IS THE NULL SESSION -- NO DELTA!");
@@ -876,77 +918,50 @@ void writesession_command(const char *filename, struct session *ses)
     if (strcmp(logcs_name(nullsession->logcharset), logcs_name(ses->logcharset)))
         cfprintf(myfile, "%clogcharset {%s}\n", tintin_char, logcs_name(ses->logcharset));
 
-    nodeptr = onptr = hash2list(ses->aliases, "*");
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((val=get_hash(nullsession->aliases, nodeptr->left)))
-            if (!strcmp(val, nodeptr->right))
-                continue;
-        cfcom(myfile, "alias", nodeptr->left, nodeptr->right, 0);
-    }
-    zap_list(onptr);
+    ws_hash(ses->aliases, nullsession->aliases, "alias", myfile);
 
-    nodeptr = ses->actions;
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((onptr=searchnode_list(nullsession->actions, nodeptr->left)))
-            if (!strcmp(onptr->right, nodeptr->right)||
-                    !strcmp(onptr->right, nodeptr->right))
-                continue;
-        cfcom(myfile, "action", nodeptr->left, nodeptr->right, nodeptr->pr);
-    }
+    TRIP_ITER(ses->actions, n)
+        ptrip *m = kb_get(trip, nullsession->actions, n);
+        if (m && !strcmp(n->right, (*m)->right))
+            continue;
+        cfcom(myfile, "action", n->left, n->right, n->pr);
+    ENDITER
 
-    sl = ses->antisubs;
-    orgsl = nullsession->antisubs;
-    for (kb_itr_first(str, sl, &itr); kb_itr_valid(&itr); kb_itr_next(str, sl, &itr))
-    {
-        char *p = kb_itr_key(char*, &itr);
-        if (!kb_get(str, orgsl, p))
+    TRIP_ITER(ses->prompts, n)
+        ptrip *m = kb_get(trip, nullsession->prompts, n);
+        if (m && !strcmp(n->right, (*m)->right))
+            continue;
+        cfcom(myfile, "promptaction", n->left, n->right, n->pr);
+    ENDITER
+
+    sl = nullsession->antisubs;
+    STR_ITER(ses->antisubs, p)
+        if (!kb_get(str, sl, p))
             cfcom(myfile, "antisub", p, 0, 0);
-    }
+    ENDITER
 
-    nodeptr = ses->subs;
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((onptr=searchnode_list(nullsession->subs, nodeptr->left)))
-            if (!strcmp(onptr->right, nodeptr->right))
+    TRIP_ITER(ses->subs, n)
+        ptrip *m = kb_get(trip, nullsession->subs, n);
+        if (m && !strcmp(n->right, (*m)->right))
                 continue;
-        if (strcmp( nodeptr->right, EMPTY_LINE))
-            cfcom(myfile, "sub", nodeptr->left, nodeptr->right, 0);
+        if (strcmp(n->right, EMPTY_LINE))
+            cfcom(myfile, "sub", n->left, n->right, 0);
         else
-            cfcom(myfile, "gag", nodeptr->left, 0, 0);
-    }
+            cfcom(myfile, "gag", n->left, 0, 0);
+    ENDITER
 
-    nodeptr = onptr = hash2list(ses->myvars, "*");
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((val=get_hash(nullsession->myvars, nodeptr->left)))
-            if (!strcmp(val, nodeptr->right))
-                continue;
-        cfcom(myfile, "var", nodeptr->left, nodeptr->right, 0);
-    }
-    zap_list(onptr);
+    ws_hash(ses->myvars, nullsession->myvars, "var", myfile);
 
-    nodeptr = ses->highs;
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((onptr=searchnode_list(nullsession->highs, nodeptr->left)))
-            if (!strcmp(onptr->right, nodeptr->right))
-                continue;
-        cfcom(myfile, "highlight", nodeptr->right, nodeptr->left, 0);
-    }
+    TRIP_ITER(ses->highs, n)
+        ptrip *m = kb_get(trip, nullsession->highs, n);
+        if (m && !strcmp(n->right, (*m)->right))
+            continue;
+        cfcom(myfile, "highlight", n->left, n->right, 0);
+    ENDITER
 
-    nodeptr = onptr = hash2list(ses->pathdirs, "*");
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((val=get_hash(nullsession->pathdirs, nodeptr->left)))
-            if (!strcmp(val, nodeptr->right))
-                continue;
-        cfcom(myfile, "pathdirs", nodeptr->left, nodeptr->right, 0);
-    }
-    zap_list(onptr);
+    ws_hash(ses->pathdirs, nullsession->pathdirs, "pathdir", myfile);
 
-    for (int nr=0;nr<MAX_LOCATIONS;nr++)
+    for (int nr=0;nr<ses->num_locations;nr++)
         if ((rptr=ses->routes[nr]))
             do
             {
@@ -956,26 +971,21 @@ void writesession_command(const char *filename, struct session *ses)
                                   rptr->distance,
                                   rptr->cond,
                                   nullsession))
+                {
+                    num2str(num, rptr->distance);
                     cfprintf(myfile, (*(rptr->cond))
-                            ?"%croute {%s} {%s} {%s} %d {%s}\n"
-                            :"%croute {%s} {%s} {%s} %d\n",
+                            ?"%croute {%s} {%s} {%s} %s {%s}\n"
+                            :"%croute {%s} {%s} {%s} %s\n",
                             tintin_char,
                             ses->locations[nr],
                             ses->locations[rptr->dest],
                             rptr->path,
-                            rptr->distance,
+                            num,
                             rptr->cond);
+                }
             } while ((rptr=rptr->next));
 
-    nodeptr = onptr = hash2list(ses->binds, "*");
-    while ((nodeptr = nodeptr->next))
-    {
-        if ((val=get_hash(nullsession->binds, nodeptr->left)))
-            if (!strcmp(val, nodeptr->right))
-                continue;
-        cfcom(myfile, "bind", nodeptr->left, nodeptr->right, 0);
-    }
-    zap_list(onptr);
+    ws_hash(ses->binds, nullsession->binds, "bind", myfile);
 
     for (int nr=0;nr<NHOOKS;nr++)
         if (ses->hooks[nr])
@@ -1063,7 +1073,7 @@ void logtype_command(const char *arg, struct session *ses)
                 tintin_printf(ses, "#Ok, log type is now %s.", logtypes[t]);
             return;
         }
-    tintin_eprintf(ses, "#No such logtype: {%s}\n", left);
+    tintin_eprintf(ses, "#No such logtype: {%s}", left);
 }
 
 /***************************/

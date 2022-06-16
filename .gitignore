@@ -35,6 +35,7 @@ protos
 protos.h
 tests/get-utf8
 tests/ttyrec2ansi
+tests/kbitr
 valgrind.*
 depcomp
 install-sh

@@ -1,5 +1,5 @@
-#act {^foo}  {#showme Ab}
-#act {^foo$} {#showme AB}
-#act {foo}   {#showme ab}
-#act {foo$}  {#showme aB}
+#act {^foo}  {#showme Ab} {1}
+#act {^foo$} {#showme AB} {2}
+#act {foo}   {#showme ab} {3}
+#act {foo$}  {#showme aB} {4}
 #run a {sh -c 'for x in foobar xfoo foo xfoobar;do echo "$x";done'}

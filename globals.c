@@ -37,3 +37,7 @@ int LINES, COLS;
 bool isstatus;
 timens_t start_time;
 timens_t idle_since;
+#ifdef HAVE_HS
+bool simd=true;
+/**/ hs_scratch_t *hs_scratch=NULL;
+#endif

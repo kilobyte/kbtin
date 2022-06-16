@@ -1,0 +1,5 @@
+#del 1 foo
+#del 1 bar
+#del 1 baz
+#finde x ba*
+#foreach {$x} {#show $2}

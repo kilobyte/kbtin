@@ -1,3 +1,20 @@
+2.0:
+*	MASSIVE increase of speed of substs/actions/highlights
+*	[COMPAT BREAK] substs/actions apply variables immediately
+*	new optional dep: hyperscan/vectorscan
+*	new optional dep: valgrind
+*	(inline) #abs
+*	(inline) #round
+*	(command) #reverselist
+*	(command) #findevents
+*	(command) #findvariables
+*	(hook) logclose
+*	log files are locked while in use
+*	bugfix: promptactions were not saved
+*	#tickon can take an offset
+*	no limit on route locations
+*	control characters are caught and shown as Unicode symbols
+
 1.0.26:
 *	fix tests on ancient cmake
 *	support key codes on Zutty
@@ -246,7 +263,7 @@
 *	workaround for dorky bg color handling in PuTTY and screen.  Will
         slow down innocent xterm users, too :(
 *	information about logging in #info
-*	the echo for player's input has it's own color (#define ECHO_COLOR)
+*	the echo for player's input has its own color (#define ECHO_COLOR)
 *	#collate
 *	#expand
 *	#hook/#unhook

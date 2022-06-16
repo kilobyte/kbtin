@@ -1,0 +1,5 @@
+#ali m {#math x $0;#show $0 → $x}
+m #abs 1.331
+m #abs 0
+m #abs -0.0001
+m #abs -1.331

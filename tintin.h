@@ -3,6 +3,7 @@
 /******************************************************************/
 #undef TELNET_DEBUG     /* define to show TELNET negotiations */
 #undef USER_DEBUG       /* debugging of the user interface */
+#undef KEYBOARD_DEBUG
 
 #include <stdbool.h>
 
@@ -31,6 +32,10 @@
 #define C_STRIKETHRU	8
 
 #define DENOM (1000000LL*3*3*3*7*2*5*2)
+
+#define BIT_SHIFT	1
+#define BIT_ALT		2
+#define BIT_CTRL	4
 
 /*************************/
 /* telnet protocol stuff */
@@ -69,10 +74,9 @@
 #define BRACE_CLOSE '}' /*character that ends an argument */
 #define HISTORY_SIZE 128                  /* history size */
 #define MAX_PATH_LENGTH 256               /* max path length (#route) */
-#define MAX_LOCATIONS 2048
 #define DEFAULT_TINTIN_CHAR '#'           /* tintin char */
 #define DEFAULT_TICK_SIZE 60
-#define DEFAULT_ROUTE_DISTANCE 10
+#define DEFAULT_ROUTE_DISTANCE (10*DENOM)
 #define VERBATIM_CHAR '\\'                /* if an input starts with this
                                              char, it will be sent 'as is'
                                              to the MUD */
@@ -154,9 +158,6 @@
 /* The stuff below here shouldn't be modified unless you know what you're */
 /* doing........                                                          */
 /**************************************************************************/
-typedef enum {PRIORITY, ALPHA, LENGTH, ALPHALONGER} llist_mode_t;
-#define K_ACTION_MAGIC "#X~4~~2~~12~[This action is being deleted!]~7~X"
-
 #define BUFFER_SIZE 4096
 #define INPUT_CHUNK 1536
 
@@ -206,6 +207,7 @@ enum
     HOOK_TITLE,
     HOOK_TICK,
     HOOK_PRETICK,
+    HOOK_LOGCLOSE,
     NHOOKS
 };
 
@@ -240,6 +242,9 @@ enum
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
 #endif
+#ifdef HAVE_HS
+# include <hs/hs.h>
+#endif
 #include "malloc.h"
 #include "unicode.h"
 #ifndef HAVE_STRLCPY
@@ -249,16 +254,28 @@ size_t strlcpy(char *dst, const char *src, size_t n);
 
 typedef int64_t num_t;
 typedef int64_t timens_t;
+typedef struct trip *ptrip;
+typedef struct acts *pacts;
+
 #define NANO 1000000000LL
 
 #define ARRAYSZ(x) (sizeof(x)/sizeof((x)[0]))
 
 KBTREE_HEADER(str, char*, strcmp)
+KBTREE_HEADER(trip, ptrip, tripcmp)
+KBTREE_HEADER(acts, pacts, actcmp)
+
+#define TYPE_ITER(kind, type, tree, ip) {kbitr_t itr; kbtree_t(kind) *itrtr = (tree); \
+    for (kb_itr_first(kind, itrtr, &itr); kb_itr_valid(&itr); kb_itr_next(kind, itrtr, &itr)) \
+    { const type ip = kb_itr_key(type, &itr);
+#define STR_ITER(tree, ip) TYPE_ITER(str, char*, (tree), ip)
+#define TRIP_ITER(tree, ip) TYPE_ITER(trip, ptrip, (tree), ip)
+#define ACTS_ITER(tree, ip) TYPE_ITER(acts, pacts, (tree), ip)
+#define ENDITER }}
 
 /************************ structures *********************/
-struct listnode
+struct trip
 {
-    struct listnode *next;
     char *left, *right, *pr;
 };
 
@@ -294,8 +311,20 @@ struct routenode
     struct routenode *next;
     int dest;
     char *path;
-    int distance;
+    num_t distance;
     char *cond;
+};
+
+struct pair
+{
+    const char *left;
+    const char *right;
+};
+
+struct pairlist
+{
+    int size;
+    struct pair pairs[];
 };
 
 typedef enum { CM_ISO8859_1, CM_UTF8, CM_ICONV, CM_ASCII } conv_mode_t;
@@ -327,14 +356,15 @@ struct session
     char *loginputprefix, *loginputsuffix;
     logtype_t logtype;
     bool ignore;
-    struct listnode *actions, *subs, *prompts, *highs;
+    kbtree_t(trip) *subs, *actions, *prompts, *highs;
     kbtree_t(str) *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds;
-    struct listnode *path;
-    struct routenode *routes[MAX_LOCATIONS];
-    char *locations[MAX_LOCATIONS];
+    struct pair path[MAX_PATH_LENGTH];
+    struct routenode **routes;
+    char **locations;
     struct eventnode *events;
-    int path_length, no_return;
+    int num_locations;
+    int path_begin, path_length;
     int socket, last_term_type;
     sestype_t sestype;
     bool naws, ga, gas;
@@ -365,6 +395,15 @@ struct session
     timens_t line_time;
     unsigned long long linenum;
     bool drafted;
+#ifdef HAVE_HS
+    bool highs_dirty, act_dirty[2], subs_dirty, antisubs_dirty;
+    hs_database_t *highs_hs, *subs_hs, *antisubs_hs;
+    kbtree_t(acts) *acts_hs[2];
+    const char **highs_cols;
+    ptrip *subs_data, *acts_data[2];
+    int subs_omni_first, subs_omni_last;
+    uintptr_t *subs_markers;
+#endif
 };
 
 typedef char pvars_t[10][BUFFER_SIZE];
@@ -403,3 +442,10 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define VALID_TIN_CHARS "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 #define is7punct(x) strchr(VALID_TIN_CHARS, (x))
 #define N(x) ((x)*DENOM)
+
+#define assert(p) do if (!(p)){fprintf(stderr, "ASSERT FAILED in %s:%u : "#p "\n", __FILE__, __LINE__);abort();}while(0)
+
+#ifdef HAVE_HS
+// Should be in globals.h but for the typedef...
+extern hs_scratch_t *hs_scratch;
+#endif

@@ -41,6 +41,11 @@ if (HAVE_LIB_UTIL)
 	set(CMAKE_REQUIRED_LIBRARIES util)
 	set(libs ${libs} util)
 endif()
+CHECK_LIBRARY_EXISTS(hs hs_compile "" HAVE_HS)
+if (HAVE_HS)
+	set(CMAKE_REQUIRED_LIBRARIES hs)
+	set(libs ${libs} hs)
+endif()
 
 CHECK_INCLUDE_FILES(valgrind/valgrind.h HAVE_VALGRIND_VALGRIND_H)
 CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
@@ -68,7 +73,7 @@ endif()
 if (MCCP)
 	CHECK_LIBRARY_EXISTS(z gzread "" HAVE_LIB_ZLIB)
 	if (NOT HAVE_LIB_ZLIB)
-		message(FATAL_ERROR "MCCP compression requires zlib")
+		message(FATAL_ERROR "MCCP compression requires zlib ('cmake . -DMCCP=off' to disable)")
 	endif()
 	set(HAVE_ZLIB 1)
 	set(libs ${libs} z)
@@ -78,7 +83,7 @@ endif()
 
 if (SSL)
 	if (NOT GNUTLS_FOUND)
-		message(FATAL_ERROR "SSL encryption requires libgnutls")
+		message(FATAL_ERROR "SSL encryption requires libgnutls ('cmake . -DSSL=off' to disable")
 	endif()
 	set(HAVE_GNUTLS 1)
 	include_directories(SYSTEM ${GNUTLS_INCLUDE_DIR})
@@ -100,7 +105,6 @@ set(KBtin_sources
 	highlight.c
 	history.c
 	eval.c
-	llist.c
 	main.c
 	misc.c
 	net.c
@@ -134,6 +138,7 @@ set(KBtin_sources
 	slist.c
 	lists.c
 	vars.c
+	tlist.c
 )
 
 set(protos ${KBtin_sources})

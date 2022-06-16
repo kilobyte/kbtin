@@ -84,6 +84,10 @@ Selects the "pipe" driver (default if stdin or stdout is not a terminal).
 .TP
 .BI -i
 Selects the full interactive tty driver (usual default).
+.TP
+.BI --no-simd
+Disables accelerated pattern matching even if supported; you should never
+have a need to specify this option.
 .SH "SEE ALSO"
 .BR ansi2txt ,
 .BR ansi2html .

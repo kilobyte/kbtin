@@ -1,0 +1,14 @@
+#Defined aliases:
+{foo}={x}
+#Defined actions:
+{foo}={x} @ {5}
+#Defined promptactions:
+{foo}={x} @ {5}
+#THESE SUBSTITUTES HAVE BEEN DEFINED:
+{foo}={x}
+#THESE ANTISUBSTITUTES HAS BEEN DEFINED:
+{foo}
+#THESE HIGHLIGHTS HAVE BEEN DEFINED:
+{foo}={red}
+#THESE ROUTES HAVE BEEN DEFINED:
+{foo}->{x}: {X} d=10

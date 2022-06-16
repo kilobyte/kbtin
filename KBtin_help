@@ -34,7 +34,7 @@ Comments:
    nop         remark
 Variables:
    math        random      variable    unvariable  initvariable sin cos
-   angle       sqrt
+   angle       sqrt        abs         round       findvariables
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
    substring   prepad      postpad     reverse     strlen      atoi
@@ -44,10 +44,11 @@ Time:
 Lists:
    finditem    deleteitems foreach     getitem     isatom      listlength
    splitlist   implode     explode     sortlist    collate     expand
+   reverselist
 Tickers:
    tick        tickon      tickoff     ticksize    pretick
 Events:
-   delay=event remove=unevent=undelay
+   delay=event remove=unevent=undelay  findevents
 Routes:
    goto        >           route       unroute     dogoto
 Misc:
@@ -242,7 +243,8 @@ Examples:
 #splitlist <head.var> <tail.var> {list} [<head length>]
 Divides {list} into two parts, storing items 1..<head length> into <head.var>
 and the rest into <tail.var>.  If <head length> is not specified, it is
-assumed to be 1.
+assumed to be 1.  If one of <head.var> <tail.var> is an explicit {}, that
+assignment is skipped.
 
 Example:
 #split head tail {smile {say Hi} {bounce a}} 2
@@ -539,6 +541,7 @@ deactivate               Session is being switched from
 title                    The MUD tried to set window title to %1
 tick                     The ticker fired (once per #ticksize seconds)
 pretick                  It's #pretick seconds before tick.
+logclose                 A log file has been closed; %1 is filename.
 
 Examples:
 #hook close {#write myconfig}
@@ -1062,20 +1065,35 @@ Example:
 #remove <pattern>
 #unevent <pattern>
 #undelay <pattern>
-Kills all timed events which ~15::4~command~-1~ (not delay!) matches <pattern>.
+Kills all timed events whose ~15::4~command~-1~ (not delay!) matches <pattern>.
 
 Example:
 #action {~~-1~7~%1 leaves } {#unevent {counter $1}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~findevents
+
+#findevents <result>
+#findevents <result> <pattern>
+Finds all timed events whose ~15::4~command~-1~ (not delay!) matches <pattern>
+(or all if no <pattern> is specified, and stores a list of them with their
+time left as braced pairs.
+
+Sample result:
+{0.3 hop} {1.5 fart} {4 {kill orc}}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~tick
 
 #tick
 Shows time until next tick.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~tickon
+~tickon [<offset>]
 
 #tickon
 Turns the TinTin's ticker on.
+
+If the <offset> is given, current elapsed time is set to that value;
+otherwise, the previous clock is re-enabled as if it has never been turned off,
+if any -- or offset of 0 is assumed.
 
 At 10 (customizable by #pretick) seconds to tick, you will receive a message
 "#10 SECONDS TO TICK!!!", and when the tick actually happens, the message is
@@ -1794,6 +1812,11 @@ This is merely a convenience over:
 Example:
 #init count 0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~findvariables
+
+#findvar <result> [<pattern>]
+Stores into <result> the names of all variables whose names match <pattern>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~angle
 
 inline (#angle <x> <y>)
@@ -1830,6 +1853,25 @@ Examples:
 
 inline (#sqrt <x>)
 Calculates the square root of <x>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~abs
+
+inline (#abs <x>)
+Returns the absolute value of <x>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~round
+inline (#round <x>)
+Returns the integer nearest to <x>, rounding halfway cases away from 0.
+
+N.B. to truncate towards 0, you can use integer division: x/1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~reverselist
+
+#reverselist <dest.var> {list}
+Reverses the order of elements in {list}.
+
+Example
+#reversel result {foo {oh my} fi}     -> result = "fi {oh my} foo"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab

@@ -1,0 +1,51 @@
+#ali foo x
+#ali bar y
+#ali baz z
+#ali quux !
+#unali quux
+#unali b*
+#ali
+#act foo x
+#act bar y
+#act baz z
+#act quux ?
+#act quux !
+#unact quux
+#unact b*
+#act
+#prom foo x
+#prom bar y
+#prom baz z
+#prom quux ?
+#prom quux !
+#unprom quux
+#unprom b*
+#prom
+#sub foo x
+#sub bar y
+#sub baz z
+#sub quux !
+#unsub quux
+#unsub b*
+#sub
+#antisub foo
+#antisub bar
+#antisub baz
+#antisub quux
+#unantisub quux
+#unantisub b*
+#antisub
+#hi red foo
+#hi red bar
+#hi red baz
+#hi red quux
+#unhi quux
+#unhi b*
+#hi
+#ro foo x X
+#ro bar x Y
+#ro baz x Z
+#ro quux x !
+#unro quux x
+#unro b* x
+#ro

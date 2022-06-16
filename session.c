@@ -5,13 +5,14 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
+#include "protos/action.h"
 #include "protos/colors.h"
+#include "protos/events.h"
 #include "protos/files.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/hooks.h"
 #include "protos/lists.h"
-#include "protos/llist.h"
 #include "protos/print.h"
 #include "protos/math.h"
 #include "protos/net.h"
@@ -23,6 +24,7 @@
 #include "protos/user.h"
 #include "protos/utils.h"
 #include "protos/string.h"
+#include "protos/tlist.h"
 #ifdef HAVE_GNUTLS
 #include "protos/ssl.h"
 #else
@@ -277,6 +279,163 @@ struct session* newactive_session(void)
 }
 
 
+/*********************************************/
+/* clear all lists associated with a session */
+/*********************************************/
+void kill_all(struct session *ses, bool no_reinit)
+{
+    if (!ses) // can't happen
+        return;
+
+    kill_hash(ses->aliases);
+    kill_tlist(ses->actions);
+    kill_tlist(ses->prompts);
+    kill_hash(ses->myvars);
+    kill_tlist(ses->highs);
+    kill_tlist(ses->subs);
+    kill_slist(ses->antisubs);
+    for (int i=0; i<MAX_PATH_LENGTH; i++)
+        free((char*)ses->path[i].left), free((char*)ses->path[i].right);
+    kill_hash(ses->pathdirs);
+    kill_hash(ses->binds);
+    kill_routes(ses);
+    kill_events(ses);
+    if (no_reinit)
+        return;
+
+    ses->aliases = init_hash();
+    ses->actions = init_tlist();
+    ses->prompts = init_tlist();
+    ses->myvars = init_hash();
+    ses->highs = init_tlist();
+    ses->subs = init_tlist();
+    ses->antisubs = init_slist();
+    ses->binds = init_hash();
+    ses->path_begin = ses->path_length = 0;
+    bzero(ses->path, sizeof(ses->path));
+    ses->pathdirs = init_hash();
+#ifdef HAVE_HS
+    ses->highs_dirty = true;
+#endif
+    tintin_printf(ses, "#Lists cleared.");
+}
+
+
+/*******************************/
+/* initialize the null session */
+/*******************************/
+void init_nullses(void)
+{
+    start_time = idle_since = current_time();
+
+    nullsession=TALLOC(struct session);
+    nullsession->name=mystrdup("main");
+    nullsession->address=0;
+    nullsession->tickstatus = false;
+    nullsession->tick_size = DEFAULT_TICK_SIZE*NANO;
+    nullsession->pretick = DEFAULT_PRETICK*NANO;
+    nullsession->time0 = 0;
+    nullsession->snoopstatus = true;
+    nullsession->logfile = 0;
+    nullsession->logname = 0;
+    nullsession->logtype = DEFAULT_LOGTYPE;
+    nullsession->loginputprefix=mystrdup(LOG_INPUT_PREFIX);
+    nullsession->loginputsuffix=mystrdup(LOG_INPUT_SUFFIX);
+    nullsession->blank = DEFAULT_DISPLAY_BLANK;
+    nullsession->echo = ui_sep_input?DEFAULT_ECHO_SEPINPUT
+                                    :DEFAULT_ECHO_NOSEPINPUT;
+    nullsession->speedwalk = DEFAULT_SPEEDWALK;
+    nullsession->togglesubs = DEFAULT_TOGGLESUBS;
+    nullsession->presub = DEFAULT_PRESUB;
+    nullsession->verbatim = false;
+    nullsession->ignore = DEFAULT_IGNORE;
+    nullsession->partial_line_marker = mystrdup(DEFAULT_PARTIAL_LINE_MARKER);
+    nullsession->aliases = init_hash();
+    nullsession->actions = init_tlist();
+    nullsession->prompts = init_tlist();
+    nullsession->subs = init_tlist();
+    nullsession->myvars = init_hash();
+    nullsession->highs = init_tlist();
+    nullsession->pathdirs = init_hash();
+    nullsession->socket = 0;
+    nullsession->sestype = SES_NULL;
+    nullsession->naws = false;
+#ifdef HAVE_ZLIB
+    nullsession->can_mccp = false;
+    nullsession->mccp = 0;
+    nullsession->mccp_more = false;
+#endif
+    nullsession->last_term_type=0;
+    nullsession->server_echo = 0;
+    nullsession->nagle = false;
+    nullsession->antisubs = init_slist();
+    nullsession->binds = init_hash();
+    nullsession->next = 0;
+    nullsession->sessionstart = nullsession->idle_since =
+        nullsession->server_idle_since = start_time;
+    nullsession->debuglogfile=0;
+    nullsession->debuglogname=0;
+    for (int i=0;i<HISTORY_SIZE;i++)
+        history[i]=0;
+    nullsession->routes=0;
+    nullsession->locations=0;
+    nullsession->num_locations=0;
+    for (int i=0;i<NHOOKS;i++)
+        nullsession->hooks[i]=0;
+    nullsession->path_begin = 0;
+    nullsession->path_length = 0;
+    bzero(nullsession->path, sizeof(nullsession->path));
+    nullsession->last_line[0] = 0;
+    nullsession->linenum = 0;
+    nullsession->events = NULL;
+    nullsession->verbose=false;
+    nullsession->closing=false;
+    nullsession->drafted=false;
+    sessionlist = nullsession;
+    activesession = nullsession;
+    pvars=0;
+
+    nullsession->mesvar[MSG_ALIAS] = DEFAULT_ALIAS_MESS;
+    nullsession->mesvar[MSG_ACTION] = DEFAULT_ACTION_MESS;
+    nullsession->mesvar[MSG_SUBSTITUTE] = DEFAULT_SUB_MESS;
+    nullsession->mesvar[MSG_EVENT] = DEFAULT_EVENT_MESS;
+    nullsession->mesvar[MSG_HIGHLIGHT] = DEFAULT_HIGHLIGHT_MESS;
+    nullsession->mesvar[MSG_VARIABLE] = DEFAULT_VARIABLE_MESS;
+    nullsession->mesvar[MSG_ROUTE] = DEFAULT_ROUTE_MESS;
+    nullsession->mesvar[MSG_GOTO] = DEFAULT_GOTO_MESS;
+    nullsession->mesvar[MSG_BIND] = DEFAULT_BIND_MESS;
+    nullsession->mesvar[MSG_SYSTEM] = DEFAULT_SYSTEM_MESS;
+    nullsession->mesvar[MSG_PATH]= DEFAULT_PATH_MESS;
+    nullsession->mesvar[MSG_ERROR]= DEFAULT_ERROR_MESS;
+    nullsession->mesvar[MSG_HOOK]= DEFAULT_HOOK_MESS;
+    nullsession->mesvar[MSG_LOG]= DEFAULT_LOG_MESS;
+    nullsession->mesvar[MSG_TICK]= DEFAULT_TICK_MESS;
+    nullsession->charset=mystrdup(DEFAULT_CHARSET);
+    nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
+                              DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
+    nullify_conv(&nullsession->c_io);
+    nullify_conv(&nullsession->c_log);
+    nullsession->line_time=0;
+#ifdef HAVE_GNUTLS
+    nullsession->ssl=0;
+#endif
+#ifdef HAVE_HS
+    nullsession->highs_dirty=false;
+    nullsession->act_dirty[0]=nullsession->act_dirty[1]=false;
+    nullsession->subs_dirty=false;
+    nullsession->antisubs_dirty=false;
+    nullsession->highs_hs=0;
+    nullsession->acts_hs[0]=nullsession->acts_hs[1]=0;
+    nullsession->subs_hs=0;
+    nullsession->antisubs_hs=0;
+    nullsession->highs_cols=0;
+    nullsession->subs_data=0;
+    nullsession->subs_markers=0;
+    nullsession->acts_data[0]=nullsession->acts_data[1]=0;
+#endif
+}
+
+
 /**********************/
 /* open a new session */
 /**********************/
@@ -300,11 +459,11 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->loginputsuffix = mystrdup(ses->loginputsuffix);
     newsession->ignore = ses->ignore;
     newsession->aliases = copy_hash(ses->aliases);
-    newsession->actions = copy_list(ses->actions, PRIORITY);
-    newsession->prompts = copy_list(ses->prompts, PRIORITY);
-    newsession->subs = copy_list(ses->subs, ALPHALONGER);
+    newsession->actions = copy_tlist(ses->actions);
+    newsession->prompts = copy_tlist(ses->prompts);
+    newsession->subs = copy_tlist(ses->subs);
     newsession->myvars = copy_hash(ses->myvars);
-    newsession->highs = copy_list(ses->highs, ALPHA);
+    newsession->highs = copy_tlist(ses->highs);
     newsession->pathdirs = copy_hash(ses->pathdirs);
     newsession->socket = sock;
     newsession->antisubs = copy_slist(ses->antisubs);
@@ -322,9 +481,9 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->telnet_buflen = 0;
     newsession->last_term_type = 0;
     newsession->next = sessionlist;
-    newsession->path = init_list();
-    newsession->no_return = 0;
+    newsession->path_begin = 0;
     newsession->path_length = 0;
+    bzero(newsession->path, sizeof(newsession->path));
     newsession->more_coming = false;
     newsession->events = NULL;
     newsession->verbose = ses->verbose;
@@ -347,11 +506,9 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->partial_line_marker = mystrdup(ses->partial_line_marker);
     for (int i=0;i<=MAX_MESVAR;i++)
         newsession->mesvar[i] = ses->mesvar[i];
-    for (int i=0;i<MAX_LOCATIONS;i++)
-    {
-        newsession->routes[i]=0;
-        newsession->locations[i]=0;
-    }
+    newsession->routes=0;
+    newsession->locations=0;
+    newsession->num_locations=0;
     copyroutes(ses, newsession);
     newsession->last_line[0]=0;
     for (int i=0;i<NHOOKS;i++)
@@ -369,6 +526,20 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->line_time=0;
 #ifdef HAVE_GNUTLS
     newsession->ssl=ssl;
+#endif
+#ifdef HAVE_HS
+    newsession->highs_dirty=true;
+    newsession->act_dirty[0]=newsession->act_dirty[1]=true;
+    newsession->subs_dirty=true;
+    newsession->antisubs_dirty=true;
+    newsession->highs_hs=0;
+    newsession->acts_hs[0]=newsession->acts_hs[1]=0;
+    newsession->subs_hs=0;
+    newsession->antisubs_hs=0;
+    newsession->highs_cols=0;
+    newsession->subs_data=0;
+    newsession->subs_markers=0;
+    newsession->acts_data[0]=newsession->acts_data[1]=0;
 #endif
     sessionlist = newsession;
     activesession = newsession;
@@ -392,6 +563,11 @@ void cleanup_session(struct session *ses)
     if (ses!=nullsession) /* valgrind cleans null */
         do_hook(act=ses, HOOK_CLOSE, 0, true);
 
+    if (ses->logfile)
+        log_off(ses);
+    if (ses->debuglogfile)
+        fclose(ses->debuglogfile), free(ses->debuglogname);
+
     kill_all(ses, true);
     if (ses == sessionlist)
         sessionlist = ses->next;
@@ -412,10 +588,6 @@ void cleanup_session(struct session *ses)
         tintin_printf(0, "#SESSION '%s' DIED.", ses->name);
     if (ses->socket && close(ses->socket) == -1)
         syserr("close in cleanup");
-    if (ses->logfile)
-        log_off(ses);
-    if (ses->debuglogfile)
-        fclose(ses->debuglogfile);
     SFREE(ses->loginputprefix);
     SFREE(ses->loginputsuffix);
     for (int i=0;i<NHOOKS;i++)
@@ -437,6 +609,18 @@ void cleanup_session(struct session *ses)
 #ifdef HAVE_GNUTLS
     if (ses->ssl)
         gnutls_deinit(ses->ssl);
+#endif
+#ifdef HAVE_HS
+    hs_free_database(ses->highs_hs);
+    kill_acts(ses, 0);
+    kill_acts(ses, 1);
+    hs_free_database(ses->subs_hs);
+    hs_free_database(ses->antisubs_hs);
+    free(ses->highs_cols);
+    free(ses->subs_data);
+    free(ses->subs_markers);
+    free(ses->acts_data[0]);
+    free(ses->acts_data[1]);
 #endif
 
     TFREE(ses, struct session);
