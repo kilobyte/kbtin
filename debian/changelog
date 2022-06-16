@@ -1,3 +1,11 @@
+kbtin (2.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * New B-Deps: lib{hype,vecto}rscan, valgrind-dev.
+  * Re-enable tests on ppc64el.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Fri, 17 Jun 2022 01:55:54 +0200
+
 kbtin (1.0.26-3) unstable; urgency=medium
 
   * Disable the true positive test fail on ppc64el.  I have no Ubuntu
