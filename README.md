@@ -39,3 +39,4 @@ Dependencies required to build:
 * zlib (libz-dev) [OPTIONAL]
 * gnutls (libgnutls28-dev) [OPTIONAL]
 * hyperscan/vectorscan [OPTIONAL]
+* valgrind-dev [OPTIONAL]
