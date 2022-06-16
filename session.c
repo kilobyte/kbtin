@@ -566,7 +566,7 @@ void cleanup_session(struct session *ses)
     if (ses->logfile)
         log_off(ses);
     if (ses->debuglogfile)
-        fclose(ses->debuglogfile);
+        fclose(ses->debuglogfile), free(ses->debuglogname);
 
     kill_all(ses, true);
     if (ses == sessionlist)
