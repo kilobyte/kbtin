@@ -1,14 +1,10 @@
 #!/usr/bin/make -f
 export DEB_BUILD_MAINT_OPTIONS=hardening=+all
-DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
 %:
 	dh $@
 
 override_dh_auto_configure:
-ifneq (,$(findstring ppc64,$(DEB_HOST_ARCH)))
-	rm -f 'tests/data/infinite hook send.'*
-endif
 	dpkg-parsechangelog -SVersion|rev|cut -d- -f2-|rev >VERSION
 	dh_auto_configure
 
