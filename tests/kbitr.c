@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "../kbtree.h"
 
-typedef int num;
+typedef intptr_t num;
 
 static num numcmp(num a, num b)
 {
@@ -31,7 +31,7 @@ int main()
                 num l = (k + 1) | 1;
                 if (j != l)
                 {
-                    printf("got %d wanted %d\n", j, l);
+                    printf("got %zd wanted %zd\n", j, l);
                     return 1;
                 }
             }
