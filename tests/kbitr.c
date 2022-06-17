@@ -16,7 +16,6 @@ int main()
     for (num n=0;n<=1000;n++)
     {
         kbtree_t(num) *elm = kb_init(num, KB_DEFAULT_SIZE);
-        elm = kb_init(num, KB_DEFAULT_SIZE);
         for (int i=0; i<n; i++)
             kb_put(num, elm, i*2+1);
 
