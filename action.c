@@ -380,6 +380,13 @@ static int act_match(unsigned int id, unsigned long long from,
     return 0;
 }
 
+static int uintcmp(const void *a, const void *b)
+{
+    unsigned A = *(const unsigned*)a;
+    unsigned B = *(const unsigned*)b;
+    return A>B? 1 : A<B? -1 : 0;
+}
+
 static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(trip) *acts, bool act)
 {
     if (ses->act_dirty[act])
@@ -403,8 +410,14 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
             continue;
         }
 
-        // Copy all triggered actions, in case of a mutation.
         int n = nid-ids;
+        // Ensure a consistent ordering of actions.  While we don't guarantee
+        // any order, in practice the order stays the same unless for a small
+        // chance to change when the set of defined actions changes.
+        // This leads to heisenbugs for the user, unfun.
+        qsort(ids, n, sizeof(unsigned), uintcmp);
+
+        // Copy all triggered actions, in case of a mutation.
         ptrip *data=ses->acts_data[act];
         struct trip *trips=malloc(n*sizeof(struct trip));
         for (int i=0; i<n; i++)
