@@ -1,3 +1,10 @@
+kbtin (2.0-2) unstable; urgency=medium
+
+  * Re-disable broken-on-Ubuntu tests on ppc64el.
+  * Avoid unaligned usage, fixes FTBFS on sparc64.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sun, 19 Jun 2022 08:27:22 +0200
+
 kbtin (2.0-1) unstable; urgency=medium
 
   * New upstream release.
