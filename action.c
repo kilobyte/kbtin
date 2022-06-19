@@ -628,11 +628,12 @@ static bool check_a_action(const char *line, const char *action, bool inside)
     else
     {
         len = -1;
-        while (*lptr)
+        do
             if ((len = match_a_string(lptr, tptr)) != -1)
                 break;
             else
                 lptr++;
+        while (*lptr);
         if (len != -1)
         {
             match_start=lptr;
@@ -645,7 +646,7 @@ static bool check_a_action(const char *line, const char *action, bool inside)
     while (*lptr && *tptr)
     {
         temp2 = tptr + 2;
-        if (!*temp2)
+        if (!*temp2 || *temp2=='$')
         {
             var_len[*(tptr + 1) - 48] = strlen(lptr);
             var_ptr[*(tptr + 1) - 48] = lptr;
