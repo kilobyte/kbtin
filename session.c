@@ -612,8 +612,8 @@ void cleanup_session(struct session *ses)
 #endif
 #ifdef HAVE_HS
     hs_free_database(ses->highs_hs);
-    kill_acts(ses, 0);
-    kill_acts(ses, 1);
+    hs_free_database(ses->acts_hs[0]);
+    hs_free_database(ses->acts_hs[1]);
     hs_free_database(ses->subs_hs);
     hs_free_database(ses->antisubs_hs);
     free(ses->highs_cols);

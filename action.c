@@ -30,37 +30,6 @@ const char *match_start, *match_end;
 extern struct session *if_command(const char *arg, struct session *ses);
 static bool check_a_action(const char *line, const char *action, bool inside);
 
-#ifdef HAVE_HS
-struct acts
-{
-    char *pr;
-    hs_database_t *hs;
-    int n;
-};
-
-static int actcmp(void *a, void *b)
-{
-    return prioritycmp(((pacts)a)->pr, ((pacts)b)->pr);
-}
-
-/**/ KBTREE_CODE(acts, pacts, actcmp)
-
-void kill_acts(struct session *ses, bool act)
-{
-    if (!ses->acts_hs[act])
-        return;
-
-    ACTS_ITER(ses->acts_hs[act], p)
-        free(p->pr);
-        hs_free_database(p->hs);
-        free(p);
-    ENDITER
-
-    kb_destroy(acts, ses->acts_hs[act]);
-    ses->acts_hs[act]=0;
-}
-#endif
-
 static bool save_action(char **right)
 {
     if (deletedActions==max_strays)
@@ -304,11 +273,11 @@ static void check_all_act_serially(const char *line, struct session *ses, kbtree
 static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
 {
     debuglog(ses, "SIMD: building %sactions", act?"":"prompt");
-    kill_acts(ses, act);
+    hs_free_database(ses->acts_hs[act]);
+    ses->acts_hs[act]=0;
     ses->act_dirty[act]=false;
     free(ses->acts_data[act]);
     ses->acts_data[act]=0;
-    ses->acts_hs[act] = kb_init(acts, KB_DEFAULT_SIZE);
 
     int n = count_tlist(acts);
     const char **pat = MALLOC(n*sizeof(void*));
@@ -319,51 +288,30 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
     if (!pat || !flags || !ids || !data)
         syserr("out of memory");
 
-    int j=0, base=0;
-    char *lastpr = 0;
+    int j=0;
     TRIP_ITER(acts, ln)
-        if (!lastpr)
-            lastpr=ln->pr;
-        else if (strcmp(ln->pr, lastpr))
-        {
-last:;
-            struct acts *a = MALLOC(sizeof(struct acts));
-            a->pr = mystrdup(lastpr);
-            a->n = j-base;
-
-            debuglog(ses, "SIMD: compiling for pr=%s", lastpr);
-            hs_compile_error_t *error;
-            if (hs_compile_multi(pat+base, flags+base, ids+base, j-base, HS_MODE_BLOCK,
-                0, &a->hs, &error))
-            {
-                tintin_eprintf(ses, "#Error: hyperscan compilation failed for %s: %s",
-                    act? "actions" : "promptactions", error->message);
-                if (error->expression>=0)
-                    tintin_eprintf(ses, "#Converted bad expression was: %s",
-                                   pat[error->expression]);
-                hs_free_compile_error(error);
-            }
-            else if (hs_alloc_scratch(a->hs, &hs_scratch))
-                syserr("out of memory");
-            debuglog(ses, "SIMD: compiled for pr=%s", lastpr);
-            kb_put(acts, ses->acts_hs[act], a);
-            if (!acts)
-                goto out;
-            lastpr = ln->pr;
-            base=j;
-        }
-
         pat[j]=action_to_regex(ln->left);
         flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH|HS_FLAG_ALLOWEMPTY;
         ids[j]=j;
         data[j]=ln;
         j++;
     ENDITER
-    acts=0;
-    goto last;
-out:
-    ses->acts_data[act]=data;
 
+    debuglog(ses, "SIMD: compiling");
+    hs_compile_error_t *error;
+    if (hs_compile_multi(pat, flags, ids, j, HS_MODE_BLOCK, 0, &ses->acts_hs[act], &error))
+    {
+        tintin_eprintf(ses, "#Error: hyperscan compilation failed for %s: %s",
+            act? "actions" : "promptactions", error->message);
+        if (error->expression>=0)
+            tintin_eprintf(ses, "#Converted bad expression was: %s",
+                           pat[error->expression]);
+        hs_free_compile_error(error);
+    }
+    else if (hs_alloc_scratch(ses->acts_hs[act], &hs_scratch))
+        syserr("out of memory");
+
+    ses->acts_data[act]=data;
     for (int i=0; i<n; i++)
         SFREE((char*)pat[i]);
     MFREE(ids, n*sizeof(int));
@@ -396,66 +344,56 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
     lastpvars = pvars;
     pvars = &vars;
 
-    ACTS_ITER(ses->acts_hs[act], a)
-        char mpr[BUFFER_SIZE];
-        strlcpy(mpr, a->pr, sizeof mpr);
-        unsigned *ids=malloc(a->n * sizeof(unsigned));
-        unsigned *nid=ids;
-        hs_error_t err=hs_scan(a->hs, line, strlen(line), 0, hs_scratch,
-            act_match, &nid);
-        if (err)
-        {
-            tintin_eprintf(ses, "#Error in hs_scan: %d", err);
-            free(ids);
-            continue;
-        }
-
-        int n = nid-ids;
-        // Ensure a consistent ordering of actions.  While we don't guarantee
-        // any order, in practice the order stays the same unless for a small
-        // chance to change when the set of defined actions changes.
-        // This leads to heisenbugs for the user, unfun.
-        qsort(ids, n, sizeof(unsigned), uintcmp);
-
-        // Copy all triggered actions, in case of a mutation.
-        ptrip *data=ses->acts_data[act];
-        struct trip *trips=malloc(n*sizeof(struct trip));
-        for (int i=0; i<n; i++)
-        {
-            ptrip ln = data[ids[i]];
-            trips[i]=*ln;
-        }
+    unsigned *ids=malloc(count_tlist(acts) * sizeof(unsigned));
+    unsigned *nid=ids;
+    hs_error_t err=hs_scan(ses->acts_hs[act], line, strlen(line), 0, hs_scratch,
+        act_match, &nid);
+    if (err)
+    {
+        tintin_eprintf(ses, "#Error in hs_scan: %d", err);
         free(ids);
+        pvars = lastpvars;
+        return;
+    }
 
-        for (int i=0; i<n; i++)
+    int n = nid-ids;
+    // Ensure a consistent ordering of actions.  While we don't guarantee
+    // any order, in practice the order stays the same unless for a small
+    // chance to change when the set of defined actions changes.
+    // This leads to heisenbugs for the user, unfun.
+    qsort(ids, n, sizeof(unsigned), uintcmp);
+
+    // Copy all triggered actions, in case of a mutation.
+    ptrip *data=ses->acts_data[act];
+    struct trip *trips=malloc(n*sizeof(struct trip));
+    for (int i=0; i<n; i++)
+    {
+        ptrip ln = data[ids[i]];
+        trips[i]=*ln;
+    }
+    free(ids);
+
+    for (int i=0; i<n; i++)
+    {
+        struct trip ln = trips[i];
+        if (!*ln.right) // marker for deleted
+            continue;
+        if (check_one_action(line, ln.left, &vars, false))
         {
-            struct trip ln = trips[i];
-            if (!*ln.right) // marker for deleted
-                continue;
-            if (check_one_action(line, ln.left, &vars, false))
+            if (ses->mesvar[MSG_ACTION] && activesession == ses)
             {
-                if (ses->mesvar[MSG_ACTION] && activesession == ses)
-                {
-                    char buffer[BUFFER_SIZE];
+                char buffer[BUFFER_SIZE];
 
-                    substitute_vars(ln.right, buffer, ses);
-                    tintin_printf(ses, "[%sACTION: %s]", act? "":"PROMPT", buffer);
-                }
-                debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line,
-                    ln.right);
-                parse_input(ln.right, true, ses);
-                recursion=0;
+                substitute_vars(ln.right, buffer, ses);
+                tintin_printf(ses, "[%sACTION: %s]", act? "":"PROMPT", buffer);
             }
+            debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line,
+                ln.right);
+            parse_input(ln.right, true, ses);
+            recursion=0;
         }
-        free(trips);
-
-        if (mutatedActions)
-        {
-            mutatedActions=false;
-            struct acts srch = {mpr, 0, 0};
-            kb_itr_after(acts, ses->acts_hs[act], &itr, &srch);
-        }
-    ENDITER
+    }
+    free(trips);
     pvars = lastpvars;
 }
 #endif

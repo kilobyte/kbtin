@@ -255,7 +255,6 @@ size_t strlcpy(char *dst, const char *src, size_t n);
 typedef int64_t num_t;
 typedef int64_t timens_t;
 typedef struct trip *ptrip;
-typedef struct acts *pacts;
 
 #define NANO 1000000000LL
 
@@ -263,14 +262,12 @@ typedef struct acts *pacts;
 
 KBTREE_HEADER(str, char*, strcmp)
 KBTREE_HEADER(trip, ptrip, tripcmp)
-KBTREE_HEADER(acts, pacts, actcmp)
 
 #define TYPE_ITER(kind, type, tree, ip) {kbitr_t itr; kbtree_t(kind) *itrtr = (tree); \
     for (kb_itr_first(kind, itrtr, &itr); kb_itr_valid(&itr); kb_itr_next(kind, itrtr, &itr)) \
     { const type ip = kb_itr_key(type, &itr);
 #define STR_ITER(tree, ip) TYPE_ITER(str, char*, (tree), ip)
 #define TRIP_ITER(tree, ip) TYPE_ITER(trip, ptrip, (tree), ip)
-#define ACTS_ITER(tree, ip) TYPE_ITER(acts, pacts, (tree), ip)
 #define ENDITER }}
 
 /************************ structures *********************/
@@ -397,8 +394,7 @@ struct session
     bool drafted;
 #ifdef HAVE_HS
     bool highs_dirty, act_dirty[2], subs_dirty, antisubs_dirty;
-    hs_database_t *highs_hs, *subs_hs, *antisubs_hs;
-    kbtree_t(acts) *acts_hs[2];
+    hs_database_t *highs_hs, *subs_hs, *antisubs_hs, *acts_hs[2];
     const char **highs_cols;
     ptrip *subs_data, *acts_data[2];
     int subs_omni_first, subs_omni_last;
