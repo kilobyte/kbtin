@@ -61,7 +61,7 @@ static void zap_actions(void)
 /***********************/
 /* the #action command */
 /***********************/
-static void parse_action(const char *arg, struct session *ses, bool act, kbtree_t(trip) *l, const char *what)
+static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l, const char *what)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     char pr[BUFFER_SIZE];
@@ -114,7 +114,7 @@ static void parse_action(const char *arg, struct session *ses, bool act, kbtree_
 
 void action_command(const char *arg, struct session *ses)
 {
-    parse_action(arg, ses, 1, ses->actions, "action");
+    parse_action(arg, ses, ses->actions, "action");
 }
 
 /*****************************/
@@ -122,7 +122,7 @@ void action_command(const char *arg, struct session *ses)
 /*****************************/
 void promptaction_command(const char *arg, struct session *ses)
 {
-    parse_action(arg, ses, 0, ses->prompts, "promptaction");
+    parse_action(arg, ses, ses->prompts, "promptaction");
 }
 
 
