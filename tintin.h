@@ -154,10 +154,6 @@
 #define EMPTY_LINE "-gag-"
 #define STACK_LIMIT 8192*1024
 
-/**************************************************************************/
-/* The stuff below here shouldn't be modified unless you know what you're */
-/* doing........                                                          */
-/**************************************************************************/
 #define BUFFER_SIZE 4096
 #define INPUT_CHUNK 1536
 
