@@ -1,3 +1,9 @@
+kbtin (2.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Sun, 06 Nov 2022 22:54:11 +0100
+
 kbtin (2.0-2) unstable; urgency=medium
 
   * Re-disable broken-on-Ubuntu tests on ppc64el.
