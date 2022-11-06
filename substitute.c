@@ -294,7 +294,7 @@ done:
         syserr("out of memory");
 }
 
-static short longest_len[BUFFER_SIZE];
+static unsigned short longest_len[BUFFER_SIZE];
 static unsigned int longest_id[BUFFER_SIZE];
 
 static int sub_match(unsigned int id, unsigned long long from,

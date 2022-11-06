@@ -1,0 +1,15 @@
+act: [foo] e
+act: [foo]
+act: [foo]
+act: [foo] be
+act: [foo] b
+foo
+act: [] e
+act: []
+act: []
+act: empty
+act: [] be
+act: [] b
+sub: empty
+
+#SESSION 'a' DIED.

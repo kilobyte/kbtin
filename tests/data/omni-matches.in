@@ -1,0 +1,11 @@
+#act {%1} {#show {act: [$1]}}
+#act {%2} {#show {act: [$2]}}
+#act {^%1$} {#show {act: [$1] be}}
+#act {^%1} {#show {act: [$1] b}}
+#act {%1$} {#show {act: [$1] e}}
+#act {^$} {#show {act: empty}}
+#sub {^$} {sub: empty}
+#run a //selfpipe
+foo
+
+#del 1 #end

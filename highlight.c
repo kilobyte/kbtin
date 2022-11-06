@@ -335,7 +335,6 @@ void do_all_high(char *line, struct session *ses)
     int c, d;
     char *pos, *txt;
     int *atr;
-    int l, r;
 
     c=-1;
     txt=text;
@@ -368,6 +367,7 @@ void do_all_high(char *line, struct session *ses)
 
     TRIP_ITER(ses->highs, ln)
         txt=text;
+        int l, r;
         while (*txt&&find(txt, ln->left, &l, &r, ln->pr))
         {
             if (!get_high(ln->right))
