@@ -1,3 +1,7 @@
+2.1:
+*	bugfix: patterns with %1$ and matching an empty string
+*	reworked action matching code, speedup w/ many priorities
+
 2.0:
 *	MASSIVE increase of speed of substs/actions/highlights
 *	[COMPAT BREAK] substs/actions apply variables immediately
