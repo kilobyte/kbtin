@@ -122,7 +122,7 @@
 #define DEFAULT_LOG_MESS true
 #define DEFAULT_TICK_MESS true
 #define DEFAULT_PRETICK 10
-#define DEFAULT_CHARSET "ISO-8859-1"      /* the MUD-side charset */
+#define DEFAULT_CHARSET "UTF-8"           /* the MUD-side charset */
 #define DEFAULT_LOGCHARSET LOGCS_LOCAL
 #define DEFAULT_PARTIAL_LINE_MARKER 0
 #define BAD_CHAR '?'                      /* marker for chars illegal for a charset */
