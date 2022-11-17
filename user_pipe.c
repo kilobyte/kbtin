@@ -15,7 +15,7 @@ static void userpipe_init(void)
     tty=isatty(1);
     color=lastcolor=7;
     i_pos=done_input;
-    memset(&outstate, 0, sizeof(outstate));
+    ZERO(outstate);
 }
 
 static void userpipe_textout(const char *txt)

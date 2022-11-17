@@ -1614,7 +1614,7 @@ static void usertty_init(void)
 {
     char* term;
 
-    memset(&outstate, 0, sizeof(outstate));
+    ZERO(outstate);
 #ifdef XTERM_TITLE
     xterm=getenv("DISPLAY")&&(getenv("WINDOWID")||getenv("KONSOLE_DCOP_SESSION"));
 #endif

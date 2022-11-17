@@ -23,8 +23,8 @@ static void print_stty(int fd)
     char buf[BUFFER_SIZE], *bptr;
 #define battr(c, a, b) bptr+=sprintf(bptr, " %s%s~7~", (ta.c_##c&a)?"~9~":"~2~-~4~", b);
 
-    memset(&ta, 0, sizeof(ta));
-    memset(&ws, 0, sizeof(ws));
+    ZERO(ta);
+    ZERO(ws);
     tintin_printf(0, "~7~pty attributes (fd=%d):", fd);
     if (tcgetattr(fd, &ta))
         tintin_printf(0, " attrs: unknown");

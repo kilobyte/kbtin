@@ -731,7 +731,7 @@ void system_command(const char *arg, struct session *ses)
             tintin_puts1("#ERROR EXECUTING SHELL COMMAND.", ses);
             return;
         }
-        memset(&cs, 0, sizeof(cs));
+        ZERO(cs);
 
         save_lastintitle=ses->lastintitle;
         while (fgets(buf, BUFFER_SIZE, output))

@@ -203,7 +203,7 @@ void utf8_to_local(char *d, const char *s)
 {
     mbstate_t cs;
 
-    memset(&cs, 0, sizeof(cs));
+    ZERO(cs);
     utf8_to_mb(&d, s, &cs);
     *d=0;
 }
@@ -216,7 +216,7 @@ void local_to_utf8(char *d, const char *s, int maxb, mbstate_t *cs)
 
     if (!cs)
     {
-        memset(&cs0, 0, sizeof(cs0));
+        ZERO(cs0);
         cs=&cs0;
     }
     len=strlen(s);
@@ -262,7 +262,7 @@ void init_locale(void)
 
 bool new_conv(struct charset_conv *conv, const char *name, int dir)
 {
-    memset(conv, 0, sizeof(struct charset_conv));
+    ZERO(*conv);
     conv->name=name;
     conv->dir=dir;
     if (!strcasecmp(name, "UTF-8") || !strcasecmp(name, "UTF8"))
@@ -285,7 +285,7 @@ bool new_conv(struct charset_conv *conv, const char *name, int dir)
 
 void nullify_conv(struct charset_conv *conv)
 {
-    memset(conv, 0, sizeof(struct charset_conv));
+    ZERO(*conv);
 }
 
 void cleanup_conv(struct charset_conv *conv)

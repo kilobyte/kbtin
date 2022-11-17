@@ -551,7 +551,7 @@ struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
     int nl;
     mbstate_t cs;
 
-    memset(&cs, 0, sizeof(cs));
+    ZERO(cs);
 
     want_tt_char = !in_read && !tintin_char_set;
     if (!ses->verbose)
@@ -1025,7 +1025,7 @@ void textin_command(const char *arg, struct session *ses)
     char buffer[BUFFER_SIZE], filename[BUFFER_SIZE], *cptr, lfname[BUFFER_SIZE];
     mbstate_t cs;
 
-    memset(&cs, 0, sizeof(cs));
+    ZERO(cs);
 
     get_arg_in_braces(arg, buffer, 1);
     substitute_vars(buffer, buffer, ses);

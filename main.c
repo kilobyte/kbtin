@@ -422,7 +422,7 @@ static void tintin(void)
     int inbuf=0;
     mbstate_t instate;
 
-    memset(&instate, 0, sizeof(instate));
+    ZERO(instate);
 
     for (;;)
     {

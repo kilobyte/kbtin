@@ -436,6 +436,7 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define N(x) ((x)*DENOM)
 
 #define assert(p) do if (!(p)){fprintf(stderr, "ASSERT FAILED in %s:%u : "#p "\n", __FILE__, __LINE__);abort();}while(0)
+#define ZERO(x) bzero(&(x), sizeof(x))
 
 #ifdef HAVE_HS
 // Should be in globals.h but for the typedef...
