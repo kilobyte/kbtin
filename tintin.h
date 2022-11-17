@@ -222,6 +222,7 @@ enum
 #include <signal.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <strings.h>
 #include <time.h>
 #ifdef HAVE_ZLIB
 # include <zlib.h>
