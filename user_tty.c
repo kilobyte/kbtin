@@ -1663,11 +1663,9 @@ static void usertty_init(void)
 
     sprintf(done_input, "~12~KB~3~tin ~7~%s by ~11~kilobyte@angband.pl~9~\n", VERSION);
     usertty_textout(done_input);
-    {
-        for (int i=0;i<COLS;++i)
-            done_input[i]='-';
-        sprintf(done_input+COLS, "~7~\n");
-    }
+    for (int i=0;i<COLS;++i)
+        done_input[i]='-';
+    sprintf(done_input+COLS, "~7~\n");
     usertty_textout(done_input);
 }
 
