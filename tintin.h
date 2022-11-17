@@ -81,11 +81,7 @@
                                              char, it will be sent 'as is'
                                              to the MUD */
 #define MAX_SESNAME_LENGTH 512 /* don't accept session names longer than this */
-#if defined(__FreeBSD__) || defined(__OpenBSD__)
 #define MAX_RECURSION 64
-#else
-#define MAX_RECURSION 128
-#endif
 #ifndef DEFAULT_FILE_DIR
 #define DEFAULT_FILE_DIR "." /* Path to Tintin files, or HOME */
 #endif
