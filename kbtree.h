@@ -35,10 +35,10 @@
 #define KB_MAX_DEPTH 64
 
 typedef struct {
-	intptr_t is_internal:1, n:31;
+	uintptr_t is_internal:1, n:31;
 } kbnode_t;
 
-#define __KB_WORD sizeof(intptr_t)
+#define __KB_WORD sizeof(uintptr_t)
 
 typedef struct {
 	kbnode_t *x;
