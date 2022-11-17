@@ -34,10 +34,6 @@
 #include <sys/stat.h>
 #include <sys/resource.h>
 
-#ifndef BADSIG
-#define BADSIG (void (*)(int))-1
-#endif
-
 typedef void (*sighandler_t)(int);
 
 extern void end_command(const char *arg, struct session *ses);
@@ -114,13 +110,13 @@ static void setup_signals(void)
     sigemptyset(&act.sa_mask);
     act.sa_flags=SA_RESTART;
 
-    if (signal(SIGTERM, (sighandler_t)myquitsig) == BADSIG)
+    if (signal(SIGTERM, (sighandler_t)myquitsig) == SIG_ERR)
         syserr("signal SIGTERM");
-    if (signal(SIGQUIT, (sighandler_t)myquitsig) == BADSIG)
+    if (signal(SIGQUIT, (sighandler_t)myquitsig) == SIG_ERR)
         syserr("signal SIGQUIT");
-    if (signal(SIGINT, (sighandler_t)myquitsig) == BADSIG)
+    if (signal(SIGINT, (sighandler_t)myquitsig) == SIG_ERR)
         syserr("signal SIGINT");
-    if (signal(SIGHUP, (sighandler_t)sighup) == BADSIG)
+    if (signal(SIGHUP, (sighandler_t)sighup) == SIG_ERR)
         syserr("signal SIGHUP");
     act.sa_handler=(sighandler_t)tstphandler;
     if (sigaction(SIGTSTP, &act, 0))
@@ -138,16 +134,16 @@ static void setup_signals(void)
 
     if (ui_own_output)
     {
-        if (signal(SIGSEGV, (sighandler_t)sigsegv) == BADSIG)
+        if (signal(SIGSEGV, (sighandler_t)sigsegv) == SIG_ERR)
             syserr("signal SIGSEGV");
-        if (signal(SIGFPE, (sighandler_t)sigfpe) == BADSIG)
+        if (signal(SIGFPE, (sighandler_t)sigfpe) == SIG_ERR)
             syserr("signal SIGFPE");
     }
 
     act.sa_handler=(sighandler_t)sigchild;
     if (sigaction(SIGCHLD, &act, 0))
         syserr("sigaction SIGCHLD");
-    if (signal(SIGPIPE, SIG_IGN) == BADSIG)
+    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
         syserr("signal SIGPIPE");
 }
 
