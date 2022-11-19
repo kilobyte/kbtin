@@ -641,9 +641,12 @@ void seslist(char *result)
                 *result++=' ';
             else
                 flag=true;
-            result+=snprintf(result, BUFFER_SIZE-5+r0-result,
+            int slen = snprintf(result, BUFFER_SIZE-5+r0-result,
                 isatom(sesptr->name) ? "%s" : "{%s}", sesptr->name);
-            if (result-r0>BUFFER_SIZE-10)
+            if (slen <= 0)
+                return;
+            result += slen;
+            if (result-r0 > BUFFER_SIZE-10)
                 return; /* pathological session names */
         }
 }
