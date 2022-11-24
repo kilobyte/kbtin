@@ -88,7 +88,7 @@ static bool do_inline(const char *line, num_t *res, struct session *ses)
     memcpy(savestacks, stacks, sizeof(savestacks));
 
     ptr=command;
-    while (*line&&(*line!=' '))
+    while (*line && !isaspace(*line))
         *ptr++=*line++;
     *ptr=0;
     line=space_out(line);
@@ -192,7 +192,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
     ptr = arg;
     while (*ptr)
     {
-        if (*ptr == ' ') ;
+        if (isaspace(*ptr)) ;
         else if (*ptr == tintin_char)
             /* inline commands */
         {
@@ -406,7 +406,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
             tintin_eprintf(ses, "#Error. Invalid expression in #if or #math in {%s}.", arg);
             return false;
         }
-        if (*ptr != ' ')
+        if (!isaspace(*ptr))
         {
             stacks[i].pos = i + 1;
             i++;

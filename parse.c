@@ -106,7 +106,7 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
         input = get_command(input, command);
         substitute_vars(command, command, ses);
         nspaces=0;
-        while (*input==' ')
+        while (isaspace(*input))
         {
             input++;
             nspaces++;
@@ -524,7 +524,7 @@ static inline const char* get_arg_stop_spaces(const char *s, char *arg)
             s++;
             inside = !inside;
         }
-        else if (!inside && *s == ' ')
+        else if (!inside && isaspace(*s))
             break;
         else
             *arg++ = *s++;
@@ -569,7 +569,7 @@ static const char* get_command(const char *s, char *arg)
             else
                 break;
         }
-        else if (!inside && (*s==' ' || *s==9))
+        else if (!inside && isaspace(*s))
             break;
         else
             *arg++ = *s++;

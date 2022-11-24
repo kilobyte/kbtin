@@ -1364,7 +1364,7 @@ void chr_command(const char *arg, struct session *ses)
             {
                 while (isadigit(*lp))
                     v=v*10 + *lp++-'0';
-                if (*lp && *lp!=' ' && *lp!='\t')
+                if (*lp && !isaspace(*lp))
                 {
                     tintin_eprintf(ses, "#chr: not a valid number in {%s}", left);
                     return;
