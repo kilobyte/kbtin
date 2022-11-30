@@ -268,6 +268,7 @@ void do_in_MUD_colors(char *txt, bool quotetype, struct session *ses)
         case 127:
             // ␡
             *out++=0xe2; *out++=0x90; *out++=0xa1;
+            break;
         case 27:
             if (*(txt+1)=='[')
             {
