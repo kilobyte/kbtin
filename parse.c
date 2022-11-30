@@ -226,10 +226,6 @@ static void do_speedwalk(const char *cp, struct session *ses)
             sc[0] = *cp;
             write_com_arg_mud(sc, "", 0, ses);
         }
-        /* Added the if to make sure we didn't move the pointer outside the
-           bounds of the original pointer.  Corrects the bug with speedwalking
-           where if you typed "u7" tintin would go apeshit. (JE)
-         */
         if (*cp)
             cp++;
     }
