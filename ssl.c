@@ -116,7 +116,6 @@ static void save_cert(gnutls_x509_crt_t cert, const char *name, bool new, struct
         return;
     }
     snprintf(fname, BUFFER_SIZE, "%s/%s/%s", home, CONFIG_DIR, CERT_DIR);
-    mkdir(fname, 0755);
     if (mkdir(fname, 0755) && errno!=EEXIST)
     {
         tintin_eprintf(oldses, "#Cannot create certs dir (%s): %s", fname, strerror(errno));
