@@ -47,12 +47,12 @@ void help_command(const char *arg, struct session *ses)
 #endif
     if (!myfile)
     {
-        sprintf(filestring, "%s_help", tintin_exec);
+        snprintf(filestring, sizeof filestring, "%s_help", tintin_exec);
         myfile = check_file(filestring);
     }
     if (!myfile)
     {
-        sprintf(filestring, "%s/KBtin_help", getenv("HOME"));
+        snprintf(filestring, sizeof filestring, "%s/KBtin_help", getenv("HOME"));
         myfile = check_file(filestring);
     }
     if (!myfile)
