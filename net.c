@@ -121,6 +121,7 @@ int connect_mud(const char *host, const char *port, struct session *ses)
                 if (abort_connect)
                 {
                     tintin_eprintf(ses, "#CONNECTION TIMED OUT");
+                    close(sock);
                     continue;
                 }
                 else
@@ -128,6 +129,7 @@ int connect_mud(const char *host, const char *port, struct session *ses)
             default:
                 alarm(0);
                 tintin_eprintf(ses, "#%s", strerror(errno));
+                close(sock);
                 continue;
             }
         }
