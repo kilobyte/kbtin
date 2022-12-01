@@ -615,9 +615,10 @@ struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
                 continue;
             }
         }
+        else
+            ignore_lines=false;
         ses = parse_input(buffer, true, ses);
         recursion=0;
-        ignore_lines=false;
         strcpy(buffer, line);
     }
     if (*buffer)
