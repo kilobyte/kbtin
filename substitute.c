@@ -26,6 +26,8 @@ static void list_subs(const char *left, bool gag, struct session *ses)
     kbtree_t(trip) *sub = ses->subs;
 
     TRIP_ITER(sub, mysubs)
+        if (!match(left, mysubs->left))
+            continue;
         if (gag)
         {
             if (!strcmp(mysubs->right, EMPTY_LINE))
