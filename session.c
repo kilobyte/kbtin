@@ -102,7 +102,7 @@ static int list_sessions(const char *arg, struct session *ses, char *left, char 
 
     if (!*left)
     {
-        tintin_puts("#THESE SESSIONS HAS BEEN DEFINED:", ses);
+        tintin_puts("#THESE SESSIONS HAVE BEEN DEFINED:", ses);
         for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
             if (sesptr!=nullsession)
                 show_session(sesptr);
