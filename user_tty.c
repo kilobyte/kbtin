@@ -719,6 +719,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
 {
     char txt[16];
 
+    assert(ses);
 #ifdef KEYBOARD_DEBUG
     if (ch==27)
         tintin_printf(ses, "~5~[~13~ESC~5~]~7~");
@@ -805,8 +806,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 if (ret(false))
                     redraw_in();
                 touch_bottom();
-                if (!ses)
-                    break;
                 if (hist_num==HISTORY_SIZE-1)
                     break;
                 if (!history[hist_num+1])
@@ -822,8 +821,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 if (ret(false))
                     redraw_in();
                 touch_bottom();
-                if (!ses)
-                    break;
                 if (hist_num==-1)
                     break;
                 do --hist_num;
@@ -1041,8 +1038,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             touch_bottom();
             if (ret(false))
                 redraw_in();
-            if (!ses)
-                break;
             if (hist_num==HISTORY_SIZE-1 || !history[hist_num+1])
                 break;
             do hist_num++;
@@ -1055,8 +1050,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             touch_bottom();
             if (ret(false))
                 redraw_in();
-            if (!ses)
-                break;
             if (hist_num==-1)
                 break;
             hist_num=-1;
