@@ -201,13 +201,11 @@ static inline bool is_speedwalk_dirs(const char *cp)
 static void do_speedwalk(const char *cp, struct session *ses)
 {
     char sc[2];
-    const char *loc;
-    int loopcnt, i;
 
     strcpy(sc, "x");
     while (*cp)
     {
-        loc = cp;
+        const char *loc = cp;
         bool multflag = false;
         while (isadigit(*cp))
         {
@@ -216,9 +214,9 @@ static void do_speedwalk(const char *cp, struct session *ses)
         }
         if (multflag && *cp)
         {
-            sscanf(loc, "%d%c", &loopcnt, sc);
-            i = 0;
-            while (i++ < loopcnt)
+            int loopcnt = atoi(loc);
+            sc[0] = *cp;
+            while (loopcnt-- > 0)
                 write_com_arg_mud(sc, "", 0, ses);
         }
         else if (*cp)
