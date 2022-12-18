@@ -1057,7 +1057,7 @@ void info_command(const char *arg, struct session *ses)
     if (ses!=nullsession)
     {
         timens_t ct=current_time();
-        tintin_printf(ses, "Idle time: %lld.%d, server idle: %lld.%d",
+        tintin_printf(ses, "Idle time: %lld.%lld, server idle: %lld.%lld",
             (ct-ses->idle_since)/NANO, (ct-ses->idle_since)%NANO/(NANO/10),
             (ct-ses->server_idle_since)/NANO, (ct-ses->server_idle_since)%NANO/(NANO/10));
     }
