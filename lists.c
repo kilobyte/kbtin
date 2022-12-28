@@ -178,7 +178,10 @@ bool isatom(const char *arg)
         /* one element list = '{elem}' */
         return false;
 
-    return !strchr(arg, ' ');
+    for (; *arg; arg++)
+        if (isaspace(*arg))
+            return false;
+    return true;
         /* argument contains spaces i.e. = 'elem1 elem2' */
         /* this is incompatibile with supposed " behaviour */
 }
@@ -668,7 +671,7 @@ void collate_command(const char *arg, struct session *ses)
             j=strtol(arg, &err, 10), arg=err;
         else
             j=1;
-        if (!*arg || *arg==' ')
+        if (!*arg || isaspace(*arg))
             continue;
         arg = get_arg_in_braces(arg, cur, 0);
         if (!j)
@@ -716,7 +719,7 @@ void expand_command(const char *arg, struct session *ses)
             j=strtol(arg, &err, 10), arg=err;
         else
             j=1;
-        if (!*arg || *arg==' ')
+        if (!*arg || isaspace(*arg))
             continue;
         arg = get_arg_in_braces(arg, cur, 0);
         if (j>BUFFER_SIZE/2)

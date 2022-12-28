@@ -19,8 +19,6 @@ not_numeric:
         a++;
         b++;
     }
-    if (!a && !b)
-        return 0;
     if (!isadigit(*a) || !isadigit(*b))
         return (*a<*b)? -1 : (*a>*b)? 1 : 0;
     while (*a=='0')
@@ -102,9 +100,9 @@ void show_trip(const ptrip t)
         tintin_printf(0, "~7~{%s~7~}={%s~7~}", t->left, t->right);
 }
 
-bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg)
+bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool no_pr)
 {
-    if (pat && is_literal(pat))
+    if (no_pr && pat && is_literal(pat))
     {
         struct trip srch = {(char*)pat, 0, 0};
         const ptrip *t = kb_get(trip, l, &srch);

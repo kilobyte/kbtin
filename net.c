@@ -67,7 +67,7 @@ int connect_mud(const char *host, const char *port, struct session *ses)
     struct addrinfo *ai, hints;
     int sock;
 
-    memset(&hints, 0, sizeof(hints));
+    ZERO(hints);
     hints.ai_family=AF_UNSPEC;
     hints.ai_socktype=SOCK_STREAM;
     hints.ai_protocol=IPPROTO_TCP;
@@ -121,6 +121,7 @@ int connect_mud(const char *host, const char *port, struct session *ses)
                 if (abort_connect)
                 {
                     tintin_eprintf(ses, "#CONNECTION TIMED OUT");
+                    close(sock);
                     continue;
                 }
                 else
@@ -128,6 +129,7 @@ int connect_mud(const char *host, const char *port, struct session *ses)
             default:
                 alarm(0);
                 tintin_eprintf(ses, "#%s", strerror(errno));
+                close(sock);
                 continue;
             }
         }

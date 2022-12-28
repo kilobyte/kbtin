@@ -863,7 +863,7 @@ None of the above symbols will heed ".gz" or ".bz2".
 #logtype <type>
 Sets the logging mode to <type>.  Valid modes are:
 * raw     Everything as-is.
-* lf      ANSI with cr/lfs converted to lfs [default].
+* lf      ANSI with cr/lf converted to lf [default].
 * ttyrec  ANSI with timing information, in a format compatible with ttyrec(1).
 
 You can change the logtype at any moment -- however, changing it in the middle

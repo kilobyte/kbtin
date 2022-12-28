@@ -14,7 +14,7 @@ freebsd_13_task:
 
 macos_x_task:
   macos_instance:
-    image: big-sur-xcode
+    image: ghcr.io/cirruslabs/macos-ventura-base:latest
   install_script:
     - brew update
     - brew install cmake gnutls zlib

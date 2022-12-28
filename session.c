@@ -102,7 +102,7 @@ static int list_sessions(const char *arg, struct session *ses, char *left, char 
 
     if (!*left)
     {
-        tintin_puts("#THESE SESSIONS HAS BEEN DEFINED:", ses);
+        tintin_puts("#THESE SESSIONS HAVE BEEN DEFINED:", ses);
         for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
             if (sesptr!=nullsession)
                 show_session(sesptr);
@@ -312,7 +312,7 @@ void kill_all(struct session *ses, bool no_reinit)
     ses->antisubs = init_slist();
     ses->binds = init_hash();
     ses->path_begin = ses->path_length = 0;
-    bzero(ses->path, sizeof(ses->path));
+    ZERO(ses->path);
     ses->pathdirs = init_hash();
 #ifdef HAVE_HS
     ses->highs_dirty = true;
@@ -384,7 +384,7 @@ void init_nullses(void)
         nullsession->hooks[i]=0;
     nullsession->path_begin = 0;
     nullsession->path_length = 0;
-    bzero(nullsession->path, sizeof(nullsession->path));
+    ZERO(nullsession->path);
     nullsession->last_line[0] = 0;
     nullsession->linenum = 0;
     nullsession->events = NULL;
@@ -483,7 +483,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->next = sessionlist;
     newsession->path_begin = 0;
     newsession->path_length = 0;
-    bzero(newsession->path, sizeof(newsession->path));
+    ZERO(newsession->path);
     newsession->more_coming = false;
     newsession->events = NULL;
     newsession->verbose = ses->verbose;
@@ -641,9 +641,12 @@ void seslist(char *result)
                 *result++=' ';
             else
                 flag=true;
-            result+=snprintf(result, BUFFER_SIZE-5+r0-result,
+            int slen = snprintf(result, BUFFER_SIZE-5+r0-result,
                 isatom(sesptr->name) ? "%s" : "{%s}", sesptr->name);
-            if (result-r0>BUFFER_SIZE-10)
+            if (slen <= 0)
+                return;
+            result += slen;
+            if (result-r0 > BUFFER_SIZE-10)
                 return; /* pathological session names */
         }
 }

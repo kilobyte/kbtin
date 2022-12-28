@@ -26,6 +26,8 @@ static void list_subs(const char *left, bool gag, struct session *ses)
     kbtree_t(trip) *sub = ses->subs;
 
     TRIP_ITER(sub, mysubs)
+        if (!match(left, mysubs->left))
+            continue;
         if (gag)
         {
             if (!strcmp(mysubs->right, EMPTY_LINE))
@@ -45,13 +47,13 @@ static void list_subs(const char *left, bool gag, struct session *ses)
         }
     ENDITER
 
-    if (!flag && ses->mesvar[MSG_SUBSTITUTE])
-    {
-        if (strcmp(left, "*"))
-            tintin_printf(ses, "#THAT %s IS NOT DEFINED.", gag? "GAG":"SUBSTITUTE");
-        else
-            tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
-    }
+    if (flag)
+        return;
+
+    if (strcmp(left, "*"))
+        tintin_printf(ses, "#THAT %s IS NOT DEFINED.", gag? "GAG":"SUBSTITUTE");
+    else
+        tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
 }
 
 static void parse_sub(const char *left_, const char *right,  bool gag, struct session *ses)

@@ -1,0 +1,2 @@
+#var foo	{a b}
+#show {[$foo]}

@@ -106,7 +106,7 @@ struct session* parse_input(const char *input, bool override_verbatim, struct se
         input = get_command(input, command);
         substitute_vars(command, command, ses);
         nspaces=0;
-        while (*input==' ')
+        while (isaspace(*input))
         {
             input++;
             nspaces++;
@@ -201,13 +201,11 @@ static inline bool is_speedwalk_dirs(const char *cp)
 static void do_speedwalk(const char *cp, struct session *ses)
 {
     char sc[2];
-    const char *loc;
-    int loopcnt, i;
 
     strcpy(sc, "x");
     while (*cp)
     {
-        loc = cp;
+        const char *loc = cp;
         bool multflag = false;
         while (isadigit(*cp))
         {
@@ -216,9 +214,9 @@ static void do_speedwalk(const char *cp, struct session *ses)
         }
         if (multflag && *cp)
         {
-            sscanf(loc, "%d%c", &loopcnt, sc);
-            i = 0;
-            while (i++ < loopcnt)
+            int loopcnt = atoi(loc);
+            sc[0] = *cp;
+            while (loopcnt-- > 0)
                 write_com_arg_mud(sc, "", 0, ses);
         }
         else if (*cp)
@@ -226,10 +224,6 @@ static void do_speedwalk(const char *cp, struct session *ses)
             sc[0] = *cp;
             write_com_arg_mud(sc, "", 0, ses);
         }
-        /* Added the if to make sure we didn't move the pointer outside the
-           bounds of the original pointer.  Corrects the bug with speedwalking
-           where if you typed "u7" tintin would go apeshit. (JE)
-         */
         if (*cp)
             cp++;
     }
@@ -524,7 +518,7 @@ static inline const char* get_arg_stop_spaces(const char *s, char *arg)
             s++;
             inside = !inside;
         }
-        else if (!inside && *s == ' ')
+        else if (!inside && isaspace(*s))
             break;
         else
             *arg++ = *s++;
@@ -569,7 +563,7 @@ static const char* get_command(const char *s, char *arg)
             else
                 break;
         }
-        else if (!inside && (*s==' ' || *s==9))
+        else if (!inside && isaspace(*s))
             break;
         else
             *arg++ = *s++;

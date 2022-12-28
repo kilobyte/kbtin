@@ -81,11 +81,7 @@
                                              char, it will be sent 'as is'
                                              to the MUD */
 #define MAX_SESNAME_LENGTH 512 /* don't accept session names longer than this */
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__ppc64__)
 #define MAX_RECURSION 64
-#else
-#define MAX_RECURSION 128
-#endif
 #ifndef DEFAULT_FILE_DIR
 #define DEFAULT_FILE_DIR "." /* Path to Tintin files, or HOME */
 #endif
@@ -126,7 +122,7 @@
 #define DEFAULT_LOG_MESS true
 #define DEFAULT_TICK_MESS true
 #define DEFAULT_PRETICK 10
-#define DEFAULT_CHARSET "ISO-8859-1"      /* the MUD-side charset */
+#define DEFAULT_CHARSET "UTF-8"           /* the MUD-side charset */
 #define DEFAULT_LOGCHARSET LOGCS_LOCAL
 #define DEFAULT_PARTIAL_LINE_MARKER 0
 #define BAD_CHAR '?'                      /* marker for chars illegal for a charset */
@@ -226,6 +222,7 @@ enum
 #include <signal.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <strings.h>
 #include <time.h>
 #ifdef HAVE_ZLIB
 # include <zlib.h>
@@ -436,6 +433,7 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define N(x) ((x)*DENOM)
 
 #define assert(p) do if (!(p)){fprintf(stderr, "ASSERT FAILED in %s:%u : "#p "\n", __FILE__, __LINE__);abort();}while(0)
+#define ZERO(x) bzero(&(x), sizeof(x))
 
 #ifdef HAVE_HS
 // Should be in globals.h but for the typedef...

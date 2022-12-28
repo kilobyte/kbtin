@@ -598,7 +598,7 @@ bad:
         if (tt==err)
             goto bad;
         tt=err;
-        while (*tt==' ')
+        while (isaspace(*tt))
             tt++;
         switch (toalower(*tt))
         {
@@ -625,7 +625,7 @@ bad:
         }
         if (*tt==',')
             tt++;
-        while (*tt==' ')
+        while (isaspace(*tt))
             tt++;
         if (!strncmp(tt, "and", 3))
             tt+=3;

@@ -53,7 +53,7 @@ static char TtyProto[] = "/dev/ttyXY";
 # endif
 
 
-int openpty(int *amaster, int *aslave, char *dummy, struct termios *termp, struct winsize *wp)
+static int openpty(int *amaster, int *aslave, char *dummy, struct termios *termp, struct winsize *wp)
 {
     int master, slave;
 
@@ -162,10 +162,8 @@ ok:
         ioctl(master, TIOCSWINSZ, wp);
     /* let's ignore errors on these ioctls silently */
 
-    if (amaster)
-        *amaster=master;
-    if (aslave)
-        *aslave=slave;
+    *amaster=master;
+    *aslave=slave;
     return 0;
 }
 

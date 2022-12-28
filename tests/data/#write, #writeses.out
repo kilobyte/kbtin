@@ -1,6 +1,5 @@
 #COMMANDS-FILE WRITTEN.
 #DELTA COMMANDS FILE WRITTEN.
-#charset {UTF-8}
 #alias {bar} {a}
 #alias {foo} {a}
 #promptaction {bar} {a} {5}
@@ -14,7 +13,6 @@
 #route {foo} {bar} {e} 10
 #route {bar} {baz} {e} 10
 -----
-#charset {UTF-8}
 #alias {bar} {a}
 #promptaction {bar} {a} {5}
 #antisub {bar}

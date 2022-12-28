@@ -714,11 +714,12 @@ static enum
 } state=TS_NORMAL;
 static int bits = 0;
 #define MAXNVAL 10
-static int val[MAXNVAL], nval;
+static int val[MAXNVAL+1], nval;
 static bool usertty_process_kbd(struct session *ses, WC ch)
 {
     char txt[16];
 
+    assert(ses);
 #ifdef KEYBOARD_DEBUG
     if (ch==27)
         tintin_printf(ses, "~5~[~13~ESC~5~]~7~");
@@ -805,8 +806,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 if (ret(false))
                     redraw_in();
                 touch_bottom();
-                if (!ses)
-                    break;
                 if (hist_num==HISTORY_SIZE-1)
                     break;
                 if (!history[hist_num+1])
@@ -822,8 +821,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 if (ret(false))
                     redraw_in();
                 touch_bottom();
-                if (!ses)
-                    break;
                 if (hist_num==-1)
                     break;
                 do --hist_num;
@@ -1041,8 +1038,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             touch_bottom();
             if (ret(false))
                 redraw_in();
-            if (!ses)
-                break;
             if (hist_num==HISTORY_SIZE-1 || !history[hist_num+1])
                 break;
             do hist_num++;
@@ -1055,8 +1050,6 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             touch_bottom();
             if (ret(false))
                 redraw_in();
-            if (!ses)
-                break;
             if (hist_num==-1)
                 break;
             hist_num=-1;
@@ -1614,7 +1607,7 @@ static void usertty_init(void)
 {
     char* term;
 
-    memset(&outstate, 0, sizeof(outstate));
+    ZERO(outstate);
 #ifdef XTERM_TITLE
     xterm=getenv("DISPLAY")&&(getenv("WINDOWID")||getenv("KONSOLE_DCOP_SESSION"));
 #endif
@@ -1663,11 +1656,9 @@ static void usertty_init(void)
 
     sprintf(done_input, "~12~KB~3~tin ~7~%s by ~11~kilobyte@angband.pl~9~\n", VERSION);
     usertty_textout(done_input);
-    {
-        for (int i=0;i<COLS;++i)
-            done_input[i]='-';
-        sprintf(done_input+COLS, "~7~\n");
-    }
+    for (int i=0;i<COLS;++i)
+        done_input[i]='-';
+    sprintf(done_input+COLS, "~7~\n");
     usertty_textout(done_input);
 }
 

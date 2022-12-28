@@ -731,7 +731,7 @@ void system_command(const char *arg, struct session *ses)
             tintin_puts1("#ERROR EXECUTING SHELL COMMAND.", ses);
             return;
         }
-        memset(&cs, 0, sizeof(cs));
+        ZERO(cs);
 
         save_lastintitle=ses->lastintitle;
         while (fgets(buf, BUFFER_SIZE, output))
@@ -1057,7 +1057,7 @@ void info_command(const char *arg, struct session *ses)
     if (ses!=nullsession)
     {
         timens_t ct=current_time();
-        tintin_printf(ses, "Idle time: %d.%d, server idle: %d.%d",
+        tintin_printf(ses, "Idle time: %lld.%lld, server idle: %lld.%lld",
             (ct-ses->idle_since)/NANO, (ct-ses->idle_since)%NANO/(NANO/10),
             (ct-ses->server_idle_since)/NANO, (ct-ses->server_idle_since)%NANO/(NANO/10));
     }
@@ -1364,7 +1364,7 @@ void chr_command(const char *arg, struct session *ses)
             {
                 while (isadigit(*lp))
                     v=v*10 + *lp++-'0';
-                if (*lp && *lp!=' ' && *lp!='\t')
+                if (*lp && !isaspace(*lp))
                 {
                     tintin_eprintf(ses, "#chr: not a valid number in {%s}", left);
                     return;

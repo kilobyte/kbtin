@@ -379,6 +379,8 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         zip="gzip -9";
     else if (len>=5 && !strcmp(fname+len-4, ".bz2"))
         zip="bzip2";
+    else if (len>=5 && !strcmp(fname+len-4, ".bz3"))
+        zip="bzip3";
     else if (len>=4 && !strcmp(fname+len-3, ".xz"))
         zip="xz";
     else if (len>=5 && !strcmp(fname+len-4, ".zst"))
@@ -551,7 +553,7 @@ struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
     int nl;
     mbstate_t cs;
 
-    memset(&cs, 0, sizeof(cs));
+    ZERO(cs);
 
     want_tt_char = !in_read && !tintin_char_set;
     if (!ses->verbose)
@@ -613,9 +615,10 @@ struct session* do_read(FILE *myfile, const char *filename, struct session *ses)
                 continue;
             }
         }
+        else
+            ignore_lines=false;
         ses = parse_input(buffer, true, ses);
         recursion=0;
-        ignore_lines=false;
         strcpy(buffer, line);
     }
     if (*buffer)
@@ -1025,7 +1028,7 @@ void textin_command(const char *arg, struct session *ses)
     char buffer[BUFFER_SIZE], filename[BUFFER_SIZE], *cptr, lfname[BUFFER_SIZE];
     mbstate_t cs;
 
-    memset(&cs, 0, sizeof(cs));
+    ZERO(cs);
 
     get_arg_in_braces(arg, buffer, 1);
     substitute_vars(buffer, buffer, ses);

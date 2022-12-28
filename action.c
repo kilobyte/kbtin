@@ -75,11 +75,11 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
     if (!*left)
     {
         tintin_printf(ses, "#Defined %ss:", what);
-        show_tlist(l, 0, 0);
+        show_tlist(l, 0, 0, false);
     }
     else if (*left && !*right)
     {
-        if (!show_tlist(l, left, 0) && ses->mesvar[MSG_ACTION])
+        if (!show_tlist(l, left, 0, false) && ses->mesvar[MSG_ACTION])
             tintin_printf(ses, "#That %s (%s) is not defined.", what, left);
     }
     else
