@@ -1,3 +1,10 @@
+kbtin (2.1-2) unstable; urgency=medium
+
+  * Merge a bunch of fixes.
+  * Don't use vectorscan on ppc64el, it's experimental/broken.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Wed, 28 Dec 2022 01:21:15 +0100
+
 kbtin (2.1-1) unstable; urgency=medium
 
   * New upstream release.
