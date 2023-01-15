@@ -466,26 +466,26 @@ void deleteitems_command(const char *arg, struct session *ses)
     get_arg(arg, item, 1, ses);
     arg = list;
     rpos=right;
-    if (*arg)
-        do {
-            arg = get_arg_in_braces(arg, temp, 0);
-            if (!match(item, temp))
+    while (*arg)
+    {
+        arg = get_arg_in_braces(arg, temp, 0);
+        if (!match(item, temp))
+        {
+            if (rpos!=right)
+                *rpos++=' ';
+            lpos=temp;
+            if (isatom(temp))
+                while (*lpos)
+                    *rpos++=*lpos++;
+            else
             {
-                if (rpos!=right)
-                    *rpos++=' ';
-                lpos=temp;
-                if (isatom(temp))
-                    while (*lpos)
-                        *rpos++=*lpos++;
-                else
-                {
-                    *rpos++=BRACE_OPEN;
-                    while (*lpos)
-                        *rpos++=*lpos++;
-                    *rpos++=BRACE_CLOSE;
-                }
+                *rpos++=BRACE_OPEN;
+                while (*lpos)
+                    *rpos++=*lpos++;
+                *rpos++=BRACE_CLOSE;
             }
-        } while (*arg);
+        }
+    }
     *rpos=0;
     set_variable(left, right, ses);
 }
