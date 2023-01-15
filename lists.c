@@ -456,25 +456,25 @@ void splitlist_command(const char *arg, struct session *ses)
 void deleteitems_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE], item[BUFFER_SIZE],
-    temp[BUFFER_SIZE], right[BUFFER_SIZE], *lpos, *rpos;
+        pat[BUFFER_SIZE], right[BUFFER_SIZE], *lpos, *rpos;
 
     arg = get_arg(arg, left, 0, ses);
     if (!*left)
         return tintin_eprintf(ses, "#Error - Syntax: #deleteitem {dest. variable} {list} {item}");
 
     arg=get_arg(arg, list, 0, ses);
-    get_arg(arg, item, 1, ses);
-    arg = list;
+    get_arg(arg, pat, 1, ses);
+    const char *it = list;
     rpos=right;
-    while (*arg)
+    while (*it)
     {
-        arg = get_arg_in_braces(arg, temp, 0);
-        if (!match(item, temp))
+        it = get_arg_in_braces(it, item, 0);
+        if (!match(pat, item))
         {
             if (rpos!=right)
                 *rpos++=' ';
-            lpos=temp;
-            if (isatom(temp))
+            lpos=item;
+            if (isatom(item))
                 while (*lpos)
                     *rpos++=*lpos++;
             else
