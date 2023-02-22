@@ -206,7 +206,7 @@ static void redraw_in(void)
     if (k_pos-k_scrl+(k_scrl!=0)>=COLS)
         k_scrl=k_pos+2-COLS;
     if (k_scrl)
-        tbuf+=sprintf(tbuf, "\033[1m<\033[0;4%dm", INPUT_COLOR);
+        tbuf+=sprintf(tbuf, "\033[1m<\033[0;37;4%dm", INPUT_COLOR);
     if (retaining)
         tbuf+=sprintf(tbuf, "\033[30;1m");
     if (in_getpassword)
