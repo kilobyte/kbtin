@@ -1,0 +1,9 @@
+#var l foo bar baz quux
+#dele x {$l} foo
+#show ｢$x｣
+#dele x {$l} b*
+#show ｢$x｣
+#dele x {$l} *
+#show ｢$x｣
+#dele x { a	{b c} 	d  {e f } {	g}} {b*}
+#show ｢$x｣
