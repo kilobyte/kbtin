@@ -7,3 +7,5 @@
 #show ｢$x｣
 #dele x { a	{b c} 	d  {e f } {	g}} {b*}
 #show ｢$x｣
+#dele x {$l} b* *o
+#show ｢$x｣

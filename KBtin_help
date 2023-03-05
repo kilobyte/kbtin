@@ -183,8 +183,8 @@ Examples:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~deleteitems
 
-#deleteitem <dest.var> {list} <pattern>
-removes from {list} all items matching <pattern> and stores result in
+#deleteitem <dest.var> {list} <pattern> [<pattern> ...]
+removes from {list} all items matching <pattern>s and stores result in
 <dest.var>
 
 Example:

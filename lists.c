@@ -460,33 +460,40 @@ void deleteitems_command(const char *arg, struct session *ses)
 
     arg = get_arg(arg, left, 0, ses);
     if (!*left)
-        return tintin_eprintf(ses, "#Error - Syntax: #deleteitem {dest. variable} {list} {item}");
+        return tintin_eprintf(ses, "#Error - Syntax: #deleteitem {dest. variable} {list} {item} [{item} ...]");
 
     arg=get_arg(arg, list, 0, ses);
-    get_arg(arg, pat, 1, ses);
-    const char *it = list;
-    rpos=right;
-    while (*it)
+
+    do
     {
-        it = get_arg_in_braces(it, item, 0);
-        if (!match(pat, item))
+        arg=get_arg(arg, pat, 0, ses);
+
+        const char *it = list;
+        rpos=right;
+        while (*it)
         {
-            if (rpos!=right)
-                *rpos++=' ';
-            lpos=item;
-            if (isatom(item))
-                while (*lpos)
-                    *rpos++=*lpos++;
-            else
+            it = get_arg_in_braces(it, item, 0);
+            if (!match(pat, item))
             {
-                *rpos++=BRACE_OPEN;
-                while (*lpos)
-                    *rpos++=*lpos++;
-                *rpos++=BRACE_CLOSE;
+                if (rpos!=right)
+                    *rpos++=' ';
+                lpos=item;
+                if (isatom(item))
+                    while (*lpos)
+                        *rpos++=*lpos++;
+                else
+                {
+                    *rpos++=BRACE_OPEN;
+                    while (*lpos)
+                        *rpos++=*lpos++;
+                    *rpos++=BRACE_CLOSE;
+                }
             }
         }
-    }
-    *rpos=0;
+        *rpos=0;
+        strcpy(list, right);
+    } while (*(arg=space_out(arg)));
+
     set_variable(left, right, ses);
 }
 
