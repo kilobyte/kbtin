@@ -260,6 +260,11 @@ void bell_command(const char *arg, struct session *ses)
     user_beep();
 }
 
+void beep_command(const char *arg, struct session *ses)
+{
+    user_beep();
+}
+
 
 /*********************/
 /* the #char command */
