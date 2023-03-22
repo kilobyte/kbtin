@@ -307,7 +307,7 @@ void keypad_command(const char *arg, struct session *ses)
     }
 
     togglebool(&keypad, arg, ses,
-               "#KEYPAD NOW WORKS IN THE ALTERNATE MODE.",
+               "#KEYPAD NOW WORKS IN THE APPLICATION MODE.",
                "#KEYPAD KEYS ARE NOW EQUAL TO NON-KEYPAD ONES.");
     user_keypad(keypad);
 }

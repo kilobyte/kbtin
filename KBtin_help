@@ -779,14 +779,13 @@ For all you quakers out here, the command to nuke all keybindings is
 ~keypad
 
 #keypad [<boolean>]
-Switches the keypad (rightmost part of keyboard) between the standard mode
+Switches the keypad (rightmost part of keyboard) between the "normal" mode
 (where it works as either arrow keys or numbers, depending on NumLock state)
-and the alternate mode, where it can be used for keybindings.  You will
-prefer the alternate mode if you enjoy walking using the keypad keys.
+and the application mode, where it can be used for keybindings.  You will
+prefer the latter mode if you enjoy walking using the keypad keys.
 NOTE: The support for this command is broken on some terminals which don't
 implement vt100 codes properly.  Ones that do work correctly include the
-Linux console, PuTTY, aterm and recent versions of rxvt;  some others (like
-xterm) can be coerced with some xmodmap tinkering (see the KEYPAD file).
+Linux console, PuTTY, aterm, rxvt, xterm, zutty.
 
 Example:
 #keypad on
