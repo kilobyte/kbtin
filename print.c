@@ -12,23 +12,6 @@ bool puts_echoing = true;
 
 /****************************************************/
 /* output to screen should go through this function */
-/* text gets checked for actions                    */
-/****************************************************/
-void tintin_puts(const char *cptr, struct session *ses)
-{
-    char line[BUFFER_SIZE];
-    stracpy(line, cptr, sizeof line);
-    if (ses)
-    {
-        _=line;
-        check_all_actions(line, ses);
-        _=0;
-    }
-    tintin_printf(ses, "%s", line);
-}
-
-/****************************************************/
-/* output to screen should go through this function */
 /* text gets checked for substitutes and actions    */
 /****************************************************/
 void tintin_puts1(const char *cptr, struct session *ses)

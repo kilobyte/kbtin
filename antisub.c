@@ -27,7 +27,7 @@ void antisubstitute_command(const char *arg, struct session *ses)
 
     if (!*left)
     {
-        tintin_puts("#THESE ANTISUBSTITUTES HAVE BEEN DEFINED:", ses);
+        tintin_printf(ses, "#THESE ANTISUBSTITUTES HAVE BEEN DEFINED:");
         show_slist(ass);
     }
     else

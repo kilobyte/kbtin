@@ -26,7 +26,7 @@ void mark_command(const char *arg, struct session *ses)
 {
     ses->path_length = 0;
     if (ses->mesvar[MSG_PATH])
-        tintin_puts("#Beginning of path marked.", ses);
+        tintin_printf(ses, "#Beginning of path marked.");
 }
 
 void map_command(const char *arg, struct session *ses)
@@ -115,13 +115,13 @@ void path_command(const char *arg, struct session *ses)
         if (r-mypath + dirlen > (COLS?COLS:BUFFER_SIZE)-10)
         {
             r[-1]=0;
-            tintin_puts(mypath, ses);
+            tintin_printf(ses, "%s", mypath);
             r=mypath+sprintf(mypath, "#Path:  ");
         }
         r+=sprintf(r, "%s;", ln->left);
     }
     r[-1]=0;
-    tintin_puts(mypath, ses);
+    tintin_printf(ses, "%s", mypath);
 }
 
 void return_command(const char *arg, struct session *ses)
@@ -164,11 +164,11 @@ void return_command(const char *arg, struct session *ses)
 void unmap_command(const char *arg, struct session *ses)
 {
     if (!ses->path_length)
-        return tintin_puts("#No move to forget!", ses);
+        return tintin_eprintf(ses, "#No move to forget!");
 
     ses->path_length--;
     if (ses->mesvar[MSG_PATH])
-        tintin_puts("#Ok.  Forgot that move.", ses);
+        tintin_eprintf(ses, "#Ok.  Forgot that move.");
 }
 
 void check_insert_path(const char *command, struct session *ses)

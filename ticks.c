@@ -20,13 +20,9 @@
 /*********************/
 void tick_command(const char *arg, struct session *ses)
 {
-    char buf[100];
-    timens_t to_tick;
-
-    to_tick = ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
-    sprintf(buf, "THERE'S NOW %lld.%03d SECONDS TO NEXT TICK.",
+    timens_t to_tick = ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
+    tintin_printf(ses, "THERE'S NOW %lld.%03d SECONDS TO NEXT TICK.",
         to_tick/NANO, msec(to_tick));
-    tintin_puts(buf, ses);
 }
 
 /************************/
@@ -36,7 +32,7 @@ void tickoff_command(const char *arg, struct session *ses)
 {
     ses->tickstatus = false;
     if (ses->mesvar[MSG_TICK])
-        tintin_puts("#TICKER IS NOW OFF.", ses);
+        tintin_printf(ses, "#TICKER IS NOW OFF.");
 }
 
 /***********************/
@@ -66,9 +62,9 @@ void tickon_command(const char *arg, struct session *ses)
     if (ses->mesvar[MSG_TICK])
     {
         if (!ses->tickstatus)
-            tintin_puts("#TICKER IS NOW ON.", ses);
+            tintin_printf(ses, "#TICKER IS NOW ON.");
         else if (!*left)
-            tintin_puts("#TICKER IS ALREADY ON.", ses);
+            tintin_printf(ses, "#TICKER IS ALREADY ON.");
     }
     ses->tickstatus = true;
     if (ses->time0 + ses->tick_size - ses->pretick <= ct)

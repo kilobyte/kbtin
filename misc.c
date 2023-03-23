@@ -748,7 +748,7 @@ void system_command(const char *arg, struct session *ses)
     ses->lastintitle=save_lastintitle;
     fclose(output);
     if (ses->mesvar[MSG_SYSTEM])
-        tintin_puts1("#OK COMMAND EXECUTED.", ses);
+        tintin_printf(ses, "#OK COMMAND EXECUTED.", ses);
 }
 
 /**********************/
@@ -814,7 +814,7 @@ struct session* zap_command(const char *arg, struct session *ses)
         end_command("end", (struct session *)NULL); /* no return */
 
     bool was_active=(target==activesession);
-    tintin_puts("#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!", target);
+    tintin_printf(target, "#ZZZZZZZAAAAAAAAPPPP!!!!!!!!! LET'S GET OUTTA HERE!!!!!!!!");
     target->closing=1;
     do_hook(target, HOOK_ZAP, 0, true);
     target->closing=0;
@@ -880,7 +880,7 @@ void tab_add(char *arg, struct session *ses)
 
     if (!arg || !strlen(arg))
     {
-        tintin_puts("Sorry, you must have some word to add.", NULL);
+        tintin_printf(NULL, "Sorry, you must have some word to add.");
         return;
     }
     get_arg(arg, buff, 1, ses);
@@ -909,8 +909,7 @@ void tab_add(char *arg, struct session *ses)
     newt->next = NULL;
     tmp->next = newt;
     tmp = newt;
-    sprintf(buff, "#New word %s added to tab completion list.", arg);
-    tintin_puts(buff, NULL);
+    tintin_printf(NULL, "#New word %s added to tab completion list.", arg);
 }
 
 void tab_delete(char *arg, struct session *ses)
@@ -922,7 +921,7 @@ void tab_delete(char *arg, struct session *ses)
 
     if (!arg || !strlen(arg))
     {
-        tintin_puts("#Sorry, you must have some word to delete.", NULL);
+        tintin_eprintf(NULL, "#Sorry, you must have some word to delete.");
         return;
     }
     get_arg(arg, s_buff, 1, ses);
@@ -930,7 +929,7 @@ void tab_delete(char *arg, struct session *ses)
     tmpold = tcomplete;
     if (!tmpold->strng)
     {                          /* (no list if the second node is null) */
-        tintin_puts("#There are no words for you to delete!", NULL);
+        tintin_eprintf(NULL, "#There are no words for you to delete!");
         return;
     }
     strcpy(c_buff, tmp->strng);
@@ -945,7 +944,7 @@ void tab_delete(char *arg, struct session *ses)
         tmpnext = tmp->next;
         tmpold->next = tmpnext;
         free(tmp);
-        tintin_puts("#Tab word deleted.", NULL);
+        tintin_printf(NULL, "#Tab word deleted.");
     }
     else
     {
@@ -953,10 +952,10 @@ void tab_delete(char *arg, struct session *ses)
         {       /* for the last node to delete */
             tmpold->next = NULL;
             free(tmp);
-            tintin_puts("#Tab word deleted.", NULL);
+            tintin_printf(NULL, "#Tab word deleted.");
             return;
         }
-        tintin_puts("Word not found in list.", NULL);
+        tintin_eprintf(NULL, "Word not found in list.");
     }
 }
 #endif

@@ -102,7 +102,7 @@ static int list_sessions(const char *arg, struct session *ses, char *left, char 
 
     if (!*left)
     {
-        tintin_puts("#THESE SESSIONS HAVE BEEN DEFINED:", ses);
+        tintin_printf(ses, "#THESE SESSIONS HAVE BEEN DEFINED:");
         for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
             if (sesptr!=nullsession)
                 show_session(sesptr);
@@ -116,7 +116,7 @@ static int list_sessions(const char *arg, struct session *ses, char *left, char 
                 break;
             }
         if (!sesptr)
-            tintin_puts("#THAT SESSION IS NOT DEFINED.", ses);
+            tintin_eprintf(ses, "#THAT SESSION IS NOT DEFINED.");
     }
     else
     {
