@@ -162,7 +162,7 @@ add_dependencies(KBtin protos gen_commands)
 target_link_libraries(KBtin ${libs})
 
 add_custom_command(OUTPUT tin2ansi
-	DEPENDS tools/tin2ansi.c colors.c
+	DEPENDS tools/tin2ansi.c colors.c protos
 	COMMAND cc ${CMAKE_SOURCE_DIR}/tools/tin2ansi.c ${CMAKE_SOURCE_DIR}/colors.c -o tin2ansi
 	COMMENT "tin2ansi")
 add_custom_command(OUTPUT manual.html
