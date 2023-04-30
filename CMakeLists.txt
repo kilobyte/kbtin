@@ -139,6 +139,7 @@ set(KBtin_sources
 	lists.c
 	vars.c
 	tlist.c
+	mudcolors.c
 )
 
 set(protos ${KBtin_sources})

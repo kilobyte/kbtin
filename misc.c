@@ -19,6 +19,7 @@
 #include "protos/hooks.h"
 #include "protos/print.h"
 #include "protos/math.h"
+#include "protos/mudcolors.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/routes.h"
