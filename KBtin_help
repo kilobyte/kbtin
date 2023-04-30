@@ -99,7 +99,7 @@ Foreground and ~0:7~background~-1~ colors:
  3 - ~3~cyan~-1~        7 - ~7~lt. gray~-1~   11 - ~11~aqua~-1~       15 - ~15~white~-1~
 Attributes:
  0 - normal text 1 - ~::1~blinking~-1~  2 - ~::2~italic~-1~        4 - ~::4~underline~-1~   8 - ~::8~overstrike~-1~
- or a sum of the above: 15 for ~::15~blinking, italic, underlined and overstruck~7~ text
+ or a sum of the above: 15 for ~::15~blinking, italic, underlined and overstruck~-1~ text
 
 While color codes are supported on all post-1980 terminals, the support for
 extended attributes varies.  For example, only text console and rxvt provides
