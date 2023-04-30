@@ -161,9 +161,13 @@ add_dependencies(KBtin protos gen_commands)
 
 target_link_libraries(KBtin ${libs})
 
+add_custom_command(OUTPUT tin2ansi
+	DEPENDS tools/tin2ansi.c colors.c
+	COMMAND cc ${CMAKE_SOURCE_DIR}/tools/tin2ansi.c ${CMAKE_SOURCE_DIR}/colors.c -o tin2ansi
+	COMMENT "tin2ansi")
 add_custom_command(OUTPUT manual.html
-	DEPENDS KBtin_help
-	COMMAND ${CMAKE_SOURCE_DIR}/help2ansi <${CMAKE_SOURCE_DIR}/KBtin_help|${CMAKE_SOURCE_DIR}/a2html|${CMAKE_SOURCE_DIR}/fixmanual >manual.html
+	DEPENDS KBtin_help tin2ansi a2html fixmanual
+	COMMAND ./tin2ansi <${CMAKE_SOURCE_DIR}/KBtin_help|${CMAKE_SOURCE_DIR}/a2html|${CMAKE_SOURCE_DIR}/fixmanual >manual.html
 	COMMENT "HTML MANUAL")
 add_custom_target(manual ALL DEPENDS manual.html)
 add_custom_command(OUTPUT KBtin_help.gz
