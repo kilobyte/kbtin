@@ -7,36 +7,32 @@ my %esc;
 for (split /\n/, <<ESC)
 1	color: #fff
 2	color: #555
-30	color: #000;background-color: #aaa
-30;41	color: #000;background-color: #a00
-30;42	color: #000;background-color: #0a0
-30;43	color: #000;background-color: #a50
-30;44	color: #000;background-color: #00a
-30;45	color: #000;background-color: #a0a
-30;46	color: #000;background-color: #0aa
-30;47	color: #000;background-color: #aaa
-1;30	color: #555
-1;31	color: #f55
+30;41	background-color: #a00
+30;42	background-color: #0a0
+30;43	background-color: #a50
+30;44	background-color: #00a
+30;45	background-color: #a0a
+30;46	background-color: #0aa
+30;47	background-color: #aaa
+31;1	color: #f55
 31	color: #a00
-1;32	color: #5f5
+32;1	color: #5f5
 32	color: #0a0
-1;33	color: #ff5
+33;1	color: #ff5
 33	color: #a50
-1;34	color: #00f
+34;1	color: #00f
 34	color: #00a
-1;35	color: #f5f
+35;1	color: #f5f
 35	color: #a0a
-1;36	color: #5ff
+36;1	color: #5ff
 36	color: #0aa
 1;4	color: #fff;text-decoration:underline
 3	font-style: italic
 4	text-decoration:underline
 5;3;4;9	color:#dfdfdf;background-color:#606060;text-decoration:underline line-through
 5	color:#dfdfdf;background-color:#606060
-1;31;5	color:#df6060;background-color:#606060
+31;1;5	color:#df6060;background-color:#606060
 9	text-decoration:line-through
-38;5;214	color:#ffaf00
-38;5;231	color:#fff
 ESC
 {
     /^([^\t]+)\t([^\t]+)$/ or die;
@@ -72,8 +68,6 @@ while (<>)
     s/</&lt;/g;
     s/>/&gt;/g;
     (print, next) if !/\e/;
-    s/(\e\[0[;0-9]*);37;([;0-9]*)m/$1;$2m/g;
-    s/(\e\[0[;0-9]*);40(|;[;0-9]*)m/$1$2m/g;
     /\e\[0m[^\e]*$/ or die "A non-reset line";
 
     my $in=0;
@@ -82,7 +76,7 @@ while (<>)
         print "$1";
         print "</b>" if $in;
         $in=0;
-        next if $2 eq '0' or $2 eq '0;37;40';
+        next if $2 eq '0';
         defined $esc{$2} or die "Unknown escape: '$2'";
         print "<b style=\"$esc{$2}\">";
         $in=1;
