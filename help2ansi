@@ -1,22 +1,38 @@
 #!/usr/bin/env perl
 use warnings;
+use integer;
 
 #Converts text with KBtin-style color codes (~n~) to ANSI.
 
 $lastcol=$col="\e[0m";
-$lastcn=$cn=7;
+my ($fg,$bg,$at) = (7,0,0);
 %ct=(0=>0, 1=>4, 2=>2, 3=>6, 4=>1, 5=>5, 6=>3, 7=>7);
+sub get256c($)
+{
+    my $c = $_[0];
+    return 16+36*($c/100)+6*($c/10 % 10)+($c % 10);
+}
+
 while(<>)
 {
     $line="";
     while(/\G(.*?)~(\-1|\d+|\d*:\d*(?::\d*)?)~/gc)
     {
         $line.=$1;
-        next if $2 eq "-1" && ($cn=$lastcn,$line.=$col=$lastcol);
+        next if $2 eq "-1" && ($line.=$col=$lastcol);
+
         $2 =~ /^(\d*)(?::(\d*)(?::(\d*))?)?$/;
         $fg=($1 eq "")?($cn&0xf):$1;
         $bg=(!defined $2)?0:($2 eq "")?(($cn&0x70)>>4):$2;
         $at=(!defined $3)?0:($3 eq "")?($cn>>7):$3;
+        if ($1 && $1>16)
+        {
+            $cn=0;
+            $col.="\e[0;38;5;".get256c($1);
+            $line.=$col.="m";
+            next; # no 256c backgrounds in the help...
+        }
+
         die "Invalid color code in [$_]" if $fg>15&&($bg||$at) || $bg>7;
         $vcn=$cn=$fg+$bg*0x10+$at*0x80;
         $vcn|=7 if ($vcn&0xf)==($vcn&0x70)>>4;
@@ -41,5 +57,4 @@ while(<>)
     /\G(.*)/;
     print "$line$1\n";
     $lastcol=$col;
-    $lastcn=$cn;
 }
