@@ -446,49 +446,48 @@ void margins_command(const char *arg, struct session *ses)
     {
         margins=false;
         tintin_printf(ses, "#MARGINS DISABLED.");
+        return;
     }
-    else
+
+    l=marginl;
+    r=marginr;
+    if (arg)
     {
-        l=marginl;
-        r=marginr;
-        if (arg)
+        arg=get_arg(arg, num, 0, ses);
+        if (*num)
         {
-            arg=get_arg(arg, num, 0, ses);
-            if (*num)
+            l=strtoul(num, &tmp, 10);
+            if (*tmp||(l<=0))
             {
-                l=strtoul(num, &tmp, 10);
-                if (*tmp||(l<=0))
-                {
-                    tintin_eprintf(ses, "#Left margin must be a positive number! Got {%s}.", num);
-                    return;
-                }
-                if (l>=BUFFER_SIZE)
-                {
-                    tintin_eprintf(ses, "#Left margin too big (%d)!", l);
-                    return;
-                }
+                tintin_eprintf(ses, "#Left margin must be a positive number! Got {%s}.", num);
+                return;
             }
-            arg=get_arg(arg, num, 1, ses);
-            if (*num)
+            if (l>=BUFFER_SIZE)
             {
-                r=strtoul(num, &tmp, 10);
-                if (*tmp||(r<l))
-                {
-                    tintin_eprintf(ses, "#Right margin must be a number greater than the left margin! Got {%s}.", tmp);
-                    return;
-                }
-                if (r>=BUFFER_SIZE)
-                {
-                    tintin_eprintf(ses, "#Right margin too big (%d)!", r);
-                    return;
-                }
+                tintin_eprintf(ses, "#Left margin too big (%d)!", l);
+                return;
             }
         }
-        marginl=l;
-        marginr=r;
-        margins=true;
-        tintin_printf(ses, "#MARGINS ENABLED.");
+        arg=get_arg(arg, num, 1, ses);
+        if (*num)
+        {
+            r=strtoul(num, &tmp, 10);
+            if (*tmp||(r<l))
+            {
+                tintin_eprintf(ses, "#Right margin must be a number greater than the left margin! Got {%s}.", tmp);
+                return;
+            }
+            if (r>=BUFFER_SIZE)
+            {
+                tintin_eprintf(ses, "#Right margin too big (%d)!", r);
+                return;
+            }
+        }
     }
+    marginl=l;
+    marginr=r;
+    margins=true;
+    tintin_printf(ses, "#MARGINS ENABLED.");
 }
 
 
@@ -514,39 +513,37 @@ void loop_command(const char *arg, struct session *ses)
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg_in_braces(arg, right, 1);
     if (sscanf(left, "%d,%d", &bound1, &bound2) != 2)
-        tintin_eprintf(ses, "#Wrong number of arguments in #loop: {%s}.", left);
-    else
-    {
-        if (pvars)
-            for (int counter=1; counter<10; counter++)
-                strcpy(vars[counter], (*pvars)[counter]);
-        else
-            for (int counter=1; counter<10; counter++)
-                strcpy(vars[counter], "");
-        lastpvars=pvars;
-        pvars=&vars;
+        return tintin_eprintf(ses, "#Wrong number of arguments in #loop: {%s}.", left);
 
-        bool flag = true;
-        int counter = bound1;
-        while (flag)
+    if (pvars)
+        for (int counter=1; counter<10; counter++)
+            strcpy(vars[counter], (*pvars)[counter]);
+    else
+        for (int counter=1; counter<10; counter++)
+            strcpy(vars[counter], "");
+    lastpvars=pvars;
+    pvars=&vars;
+
+    bool flag = true;
+    int counter = bound1;
+    while (flag)
+    {
+        sprintf(vars[0], "%d", counter);
+        parse_input(right, true, ses);
+        if (bound1 < bound2)
         {
-            sprintf(vars[0], "%d", counter);
-            parse_input(right, true, ses);
-            if (bound1 < bound2)
-            {
-                counter++;
-                if (counter > bound2)
-                    flag = false;
-            }
-            else
-            {
-                counter--;
-                if (counter < bound2)
-                    flag = false;
-            }
+            counter++;
+            if (counter > bound2)
+                flag = false;
         }
-        pvars=lastpvars;
+        else
+        {
+            counter--;
+            if (counter < bound2)
+                flag = false;
+        }
     }
+    pvars=lastpvars;
 }
 
 static const char *msNAME[]=
@@ -727,33 +724,31 @@ void system_command(const char *arg, struct session *ses)
     int save_lastintitle;
 
     get_arg(arg, what, 1, ses);
-    if (*what)
-    {
-        if (ses->mesvar[MSG_SYSTEM])
-            tintin_puts1("#EXECUTING SHELL COMMAND.", ses);
-        utf8_to_local(buf, what);
-        if (!(output = mypopen(buf, false, -1)))
-        {
-            tintin_puts1("#ERROR EXECUTING SHELL COMMAND.", ses);
-            return;
-        }
-        ZERO(cs);
+    if (!*what)
+        return tintin_eprintf(ses, "#EXECUTE WHAT COMMAND?");
 
-        save_lastintitle=ses->lastintitle;
-        while (fgets(buf, BUFFER_SIZE, output))
-        {
-            ses->lastintitle=0;
-            do_in_MUD_colors(buf, true, ses);
-            local_to_utf8(ustr, buf, BUFFER_SIZE, &cs);
-            user_textout(ustr);
-        }
-        ses->lastintitle=save_lastintitle;
-        fclose(output);
-        if (ses->mesvar[MSG_SYSTEM])
-            tintin_puts1("#OK COMMAND EXECUTED.", ses);
+    if (ses->mesvar[MSG_SYSTEM])
+        tintin_puts1("#EXECUTING SHELL COMMAND.", ses);
+    utf8_to_local(buf, what);
+    if (!(output = mypopen(buf, false, -1)))
+    {
+        tintin_puts1("#ERROR EXECUTING SHELL COMMAND.", ses);
+        return;
     }
-    else
-        tintin_eprintf(ses, "#EXECUTE WHAT COMMAND?");
+    ZERO(cs);
+
+    save_lastintitle=ses->lastintitle;
+    while (fgets(buf, BUFFER_SIZE, output))
+    {
+        ses->lastintitle=0;
+        do_in_MUD_colors(buf, true, ses);
+        local_to_utf8(ustr, buf, BUFFER_SIZE, &cs);
+        user_textout(ustr);
+    }
+    ses->lastintitle=save_lastintitle;
+    fclose(output);
+    if (ses->mesvar[MSG_SYSTEM])
+        tintin_puts1("#OK COMMAND EXECUTED.", ses);
 }
 
 /**********************/
@@ -764,26 +759,24 @@ void shell_command(const char *arg, struct session *ses)
     char cmd[BUFFER_SIZE*4], what[BUFFER_SIZE];
 
     get_arg(arg, what, 1, ses);
-    if (*what)
+    if (!*what)
+        return tintin_eprintf(ses, "#EXECUTE WHAT COMMAND?");
+
+    if (ses->mesvar[MSG_SYSTEM])
+        tintin_puts1("#EXECUTING SHELL COMMAND.", ses);
+    utf8_to_local(cmd, what);
+    if (ui_own_output)
+        user_pause();
+    if (system(cmd))
     {
-        if (ses->mesvar[MSG_SYSTEM])
-            tintin_puts1("#EXECUTING SHELL COMMAND.", ses);
-        utf8_to_local(cmd, what);
-        if (ui_own_output)
-            user_pause();
-        if (system(cmd))
-        {
-             /* yay source hardening retardness -- not only missing /bin/sh is
-                illegal on a POSIX system, but also there's no way to check for
-                that error without false positives */
-        }
-        if (ui_own_output)
-            user_resume();
-        if (ses->mesvar[MSG_SYSTEM])
-            tintin_puts1("#OK COMMAND EXECUTED.", ses);
+         /* yay source hardening retardness -- not only missing /bin/sh is
+            illegal on a POSIX system, but also there's no way to check for
+            that error without false positives */
     }
-    else
-        tintin_eprintf(ses, "#EXECUTE WHAT COMMAND?");
+    if (ui_own_output)
+        user_resume();
+    if (ses->mesvar[MSG_SYSTEM])
+        tintin_puts1("#OK COMMAND EXECUTED.", ses);
 }
 
 
