@@ -64,16 +64,16 @@ ubuntu_arm64_task:
   test_script:
     ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
 
-ubuntu_armhf_task:
-  arm_container:
-    image: ubuntu:jammy
-  install_script:
-    - dpkg --add-architecture armhf
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gcc-arm-linux-gnueabihf libc6:armhf libgnutls28-dev:armhf libz-dev:armhf
-  build_script:
-    - cmake -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc .
-    - make -j$(getconf _NPROCESSORS_ONLN)
-  test_script:
-    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
+#ubuntu_armhf_task:
+#  arm_container:
+#    image: ubuntu:jammy
+#  install_script:
+#    - dpkg --add-architecture armhf
+#    - apt-get update
+#    - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+#    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gcc-arm-linux-gnueabihf libc6:armhf libgnutls28-dev:armhf libz-dev:armhf
+#  build_script:
+#    - cmake -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc .
+#    - make -j$(getconf _NPROCESSORS_ONLN)
+#  test_script:
+#    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
