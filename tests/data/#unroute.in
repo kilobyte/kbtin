@@ -1,0 +1,6 @@
+#ali u {#ro foo bar -;#ro foo baz -;#ro bar baz -;#ro baz bar -;#showme #unro $0;#unro $0;#ro}
+u foo bar
+u foo bax
+u foo
+u ba*
+u baz

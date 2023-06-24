@@ -289,17 +289,23 @@ void unroute_command(const char *arg, struct session *ses)
     arg=get_arg(arg, a, 0, ses);
     arg=get_arg(arg, b, 1, ses);
 
-    if ((!*a)||(!*b))
+    if (!*a)
     {
         tintin_eprintf(ses, "#SYNTAX: #unroute <from> <to>");
         return;
     }
 
     for (int i=0;i<ses->num_locations;i++)
-        if (ses->locations[i]&&match(a, ses->locations[i]))
+    {
+        if (!ses->locations[i])
+            continue;
+        bool is_a = match(a, ses->locations[i]);
+
+        if (is_a || !*b)
             for (struct routenode**r=&ses->routes[i];*r;)
             {
-                if (match(b, ses->locations[(*r)->dest]))
+                if (*b ? match(b, ses->locations[(*r)->dest])
+                       : is_a || match(a, ses->locations[(*r)->dest]))
                 {
                     struct routenode *p=*r;
                     if (ses->mesvar[MSG_ROUTE])
@@ -317,6 +323,7 @@ void unroute_command(const char *arg, struct session *ses)
                 else
                     r=&((*r)->next);
             }
+    }
     if (found)
         kill_unused_locations(ses);
     else if (ses->mesvar[MSG_ROUTE])

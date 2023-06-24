@@ -1567,6 +1567,9 @@ Examples:
 #unroute <pattern a> <pattern b>
 Kills all direct routes whose starting location matches <pattern a> and
 destination matches <pattern b>.
+
+#unroute <pattern>
+Kills all direct routes going from or to a locationg matching <pattern>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~dogoto
 
