@@ -103,8 +103,8 @@ void userpipe_initdriver(void)
 
     user_init           = userpipe_init;
     user_done           = user_noop;
-    user_pause          = user_illegal;
-    user_resume         = user_illegal;
+    user_pause          = user_noop;
+    user_resume         = user_noop;
     user_textout        = userpipe_textout;
     user_textout_draft  = (void (*)(const char*, bool))user_noop;
     user_process_kbd    = userpipe_process_kbd;

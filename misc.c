@@ -765,16 +765,14 @@ void shell_command(const char *arg, struct session *ses)
     if (ses->mesvar[MSG_SYSTEM])
         tintin_puts1("#EXECUTING SHELL COMMAND.", ses);
     utf8_to_local(cmd, what);
-    if (ui_own_output)
-        user_pause();
+    user_pause();
     if (system(cmd))
     {
          /* yay source hardening retardness -- not only missing /bin/sh is
             illegal on a POSIX system, but also there's no way to check for
             that error without false positives */
     }
-    if (ui_own_output)
-        user_resume();
+    user_resume();
     if (ses->mesvar[MSG_SYSTEM])
         tintin_puts1("#OK COMMAND EXECUTED.", ses);
 }

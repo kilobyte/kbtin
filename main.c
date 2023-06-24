@@ -50,8 +50,7 @@ static void myquitsig(int);
 
 static void tstphandler(int sig)
 {
-    if (ui_own_output)
-        user_pause();
+    user_pause();
     kill(getpid(), SIGSTOP);
 }
 
@@ -62,14 +61,12 @@ static void sigchild(void)
 
 static void sigcont(void)
 {
-    if (ui_own_output)
-        user_resume();
+    user_resume();
 }
 
 static void sigsegv(void)
 {
-    if (ui_own_output)
-        user_done();
+    user_done();
     fflush(0);
     signal(SIGSEGV, SIG_DFL);
     raise(SIGSEGV);
@@ -77,8 +74,7 @@ static void sigsegv(void)
 
 static void sigfpe(void)
 {
-    if (ui_own_output)
-        user_done();
+    user_done();
     fflush(0);
     signal(SIGFPE, SIG_DFL);
     raise(SIGFPE);
