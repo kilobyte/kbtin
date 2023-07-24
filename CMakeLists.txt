@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 2.8.12...3.27)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
 	cmake_policy(SET CMP0075 NEW) # hush the warning, either option works
 endif()
