@@ -396,6 +396,8 @@ This command doesn't support background colors and blink (yet?).
 Example (color table for T2T):
 #mudcolors $0$ $BLU$ $GRN$ $CYN$ $RED$ $MAG$ $YEL$ $0$ $0$ $HIB$ $HIG$ $HIC$
 $HIR$ $HIM$ $HIY$ $BOLD$
+(for Duris):
+#mudc &+l &+b &+g &+c &+r &+m &+y &n &+L &+B &+G &+C &+R &+M &+Y &+W
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~bold
 
