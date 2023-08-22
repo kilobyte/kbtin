@@ -394,10 +394,10 @@ Color numbers:
 This command doesn't support background colors and blink (yet?).
 
 Example (color table for T2T):
-#mudcolors $0$ $BLU$ $GRN$ $CYN$ $RED$ $MAG$ $YEL$ $0$ $0$ $HIB$ $HIG$ $HIC$
-$HIR$ $HIM$ $HIY$ $BOLD$
+#mudcolors ~0:7~$0$~7~ ~1~$BLU$~7~ ~2~$GRN$~7~ ~3~$CYN$~7~ ~4~$RED$~7~ ~5~$MAG$~7~ ~6~$YEL$~7~ $0$ ~8~$HIK$~7~ ~9~$HIB$~7~ ~10~$HIG$~7~ ~11~$HIC$~7~
+ ~12~$HIR$~7~ ~13~$HIM$~7~ ~14~$HIY$~7~ ~15~$BOLD$~7~
 (for Duris):
-#mudc &+l &+b &+g &+c &+r &+m &+y &n &+L &+B &+G &+C &+R &+M &+Y &+W
+#mudc ~0:7~&+l~7~ ~1~&+b~7~ ~2~&+g~7~ ~3~&+c~7~ ~4~&+r~7~ ~5~&+m~7~ ~6~&+y~7~ &n ~8~&+L~7~ ~9~&+B~7~ ~10~&+G~7~ ~11~&+C~7~ ~12~&+R~7~ ~13~&+M~7~ ~14~&+Y~7~ ~15~&+W~7~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~bold
 
