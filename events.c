@@ -145,9 +145,6 @@ void undelay_command(const char *arg, struct session *ses)
     bool flag;
     struct eventnode **ev;
 
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
-
     arg = get_arg(arg, left, 1, ses);
 
     if (!*left)
@@ -194,9 +191,6 @@ void kill_events(struct session *ses)
 void findevents_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
-
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);

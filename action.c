@@ -27,7 +27,7 @@ static char **stray_strings=0;
 static int max_strays=0;
 const char *match_start, *match_end;
 
-extern struct session *if_command(const char *arg, struct session *ses);
+extern struct session *if_command(const char *arg, struct session *ses) __attribute__((nonnull));
 static bool check_a_action(const char *line, const char *action, bool inside);
 
 static bool save_action(char **right)
