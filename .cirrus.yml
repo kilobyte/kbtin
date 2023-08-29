@@ -37,9 +37,9 @@ ubuntu_amd64_task:
   test_script:
     ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
 
-ubuntu_i386_task:
+debian_i386_task:
   container:
-    image: ubuntu:jammy
+    image: debian:bookworm
   install_script:
     - dpkg --add-architecture i386
     - apt-get update
