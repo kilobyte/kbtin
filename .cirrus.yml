@@ -1,6 +1,6 @@
 freebsd_13_task:
   freebsd_instance:
-    image: freebsd-13-0-release-amd64
+    image: freebsd-13-2-release-amd64
   install_script:
     pkg install -y cmake gnutls perl5
   build_script:
