@@ -278,7 +278,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
             stacks[i].val = N(result == should_differ);
         }
         /* jku: end of comparing strings */
-        /* jku: undefined variables are now assigned value 0 (false) */
+        /* jku: undefined variables are assigned value 0 (false) */
         else if (*ptr == '$')
         {
             if (ses->mesvar[MSG_VARIABLE])
@@ -296,7 +296,6 @@ static bool conv_to_nums(char *arg, struct session *ses)
             }
             ptr--;
         }
-        /* jku: end of changes */
         else if (*ptr == '(')
             stacks[i].prio = PRIO_LPAREN;
         else if (*ptr == ')')
