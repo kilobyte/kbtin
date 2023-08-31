@@ -479,9 +479,10 @@ static bool do_one_inside(int begin, int end)
         }
         else
         {
-            int next;
-            assert(loc >= 0);
-            next = stacks[loc].pos;
+            if (loc < 0)
+                return false;
+
+            int next = stacks[loc].pos;
             if (ploc == -1 || stacks[next].pos == 0 || stacks[next].prio != PRIO_LITERAL)
                 return false;
             if (stacks[ploc].prio != PRIO_LITERAL)
