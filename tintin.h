@@ -435,6 +435,13 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define assert(p) do if (!(p)){fprintf(stderr, "ASSERT FAILED in %s:%u : "#p "\n", __FILE__, __LINE__);abort();}while(0)
 #define ZERO(x) bzero(&(x), sizeof(x))
 
+static inline void stracpy(char *restrict dst, const char *restrict src, size_t sz)
+{
+    size_t len = strlen(src) + 1;
+    assert(len <= sz);
+    memcpy(dst, src, len);
+}
+
 #ifdef HAVE_HS
 // Should be in globals.h but for the typedef...
 extern hs_scratch_t *hs_scratch;

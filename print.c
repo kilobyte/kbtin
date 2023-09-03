@@ -17,7 +17,7 @@ bool puts_echoing = true;
 void tintin_puts(const char *cptr, struct session *ses)
 {
     char line[BUFFER_SIZE];
-    strcpy(line, cptr);
+    stracpy(line, cptr, sizeof line);
     if (ses)
     {
         _=line;
@@ -34,8 +34,7 @@ void tintin_puts(const char *cptr, struct session *ses)
 void tintin_puts1(const char *cptr, struct session *ses)
 {
     char line[BUFFER_SIZE];
-
-    strcpy(line, cptr);
+    stracpy(line, cptr, sizeof line);
 
     _=line;
     if (!ses->presub && !ses->ignore)
