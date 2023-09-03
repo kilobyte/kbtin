@@ -89,7 +89,7 @@ void tintin_eprintf(struct session *ses, const char *format, ...)
     char buf[BUFFER_SIZE];
 
     /* note: the behavior on !ses is wrong */
-    if ((ses != activesession && ses != nullsession && ses)
+    if ((ses != activesession && ses)
         || (!puts_echoing && ses && !ses->mesvar[MSG_ERROR]))
     {
         return;
