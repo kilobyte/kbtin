@@ -88,12 +88,10 @@ void tintin_eprintf(struct session *ses, const char *format, ...)
     va_list ap;
     char buf[BUFFER_SIZE];
 
-    /* note: the behavior on !ses is wrong */
-    if ((ses != activesession && ses)
-        || (!puts_echoing && ses && !ses->mesvar[MSG_ERROR]))
-    {
-        return;
-    }
+    if (ses && ses != activesession)
+        return; // we're not foreground
+    if (!puts_echoing && ses && !ses->mesvar[MSG_ERROR])
+        return; // disabled and not in "show errors" mode
 
     va_start(ap, format);
     int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
