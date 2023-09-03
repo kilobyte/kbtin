@@ -35,9 +35,6 @@ static void list_events(const char *arg, struct session *ses)
     bool flag;
     struct eventnode *ev;
 
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
-
     ct = current_time();
     ev = ses->events;
     arg = get_arg_in_braces(arg, left, 1);
@@ -76,9 +73,6 @@ void delay_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE], right[BUFFER_SIZE], *cptr;
     timens_t delay;
     struct eventnode *ev, *ptr, *ptrlast;
-
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);

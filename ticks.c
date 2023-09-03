@@ -20,9 +20,6 @@
 /*********************/
 void tick_command(const char *arg, struct session *ses)
 {
-    if (!ses)
-        return tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
-
     char buf[100];
     timens_t to_tick;
 
@@ -37,9 +34,6 @@ void tick_command(const char *arg, struct session *ses)
 /************************/
 void tickoff_command(const char *arg, struct session *ses)
 {
-    if (!ses)
-        return tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
-
     ses->tickstatus = false;
     if (ses->mesvar[MSG_TICK])
         tintin_puts("#TICKER IS NOW OFF.", ses);
@@ -52,9 +46,6 @@ void tickon_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], *err;
     timens_t x=0;
-
-    if (!ses)
-        return tintin_puts("#NO SESSION ACTIVE => NO TICKER!", ses);
 
     timens_t ct = current_time();
 
@@ -99,8 +90,6 @@ void ticksize_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE], *err;
 
     get_arg(arg, left, 1, ses);
-    if (!ses)
-        return tintin_printf(ses, "#NO SESSION ACTIVE => NO TICKER!");
     if (!*left || !isadigit(*left))
         return tintin_eprintf(ses, "#SYNTAX: #ticksize <number>");
     x=str2timens(left, &err);
@@ -124,8 +113,6 @@ void pretick_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE], *err;
 
     get_arg(arg, left, 1, ses);
-    if (!ses)
-        return tintin_printf(ses, "#NO SESSION ACTIVE => NO TICKER!");
     if (!*left)
         x=ses->pretick? 0 : 10 * NANO;
     else

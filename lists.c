@@ -789,9 +789,6 @@ void findvariables_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO VARS!");
-
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
     if (!*left)

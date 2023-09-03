@@ -350,8 +350,6 @@ error:
                 switch (nt)
                 {
                 case 0: /* set window title */
-                    if (!ses)
-                        break;
                     if (back-TXT<=ses->lastintitle)
                         break;
                     ses->lastintitle=back-TXT;

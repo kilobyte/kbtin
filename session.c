@@ -284,9 +284,6 @@ struct session* newactive_session(void)
 /*********************************************/
 void kill_all(struct session *ses, bool no_reinit)
 {
-    if (!ses) // can't happen
-        return;
-
     kill_hash(ses->aliases);
     kill_tlist(ses->actions);
     kill_tlist(ses->prompts);
