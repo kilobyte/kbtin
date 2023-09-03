@@ -60,6 +60,9 @@ void tintin_puts1(const char *cptr, struct session *ses)
     _=0;
 }
 
+// In these two functions, ses=0 means a message whose context is not
+// attached to a specific session, not even the nullsession.
+
 void tintin_printf(struct session *ses, const char *format, ...)
 {
     va_list ap;
