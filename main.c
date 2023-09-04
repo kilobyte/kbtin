@@ -283,7 +283,7 @@ static void apply_options(void)
             if ((f=fopen(opt->right, "r")))
             {
                 if (activesession->verbose || !real_quiet)
-                    tintin_printf(0, "#READING {%s}", ustr);
+                    tintin_printf(activesession, "#READING {%s}", ustr);
                 activesession = do_read(f, ustr, activesession);
             }
             else
