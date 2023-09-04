@@ -75,11 +75,11 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
     if (!*left)
     {
         tintin_printf(ses, "#Defined %ss:", what);
-        show_tlist(l, 0, 0, false);
+        show_tlist(l, 0, 0, false, ses);
     }
     else if (*left && !*right)
     {
-        if (!show_tlist(l, left, 0, false) && ses->mesvar[MSG_ACTION])
+        if (!show_tlist(l, left, 0, false, ses) && ses->mesvar[MSG_ACTION])
             tintin_printf(ses, "#That %s (%s) is not defined.", what, left);
     }
     else
@@ -139,7 +139,7 @@ void unaction_command(const char *arg, struct session *ses)
 
     if (!delete_tlist(ses->actions, left, ses->mesvar[MSG_ACTION]?
             "#Ok. {%s} is no longer an action." : 0,
-            inActions? save_action : 0, false)
+            inActions? save_action : 0, false, ses)
         && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
     {
         tintin_printf(ses, "#No match(es) found for {%s}", left);
@@ -164,7 +164,7 @@ void unpromptaction_command(const char *arg, struct session *ses)
 
     if (!delete_tlist(ses->prompts, left, ses->mesvar[MSG_ACTION]?
             "#Ok. {%s} is no longer a promptaction." : 0,
-            inActions? save_action : 0, false)
+            inActions? save_action : 0, false, ses)
         && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
     {
         tintin_printf(ses, "#No match(es) found for {%s}", left);

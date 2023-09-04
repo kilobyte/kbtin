@@ -112,7 +112,7 @@ void highlight_command(const char *arg, struct session *ses)
     if (!*left)
     {
         tintin_printf(ses, "#THESE HIGHLIGHTS HAVE BEEN DEFINED:");
-        show_tlist(ses->highs, 0, 0, true);
+        show_tlist(ses->highs, 0, 0, true, ses);
         return;
     }
 
@@ -201,7 +201,7 @@ void unhighlight_command(const char *arg, struct session *ses)
         return tintin_eprintf(ses, "#Syntax: #unhighlight <pattern>");
 
     if (delete_tlist(ses->highs, left, ses->mesvar[MSG_HIGHLIGHT]?
-            "#Ok. {%s} is no longer highlighted." : 0, 0, true))
+            "#Ok. {%s} is no longer highlighted." : 0, 0, true, ses))
     {
 #ifdef HAVE_HS
         ses->highs_dirty = true;

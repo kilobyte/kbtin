@@ -43,7 +43,7 @@ static void list_subs(const char *left, bool gag, struct session *ses)
             if (!flag)
                 tintin_printf(ses, "#THESE SUBSTITUTES HAVE BEEN DEFINED:");
             flag=true;
-            show_trip(mysubs);
+            show_trip(mysubs, ses);
         }
     ENDITER
 
@@ -133,7 +133,7 @@ static void unsub(const char *arg, bool gag, struct session *ses)
     if (!delete_tlist(ses->subs, left, ses->mesvar[MSG_SUBSTITUTE]?
         gag? "#Ok. {%s} is no longer gagged." :
         "#Ok. {%s} is no longer substituted." : 0,
-        gag? is_not_gag : is_gag, true)
+        gag? is_not_gag : is_gag, true, ses)
         && ses->mesvar[MSG_SUBSTITUTE])
     {
         tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
