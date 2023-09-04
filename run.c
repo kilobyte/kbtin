@@ -16,8 +16,10 @@
 extern char **environ;
 
 
-static void print_stty(int fd)
+static void print_stty(struct session *ses)
 {
+    int fd = ses->socket;
+
     struct termios ta;
     struct winsize ws;
     char buf[BUFFER_SIZE], *bptr;
@@ -25,12 +27,12 @@ static void print_stty(int fd)
 
     ZERO(ta);
     ZERO(ws);
-    tintin_printf(0, "~7~pty attributes (fd=%d):", fd);
+    tintin_printf(ses, "~7~pty attributes (fd=%d):", fd);
     if (tcgetattr(fd, &ta))
-        tintin_printf(0, " attrs: unknown");
+        tintin_printf(ses, " attrs: unknown");
     else
     {
-        tintin_printf(0, " attrs: cflag=~3~%x~7~, iflag=~3~%x~7~, oflag=~3~%x~7~, lflag=~3~%x~7~",
+        tintin_printf(ses, " attrs: cflag=~3~%x~7~, iflag=~3~%x~7~, oflag=~3~%x~7~, lflag=~3~%x~7~",
             ta.c_cflag, ta.c_iflag, ta.c_oflag, ta.c_lflag);
         bptr=buf+sprintf(buf, " ~3~[%x]~7~:", ta.c_cflag);
         battr(cflag, PARENB, "parenb");
@@ -43,7 +45,7 @@ static void print_stty(int fd)
 #ifdef CRTSCTS
         battr(cflag, CRTSCTS, "crtscts");
 #endif
-        tintin_printf(0, "%s", buf);
+        tintin_printf(ses, "%s", buf);
         bptr=buf+sprintf(buf, " ~3~[%x]~7~:", ta.c_iflag);
         battr(iflag, IGNBRK, "ignbrk");
         battr(iflag, BRKINT, "brkint");
@@ -65,7 +67,7 @@ static void print_stty(int fd)
 #ifdef IMAXBEL
         battr(iflag, IMAXBEL, "imaxbel");
 #endif
-        tintin_printf(0, "%s", buf);
+        tintin_printf(ses, "%s", buf);
         bptr=buf+sprintf(buf, " ~3~[%x]~7~:", ta.c_oflag);
         battr(oflag, OPOST, "opost");
 #ifdef OLCUC
@@ -89,7 +91,7 @@ static void print_stty(int fd)
         battr(oflag, VT0, "vt0");
         battr(oflag, FF0, "ff0");
 */
-        tintin_printf(0, "%s", buf);
+        tintin_printf(ses, "%s", buf);
         bptr=buf+sprintf(buf, " ~3~[%x]~7~:", ta.c_lflag);
         battr(lflag, ISIG, "isig");
         battr(lflag, ICANON, "icanon");
@@ -112,18 +114,18 @@ static void print_stty(int fd)
 #ifdef ECHOKE
         battr(lflag, ECHOKE, "echoke");
 #endif
-        tintin_printf(0, "%s", buf);
+        tintin_printf(ses, "%s", buf);
     }
     if (ioctl(fd, TIOCGWINSZ, &ws))
-        tintin_printf(0, " window size: unknown");
+        tintin_printf(ses, " window size: unknown");
     else
-        tintin_printf(0, " window size: %dx%d",
+        tintin_printf(ses, " window size: %dx%d",
             ws.ws_col, ws.ws_row);
 }
 
 void stty_command(const char *arg, struct session *ses)
 {
-    print_stty(ses->socket);
+    print_stty(ses);
 }
 
 
