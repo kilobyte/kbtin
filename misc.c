@@ -748,7 +748,7 @@ void system_command(const char *arg, struct session *ses)
     ses->lastintitle=save_lastintitle;
     fclose(output);
     if (ses->mesvar[MSG_SYSTEM])
-        tintin_printf(ses, "#OK COMMAND EXECUTED.", ses);
+        tintin_printf(ses, "#OK COMMAND EXECUTED.");
 }
 
 /**********************/
