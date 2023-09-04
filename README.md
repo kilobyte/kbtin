@@ -3,6 +3,17 @@ KBtin
 
 KBtin is a very heavily extended clone of well-known TinTin++.
 
+If you're new to MUDding, I would really recommend using one of modern
+clients, such as Mudlet instead.  The TinTin++ language is awful to use;
+the codebase in ancient; user-friendliness is an unthing.
+
+On the other hand, it's one of last remaining text-mode clients, which
+enables you eg. to run it on a box in the same datacenter as the game
+server -- for juicy 0.1ms ping and thus reaction time -- while still
+giving you adequate interactivity despite you living on the other side
+of the world, hobbled by that pesky speed of light.  You can use all
+the usual Unix tools like `mosh`, `screen`/`tmux`, etc...
+
 The features include:
 * editing keys, input box
 * scrollback
