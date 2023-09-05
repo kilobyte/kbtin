@@ -158,31 +158,3 @@ start:
     } while (*pat);
     return true;
 }
-
-
-char* get_fastener(const char *txt, char *mbl)
-{
-    const char *m;
-
-    if (*txt=='^')
-        return 0;
-    if (*txt=='*')
-        return 0;
-    m=txt;
-    while (*m && *m!='*')
-        m++;
-    if (*m=='*')
-    {
-        if (*(m+1))
-            return 0;
-    }
-    else
-    {
-        if (*m)
-            return 0;
-    }
-    assert(m-txt<BUFFER_SIZE);
-    memcpy(mbl, txt, m-txt);
-    *(mbl+(m-txt))=0;
-    return mbl;
-}
