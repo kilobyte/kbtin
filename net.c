@@ -20,6 +20,7 @@
 #include "protos/run.h"
 #include "protos/telnet.h"
 #include "protos/unicode.h"
+#include "protos/user.h"
 #include "protos/utils.h"
 
 #ifndef BADSIG
@@ -136,6 +137,7 @@ int connect_mud(const char *host, const char *port, struct session *ses)
 
         alarm(0);
         freeaddrinfo(ai);
+        user_textout_draft("~8~[connected]~-1~", false);
         return sock;
     }
 
