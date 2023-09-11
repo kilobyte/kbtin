@@ -58,6 +58,14 @@ static const char* afstr(int af)
 }
 
 
+/***************************************************************************/
+/* An MPTCP-capable connection attempt to a non-MPTCP recipient works well */
+/* and the kernel does paranoid fallbacks.  Thus, the only case we need to */
+/* fallback ourselves if when running on a kernel that doesn't know MPTCP  */
+/* (as the syscall will fail).  Thus, a global flag suffices.              */
+/***************************************************************************/
+static bool try_mptcp = true;
+
 /**************************************************/
 /* try connect to the mud specified by the args   */
 /* return fd on success / 0 on failure            */
@@ -91,8 +99,19 @@ int connect_mud(const char *host, const char *port, struct session *ses)
         tintin_printf(ses, "#Trying to connect... (%s) (charset=%s)",
             afstr(addr->ai_family), ses->charset);
 
-        if ((sock=socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol))==-1)
+fresh_sock:
+        if ((sock=socket(addr->ai_family, addr->ai_socktype,
+#ifdef IPPROTO_MPTCP
+            try_mptcp? IPPROTO_MPTCP :
+#endif
+            addr->ai_protocol))==-1)
         {
+            if (try_mptcp)
+            {
+                    tintin_eprintf(ses, "#Kernel too old for MPTCP, disabling");
+                    try_mptcp = false;
+                    goto fresh_sock;
+            }
             tintin_eprintf(ses, "#ERROR: %s", strerror(errno));
             continue;
         }
