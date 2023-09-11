@@ -37,7 +37,7 @@ void antisubstitute_command(const char *arg, struct session *ses)
         antisubnum++;
         if (ses->mesvar[MSG_SUBSTITUTE])
             tintin_printf(ses, "Ok. Any line with {%s} will not be subbed.", left);
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
         ses->antisubs_dirty=true;
 #endif
     }
@@ -87,7 +87,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
         }
     }
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (had_any)
         ses->antisubs_dirty=true;
 #endif
@@ -96,7 +96,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
 }
 
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 static void build_antisubs_hs(struct session *ses)
 {
     hs_free_database(ses->antisubs_hs);
@@ -149,7 +149,7 @@ static int anti_match(unsigned int id, unsigned long long from,
 
 bool do_one_antisub(const char *line, struct session *ses)
 {
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (!kb_size(ses->antisubs))
         return false;
 

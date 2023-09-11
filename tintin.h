@@ -235,7 +235,7 @@ enum
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
 #endif
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 # include <hs/hs.h>
 #endif
 #include "malloc.h"
@@ -385,7 +385,7 @@ struct session
     timens_t line_time;
     unsigned long long linenum;
     bool drafted;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     bool highs_dirty, act_dirty[2], subs_dirty, antisubs_dirty;
     hs_database_t *highs_hs, *subs_hs, *antisubs_hs, *acts_hs[2];
     const char **highs_cols;
@@ -442,7 +442,7 @@ static inline void stracpy(char *restrict dst, const char *restrict src, size_t 
     memcpy(dst, src, len);
 }
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 // Should be in globals.h but for the typedef...
 extern hs_scratch_t *hs_scratch;
 #endif

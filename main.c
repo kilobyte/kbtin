@@ -227,7 +227,7 @@ static void parse_options(int argc, char **argv)
                 o->left=argv[arg-2]+1, o->right=argv[arg-1], o++->pr=argv[arg];
         }
         else if (!strcmp(argv[arg], "--no-simd"))
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
             simd=false;
 #else
             ;
@@ -351,7 +351,7 @@ int main(int argc, char **argv)
     init_locale();
     user_setdriver(isatty(0)?1:0);
     parse_options(argc, argv);
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (simd && hs_valid_platform())
         simd=false;
 #endif

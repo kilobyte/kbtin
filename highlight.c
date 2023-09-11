@@ -154,7 +154,7 @@ void highlight_command(const char *arg, struct session *ses)
         }
         kb_put(trip, ses->highs, new);
         hinum++;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
         ses->highs_dirty = true;
 #endif
         if (ses->mesvar[MSG_HIGHLIGHT])
@@ -203,7 +203,7 @@ void unhighlight_command(const char *arg, struct session *ses)
     if (delete_tlist(ses->highs, left, ses->mesvar[MSG_HIGHLIGHT]?
             "#Ok. {%s} is no longer highlighted." : 0, 0, true, ses))
     {
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
         ses->highs_dirty = true;
 #endif
     }
@@ -212,7 +212,7 @@ void unhighlight_command(const char *arg, struct session *ses)
 }
 
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 static char *glob_to_regex(const char *pat)
 {
     char buf[BUFFER_SIZE*2+3], *b=buf;
@@ -325,7 +325,7 @@ void do_all_high(char *line, struct session *ses)
     if (!count_tlist(ses->highs))
         return;
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (simd && ses->highs_dirty)
         build_highs_hs(ses);
 #endif
@@ -352,7 +352,7 @@ void do_all_high(char *line, struct session *ses)
     *txt=0;
     *atr=c;
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (ses->highs_hs)
     {
         gattr = attr;
@@ -384,7 +384,7 @@ void do_all_high(char *line, struct session *ses)
         }
     ENDITER
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 done:
 #endif
 

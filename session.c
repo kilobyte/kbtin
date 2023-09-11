@@ -311,7 +311,7 @@ void kill_all(struct session *ses, bool no_reinit)
     ses->path_begin = ses->path_length = 0;
     ZERO(ses->path);
     ses->pathdirs = init_hash();
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     ses->highs_dirty = true;
 #endif
     tintin_printf(ses, "#Lists cleared.");
@@ -416,7 +416,7 @@ void init_nullses(void)
 #ifdef HAVE_GNUTLS
     nullsession->ssl=0;
 #endif
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     nullsession->highs_dirty=false;
     nullsession->act_dirty[0]=nullsession->act_dirty[1]=false;
     nullsession->subs_dirty=false;
@@ -524,7 +524,7 @@ static struct session *new_session(const char *name, const char *address, int so
 #ifdef HAVE_GNUTLS
     newsession->ssl=ssl;
 #endif
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     newsession->highs_dirty=true;
     newsession->act_dirty[0]=newsession->act_dirty[1]=true;
     newsession->subs_dirty=true;
@@ -607,7 +607,7 @@ void cleanup_session(struct session *ses)
     if (ses->ssl)
         gnutls_deinit(ses->ssl);
 #endif
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     hs_free_database(ses->highs_hs);
     hs_free_database(ses->acts_hs[0]);
     hs_free_database(ses->acts_hs[1]);

@@ -106,7 +106,7 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
             tintin_printf(ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
         acnum++;
         mutatedActions = true;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
         ses->act_dirty[l == ses->actions] = true;
 #endif
     }
@@ -146,7 +146,7 @@ void unaction_command(const char *arg, struct session *ses)
     }
 
     mutatedActions = true;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     ses->act_dirty[1] = true;
 #endif
 }
@@ -171,13 +171,13 @@ void unpromptaction_command(const char *arg, struct session *ses)
     }
 
     mutatedActions = true;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     ses->act_dirty[0] = true;
 #endif
 }
 
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 char *action_to_regex(const char *pat)
 {
     char buf[BUFFER_SIZE*2+3], *b=buf;
@@ -269,7 +269,7 @@ static void check_all_act_serially(const char *line, struct session *ses, kbtree
     ENDITER
 }
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
 {
     debuglog(ses, "SIMD: building %sactions", act?"":"prompt");
@@ -408,7 +408,7 @@ static void check_all_act(const char *line, struct session *ses, bool act)
     bool oldMutated = mutatedActions;
     mutatedActions = false;
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (simd)
         check_all_act_simd(line, ses, acts, act);
     else

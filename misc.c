@@ -358,7 +358,7 @@ void end_command(const char *arg, struct session *ses)
         cleanup_bind();
         cleanup_history();
     }
-# ifdef HAVE_HS
+# ifdef HAVE_SIMD
     hs_free_scratch(hs_scratch);
 # endif
 #endif
@@ -1003,7 +1003,7 @@ void info_command(const char *arg, struct session *ses)
         tintin_printf(ses, "Session : {%s}  Type: self-pipe", ses->name);
     }
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     tintin_printf(ses, "Using %s pattern matching.", simd? "SIMD" : "non-parallel");
 #endif
 

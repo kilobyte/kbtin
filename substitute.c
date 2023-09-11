@@ -81,7 +81,7 @@ static void parse_sub(const char *left_, const char *right,  bool gag, struct se
     }
     kb_put(trip, sub, new);
     subnum++;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     ses->subs_dirty=true;
 #endif
     if (ses->mesvar[MSG_SUBSTITUTE])
@@ -139,7 +139,7 @@ static void unsub(const char *arg, bool gag, struct session *ses)
         tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
     }
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     ses->subs_dirty=true;
 #endif
 }
@@ -214,7 +214,7 @@ static void do_all_sub_serially(char *line, struct session *ses)
     pvars=lastpvars;
 }
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 // Hyperscan disallows patterns that match an empty buffer, we do them by hand.
 static bool is_omni_regex(const char *pat)
 {
@@ -360,7 +360,7 @@ gagged:
 
 void do_all_sub(char *line, struct session *ses)
 {
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (!kb_size(ses->subs))
         return;
 
