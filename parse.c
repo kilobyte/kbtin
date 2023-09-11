@@ -250,7 +250,7 @@ static bool do_goto(const char *txt, struct session *ses)
         if (!(ch=get_hash(ses->myvars, "loc"))||(!*ch))
         {
             tintin_eprintf(ses, "#Cannot goto from $loc, it is not set!");
-            return true; // was syntaxically correct
+            return true; // was syntactically correct
         }
         snprintf(tmp, sizeof(tmp), "{%s} {%s}", ch, txt+1);
         goto_command(tmp, ses);

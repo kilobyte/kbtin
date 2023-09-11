@@ -183,7 +183,7 @@ bool isatom(const char *arg)
             return false;
     return true;
         /* argument contains spaces i.e. = 'elem1 elem2' */
-        /* this is incompatibile with supposed " behaviour */
+        /* this is incompatible with supposed " behaviour */
 }
 
 /***********************/
