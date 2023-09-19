@@ -20,9 +20,10 @@ static void userpipe_init(void)
 
 static void userpipe_textout(const char *txt)
 {
-    char buf[BUFFER_SIZE], *b=buf;
+    char buf[BUFFER_SIZE+64], *b=buf;
 
     for (const char *a=txt; *a; )
+    {
         switch (*a)
         {
         case '~':
@@ -42,6 +43,9 @@ static void userpipe_textout(const char *txt)
         default:
             one_utf8_to_mb(&b, &a, &outstate);
         }
+        if (b>buf+BUFFER_SIZE)
+            write_stdout(buf, b-buf), b=buf;
+    }
     write_stdout(buf, b-buf);
 }
 
