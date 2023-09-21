@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+find -name '*.gc*' -execdir rm '{}' +
+make clean
+make -j`nproc`
+ctest -j`nproc` --output-on-failure
+gcov -kH ./CMakeFiles/KBtin.dir/*.gcda
