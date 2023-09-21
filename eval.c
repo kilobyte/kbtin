@@ -200,16 +200,14 @@ static bool conv_to_nums(char *arg, struct session *ses)
     int i, flag;
     bool result, should_differ;
     bool regex=false; /* false=strncmp, true=regex match */
-    char *ptr;
     char temp[BUFFER_SIZE];
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
     i = 0;
-    ptr = arg;
+    char *ptr = arg;
     while (*ptr)
     {
-        if (isaspace(*ptr)) ;
-        else if (*ptr == tintin_char)
+        if (*ptr == tintin_char)
             /* inline commands */
         {
             ptr=(char*)get_inline(ptr+1, temp)-1;
@@ -219,9 +217,13 @@ static bool conv_to_nums(char *arg, struct session *ses)
             stacks[i].val=res;
             stacks[i].prio=PRIO_LITERAL;
         }
-        /* jku: comparing strings with = and != */
-        else if (*ptr == '[')
+        else switch (*ptr)
         {
+        case ' ': case '\t': case '\n': case 12: case '\v':
+            break;
+
+        case '[':
+            /* jku: comparing strings with = and != */
             ptr++;
             char *tptr=left;
             while ((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
@@ -276,61 +278,54 @@ static bool conv_to_nums(char *arg, struct session *ses)
                 result = strcmp(left, right);
             stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = N(result == should_differ);
-        }
-        /* jku: end of comparing strings */
-        /* jku: undefined variables are assigned value 0 (false) */
-        else if (*ptr == '$')
-        {
+            break;
+
+        case '$':
             if (ses->mesvar[MSG_VARIABLE])
                 tintin_eprintf(ses, "#Undefined variable in {%s}.", arg);
             stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = N(0);
             if (*(++ptr)==BRACE_OPEN)
-            {
                 ptr=(char*)get_arg_in_braces(ptr, temp, 0);
-            }
             else
-            {
                 while (isalpha(*ptr) || *ptr=='_' || isadigit(*ptr))
                     ptr++;
-            }
             ptr--;
-        }
-        else if (*ptr == '(')
+            break;
+
+        case '(':
             stacks[i].prio = PRIO_LPAREN;
-        else if (*ptr == ')')
+            break;
+        case ')':
             stacks[i].prio = PRIO_RPAREN;
-        else if (*ptr == '!')
+            break;
+        case '!':
             if (*(ptr + 1) == '=')
                 stacks[i].prio = PRIO_NONEQUAL,
                 ptr++;
             else
                 stacks[i].prio = PRIO_NOT;
-        else if (*ptr == '*')
-        {
+            break;
+        case '*':
             stacks[i].prio = PRIO_MULT;
             stacks[i].op = 0;
-        }
-        else if (*ptr == '/')
-        {
+            break;
+        case '/':
             stacks[i].prio = PRIO_MULT;
             if (ptr[1] == '/') /* / is integer division, // fractional */
                 stacks[i].op = 2, ptr++;
             else
                 stacks[i].op = 1;
-        }
-        else if (*ptr == '%')
-        {
+            break;
+        case '%':
             stacks[i].prio = PRIO_MULT;
             stacks[i].op = 3;
-        }
-        else if (*ptr == '+')
-        {
+            break;
+        case '+':
             stacks[i].prio = PRIO_ADD;
             stacks[i].op = 2;
-        }
-        else if (*ptr == '-')
-        {
+            break;
+        case '-':
             flag = -1;
             if (i > 0)
                 flag = stacks[i - 1].prio;
@@ -345,9 +340,8 @@ static bool conv_to_nums(char *arg, struct session *ses)
                 stacks[i].prio = PRIO_LITERAL;
                 ptr--;
             }
-        }
-        else if (*ptr == '>')
-        {
+            break;
+        case '>':
             if (*(ptr + 1) == '=')
             {
                 stacks[i].prio = PRIO_INEQUAL;
@@ -359,9 +353,8 @@ static bool conv_to_nums(char *arg, struct session *ses)
                 stacks[i].prio = PRIO_INEQUAL;
                 stacks[i].op = 5;
             }
-        }
-        else if (*ptr == '<')
-        {
+            break;
+        case '<':
             if (*(ptr + 1) == '=')
             {
                 ptr++;
@@ -373,46 +366,40 @@ static bool conv_to_nums(char *arg, struct session *ses)
                 stacks[i].prio = PRIO_INEQUAL;
                 stacks[i].op = 7;
             }
-        }
-        else if (*ptr == '=')
-        {
+            break;
+        case '=':
             stacks[i].prio = PRIO_EQUAL;
             if (*(ptr + 1) == '=')
                 ptr++;
-        }
-        else if (*ptr == '&')
-        {
+            break;
+        case '&':
             stacks[i].prio = PRIO_AND;
             if (*(ptr + 1) == '&')
                 ptr++;
-        }
-        else if (*ptr == '|')
-        {
+            break;
+        case '|':
             stacks[i].prio = PRIO_OR;
             if (*(ptr + 1) == '|')
                 ptr++;
-        }
-        else if (isadigit(*ptr))
-        {
+            break;
+        case '0' ... '9':
             stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = str2num(ptr, &ptr);
             ptr--;
-        }
-        else if (*ptr == 'T')
-        {
+            break;
+        case 'T':
             stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = N(1);
-        }
-        else if (*ptr == 'F')
-        {
+            break;
+        case 'F':
             stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = N(0);
-        }
-        else
-        {
+            break;
+        default:
             tintin_eprintf(ses, "#Error. Invalid expression in #if or #math in {%s}.", arg);
             return false;
         }
+
         if (!isaspace(*ptr))
         {
             stacks[i].pos = i + 1;
