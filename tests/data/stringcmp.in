@@ -1,0 +1,12 @@
+#ali m {#if {$0} {#show {✓ $0}} #else {#show ✗ $0}}
+m [ ]
+m [ 1 ]
+m [ a b = a b ]
+m [ a b = a c ]
+m [ x != x ]
+m [ x == x ]
+m [ x =~ x ]
+m [ x =~ * ]
+m [ x = * ]
+m [ x !~ * ]
+m [ x !~ y ]
