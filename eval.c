@@ -312,7 +312,8 @@ static bool conv_to_nums(char *arg, struct session *ses)
                 stacks[i].prio = PRIO_NONEQUAL,
                 ptr++;
             else
-                stacks[i].prio = PRIO_NOT;
+                stacks[i].prio = PRIO_NOT,
+                stacks[i].op = 0;
             break;
         case '*':
             stacks[i].prio = PRIO_MULT;
@@ -341,9 +342,18 @@ static bool conv_to_nums(char *arg, struct session *ses)
             }
             else
             {
-                stacks[i].val = str2num(ptr, &ptr);
-                stacks[i].prio = PRIO_LITERAL;
-                ptr--;
+                char *rest;
+                stacks[i].val = str2num(ptr, &rest);
+                if (rest != ptr)
+                {
+                    stacks[i].prio = PRIO_LITERAL;
+                    ptr = rest - 1;
+                }
+                else
+                {
+                    stacks[i].prio = PRIO_NOT;
+                    stacks[i].op = 1;
+                }
             }
             break;
         case '>':
@@ -467,7 +477,7 @@ static bool do_one_inside(int begin, int end)
                 return false;
             stacks[loc].pos = stacks[next].pos;
             stacks[loc].prio = PRIO_LITERAL;
-            stacks[loc].val = N(!stacks[next].val);
+            stacks[loc].val = stacks[loc].op ? -stacks[next].val : N(!stacks[next].val);
         }
         else
         {
