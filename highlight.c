@@ -376,8 +376,8 @@ void do_all_high(char *line, struct session *ses)
             r+=txt-text;
             l+=txt-text;
             /* changed: no longer highlight in the middle of a word */
-            if (((l==0)||(!isalnum(text[l])||!isalnum(text[l-1])))&&
-                    (!isalnum(text[r])||!isalnum(text[r+1])))
+            if (((l==0)||(!is7alnum(text[l])||!is7alnum(text[l-1])))&&
+                    (!is7alnum(text[r])||!is7alnum(text[r+1])))
                 for (int i=l;i<=r;i++)
                     attr[i]=highpattern[(++c)%nhighpattern];
             txt=text+r+1;
