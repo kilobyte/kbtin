@@ -334,8 +334,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
             stacks[i].op = 2;
             break;
         case '-':
-            int flag = (i>0)? stacks[i - 1].prio : -1;
-            if (flag == PRIO_LITERAL)
+            if (i > 0 && stacks[i - 1].prio == PRIO_LITERAL)
             {
                 stacks[i].prio = PRIO_ADD;
                 stacks[i].op = 3;
