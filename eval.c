@@ -195,15 +195,75 @@ num_t eval_expression(char *arg, struct session *ses)
     }
 }
 
-static bool conv_to_nums(char *arg, struct session *ses)
+// comparing strings inside [ ] with = and !=
+static char *stringcmp(char *ptr, int i, struct session *ses)
 {
-    int i, flag;
     bool result, should_differ;
     bool regex=false; /* false=strncmp, true=regex match */
-    char temp[BUFFER_SIZE];
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    i = 0;
+    ptr++;
+    char *tptr=left;
+    while ((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
+    {
+        *tptr = *ptr;
+        ptr++;
+        tptr++;
+    }
+    *tptr='\0';
+    if (!*ptr)
+        return false; /* error */
+    if (*ptr == ']')
+        tintin_eprintf(ses, "#Compare %s to what ? (only one var between [ ])", left);
+    switch (*ptr)
+    {
+    case '!' :
+        ptr++;
+        should_differ=true;
+        switch (*ptr)
+        {
+        case '=' : regex=false; ptr++; break;
+        case '~' : regex=true; ptr++; break;
+        default : return false;
+        }
+        break;
+    case '=' :
+        ptr++;
+        should_differ=false;
+        switch (*ptr)
+        {
+        case '=' : regex=false; ptr++; break;
+        case '~' : regex=true; ptr++; break;
+        default : break;
+        }
+        break;
+    default : return false;
+    }
+
+    tptr=right;
+    while ((*ptr) && (*ptr != ']'))
+    {
+        *tptr = *ptr;
+        ptr++;
+        tptr++;
+    }
+    *tptr='\0';
+    if (!*ptr)
+        return false;
+    if (regex)
+        result = !match(right, left);
+    else
+        result = strcmp(left, right);
+    stacks[i].prio = PRIO_LITERAL;
+    stacks[i].val = N(result == should_differ);
+    return ptr;
+}
+
+static bool conv_to_nums(char *arg, struct session *ses)
+{
+    char temp[BUFFER_SIZE];
+
+    int i = 0;
     char *ptr = arg;
     while (*ptr)
     {
@@ -223,61 +283,9 @@ static bool conv_to_nums(char *arg, struct session *ses)
             break;
 
         case '[':
-            /* jku: comparing strings with = and != */
-            ptr++;
-            char *tptr=left;
-            while ((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
-            {
-                *tptr = *ptr;
-                ptr++;
-                tptr++;
-            }
-            *tptr='\0';
-            if (!*ptr)
-                return false; /* error */
-            if (*ptr == ']')
-                tintin_eprintf(ses, "#Compare %s to what ? (only one var between [ ])", left);
-            switch (*ptr)
-            {
-            case '!' :
-                ptr++;
-                should_differ=true;
-                switch (*ptr)
-                {
-                case '=' : regex=false; ptr++; break;
-                case '~' : regex=true; ptr++; break;
-                default : return false;
-                }
-                break;
-            case '=' :
-                ptr++;
-                should_differ=false;
-                switch (*ptr)
-                {
-                case '=' : regex=false; ptr++; break;
-                case '~' : regex=true; ptr++; break;
-                default : break;
-                }
-                break;
-            default : return false;
-            }
-
-            tptr=right;
-            while ((*ptr) && (*ptr != ']'))
-            {
-                *tptr = *ptr;
-                ptr++;
-                tptr++;
-            }
-            *tptr='\0';
-            if (!*ptr)
+            ptr = stringcmp(ptr, i, ses);
+            if (!ptr)
                 return false;
-            if (regex)
-                result = !match(right, left);
-            else
-                result = strcmp(left, right);
-            stacks[i].prio = PRIO_LITERAL;
-            stacks[i].val = N(result == should_differ);
             break;
 
         case '$':
@@ -326,9 +334,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
             stacks[i].op = 2;
             break;
         case '-':
-            flag = -1;
-            if (i > 0)
-                flag = stacks[i - 1].prio;
+            int flag = (i>0)? stacks[i - 1].prio : -1;
             if (flag == PRIO_LITERAL)
             {
                 stacks[i].prio = PRIO_ADD;
