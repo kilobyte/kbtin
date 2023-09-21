@@ -615,7 +615,7 @@ bad:
         case 'm':
             w*=60;
         case 's':
-            while (isalpha(*tt))
+            while (is7alpha(*tt))
                 tt++;
         case 0:
             t+=w;

@@ -288,7 +288,7 @@ static bool conv_to_nums(char *arg, struct session *ses)
             if (*(++ptr)==BRACE_OPEN)
                 ptr=(char*)get_arg_in_braces(ptr, temp, 0);
             else
-                while (isalpha(*ptr) || *ptr=='_' || isadigit(*ptr))
+                while (is7alpha(*ptr) || *ptr=='_' || isadigit(*ptr))
                     ptr++;
             ptr--;
             break;
