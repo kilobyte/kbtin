@@ -116,6 +116,8 @@ static bool do_inline(const char *line, num_t *res, struct session *ses)
         *res=N(listlength_inline(line, ses));
     else if (is_abrev(command, "strlen"))
         *res=N(strlen_inline(line, ses));
+    else if (is_abrev(command, "strwidth"))
+        *res=N(strwidth_inline(line, ses));
     else if (is_abrev(command, "random"))
         *res=N(random_inline(line, ses));
     else if (is_abrev(command, "grep"))

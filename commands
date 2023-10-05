@@ -93,6 +93,7 @@ substitute
 gag
 substring
 strlen
+strwidth
 system
 ;tablist
 ;tabadd

@@ -37,8 +37,8 @@ Variables:
    angle       sqrt        abs         round       findvariables
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
-   substring   prepad      postpad     reverse     strlen      atoi
-   chr         ord         hexord      trim
+   substring   prepad      postpad     reverse     strlen      strwidth
+   atoi        chr         ord         hexord      trim
 Time:
    ctime       time        localtime   gmtime
 Lists:
@@ -1299,6 +1299,15 @@ Example:
 Stores the length of <text> into <dest.var>.
 
 inline #strlen <text>
+Evaluates to the length of <text>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~strwidth
+
+#strwidth <dest.var> <text>
+Stores the visible length of <text> into <dest.var>.  That is, CJK characters
+count as 2, combining characters and color codes have 0 width.
+
+inline #strwidth <text>
 Evaluates to the length of <text>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~decolorize

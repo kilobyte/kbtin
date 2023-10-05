@@ -25,7 +25,7 @@
 
 
 extern struct session *if_command(const char *arg, struct session *ses);
-
+static int cutws(WC *str, int len, WC **rstr, int *color);
 
 /*************************/
 /* the #variable command */
@@ -167,6 +167,42 @@ int strlen_inline(const char *arg, struct session *ses)
 
     arg = get_arg(arg, left, 1, ses);
     return utf8_width(left);
+}
+
+static int cwidth(char *s)
+{
+    WC txt[BUFFER_SIZE], *dum;
+    int color=7;
+
+    utf8_to_wc(txt, s, BUFFER_SIZE-1);
+    return cutws(txt, BUFFER_SIZE-1, &dum, &color);
+}
+
+/*************************/
+/* the #strwidth command */
+/*************************/
+void strwidth_command(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
+    if (!*left)
+        return tintin_eprintf(ses, "#Syntax: #strwidth <var> <text>");
+
+    sprintf(right, "%d", cwidth(right));
+    set_variable(left, right, ses);
+}
+
+/************************/
+/* the #strwidth inline */
+/************************/
+int strwidth_inline(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE];
+
+    arg = get_arg(arg, left, 1, ses);
+    return cwidth(left);
 }
 
 /****************************************************/
