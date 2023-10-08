@@ -1257,12 +1257,16 @@ Converts <text> into ALL UPPERCASE and stores it into <dest.var>.
 ~substring
 
 #substr <dest.var> <l>[,<r>] <text>
-Cuts characters <l>..<r> from <text> and stores them into <dest.var>.
+Copies a substring of width <l>..<r> from <text> and stores it into <dest.var>.
+
+As usual, a CJK character has width 2, while combining decorations or
+color codes are considered a part of a character they're attached to.
 
 Examples:
 #substr result 3 abcde          -> result = "c"
 #substr result 2,3 abcde        -> result = "bc"
 #substr result 4,1000 abcde     -> result = "de"
+#substr result 2,4 ~4~~~4~4~~7~abcde     -> result = "~4~~~4~4~~7~bcd"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~prepad
 
