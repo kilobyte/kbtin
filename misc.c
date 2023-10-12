@@ -960,9 +960,33 @@ void tab_delete(char *arg, struct session *ses)
 }
 #endif
 
+/* a human-readable time value */
+static void format_time(char *buf, timens_t t)
+{
+    if (!t)
+    {
+        buf[0]='0';
+        buf[1]=0;
+        return;
+    }
+
+    bool space = false;
+    #define TP(x, suf) if (t/(x)) \
+        { buf+=sprintf(buf, space? " %lld%s" : "%lld%s", t/(x), suf); t-=t/(x); space=1; }
+
+    TP(365*24*3600*NANO, "y");
+    TP(24*3600*NANO, "d");
+    TP(3600*NANO, "h");
+    TP(60*NANO, "m");
+    if (t % NANO)
+        sprintf(buf, "%s%lld.%llds", space? " ":"", t/NANO, (t*10)/NANO%10);
+    else
+        TP(NANO, "s");
+}
+
 void info_command(const char *arg, struct session *ses)
 {
-    char buffer[BUFFER_SIZE], *bptr;
+    char buffer[BUFFER_SIZE], *bptr, tim1[64], tim2[64];
     int actions   = count_tlist(ses->actions);
     int practions = count_tlist(ses->prompts);
     int aliases   = ses->aliases->nval;
@@ -1050,13 +1074,14 @@ void info_command(const char *arg, struct session *ses)
         tintin_printf(ses, "Not logging");
     if (ses->debuglogfile)
         tintin_printf(ses, "Debuglog: {%s}", ses->debuglogname);
-    tintin_printf(ses, "Session duration: %lld", (current_time()-start_time)/NANO);
+    format_time(tim1, current_time()-start_time);
+    tintin_printf(ses, "Session duration: %s", tim1);
     if (ses!=nullsession)
     {
         timens_t ct=current_time();
-        tintin_printf(ses, "Idle time: %lld.%lld, server idle: %lld.%lld",
-            (ct-ses->idle_since)/NANO, (ct-ses->idle_since)%NANO/(NANO/10),
-            (ct-ses->server_idle_since)/NANO, (ct-ses->server_idle_since)%NANO/(NANO/10));
+        format_time(tim1, ct-ses->idle_since);
+        format_time(tim2, ct-ses->server_idle_since);
+        tintin_printf(ses, "Idle time: %s, server idle: %s", tim1, tim2);
     }
     if (ses->line_time)
         tintin_printf(ses, "Line processing time: %lld.%06llds (%1.1f per second)",
