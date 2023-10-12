@@ -1050,6 +1050,7 @@ void info_command(const char *arg, struct session *ses)
         tintin_printf(ses, "Not logging");
     if (ses->debuglogfile)
         tintin_printf(ses, "Debuglog: {%s}", ses->debuglogname);
+    tintin_printf(ses, "Session duration: %lld", (current_time()-start_time)/NANO);
     if (ses!=nullsession)
     {
         timens_t ct=current_time();
