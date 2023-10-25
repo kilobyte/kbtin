@@ -381,6 +381,9 @@ in the text being sent to the MUD.
 #mudcolors 0
 The color codes will be sent verbatim.
 
+#mudcolors ANSI
+Color codes will be sent as ANSI (ESC [ m).
+
 #mudcolors {}
 Color codes will be ignored.
 

@@ -8,7 +8,8 @@
 
 extern const int rgbbgr[8];
 
-static enum {MUDC_OFF, MUDC_ON, MUDC_NULL, MUDC_NULL_WARN} mudcolors=MUDC_NULL_WARN;
+static enum {MUDC_OFF, MUDC_ON, MUDC_ANSI, MUDC_NULL, MUDC_NULL_WARN}
+    mudcolors=MUDC_NULL_WARN;
 static char *MUDcolors[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 typedef unsigned char u8;
@@ -414,6 +415,9 @@ color:
             mudcolors=MUDC_NULL;
         case MUDC_NULL:
             break;
+        case MUDC_ANSI:
+            txt=ansicolor(txt, c);
+            break;
         case MUDC_ON:;
             int k = rgb_to_16(rgb_from_256(c&CFG_MASK));
             strcpy(txt, MUDcolors[k]);
@@ -443,6 +447,12 @@ error_msg:
     {
         mudcolors=MUDC_OFF;
         tintin_printf(ses, "#outgoing color codes (~n~) are now sent verbatim.");
+        return;
+    }
+    if (!strcasecmp(arg, "ansi"))
+    {
+        mudcolors=MUDC_ANSI;
+        tintin_printf(ses, "#outgoing color codes (~n~) are now sent as ANSI SGR.");
         return;
     }
     if (!*get_arg_in_braces(arg, buf, 0))
