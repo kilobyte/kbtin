@@ -387,7 +387,7 @@ error:
 
 void do_out_MUD_colors(char *line)
 {
-    char buf[BUFFER_SIZE], *txt=buf;
+    char buf[BUFFER_SIZE*2], *txt=buf;
     int c=7;
 
     if (!mudcolors)
@@ -400,6 +400,11 @@ void do_out_MUD_colors(char *line)
         *txt++=*pos;
         continue;
 color:
+        if (txt>buf+BUFFER_SIZE)
+        {
+            tintin_eprintf(0, "#Error: line too long while applying mudcolors");
+            break;
+        }
         switch (mudcolors)
         {
         case MUDC_OFF:
@@ -415,6 +420,8 @@ color:
             txt+=strlen(MUDcolors[k]);
         }
     }
+    if (txt>buf+BUFFER_SIZE-2)
+        txt=buf+BUFFER_SIZE-2;
     *txt=0;
     strcpy(line, buf);
 }
