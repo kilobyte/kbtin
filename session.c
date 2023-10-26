@@ -388,6 +388,8 @@ void init_nullses(void)
     nullsession->verbose=false;
     nullsession->closing=false;
     nullsession->drafted=false;
+    nullsession->mudcolors=MUDC_NULL_WARN;
+    ZERO(nullsession->MUDcolors);
     sessionlist = nullsession;
     activesession = nullsession;
     pvars=0;
@@ -514,6 +516,9 @@ static struct session *new_session(const char *name, const char *address, int so
         else
             newsession->hooks[i]=0;
     newsession->closing=0;
+    newsession->mudcolors = ses->mudcolors;
+    for (int i=0;i<ARRAYSZ(ses->MUDcolors);i++)
+        newsession->MUDcolors[i] = mystrdup(ses->MUDcolors[i]);
     newsession->charset = mystrdup(sestype==SES_SOCKET ? ses->charset : user_charset_name);
     newsession->logcharset = logcs_is_special(ses->logcharset) ?
                               ses->logcharset : mystrdup(ses->logcharset);

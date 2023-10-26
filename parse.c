@@ -610,7 +610,7 @@ static void write_com_arg_mud(const char *command, const char *argument, int nsp
                 nsp=1;
             snprintf(outtext+i, BUFFER_SIZE-i, "%*s%s", nsp, "", argument);
         }
-        do_out_MUD_colors(outtext);
+        do_out_MUD_colors(outtext, ses);
         write_line_mud(outtext, ses);
     }
 }

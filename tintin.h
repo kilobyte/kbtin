@@ -331,6 +331,8 @@ typedef enum { LOG_RAW, LOG_LF, LOG_TTYREC } logtype_t;
 
 typedef enum { SES_NULL, SES_SOCKET, SES_PTY, SES_SELFPIPE } sestype_t;
 
+typedef enum {MUDC_OFF, MUDC_ON, MUDC_ANSI, MUDC_NULL, MUDC_NULL_WARN} mudcolors_t;
+
 struct session
 {
     struct session *next;
@@ -374,6 +376,8 @@ struct session
     int lastintitle;
     char *charset, *logcharset;
     struct charset_conv c_io, c_log;
+    mudcolors_t mudcolors;
+    char *MUDcolors[16];
 #ifdef HAVE_ZLIB
     bool can_mccp, mccp_more;
     z_stream *mccp;

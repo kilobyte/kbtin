@@ -8,10 +8,6 @@
 
 extern const int rgbbgr[8];
 
-static enum {MUDC_OFF, MUDC_ON, MUDC_ANSI, MUDC_NULL, MUDC_NULL_WARN}
-    mudcolors=MUDC_NULL_WARN;
-static char *MUDcolors[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
 typedef unsigned char u8;
 struct rgb { u8 r; u8 g; u8 b; };
 
@@ -386,12 +382,12 @@ error:
     strcpy(TXT, OUT);
 }
 
-void do_out_MUD_colors(char *line)
+void do_out_MUD_colors(char *line, struct session *ses)
 {
     char buf[BUFFER_SIZE*2], *txt=buf;
     int c=7;
 
-    if (!mudcolors)
+    if (!ses->mudcolors)
         return;
     for (char *pos=line;*pos;pos++)
     {
@@ -406,13 +402,13 @@ color:
             tintin_eprintf(0, "#Error: line too long while applying mudcolors");
             break;
         }
-        switch (mudcolors)
+        switch (ses->mudcolors)
         {
         case MUDC_OFF:
             abort();
         case MUDC_NULL_WARN:
             tintin_printf(0, "#Warning: no color codes set, use #mudcolors");
-            mudcolors=MUDC_NULL;
+            ses->mudcolors=MUDC_NULL;
         case MUDC_NULL:
             break;
         case MUDC_ANSI:
@@ -420,8 +416,8 @@ color:
             break;
         case MUDC_ON:;
             int k = rgb_to_16(rgb_from_256(c&CFG_MASK));
-            strcpy(txt, MUDcolors[k]);
-            txt+=strlen(MUDcolors[k]);
+            strcpy(txt, ses->MUDcolors[k]);
+            txt+=strlen(ses->MUDcolors[k]);
         }
     }
     if (txt>buf+BUFFER_SIZE-2)
@@ -445,13 +441,13 @@ error_msg:
     }
     if (!yes_no(arg))
     {
-        mudcolors=MUDC_OFF;
+        ses->mudcolors=MUDC_OFF;
         tintin_printf(ses, "#outgoing color codes (~n~) are now sent verbatim.");
         return;
     }
     if (!strcasecmp(arg, "ansi"))
     {
-        mudcolors=MUDC_ANSI;
+        ses->mudcolors=MUDC_ANSI;
         tintin_printf(ses, "#outgoing color codes (~n~) are now sent as ANSI SGR.");
         return;
     }
@@ -469,7 +465,7 @@ error_msg:
             if ((nc==1)&&!*cc[0])
             {
 null_codes:
-                mudcolors=MUDC_NULL;
+                ses->mudcolors=MUDC_NULL;
                 tintin_printf(ses, "#outgoing color codes are now ignored.");
                 return;
             }
@@ -480,11 +476,11 @@ null_codes:
     }
     if (*arg)
         goto error_msg;
-    mudcolors=MUDC_ON;
+    ses->mudcolors=MUDC_ON;
     for (int nc=0;nc<16;nc++)
     {
-        SFREE(MUDcolors[nc]);
-        MUDcolors[nc]=mystrdup(cc[nc]);
+        SFREE(ses->MUDcolors[nc]);
+        ses->MUDcolors[nc]=mystrdup(cc[nc]);
     }
     tintin_printf(ses, "#outgoing color codes table initialized");
 }
