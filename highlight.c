@@ -324,20 +324,12 @@ static int high_match(unsigned int id, unsigned long long from,
 }
 #endif
 
-void do_all_high(char *line, struct session *ses)
+// converts a ~X~ colored string into character:attribute pairs, returns length
+static int attributize_colors(char *restrict text, int *restrict attr, const char *restrict line)
 {
-    if (!count_tlist(ses->highs))
-        return;
-
-#ifdef HAVE_SIMD
-    if (simd && ses->highs_dirty)
-        build_highs_hs(ses);
-#endif
-
-    char text[BUFFER_SIZE];
-    int attr[BUFFER_SIZE];
     int c, d;
-    char *pos, *txt;
+    const char *pos;
+    char *txt;
     int *atr;
 
     c=-1;
@@ -356,46 +348,15 @@ void do_all_high(char *line, struct session *ses)
     *txt=0;
     *atr=c;
 
-#ifdef HAVE_SIMD
-    if (ses->highs_hs)
-    {
-        gattr = attr;
-        hs_error_t err=hs_scan(ses->highs_hs, text, txt-text, 0, hs_scratch,
-                               high_match, ses);
-        // TODO: optimize coloring multiple matches
-        if (err)
-            tintin_eprintf(ses, "#Error in hs_scan: %d", err);
-        goto done;
-    }
-#endif
+    return txt-text;
+}
 
-    TRIP_ITER(ses->highs, ln)
-        txt=text;
-        int l, r;
-        while (*txt&&find(txt, ln->left, &l, &r, ln->pr))
-        {
-            if (!get_high(ln->right))
-                break;
-            c=-1;
-            r+=txt-text;
-            l+=txt-text;
-            /* changed: no longer highlight in the middle of a word */
-            if (((l==0)||(!is7alnum(text[l])||!is7alnum(text[l-1])))&&
-                    (!is7alnum(text[r])||!is7alnum(text[r+1])))
-                for (int i=l;i<=r;i++)
-                    attr[i]=highpattern[(++c)%nhighpattern];
-            txt=text+r+1;
-        }
-    ENDITER
-
-#ifdef HAVE_SIMD
-done:
-#endif
-
-    c=-1;
-    pos=line;
-    txt=text;
-    atr=attr;
+static void deattributize_colors(char *restrict line, const char *restrict text, const int *restrict attr)
+{
+    int c=-1;
+    char *pos=line;
+    const char *txt=text;
+    const int *atr=attr;
     while (*txt)
     {
         if (c!=*atr)
@@ -412,4 +373,57 @@ done:
     if (c!=*atr)
         pos+=setcolor(pos, c=*atr);
     *pos=0;
+}
+
+void do_all_high(char *line, struct session *ses)
+{
+    if (!count_tlist(ses->highs))
+        return;
+
+#ifdef HAVE_SIMD
+    if (simd && ses->highs_dirty)
+        build_highs_hs(ses);
+#endif
+
+    char text[BUFFER_SIZE];
+    int attr[BUFFER_SIZE];
+    int len = attributize_colors(text, attr, line);
+
+#ifdef HAVE_SIMD
+    if (ses->highs_hs)
+    {
+        gattr = attr;
+        hs_error_t err=hs_scan(ses->highs_hs, text, len, 0, hs_scratch,
+                               high_match, ses);
+        // TODO: optimize coloring multiple matches
+        if (err)
+            tintin_eprintf(ses, "#Error in hs_scan: %d", err);
+        goto done;
+    }
+#endif
+
+    TRIP_ITER(ses->highs, ln)
+        char *txt=text;
+        int l, r;
+        while (*txt&&find(txt, ln->left, &l, &r, ln->pr))
+        {
+            if (!get_high(ln->right))
+                break;
+            int c=-1;
+            r+=txt-text;
+            l+=txt-text;
+            /* changed: no longer highlight in the middle of a word */
+            if (((l==0)||(!is7alnum(text[l])||!is7alnum(text[l-1])))&&
+                    (!is7alnum(text[r])||!is7alnum(text[r+1])))
+                for (int i=l;i<=r;i++)
+                    attr[i]=highpattern[(++c)%nhighpattern];
+            txt=text+r+1;
+        }
+    ENDITER
+
+#ifdef HAVE_SIMD
+done:
+#endif
+
+    deattributize_colors(line, text, attr);
 }
