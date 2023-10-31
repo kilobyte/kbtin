@@ -427,3 +427,43 @@ done:
 
     deattributize_colors(line, text, attr);
 }
+
+/*************************/
+/* the #colorize command */
+/*************************/
+void colorize_command(const char *arg, struct session *ses)
+{
+    char var[BUFFER_SIZE], color[BUFFER_SIZE], line[BUFFER_SIZE];
+
+    arg = get_arg(arg, var, 0, ses);
+    arg = get_arg(arg, color, 0, ses);
+    arg = get_arg(arg, line, 1, ses);
+
+    if (!*var || !*color)
+        return tintin_eprintf(ses, "#Usage: #colorize <dest.var> <color> <text>");
+
+    if (!get_high(color))
+    {
+        tintin_eprintf(ses, "#Invalid highlighting color, valid ones are:");
+        show_high_help(ses);
+        return;
+    }
+
+    char text[BUFFER_SIZE];
+    int attr[BUFFER_SIZE];
+
+    int len=attributize_colors(text, attr, line);
+    // Currently old attributes are thrown away, but it'd be nice to allow
+    // adding only a particular part (underline, foreground, background, etc)
+    // while keeping the rest unmodified.
+
+    // Go back to ~7~, ~-1~ is an internal hack.
+    attr[len]=7;
+
+    int c=-1;
+    for (int i=0; i<len; i++)
+        attr[i]=highpattern[(++c)%nhighpattern];
+
+    deattributize_colors(line, text, attr);
+    set_variable(var, line, ses);
+}

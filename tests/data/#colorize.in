@@ -1,0 +1,4 @@
+#colorize x 4/6 foo bar
+#sub ~ `
+#dosub x {$x}
+#show $x

@@ -38,7 +38,7 @@ Variables:
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
    substring   prepad      postpad     reverse     strlen      strwidth
-   atoi        chr         ord         hexord      trim
+   atoi        chr         ord         hexord      trim        colorize
 Time:
    ctime       time        localtime   gmtime
 Lists:
@@ -688,6 +688,15 @@ Examples:
 
 #unhighlight <pattern>
 You got it, this command removes all highlights matching <pattern>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~colorize
+
+#colorize <dest.var> <color> <text>
+Applies <color> to <text>, storing the result into <dest.var>.  All ways to
+express a color known to #highlight are allowed, including patterns.
+
+And indeed, without a pattern this command would be nothing but #decolorize
+followed by wrapping the result in ~color~ ~~:~7~~-1~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~presub
 
