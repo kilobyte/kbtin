@@ -52,30 +52,44 @@ static struct colordef
         {-1, 0},
     };
 
-static int highpattern[64];
+static int highpattern[64], highmask[64];
 static int nhighpattern;
 
-static int get_high_num(const char *hig)
+static bool get_high_num(const char *hig, int hn)
 {
     char tmp[BUFFER_SIZE];
 
     if (!*hig)
-        return -1;
-    if (isadigit(*hig))
+        return false;
+    if (isadigit(*hig) || *hig==':')
     {
         const char *sl=strchr(hig, '/');
         if (!sl)
             sl=strchr(hig, 0);
         sprintf(tmp, "~%.*s~", (int)(sl-hig), hig);
         sl=tmp;
-        int highcolor=7;
-        if (getcolor(&sl, &highcolor, 0))
-            return highcolor;
+        int c=7;
+        if (getcolor(&sl, &c, 0))
+        {
+            int minc=0;
+            sl=tmp; getcolor(&sl, &minc, 0);
+            int maxc=C_MASK;
+            sl=tmp; getcolor(&sl, &maxc, 0);
+            int mask = maxc &~ minc;
+            highmask[hn] = mask;
+            highpattern[hn] = c &~ mask;
+
+            return true;
+        }
     }
     for (int code=0;cNames[code].num!=-1;code++)
         if (is_abrev(hig, cNames[code].name))
-            return cNames[code].num;
-    return -1;
+        {
+            highpattern[hn]=cNames[code].num;
+            highmask[hn]=0;
+            return true;
+        }
+    return false;
 }
 
 static bool get_high(const char *hig)
@@ -85,7 +99,7 @@ static bool get_high(const char *hig)
         return false;
     while (hig&&*hig)
     {
-        if ((highpattern[nh++]=get_high_num(hig))==-1)
+        if (!get_high_num(hig, nh++))
             return false;
         if ((hig=strchr(hig, '/')))
             hig++;
@@ -216,6 +230,15 @@ void unhighlight_command(const char *arg, struct session *ses)
 }
 
 
+static void apply_high(int *attr, int len)
+{
+    for (int i=0; i<len; i++)
+    {
+        int c = i % nhighpattern;
+        attr[i] = attr[i] & highmask[c] | highpattern[c];
+    }
+}
+
 #ifdef HAVE_SIMD
 static char *glob_to_regex(const char *pat)
 {
@@ -317,9 +340,7 @@ static int high_match(unsigned int id, unsigned long long from,
     struct session *ses = context;
     if (!get_high(ses->highs_cols[id]))
         return 0;
-    int c=-1;
-    for (unsigned long long i = from; i<to; i++)
-        gattr[i]=highpattern[(++c)%nhighpattern];
+    apply_high(gattr + from, to - from);
     return 0;
 }
 #endif
@@ -409,14 +430,14 @@ void do_all_high(char *line, struct session *ses)
         {
             if (!get_high(ln->right))
                 break;
-            int c=-1;
             r+=txt-text;
             l+=txt-text;
             /* changed: no longer highlight in the middle of a word */
             if (((l==0)||(!is7alnum(text[l])||!is7alnum(text[l-1])))&&
                     (!is7alnum(text[r])||!is7alnum(text[r+1])))
-                for (int i=l;i<=r;i++)
-                    attr[i]=highpattern[(++c)%nhighpattern];
+            {
+                apply_high(attr+l, r+1-l);
+            }
             txt=text+r+1;
         }
     ENDITER
@@ -461,11 +482,7 @@ void colorize_command(const char *arg, struct session *ses)
     attr[len]=7;
 
     if (*color)
-    {
-        int c=-1;
-        for (int i=0; i<len; i++)
-            attr[i]=highpattern[(++c)%nhighpattern];
-    }
+        apply_high(attr, len);
 
     deattributize_colors(line, text, attr, 7);
     set_variable(var, line, ses);

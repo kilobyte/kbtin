@@ -8,3 +8,6 @@
 #colorize x {} foo~4~~6~bar~7~baz
 #dosub x {$x}
 #show $x
+#colorize x :1 foo~4~bar
+#dosub x {$x}
+#show $x
