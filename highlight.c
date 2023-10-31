@@ -89,7 +89,7 @@ static bool get_high(const char *hig)
             return false;
         if ((hig=strchr(hig, '/')))
             hig++;
-        if (nhighpattern==64)
+        if (nhighpattern==ARRAYSZ(highpattern))
             return true;
     }
     return true;
