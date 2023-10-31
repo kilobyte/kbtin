@@ -125,7 +125,6 @@ static void show_high_help(struct session *ses)
 void highlight_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
-    bool colflag = true;
     char *pright, *bp, *cp, buf[BUFFER_SIZE];
 
     pright = right;
@@ -150,47 +149,47 @@ void highlight_command(const char *arg, struct session *ses)
             bp++;
         memcpy(buf, bp, cp - bp);
         buf[cp - bp] = '\0';
-        colflag = get_high(buf);
         bp = cp + 1;
-    }
-    if (colflag)
-    {
-        if (!*right)
+
+        if (!get_high(buf))
         {
-            if (ses->mesvar[MSG_HIGHLIGHT] || ses->mesvar[MSG_ERROR])
-                tintin_eprintf(ses, "#Highlight WHAT?");
+            if (!puts_echoing && ses->mesvar[MSG_ERROR])
+                return tintin_eprintf(ses, "#Invalid highlighting color: {%s}", left);
+
+            if (strcmp(left, "list"))
+                tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
+            show_high_help(ses);
             return;
         }
+    }
 
-        ptrip new = MALLOC(sizeof(struct trip));
-        new->left = mystrdup(right);
-        new->right = mystrdup(left);
-        new->pr = 0;
-        ptrip *old = kb_get(trip, ses->highs, new);
-        if (old)
-        {
-            ptrip del = *old;
-            kb_del(trip, ses->highs, new);
-            free(del->left);
-            free(del->right);
-            free(del);
-        }
-        kb_put(trip, ses->highs, new);
-        hinum++;
-#ifdef HAVE_SIMD
-        ses->highs_dirty = true;
-#endif
-        if (ses->mesvar[MSG_HIGHLIGHT])
-            tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
+    if (!*right)
+    {
+        if (ses->mesvar[MSG_HIGHLIGHT] || ses->mesvar[MSG_ERROR])
+            tintin_eprintf(ses, "#Highlight WHAT?");
         return;
     }
 
-    if (!puts_echoing && ses->mesvar[MSG_ERROR])
-        return tintin_eprintf(ses, "#Invalid highlighting color: {%s}", left);
-
-    if (strcmp(left, "list"))
-        tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
-    show_high_help(ses);
+    ptrip new = MALLOC(sizeof(struct trip));
+    new->left = mystrdup(right);
+    new->right = mystrdup(left);
+    new->pr = 0;
+    ptrip *old = kb_get(trip, ses->highs, new);
+    if (old)
+    {
+        ptrip del = *old;
+        kb_del(trip, ses->highs, new);
+        free(del->left);
+        free(del->right);
+        free(del);
+    }
+    kb_put(trip, ses->highs, new);
+    hinum++;
+#ifdef HAVE_SIMD
+    ses->highs_dirty = true;
+#endif
+    if (ses->mesvar[MSG_HIGHLIGHT])
+        tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
 }
 
 /*****************************/
