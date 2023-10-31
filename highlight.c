@@ -80,18 +80,19 @@ static int get_high_num(const char *hig)
 
 static bool get_high(const char *hig)
 {
-    nhighpattern=0;
+    int nh=0;
     if (!*hig)
         return false;
     while (hig&&*hig)
     {
-        if ((highpattern[nhighpattern++]=get_high_num(hig))==-1)
+        if ((highpattern[nh++]=get_high_num(hig))==-1)
             return false;
         if ((hig=strchr(hig, '/')))
             hig++;
-        if (nhighpattern==ARRAYSZ(highpattern))
-            return true;
+        if (nh==ARRAYSZ(highpattern))
+            break;
     }
+    nhighpattern = nh;
     return true;
 }
 
