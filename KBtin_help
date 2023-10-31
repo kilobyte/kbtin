@@ -104,7 +104,7 @@ Attributes:
  or a sum of the above: 15 for ~::15~blinking, italic, underlined and overstruck~-1~ text
 
 While color codes are supported on all post-1980 terminals, the support for
-extended attributes varies.  For example, only text console and rxvt provides
+extended attributes varies.  For example, only text console and rxvt provide
 blink, while italic and underlining is available on some xterms.
 
 You can omit a field to retain the old color, for example: ::1 turns
