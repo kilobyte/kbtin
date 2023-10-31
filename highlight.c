@@ -96,6 +96,29 @@ static bool get_high(const char *hig)
     return true;
 }
 
+static void show_high_help(struct session *ses)
+{
+    char buf[BUFFER_SIZE], *bp=buf;
+    buf[0]=0;
+
+    for (int i=0;cNames[i].num!=-1;i++)
+    {
+        bp+=setcolor(bp, cNames[i].num);
+        int len = sprintf(bp, "%s~7~, ", cNames[i].name);
+        bp+=len;
+        while (len++ < 21)
+            *bp++=' ' ;
+        *bp=0;
+        if ((i%4)==3)
+        {
+            tintin_printf(ses, "%s", buf);
+            buf[0]=0;
+            bp=buf;
+        }
+    }
+    tintin_printf(ses, "%sor 0..15:0..7:0..1", buf);
+}
+
 /***************************/
 /* the #highlight command  */
 /***************************/
@@ -167,24 +190,7 @@ void highlight_command(const char *arg, struct session *ses)
 
     if (strcmp(left, "list"))
         tintin_printf(ses, "#Invalid highlighting color, valid colors are:");
-    buf[0]=0;
-    bp=buf;
-    for (int i=0;cNames[i].num!=-1;i++)
-    {
-        bp+=setcolor(bp, cNames[i].num);
-        int len = sprintf(bp, "%s~7~, ", cNames[i].name);
-        bp+=len;
-        while (len++ < 21)
-            *bp++=' ' ;
-        *bp=0;
-        if ((i%4)==3)
-        {
-            tintin_printf(ses, "%s", buf);
-            buf[0]=0;
-            bp=buf;
-        }
-    }
-    tintin_printf(ses, "%sor 0..15:0..7:0..1", buf);
+    show_high_help(ses);
 }
 
 /*****************************/
