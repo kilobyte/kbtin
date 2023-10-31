@@ -695,8 +695,14 @@ You got it, this command removes all highlights matching <pattern>.
 Applies <color> to <text>, storing the result into <dest.var>.  All ways to
 express a color known to #highlight are allowed, including patterns.
 
-And indeed, without a pattern this command would be nothing but #decolorize
-followed by wrapping the result in ~color~ ~~:~7~~-1~
+You probably want to use color codes with incomplete fields, that is, ~~-1~::~
+is no-op, ~~-1~:4:~ sets background to red without changing foreground or
+flags, etc.  Note that a field that's missing entirely rather than empty
+defaults to ~~-1~7:0:0~ rather than to ~~-1~::~.
+
+Referring to a color by name rather than code has been changed as of KBtin 2.2
+to mean ~~-1~2::~ rather than ~~-1~2:0:0~ as before.  Likewise, named flags don't
+clear other attributes.
 
 #colorize <dest.var> {} <text>
 Canonicalizes color codes inside <text> (getting rid of multiple codes in a
