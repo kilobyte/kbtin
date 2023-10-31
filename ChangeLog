@@ -283,7 +283,7 @@
 	*	\e -> \033
 	*	autoconf checks to test whether the code for inlined
 		functions is actually generated
-*	changes needes to compile on Cygwin:
+*	changes needed to compile on Cygwin:
 	*	checking for stropts.h
 	Note: As opposed to UNIX systems, which all enjoy the whole
 	functionality, KBtin is crippled on Win32 systems.  Basically,
