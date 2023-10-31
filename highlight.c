@@ -325,14 +325,14 @@ static int high_match(unsigned int id, unsigned long long from,
 #endif
 
 // converts a ~X~ colored string into character:attribute pairs, returns length
-static int attributize_colors(char *restrict text, int *restrict attr, const char *restrict line)
+static int attributize_colors(char *restrict text, int *restrict attr, const char *restrict line, int init)
 {
     int c, d;
     const char *pos;
     char *txt;
     int *atr;
 
-    c=-1;
+    c=init;
     txt=text;
     atr=attr;
     for (pos=line;*pos;pos++)
@@ -351,9 +351,9 @@ static int attributize_colors(char *restrict text, int *restrict attr, const cha
     return txt-text;
 }
 
-static void deattributize_colors(char *restrict line, const char *restrict text, const int *restrict attr)
+static void deattributize_colors(char *restrict line, const char *restrict text, const int *restrict attr, int init)
 {
-    int c=-1;
+    int c=init;
     char *pos=line;
     const char *txt=text;
     const int *atr=attr;
@@ -387,7 +387,7 @@ void do_all_high(char *line, struct session *ses)
 
     char text[BUFFER_SIZE];
     int attr[BUFFER_SIZE];
-    int len = attributize_colors(text, attr, line);
+    int len = attributize_colors(text, attr, line, -1);
 
 #ifdef HAVE_SIMD
     if (ses->highs_hs)
@@ -425,7 +425,7 @@ void do_all_high(char *line, struct session *ses)
 done:
 #endif
 
-    deattributize_colors(line, text, attr);
+    deattributize_colors(line, text, attr, -1);
 }
 
 /*************************/
@@ -452,7 +452,7 @@ void colorize_command(const char *arg, struct session *ses)
     char text[BUFFER_SIZE];
     int attr[BUFFER_SIZE];
 
-    int len=attributize_colors(text, attr, line);
+    int len=attributize_colors(text, attr, line, 7);
     // Currently old attributes are thrown away, but it'd be nice to allow
     // adding only a particular part (underline, foreground, background, etc)
     // while keeping the rest unmodified.
@@ -467,6 +467,6 @@ void colorize_command(const char *arg, struct session *ses)
             attr[i]=highpattern[(++c)%nhighpattern];
     }
 
-    deattributize_colors(line, text, attr);
+    deattributize_colors(line, text, attr, 7);
     set_variable(var, line, ses);
 }
