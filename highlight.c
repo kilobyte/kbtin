@@ -55,7 +55,6 @@ static struct colordef
 static int highpattern[64];
 static int nhighpattern;
 
-static int highcolor; /* an ugly kludge... */
 static int get_high_num(const char *hig)
 {
     char tmp[BUFFER_SIZE];
@@ -69,12 +68,13 @@ static int get_high_num(const char *hig)
             sl=strchr(hig, 0);
         sprintf(tmp, "~%.*s~", (int)(sl-hig), hig);
         sl=tmp;
+        int highcolor=7;
         if (getcolor(&sl, &highcolor, 0))
             return highcolor;
     }
     for (int code=0;cNames[code].num!=-1;code++)
         if (is_abrev(hig, cNames[code].name))
-            return highcolor=cNames[code].num;
+            return cNames[code].num;
     return -1;
 }
 
@@ -85,7 +85,6 @@ static bool get_high(const char *hig)
         return false;
     while (hig&&*hig)
     {
-        highcolor=7;
         if ((highpattern[nhighpattern++]=get_high_num(hig))==-1)
             return false;
         if ((hig=strchr(hig, '/')))
