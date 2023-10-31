@@ -195,7 +195,6 @@ void highlight_command(const char *arg, struct session *ses)
 /*****************************/
 /* the #unhighlight command */
 /*****************************/
-
 void unhighlight_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
