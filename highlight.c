@@ -14,41 +14,41 @@
 
 static struct colordef
 {
-    int num;
+    int num, mask;
     const char *name;
 } cNames[]=
     {
-        { 0, "black"},
-        { 1, "blue"},
-        { 2, "green"},
-        { 3, "cyan"},
-        { 4, "red"},
-        { 5, "magenta"},
-        { 5, "violet"},
-        { 6, "brown"},
-        { 7, "grey"},
-        { 7, "gray"},
-        { 7, "normal"},
-        { 8, "faint"},
-        { 8, "charcoal"},
-        { 8, "dark"},
-        { 9, "light blue"},
-        {10, "light green"},
-        {11, "light cyan"},
-        {11, "aqua"},
-        {12, "light red"},
-        {13, "light magenta"},
-        {13, "pink"},
-        {14, "yellow"},
-        {15, "white"},
-        {15, "bold"},
-        {7<<CBG_AT, "inverse"},
-        {7<<CBG_AT, "reverse"},
-        {CFL_BLINK, "blink"},
-        {CFL_UNDERLINE, "underline"},
-        {CFL_UNDERLINE, "underlined"},
-        {CFL_ITALIC, "italic"},
-        {CFL_STRIKETHRU, "strike"},
+        { 0, CBG_MASK|CFL_MASK, "black"},
+        { 1, CBG_MASK|CFL_MASK, "blue"},
+        { 2, CBG_MASK|CFL_MASK, "green"},
+        { 3, CBG_MASK|CFL_MASK, "cyan"},
+        { 4, CBG_MASK|CFL_MASK, "red"},
+        { 5, CBG_MASK|CFL_MASK, "magenta"},
+        { 5, CBG_MASK|CFL_MASK, "violet"},
+        { 6, CBG_MASK|CFL_MASK, "brown"},
+        { 7, CBG_MASK|CFL_MASK, "grey"},
+        { 7, CBG_MASK|CFL_MASK, "gray"},
+        { 7, CBG_MASK|CFL_MASK, "normal"},
+        { 8, CBG_MASK|CFL_MASK, "faint"}, // should be halfbright
+        { 8, CBG_MASK|CFL_MASK, "charcoal"},
+        { 8, CBG_MASK|CFL_MASK, "dark"},
+        { 9, CBG_MASK|CFL_MASK, "light blue"},
+        {10, CBG_MASK|CFL_MASK, "light green"},
+        {11, CBG_MASK|CFL_MASK, "light cyan"},
+        {11, CBG_MASK|CFL_MASK, "aqua"},
+        {12, CBG_MASK|CFL_MASK, "light red"},
+        {13, CBG_MASK|CFL_MASK, "light magenta"},
+        {13, CBG_MASK|CFL_MASK, "pink"},
+        {14, CBG_MASK|CFL_MASK, "yellow"},
+        {15, CBG_MASK|CFL_MASK, "white"},
+        {15, CBG_MASK|CFL_MASK, "bold"},
+        {7<<CBG_AT, CFL_MASK, "inverse"}, // should keep but invert existing color
+        {7<<CBG_AT, CFL_MASK, "reverse"}, // ditto
+        {CFL_BLINK, C_MASK, "blink"},
+        {CFL_UNDERLINE, C_MASK, "underline"},
+        {CFL_UNDERLINE, C_MASK, "underlined"},
+        {CFL_ITALIC, C_MASK, "italic"},
+        {CFL_STRIKETHRU, C_MASK, "strike"},
         {-1, 0},
     };
 
@@ -86,7 +86,7 @@ static bool get_high_num(const char *hig, int hn)
         if (is_abrev(hig, cNames[code].name))
         {
             highpattern[hn]=cNames[code].num;
-            highmask[hn]=0;
+            highmask[hn]=cNames[code].mask;
             return true;
         }
     return false;
@@ -235,7 +235,7 @@ static void apply_high(int *attr, int len)
     for (int i=0; i<len; i++)
     {
         int c = i % nhighpattern;
-        attr[i] = attr[i] & highmask[c] | highpattern[c];
+        attr[i] = ((attr[i]==-1)? 7 : attr[i]) & highmask[c] | highpattern[c];
     }
 }
 
