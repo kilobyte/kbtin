@@ -439,10 +439,10 @@ void colorize_command(const char *arg, struct session *ses)
     arg = get_arg(arg, color, 0, ses);
     arg = get_arg(arg, line, 1, ses);
 
-    if (!*var || !*color)
+    if (!*var)
         return tintin_eprintf(ses, "#Usage: #colorize <dest.var> <color> <text>");
 
-    if (!get_high(color))
+    if (*color && !get_high(color))
     {
         tintin_eprintf(ses, "#Invalid highlighting color, valid ones are:");
         show_high_help(ses);
@@ -460,9 +460,12 @@ void colorize_command(const char *arg, struct session *ses)
     // Go back to ~7~, ~-1~ is an internal hack.
     attr[len]=7;
 
-    int c=-1;
-    for (int i=0; i<len; i++)
-        attr[i]=highpattern[(++c)%nhighpattern];
+    if (*color)
+    {
+        int c=-1;
+        for (int i=0; i<len; i++)
+            attr[i]=highpattern[(++c)%nhighpattern];
+    }
 
     deattributize_colors(line, text, attr);
     set_variable(var, line, ses);

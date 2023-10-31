@@ -2,3 +2,6 @@
 #sub ~ `
 #dosub x {$x}
 #show $x
+#colorize x {} foo~4~~6~bar
+#dosub x {$x}
+#show $x

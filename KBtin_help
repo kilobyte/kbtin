@@ -697,6 +697,11 @@ express a color known to #highlight are allowed, including patterns.
 
 And indeed, without a pattern this command would be nothing but #decolorize
 followed by wrapping the result in ~color~ ~~:~7~~-1~
+
+#colorize <dest.var> {} <text>
+Canonicalizes color codes inside <text> (getting rid of multiple codes in a
+row as produced by some MUDs, eliding redundant changing color to same,
+resolving empty mask fields, etc).  There's no visual change.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~presub
 
