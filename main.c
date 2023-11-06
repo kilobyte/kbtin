@@ -345,7 +345,9 @@ static void banner(void)
 static void randomize(void)
 {
     unsigned seed;
+#ifdef HAVE_GETENTROPY
     if (getentropy(&seed, sizeof seed))
+#endif
         seed = (((unsigned)getpid())*0x10001)^start_time^(start_time>>32);
     srand(seed);
 }

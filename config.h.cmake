@@ -21,6 +21,7 @@
 #cmakedefine HAVE_POSIX_OPENPT
 #cmakedefine HAVE_STRLCPY
 #cmakedefine HAVE_WCWIDTH
+#cmakedefine HAVE_GETENTROPY
 
 #cmakedefine HAVE_ZLIB
 #cmakedefine HAVE_GNUTLS
