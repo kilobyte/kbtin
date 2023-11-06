@@ -361,7 +361,7 @@ int main(int argc, char **argv)
     strcpy(status, EMPTY_LINE);
     user_init();
     /*  read_complete();            no tab-completion */
-    srand((getpid()*0x10001)^start_time^(start_time>>32));
+    srand((((unsigned)getpid())*0x10001)^start_time^(start_time>>32));
     lastdraft=0;
 
     if (ui_own_output || tty)
