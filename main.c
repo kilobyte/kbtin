@@ -342,6 +342,14 @@ static void banner(void)
     tintin_printf(0, "~15~#help                         ~7~to get the help index");
 }
 
+static void randomize(void)
+{
+    unsigned seed;
+    if (getentropy(&seed, sizeof seed))
+        seed = (((unsigned)getpid())*0x10001)^start_time^(start_time>>32);
+    srand(seed);
+}
+
 /**************************************************************************/
 /* main() - show title - setup signals - init lists - readcoms - tintin() */
 /**************************************************************************/
@@ -361,7 +369,7 @@ int main(int argc, char **argv)
     strcpy(status, EMPTY_LINE);
     user_init();
     /*  read_complete();            no tab-completion */
-    srand((((unsigned)getpid())*0x10001)^start_time^(start_time>>32));
+    randomize();
     lastdraft=0;
 
     if (ui_own_output || tty)
