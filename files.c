@@ -24,7 +24,7 @@
 #include <pwd.h>
 #include <fcntl.h>
 #include <sys/file.h>
-
+#include <sys/time.h>
 
 #ifndef O_BINARY
 # define O_BINARY 0

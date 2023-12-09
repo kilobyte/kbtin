@@ -2,6 +2,7 @@
 #define __EXTENSIONS__
 #include "tintin.h"
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>

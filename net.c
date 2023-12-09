@@ -10,7 +10,7 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
-#include <unistd.h>
+#include <signal.h>
 #include "tintin.h"
 #include "protos/files.h"
 #include "protos/globals.h"
