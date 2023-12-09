@@ -74,7 +74,7 @@
 #define BRACE_CLOSE '}' /*character that ends an argument */
 #define HISTORY_SIZE 128                  /* history size */
 #define MAX_PATH_LENGTH 256               /* max path length (#route) */
-#define DEFAULT_TINTIN_CHAR '#'           /* tintin char */
+#define DEFAULT_TINTIN_CHAR '#'           /* prefix for tintin commands */
 #define DEFAULT_TICK_SIZE 60
 #define DEFAULT_ROUTE_DISTANCE (10*DENOM)
 #define VERBATIM_CHAR '\\'                /* if an input starts with this
