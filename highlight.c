@@ -235,7 +235,8 @@ static void apply_high(int *attr, int len)
     for (int i=0; i<len; i++)
     {
         int c = i % nhighpattern;
-        attr[i] = ((attr[i]==-1)? 7 : attr[i]) & highmask[c] | highpattern[c];
+        int oldattr = (attr[i]==-1)? 7 : attr[i];
+        attr[i] = (oldattr & highmask[c]) | highpattern[c];
     }
 }
 
