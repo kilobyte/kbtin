@@ -219,18 +219,12 @@ enum
 #include <unistd.h>
 #include <stdarg.h>
 #include <wchar.h>
-#include <signal.h>
 #include <errno.h>
-#include <sys/time.h>
 #include <strings.h>
-#include <time.h>
 #ifdef HAVE_ZLIB
 # include <zlib.h>
 #endif
 #include <string.h>
-#if GWINSZ_IN_SYS_IOCTL
-# include <sys/ioctl.h>
-#endif
 #ifdef HAVE_GNUTLS
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
