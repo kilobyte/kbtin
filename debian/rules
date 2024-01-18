@@ -1,6 +1,11 @@
 #!/usr/bin/make -f
-export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+ifeq ($(DEB_TARGET_ARCH),armhf)
+  export DEB_BUILD_MAINT_OPTIONS = hardening=+all,-stackclash
+else
+  export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+endif
 
 %:
 	dh $@
