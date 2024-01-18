@@ -1,3 +1,11 @@
+kbtin (2.1-3) UNRELEASED; urgency=medium
+
+  * Temporarily disable stack-clash-protection on armhf, it does accesses
+    past SP not currently allowed by valgrind.  Thanks Emanuele Rocca,
+    closes: #1061076.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Thu, 18 Jan 2024 10:53:48 +0100
+
 kbtin (2.1-2) unstable; urgency=medium
 
   * Merge a bunch of fixes.
