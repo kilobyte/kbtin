@@ -6,6 +6,7 @@
 /*********************************************************************/
 #include "tintin.h"
 #include <math.h>
+#include <time.h>
 #include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/chinese.h"
