@@ -11,7 +11,7 @@ Input/output:
    blank       speedwalk   showme      status      margins     bell
    send        sendchar    charset     bold
 Aliases:
-   alias       unalias     ifaliasexists
+   alias       unalias     ifaliasexists   shift
 Triggers:
    action      unaction    ignore      promptaction    unpromptaction
    hook        unhook      doactions   dopromptactions
@@ -610,6 +610,15 @@ Removes all aliases whose name matches <pattern>.
 #ifaliasexists <alias> <ifexists> <command> [#elif/#else ...]
 
 Queries whether <alias> has been defined; if yes, the <command> is executed.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~shift
+
+#shift [<n>]
+
+Reassigns positional variables: moves $2 to $1, $3 to $2, ..., clears $9.
+If <n> is given, shifts by that many positions.
+
+$0 is updated to drop first <n> arguments.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~substitute
 

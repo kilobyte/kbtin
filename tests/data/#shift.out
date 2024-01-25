@@ -1,0 +1,17 @@
+#Error: #shift: no positional variables in this context.
+« [] [] [] [] [] [] [] [] [] []
+» [] [] [] [] [] [] [] [] [] []
+« [foo bar baz] [foo] [bar] [baz] [] [] [] [] [] []
+» [bar baz] [bar] [baz] [] [] [] [] [] [] []
+« [] [] [] [] [] [] [] [] [] []
+» [] [] [] [] [] [] [] [] [] []
+« [foo bar baz] [foo] [bar] [baz] [] [] [] [] [] []
+» [] [] [] [] [] [] [] [] [] []
+« [{a b} a {a {b} c} d e] [a b] [a] [a {b} c] [d] [e] [] [] [] []
+» [d e] [d] [e] [] [] [] [] [] [] []
+« [] [] [] [] [] [] [] [] [] []
+#Error: #shift takes a positive number, got {-1}
+» [] [] [] [] [] [] [] [] [] []
+« [] [] [] [] [] [] [] [] [] []
+#Error: #shift takes a positive number, got {dupa}
+» [] [] [] [] [] [] [] [] [] []

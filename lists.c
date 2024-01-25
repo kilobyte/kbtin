@@ -833,3 +833,32 @@ void findvariables_command(const char *arg, struct session *ses)
     set_variable(left, buf, ses);
     free(pl);
 }
+
+
+/*********************/
+/* the shift command */
+/*********************/
+void shift_command(const char *arg, struct session *ses)
+{
+    if (!pvars)
+        return tintin_eprintf(ses, "#Error: #shift: no positional variables in this context.");
+
+    char left[BUFFER_SIZE];
+    get_arg(arg, left, 1, ses);
+    int n = (*left)? atoi(left) : 1;
+    if (n<1)
+        return tintin_eprintf(ses, "#Error: #shift takes a positive number, got {%s}", left);
+    if (n>9)
+        n=9;
+    for (int i=1; i<10; i++)
+        if (i+n<10)
+            strcpy((*pvars)[i], (*pvars)[i+n]);
+        else
+            *(*pvars)[i]=0;
+
+    // update $0
+    const char *sec = (*pvars)[0];
+    for (; n>0; n--)
+        sec = space_out(get_arg_in_braces(sec, left, 0));
+    memmove((*pvars)[0], sec, strlen(sec)+1);
+}
