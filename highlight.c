@@ -410,6 +410,7 @@ void do_all_high(char *line, struct session *ses)
     char text[BUFFER_SIZE];
     int attr[BUFFER_SIZE];
     int len = attributize_colors(text, attr, line, -1);
+    (void)len; // return value unused if !HAVE_SIMD
 
 #ifdef HAVE_SIMD
     if (ses->highs_hs)
