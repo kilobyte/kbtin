@@ -1,4 +1,5 @@
 #!/bin/sh -e
+# cmake must be configured with -coverage for CFLAGS.
 
 find -name '*.gc*' -execdir rm '{}' +
 make clean
