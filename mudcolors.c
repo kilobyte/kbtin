@@ -13,7 +13,7 @@ struct rgb { u8 r; u8 g; u8 b; };
 
 static inline u8 ramp256_6(int i)
 {
-    /* 00 5f 87 af d7 ff */
+    /* 00 5f 87 af d7 ff = 0 95 135 175 215 255 */
     return i ? 55 + i * 40 : 0;
 }
 
