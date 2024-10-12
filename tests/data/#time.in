@@ -4,3 +4,4 @@
 #time tmp 2 weeks 1 d;#showme $tmp
 #time tmp 0.5h;#showme $tmp
 #time tmp 0.25d 0.5m;#showme $tmp
+#time tmp 0.5h 10.001;#showme $tmp

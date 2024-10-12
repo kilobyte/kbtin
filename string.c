@@ -706,18 +706,19 @@ void ctime_command(const char *arg, struct session *ses)
 void time_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], ct[BUFFER_SIZE];
+    timens_t t;
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        timens_t t=time2secs(ct, ses);
+        t=time2secs(ct, ses);
         if (t==INVALID_TIME)
             return;
-        sprintf(ct, "%lld", (long long)(t/NANO));
     }
     else
-        sprintf(ct, "%lld", (long long)time(0));
+        t = time(0) * NANO;
+    nsecstr(ct, t);
     if (!*left)
         tintin_printf(ses, "#%s.", ct);
     else
