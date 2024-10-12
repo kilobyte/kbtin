@@ -610,15 +610,12 @@ void trim_command(const char *arg, struct session *ses)
     set_variable(destvar, s, ses);
 }
 
-
-#define INVALID_TIME (int)0x80000000
-
 /************************************************************/
 /* parse time, return # of seconds or INVALID_TIME on error */
 /************************************************************/
-static int time2secs(const char *tt, struct session *ses)
+static timens_t time2secs(const char *tt, struct session *ses)
 {
-    int w, t=0;
+    timens_t w, t=0;
 
     if (!*tt)
     {
@@ -631,7 +628,7 @@ bad:
     for (;;)
     {
         char *err;
-        w=strtol(tt, &err, 10);
+        w = str2timens(tt, &err);
         if (tt==err)
             goto bad;
         tt=err;
@@ -683,10 +680,11 @@ void ctime_command(const char *arg, struct session *ses)
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, arg2, 1, ses);
     if (!*arg2)
-        tt=time(0);
+        tt = current_time();
     else if ((tt=time2secs(arg2, ses))==INVALID_TIME)
         return;
-    p = ct = ctime_r(&tt, arg2);
+    const time_t t = tt / NANO;
+    p = ct = ctime_r(&t, arg2);
     while (p && *p)
     {
         if (*p == '\n')
@@ -713,13 +711,13 @@ void time_command(const char *arg, struct session *ses)
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        int t=time2secs(ct, ses);
+        timens_t t=time2secs(ct, ses);
         if (t==INVALID_TIME)
             return;
-        sprintf(ct, "%d", t);
+        sprintf(ct, "%lld", (long long)(t/NANO));
     }
     else
-        sprintf(ct, "%d", (int)time(0));
+        sprintf(ct, "%lld", (long long)time(0));
     if (!*left)
         tintin_printf(ses, "#%s.", ct);
     else
@@ -739,10 +737,11 @@ void localtime_command(const char *arg, struct session *ses)
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        t=time2secs(ct, ses);
-        if (t==INVALID_TIME)
+        timens_t tt=time2secs(ct, ses);
+        if (tt==INVALID_TIME)
             return;
-        sprintf(ct, "%ld", (long)t);
+        t = tt/NANO;
+        sprintf(ct, "%lld", (long long)(t));
     }
     else
         t=time(0);
@@ -770,9 +769,10 @@ void gmtime_command(const char *arg, struct session *ses)
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        t=time2secs(ct, ses);
-        if (t==INVALID_TIME)
+        timens_t tt = time2secs(ct, ses);
+        if (tt==INVALID_TIME)
             return;
+        t = tt/NANO;
         sprintf(ct, "%ld", (long)t);
     }
     else

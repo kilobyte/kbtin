@@ -244,6 +244,7 @@ typedef int64_t timens_t;
 typedef struct trip *ptrip;
 
 #define NANO 1000000000LL
+#define INVALID_TIME 0x8000000000000000LL
 
 #define ARRAYSZ(x) (sizeof(x)/sizeof((x)[0]))
 
