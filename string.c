@@ -613,7 +613,7 @@ void trim_command(const char *arg, struct session *ses)
 /************************************************************/
 /* parse time, return # of seconds or INVALID_TIME on error */
 /************************************************************/
-static timens_t time2secs(const char *tt, struct session *ses)
+timens_t time2secs(const char *tt, struct session *ses)
 {
     timens_t w, t=0;
 

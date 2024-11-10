@@ -70,8 +70,7 @@ static void list_events(const char *arg, struct session *ses)
 /* add new event to the list */
 void delay_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], *cptr;
-    timens_t delay;
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
     struct eventnode *ev, *ptr, *ptrlast;
 
     arg = get_arg(arg, left, 0, ses);
@@ -82,8 +81,12 @@ void delay_command(const char *arg, struct session *ses)
         return;
     }
 
-    if (!*left || (delay=str2timens(left, &cptr))<0 || *cptr)
-        return tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), NEGATIVE DELAY", left);
+    if (!*left)
+        return tintin_eprintf(ses, "#EVENT IGNORED, NO DELAY GIVEN");
+
+    timens_t delay = time2secs(left, ses);
+    if (delay==INVALID_TIME || delay<0)
+        return tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), INVALID DELAY", left);
 
     ev = TALLOC(struct eventnode);
     ev->time = current_time() + delay;
