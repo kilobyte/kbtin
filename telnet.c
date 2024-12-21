@@ -386,6 +386,5 @@ void telnet_write_line(const char *line, struct session *ses, bool nl)
         *out++='\r', *out++='\n';
     *out=0;
 
-    if (write_socket(ses, outtext, out-outtext) == -1)
-        syserr("write in telnet_write_line()");
+    write_socket(ses, outtext, out-outtext);
 }
