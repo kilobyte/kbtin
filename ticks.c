@@ -11,6 +11,7 @@
 #include "protos/math.h"
 #include "protos/print.h"
 #include "protos/parse.h"
+#include "protos/string.h"
 #include "protos/utils.h"
 #include "protos/vars.h"
 
@@ -40,7 +41,7 @@ void tickoff_command(const char *arg, struct session *ses)
 /***********************/
 void tickon_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], *err;
+    char left[BUFFER_SIZE];
     timens_t x=0;
 
     timens_t ct = current_time();
@@ -49,9 +50,9 @@ void tickon_command(const char *arg, struct session *ses)
     substitute_vars(left, left, ses);
     if (*left)
     {
-        x = str2timens(left, &err);
-        if (*err || !*left)
-            return tintin_eprintf(ses, "#SYNTAX: #tickon [<offset>]");
+        x = time2secs(left, ses);
+        if (x == INVALID_TIME)
+            return;
         if (x < 0)
             return tintin_eprintf(ses, "#NEGATIVE TICK OFFSET");
         ses->time0 = ct - ses->tick_size + x;
@@ -82,14 +83,13 @@ void tickon_command(const char *arg, struct session *ses)
 /*************************/
 void ticksize_command(const char *arg, struct session *ses)
 {
-    timens_t x;
-    char left[BUFFER_SIZE], *err;
+    char left[BUFFER_SIZE];
 
     get_arg(arg, left, 1, ses);
-    if (!*left || !isadigit(*left))
+    if (!*left)
         return tintin_eprintf(ses, "#SYNTAX: #ticksize <number>");
-    x=str2timens(left, &err);
-    if (*err || x<=0)
+    timens_t x = time2secs(left, ses);
+    if (x == INVALID_TIME || x <= 0)
         return tintin_eprintf(ses, "#INVALID TICKSIZE");
     ses->tick_size = x;
     ses->time0 = current_time();
@@ -106,15 +106,15 @@ void ticksize_command(const char *arg, struct session *ses)
 void pretick_command(const char *arg, struct session *ses)
 {
     timens_t x;
-    char left[BUFFER_SIZE], *err;
+    char left[BUFFER_SIZE];
 
     get_arg(arg, left, 1, ses);
     if (!*left)
         x=ses->pretick? 0 : 10 * NANO;
     else
     {
-        x=str2timens(left, &err);
-        if (*err || x<0)
+        x = time2secs(left, ses);
+        if (x == INVALID_TIME || x < 0)
             return tintin_eprintf(ses, "#INVALID PRETICK DELAY");
     }
     if (x>=ses->tick_size)
