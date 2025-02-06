@@ -19,12 +19,59 @@ int msec(timens_t t)
     return t/1000000;
 }
 
+static void schedule_event(struct session *ses, struct eventnode *restrict ev)
+{
+    // TODO: burn this code and replace without O(n)
+    struct eventnode *ptr, *ptrlast;
+
+    if (!ses->events)
+        ses->events = ev;
+    else if (ses->events->time > ev->time)
+    {
+        ev->next = ses->events;
+        ses->events = ev;
+    }
+    else
+    {
+        ptr = ses->events;
+        while ((ptrlast = ptr) && (ptr = ptr->next))
+        {
+            if (ptr->time > ev->time)
+            {
+                ev->next = ptr;
+                ptrlast->next = ev;
+                return;
+            }
+        }
+        ptrlast->next = ev;
+        ev->next = NULL;
+    }
+}
+
 void execute_event(struct eventnode *ev, struct session *ses)
 {
     if (activesession==ses && ses->mesvar[MSG_EVENT])
         tintin_printf(ses, "[EVENT: %s]", ev->event);
     parse_input(ev->event, true, ses);
     recursion=0;
+}
+
+/* execute due events, abort and return 1 if any_closed */
+bool do_events(struct session *ses, timens_t now)
+{
+    struct eventnode *ev;
+
+    while ((ev=ses->events) && (ev->time<=now))
+    {
+        ses->events=ev->next;
+        execute_event(ev, ses);
+        SFREE(ev->event);
+        TFREE(ev, struct eventnode);
+        if (any_closed)
+            return 1;
+    }
+
+    return 0;
 }
 
 /* list active events matching regexp arg */
@@ -71,7 +118,6 @@ static void list_events(const char *arg, struct session *ses)
 void delay_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
-    struct eventnode *ev, *ptr, *ptrlast;
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
@@ -88,33 +134,12 @@ void delay_command(const char *arg, struct session *ses)
     if (delay==INVALID_TIME || delay<0)
         return tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), INVALID DELAY", left);
 
-    ev = TALLOC(struct eventnode);
+    struct eventnode *ev = TALLOC(struct eventnode);
     ev->time = current_time() + delay;
     ev->next = NULL;
     ev->event = mystrdup(right);
 
-    if (!ses->events)
-        ses->events = ev;
-    else if (ses->events->time > ev->time)
-    {
-        ev->next = ses->events;
-        ses->events = ev;
-    }
-    else
-    {
-        ptr = ses->events;
-        while ((ptrlast = ptr) && (ptr = ptr->next))
-        {
-            if (ptr->time > ev->time)
-            {
-                ev->next = ptr;
-                ptrlast->next = ev;
-                return;
-            }
-        }
-        ptrlast->next = ev;
-        ev->next = NULL;
-    }
+    schedule_event(ses, ev);
 }
 
 void event_command(const char *arg, struct session *ses)

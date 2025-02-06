@@ -159,20 +159,11 @@ timens_t check_event(timens_t time, struct session *ses)
 {
     timens_t tt; /* tick time */
     timens_t et; /* event time */
-    struct eventnode *ev;
 
     assert(ses);
 
-    /* events check  - that should be done in #delay */
-    while ((ev=ses->events) && (ev->time<=time))
-    {
-        ses->events=ev->next;
-        execute_event(ev, ses);
-        SFREE(ev->event);
-        TFREE(ev, struct eventnode);
-        if (any_closed)
-            return -1;
-    }
+    if (do_events(ses, time))
+        return -1;
     et = (ses->events) ? ses->events->time : 0;
 
     /* ticks check */
