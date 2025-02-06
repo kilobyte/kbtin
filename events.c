@@ -25,7 +25,10 @@ static void schedule_event(struct session *ses, struct eventnode *restrict ev)
     struct eventnode *ptr, *ptrlast;
 
     if (!ses->events)
+    {
         ses->events = ev;
+        ev->next = NULL;
+    }
     else if (ses->events->time > ev->time)
     {
         ev->next = ses->events;
@@ -48,7 +51,7 @@ static void schedule_event(struct session *ses, struct eventnode *restrict ev)
     }
 }
 
-void execute_event(struct eventnode *ev, struct session *ses)
+static void execute_event(struct eventnode *ev, struct session *ses)
 {
     if (activesession==ses && ses->mesvar[MSG_EVENT])
         tintin_printf(ses, "[EVENT: %s]", ev->event);
@@ -65,13 +68,37 @@ bool do_events(struct session *ses, timens_t now)
     {
         ses->events=ev->next;
         execute_event(ev, ses);
-        SFREE(ev->event);
-        TFREE(ev, struct eventnode);
+
+        if (ev->period >= 0)
+        {
+            timens_t del = ev->period;
+            if (!del)
+                del = 1; // rapid-fire events shouldn't starve others
+            ev->time = now + del;
+            schedule_event(ses, ev);
+        }
+        else
+        {
+            SFREE(ev->event);
+            TFREE(ev, struct eventnode);
+        }
         if (any_closed)
             return 1;
     }
 
     return 0;
+}
+
+static void show_event(struct session *ses, struct eventnode *ev, timens_t ct)
+{
+    if (ev->period >= 0)
+        tintin_printf(ses, "(%lld.%03d, %lld.%03d)\t {%s}",
+            (ev->time-ct)/NANO, msec(ev->time-ct),
+            (ev->period)/NANO, msec(ev->period),
+            ev->event);
+    else
+        tintin_printf(ses, "(%lld.%03d)\t\t {%s}", (ev->time-ct)/NANO,
+            msec(ev->time-ct), ev->event);
 }
 
 /* list active events matching regexp arg */
@@ -91,8 +118,7 @@ static void list_events(const char *arg, struct session *ses)
         tintin_printf(ses, "#Defined events:");
         while (ev)
         {
-            tintin_printf(ses, "(%lld.%03d)\t {%s}", (ev->time-ct)/NANO,
-                msec(ev->time-ct), ev->event);
+            show_event(ses, ev, ct);
             ev = ev->next;
         }
     }
@@ -103,8 +129,7 @@ static void list_events(const char *arg, struct session *ses)
         {
             if (match(left, ev->event))
             {
-                tintin_printf(ses, "(%lld.%03d)\t {%s}", (ev->time-ct)/NANO,
-                    msec(ev->time-ct), ev->event);
+                show_event(ses, ev, ct);
                 flag = true;
             }
             ev = ev->next;
@@ -118,6 +143,7 @@ static void list_events(const char *arg, struct session *ses)
 void delay_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
+    timens_t period = -1;
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
@@ -130,13 +156,25 @@ void delay_command(const char *arg, struct session *ses)
     if (!*left)
         return tintin_eprintf(ses, "#EVENT IGNORED, NO DELAY GIVEN");
 
+    char *slash = strchr(left, ',');
+    if (slash)
+        *slash = 0;
+
     timens_t delay = time2secs(left, ses);
     if (delay==INVALID_TIME || delay<0)
         return tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), INVALID DELAY", left);
 
+    if (slash)
+    {
+        slash++;
+        period = time2secs(slash, ses);
+        if (period==INVALID_TIME || period<0)
+            return tintin_eprintf(ses, "#EVENT IGNORED (PERIOD={%s}), INVALID PERIOD", slash);
+    }
+
     struct eventnode *ev = TALLOC(struct eventnode);
     ev->time = current_time() + delay;
-    ev->next = NULL;
+    ev->period = period;
     ev->event = mystrdup(right);
 
     schedule_event(ses, ev);

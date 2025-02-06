@@ -288,7 +288,7 @@ struct eventnode
 {
     struct eventnode *next;
     char *event;
-    timens_t time;
+    timens_t time, period;
 };
 
 struct routenode
