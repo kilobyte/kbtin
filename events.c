@@ -71,10 +71,16 @@ bool do_events(struct session *ses, timens_t now)
 
         if (ev->period >= 0)
         {
+            // If badly lagged, wait at least half of period.
+            timens_t old = ev->time - now;
             timens_t del = ev->period;
-            if (!del)
-                del = 1; // rapid-fire events shouldn't starve others
-            ev->time = now + del;
+            timens_t new = old + del;
+            timens_t cap = del/2;
+            if (new < cap)
+                new = cap;
+            if (new <= 0)
+                new = 1; // rapid-fire events shouldn't starve others
+            ev->time = now + new;
             schedule_event(ses, ev);
         }
         else
