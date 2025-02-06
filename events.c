@@ -111,12 +111,9 @@ static void show_event(struct session *ses, struct eventnode *ev, timens_t ct)
 static void list_events(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    timens_t ct; /* current time */
-    bool flag;
-    struct eventnode *ev;
+    timens_t ct = current_time();
+    struct eventnode *ev = ses->events;
 
-    ct = current_time();
-    ev = ses->events;
     arg = get_arg_in_braces(arg, left, 1);
 
     if (!*left)
@@ -130,7 +127,7 @@ static void list_events(const char *arg, struct session *ses)
     }
     else
     {
-        flag = false;
+        bool flag = false;
         while (ev)
         {
             if (match(left, ev->event))
@@ -154,10 +151,7 @@ void delay_command(const char *arg, struct session *ses)
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
     if (!*right)
-    {
-        list_events(left, ses);
-        return;
-    }
+        return list_events(left, ses);
 
     if (!*left)
         return tintin_eprintf(ses, "#EVENT IGNORED, NO DELAY GIVEN");
@@ -194,22 +188,16 @@ void event_command(const char *arg, struct session *ses)
 /* remove ev->next from list */
 static void remove_event(struct eventnode **ev)
 {
-    struct eventnode *tmp;
-    if (*ev)
-    {
-        tmp = (*ev)->next;
-        SFREE((*ev)->event);
-        TFREE(*ev, struct eventnode);
-        *ev=tmp;
-    }
+    struct eventnode *tmp = (*ev)->next;
+    SFREE((*ev)->event);
+    TFREE(*ev, struct eventnode);
+    *ev=tmp;
 }
 
 /* remove events matching regexp arg from list */
 void undelay_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    bool flag;
-    struct eventnode **ev;
 
     arg = get_arg(arg, left, 1, ses);
 
@@ -218,8 +206,8 @@ void undelay_command(const char *arg, struct session *ses)
 
     timens_t ct = current_time();
 
-    flag = false;
-    ev = &(ses->events);
+    bool flag = false;
+    struct eventnode **ev = &(ses->events);
     while (*ev)
         if (match(left, (*ev)->event))
         {
