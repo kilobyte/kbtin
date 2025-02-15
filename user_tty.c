@@ -1775,10 +1775,15 @@ static void usertty_beep(void)
     write_stdout("\007", 1);
 }
 
+static void usertty_input_color(int c)
+{
+    ansicolor(input_color, c);
+}
+
 
 void usertty_initdriver(void)
 {
-    sprintf(input_color, "\033[0;37;4%dm", INPUT_COLOR);
+    ansicolor(input_color, INPUT_COLOR);
 
     ui_sep_input=true;
     ui_con_buffer=true;
@@ -1802,4 +1807,5 @@ void usertty_initdriver(void)
     user_resize         = usertty_resize;
     user_show_status    = usertty_show_status;
     user_mark_greeting  = usertty_mark_greeting;
+    user_input_color    = usertty_input_color;
 }

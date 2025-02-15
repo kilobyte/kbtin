@@ -490,6 +490,39 @@ void margins_command(const char *arg, struct session *ses)
     tintin_printf(ses, "#MARGINS ENABLED.");
 }
 
+/***************************/
+/* the #inputcolor command */
+/***************************/
+// the documented name is "inputcolor" without the s
+void inputcolors_command(const char *arg, struct session *ses)
+{
+    char num[BUFFER_SIZE];
+
+    if (!ui_sep_input)
+    {
+        tintin_eprintf(ses, "#UI: no input bar to set colors for");
+        return;
+    }
+
+    get_arg(arg, num, 1, ses);
+
+    if (!*num)
+    {
+        user_input_color(INPUT_COLOR);
+        tintin_printf(ses, "#UI: input bar reset to default color");
+        return;
+    }
+
+    int c = INPUT_COLOR;
+    if (!getcolor(&arg, &c, 0))
+    {
+        tintin_eprintf(ses, "#Invalid color code, see \"#help color\"");
+        return;
+    }
+
+    user_input_color(c);
+}
+
 
 /***********************/
 /* the #showme command */

@@ -121,4 +121,5 @@ void userpipe_initdriver(void)
     user_resize         = userpipe_resize;
     user_show_status    = user_illegal;
     user_mark_greeting  = user_noop;
+    user_input_color    = (void (*)(int))user_illegal;
 }

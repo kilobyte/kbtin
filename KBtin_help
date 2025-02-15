@@ -9,7 +9,7 @@ Session management:
 Input/output:
    verbatim    char        echo        history     cr          mudcolors
    blank       speedwalk   showme      status      margins     bell
-   send        sendchar    charset     bold
+   send        sendchar    charset     bold        inputcolor
 Aliases:
    alias       unalias     ifaliasexists   shift
 Triggers:
@@ -406,6 +406,11 @@ Example (color table for T2T):
 
 Some terminals make bright colors wide-stroked as well.  You can use this
 command to try to disable this behaviour.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~inputcolor
+
+#inputcolor ~~7~7:1~
+Set the color of the input bar to the given code.  The default is ~~7~7:1~.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~showme
 

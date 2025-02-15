@@ -57,7 +57,7 @@
 /***********************************************/
 #define CONSOLE_LENGTH 32768
 #define STATUS_COLOR COLOR_BLACK
-#define INPUT_COLOR  COLOR_BLUE
+#define INPUT_COLOR  (7 + (1<<CBG_BITS))
 #define MARGIN_COLOR COLOR_RED
 /* FIXME: neither INPUT_COLOR nor MARGIN_COLOR can be COLOR_WHITE */
 /*#define IGNORE_INT*//* uncomment to disable INT (usually ^C) from keyboard */
