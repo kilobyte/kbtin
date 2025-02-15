@@ -21,6 +21,7 @@ static mbstate_t outstate;
 static char out_line[BUFFER_SIZE], b_draft[BUFFER_SIZE];
 static WC k_input[BUFFER_SIZE], kh_input[BUFFER_SIZE], tk_input[BUFFER_SIZE];
 static WC yank_buffer[BUFFER_SIZE];
+static char input_color[64];
 static int k_len, k_pos, k_scrl, tk_len, tk_pos, tk_scrl;
 static int o_len, o_pos, o_oldcolor, o_prevcolor, o_draftlen, o_lastprevcolor;
 #define o_color color
@@ -200,15 +201,15 @@ static void redraw_in(void)
 {
     int l, r, k;
 
-    tbuf+=sprintf(tbuf, "\033[%d;1f\033[0;37;4%dm", scr_len+1, INPUT_COLOR);
+    tbuf+=sprintf(tbuf, "\033[%d;1f%s", scr_len+1, input_color);
     if (k_pos<k_scrl)
         k_scrl=k_pos;
     if (k_pos-k_scrl+(k_scrl!=0)>=COLS)
         k_scrl=k_pos+2-COLS;
     if (k_scrl)
-        tbuf+=sprintf(tbuf, "\033[1m<\033[0;37;4%dm", INPUT_COLOR);
+        tbuf+=sprintf(tbuf, "\033[1m<%s", input_color);
     if (retaining)
-        tbuf+=sprintf(tbuf, "\033[30;1m");
+        tbuf+=sprintf(tbuf, "\033[2m");
     if (in_getpassword)
     {
         l=WClen(&(k_input[k_scrl]));
@@ -243,7 +244,7 @@ static void redraw_in(void)
                 r+=k;
                 l-=k;
             }
-            tbuf+=sprintf(tbuf, "\033[4%dm", INPUT_COLOR);
+            tbuf+=sprintf(tbuf, "%s", input_color);
             if (l>0)
                 tbuf+=OUT_WC(tbuf, k_input+r, l);
             k_input[k_len]=0;
@@ -367,8 +368,8 @@ static void b_scroll(int b_to)
 
     if (b_screenb==b_bottom)
     {
-        tbuf+=sprintf(tbuf, "\033[%d;1f\033[0;1;37;4%dm\033[2K\033[?25l",
-                scr_len+1, INPUT_COLOR);
+        tbuf+=sprintf(tbuf, "\033[%d;1f%s\033[1m\033[2K\033[?25l",
+                scr_len+1, input_color);
         for (int x=0;x<COLS;++x)
             *tbuf++='^';
     }
@@ -1224,10 +1225,10 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             }
             redraw_in();
 #if 0
-            tbuf+=sprintf(tbuf, "\033[%d;1f\033[0;37;4%dm\033[2K", scr_len+1, INPUT_COLOR);
+            tbuf+=sprintf(tbuf, "\033[%d;1f%s\033[2K", scr_len+1, input_color);
             if (margins&&(marginl<=COLS))
             {
-                tbuf+=sprintf(tbuf, "\033[%d;%df\033[0;37;4%dm",
+                tbuf+=sprintf(tbuf, "\033[%d;%df\033[4%dm",
                               scr_len+1, marginl, MARGIN_COLOR);
                 if (marginr<=COLS)
                     i=marginr+1-marginl;
@@ -1235,7 +1236,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                     i=COLS+1-marginl;
                 while (i--)
                     *tbuf++=' ';
-                tbuf+=sprintf(tbuf, "\033[1;37;4%dm\033[%d;1f", INPUT_COLOR, scr_len+1);
+                tbuf+=sprintf(tbuf, "%s\033[1m\033[%d;1f", input_color, scr_len+1);
             }
             scr_curs=0;
             term_commit();
@@ -1432,10 +1433,9 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 if ((k_len==k_pos)&&(k_len<COLS))
                 {
                     scr_curs+=dw;
-                    tbuf+=sprintf(tbuf, "\033[0;37;4%dm",
-                                  margins&&
-                                  (k_len>=marginl)&&(k_len<=marginr)
-                                  ? MARGIN_COLOR : INPUT_COLOR);
+                    tbuf+=sprintf(tbuf, "%s", input_color);
+                    if (margins && (k_len>=marginl)&&(k_len<=marginr))
+                        tbuf+=sprintf(tbuf, "\033[4%dm", MARGIN_COLOR);
                     if (in_getpassword)
                     {
                         *tbuf++='*';
@@ -1538,7 +1538,7 @@ static void usertty_drawscreen(void)
     need_resize=false;
     scr_len=LINES-1-isstatus;
     tbuf+=sprintf(tbuf, "\033[0;37;40m\033[2J\033[0;37;40m\033[1;%dr\0337", scr_len);
-    tbuf+=sprintf(tbuf, "\033[%d;1f\033[0;37;4%dm", scr_len+1, INPUT_COLOR);
+    tbuf+=sprintf(tbuf, "\033[%d;1f%s", scr_len+1, input_color);
     if (!putty)
         tbuf+=sprintf(tbuf, "\033[2K");
     else
@@ -1778,6 +1778,8 @@ static void usertty_beep(void)
 
 void usertty_initdriver(void)
 {
+    sprintf(input_color, "\033[0;37;4%dm", INPUT_COLOR);
+
     ui_sep_input=true;
     ui_con_buffer=true;
     ui_keyboard=true;
