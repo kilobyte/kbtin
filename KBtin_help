@@ -414,12 +414,12 @@ Set the color of the input bar to the given code.  The default is ~~7~7:1~.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~showme
 
-#showme <text>
+#show <text>
 Echoes <text> to the user.
 
 #example
-#showme {Terminal size: $COLSx$LINES}
-#action {%1's mighty bash sends you sprawling} {#showme =======BASHED========}
+#show {Terminal size: $COLSx$LINES}
+#action {%1's mighty bash sends you sprawling} {#show =======BASHED========}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~charset
 
