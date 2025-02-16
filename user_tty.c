@@ -209,7 +209,7 @@ static void redraw_in(void)
     if (k_scrl)
         tbuf+=sprintf(tbuf, "\033[1m<%s", input_color);
     if (retaining)
-        tbuf+=sprintf(tbuf, "\033[2m");
+        tbuf+=sprintf(tbuf, "\033[30;1m");
     if (in_getpassword)
     {
         l=WClen(&(k_input[k_scrl]));
