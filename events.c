@@ -124,22 +124,21 @@ static void list_events(const char *arg, struct session *ses)
             show_event(ses, ev, ct);
             ev = ev->next;
         }
+        return;
     }
-    else
+
+    bool flag = false;
+    while (ev)
     {
-        bool flag = false;
-        while (ev)
+        if (match(left, ev->event))
         {
-            if (match(left, ev->event))
-            {
-                show_event(ses, ev, ct);
-                flag = true;
-            }
-            ev = ev->next;
+            show_event(ses, ev, ct);
+            flag = true;
         }
-        if (!flag)
-            tintin_printf(ses, "#THAT EVENT (%s) IS NOT DEFINED.", left);
+        ev = ev->next;
     }
+    if (!flag)
+        tintin_printf(ses, "#THAT EVENT (%s) IS NOT DEFINED.", left);
 }
 
 /* add new event to the list */
