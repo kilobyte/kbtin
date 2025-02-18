@@ -7,18 +7,6 @@
 
 #include <stdbool.h>
 
-/**********************/
-/* color ANSI numbers */
-/**********************/
-#define COLOR_BLACK     0
-#define COLOR_BLUE      4
-#define COLOR_GREEN     2
-#define COLOR_CYAN      6
-#define COLOR_RED       1
-#define COLOR_MAGENTA   5
-#define COLOR_YELLOW    3
-#define COLOR_WHITE     7
-
 #define LOGCS_LOCAL     ((char*)1)
 #define LOGCS_REMOTE    ((char*)2)
 
@@ -56,10 +44,10 @@
 /* Some default values you might wanna change: */
 /***********************************************/
 #define CONSOLE_LENGTH 32768
-#define STATUS_COLOR COLOR_BLACK
+#define STATUS_COLOR 0
 #define INPUT_COLOR  (7 + (1<<CBG_BITS))
-#define MARGIN_COLOR COLOR_RED
-/* FIXME: neither INPUT_COLOR nor MARGIN_COLOR can be COLOR_WHITE */
+#define MARGIN_COLOR_ANSI 1
+/* FIXME: neither INPUT_COLOR nor MARGIN_COLOR can be 7 */
 /*#define IGNORE_INT*//* uncomment to disable INT (usually ^C) from keyboard */
 #define XTERM_TITLE "KBtin - %s"
 #undef  PTY_ECHO_HACK   /* not working yet */

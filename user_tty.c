@@ -234,7 +234,7 @@ static void redraw_in(void)
                 l-=k;
                 k=0;
             }
-            tbuf+=sprintf(tbuf, "\033[4%dm", MARGIN_COLOR);
+            tbuf+=sprintf(tbuf, "\033[4%dm", MARGIN_COLOR_ANSI);
             k+=marginr-marginl+1;
             if (k>l)
                 k=l;
@@ -279,7 +279,7 @@ static void redraw_status(void)
     if (!isstatus)
         return;
     tbuf+=sprintf(tbuf, "\033[%d;1f\033[0;3%d;4%dm\033[2K\r", LINES,
-                  STATUS_COLOR==COLOR_BLACK?7:0, STATUS_COLOR);
+                  STATUS_COLOR==0?7:0, STATUS_COLOR);
     if (!*(pos=status))
         goto end;
     while (*pos)
@@ -294,7 +294,7 @@ static void redraw_status(void)
                 int k = c&CFG_MASK;
                 if (k != 0 && k != 8)
                     k = 0;
-                else if (STATUS_COLOR == COLOR_BLACK)
+                else if (STATUS_COLOR == 0)
                     k = 7;
                 else
                     k = 0;
@@ -1229,7 +1229,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             if (margins&&(marginl<=COLS))
             {
                 tbuf+=sprintf(tbuf, "\033[%d;%df\033[4%dm",
-                              scr_len+1, marginl, MARGIN_COLOR);
+                              scr_len+1, marginl, MARGIN_COLOR_ANSI);
                 if (marginr<=COLS)
                     i=marginr+1-marginl;
                 else
@@ -1435,7 +1435,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                     scr_curs+=dw;
                     tbuf+=sprintf(tbuf, "%s", input_color);
                     if (margins && (k_len>=marginl)&&(k_len<=marginr))
-                        tbuf+=sprintf(tbuf, "\033[4%dm", MARGIN_COLOR);
+                        tbuf+=sprintf(tbuf, "\033[4%dm", MARGIN_COLOR_ANSI);
                     if (in_getpassword)
                     {
                         *tbuf++='*';
