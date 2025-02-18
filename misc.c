@@ -494,6 +494,16 @@ void margins_command(const char *arg, struct session *ses)
 /* the #inputcolor command */
 /***************************/
 // the documented name is "inputcolor" without the s
+static const char* iparts[] =
+{
+    "input",
+#if 0
+    "retain",
+    "margin",
+    "scroll",
+#endif
+};
+
 void inputcolors_command(const char *arg, struct session *ses)
 {
     char num[BUFFER_SIZE];
@@ -508,8 +518,15 @@ void inputcolors_command(const char *arg, struct session *ses)
 
     if (!*num)
     {
-        user_input_color(INPUT_COLOR);
-        tintin_printf(ses, "#UI: input bar reset to default color");
+        tintin_printf(ses, "Defined UI colors:");
+        for (int i=0; i<ARRAYSZ(iparts); i++)
+        {
+            char tc[64];
+            int c =input_c[i];
+            setcolor(tc, c);
+            // tc starts and ends in tildes, consume them and escape with ~7~
+            tintin_printf(ses, "~7~%-10s %s**~7~ ~~7%s7~~~1~", iparts[i], tc, tc);
+        }
         return;
     }
 
@@ -520,6 +537,7 @@ void inputcolors_command(const char *arg, struct session *ses)
         return;
     }
 
+    input_c[0] = c;
     user_input_color(c);
 }
 
