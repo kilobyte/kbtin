@@ -19,8 +19,30 @@ int msec(timens_t t)
     return t/1000000;
 }
 
+/* remove ev->next from list */
+static void remove_event(struct eventnode **ev)
+{
+    struct eventnode *tmp = (*ev)->next;
+    SFREE((*ev)->event);
+    SFREE((*ev)->label);
+    TFREE(*ev, struct eventnode);
+    *ev=tmp;
+}
+
 static void schedule_event(struct session *ses, struct eventnode *restrict ev1)
 {
+    const char *l1, *l2;
+
+    if ((l1=ev1->label))
+    {
+        struct eventnode **ev2 = &(ses->events);
+        while (*ev2)
+            if (((l2=(*ev2)->label)) && !strcmp(l1, l2))
+                remove_event(ev2);
+            else
+                ev2=&(*ev2)->next;
+    }
+
     timens_t t1 = ev1->time;
     struct eventnode **ev2 = &ses->events;
 
@@ -76,14 +98,19 @@ bool do_events(struct session *ses, timens_t now)
 
 static void show_event(struct session *ses, struct eventnode *ev, timens_t ct)
 {
+    char times[64];
+
     if (ev->period >= 0)
-        tintin_printf(ses, "(%lld.%03d, %lld.%03d)\t {%s}",
+        sprintf(times, "(%lld.%03d, %lld.%03d)\t",
             (ev->time-ct)/NANO, msec(ev->time-ct),
-            (ev->period)/NANO, msec(ev->period),
-            ev->event);
+            (ev->period)/NANO, msec(ev->period));
     else
-        tintin_printf(ses, "(%lld.%03d)\t\t {%s}", (ev->time-ct)/NANO,
-            msec(ev->time-ct), ev->event);
+        sprintf(times, "(%lld.%03d)\t\t", (ev->time-ct)/NANO, msec(ev->time-ct));
+
+    if (ev->label)
+        tintin_printf(ses, "%s {%s} {%s}", times, ev->event, ev->label);
+    else
+        tintin_printf(ses, "%s {%s}", times, ev->event);
 }
 
 /* list active events matching regexp arg */
@@ -123,11 +150,12 @@ static void list_events(const char *arg, struct session *ses)
 /* add new event to the list */
 void delay_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+    char left[BUFFER_SIZE], right[BUFFER_SIZE], label[BUFFER_SIZE];
     timens_t period = -1;
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
+    arg = get_arg(arg, label, 0, ses);
     if (!*right)
         return list_events(left, ses);
 
@@ -154,6 +182,7 @@ void delay_command(const char *arg, struct session *ses)
     ev->time = current_time() + delay;
     ev->period = period;
     ev->event = mystrdup(right);
+    ev->label = label[0]? mystrdup(label) : 0;
 
     schedule_event(ses, ev);
 }
@@ -163,31 +192,24 @@ void event_command(const char *arg, struct session *ses)
     delay_command(arg, ses);
 }
 
-/* remove ev->next from list */
-static void remove_event(struct eventnode **ev)
-{
-    struct eventnode *tmp = (*ev)->next;
-    SFREE((*ev)->event);
-    TFREE(*ev, struct eventnode);
-    *ev=tmp;
-}
-
 /* remove events matching regexp arg from list */
 void undelay_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE];
+    char left[BUFFER_SIZE], label[BUFFER_SIZE];
 
     arg = get_arg(arg, left, 1, ses);
+    arg = get_arg(arg, label, 0, ses);
 
-    if (!*left)
-        return tintin_eprintf(ses, "#ERROR: valid syntax is: #undelay {event pattern}");
+    if (!*left && !*label)
+        return tintin_eprintf(ses, "#ERROR: valid syntax is: #undelay {event pattern} [{label pattern}]");
 
     timens_t ct = current_time();
 
     bool flag = false;
     struct eventnode **ev = &(ses->events);
     while (*ev)
-        if (match(left, (*ev)->event))
+        if ((!*left || match(left, (*ev)->event))
+         && (!*label || match(label, (*ev)->label)))
         {
             flag=true;
             if (ses==activesession && ses->mesvar[MSG_EVENT])

@@ -275,7 +275,7 @@ struct completenode
 struct eventnode
 {
     struct eventnode *next;
-    char *event;
+    char *event, *label;
     timens_t time, period;
 };
 

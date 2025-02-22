@@ -1097,6 +1097,12 @@ The <time> must be non-negative; using <time> of 0 is an useful idiom that
 allows avoiding doing something in the middle of recursion, or doing long
 work without risk of starving other activity.
 
+#delay <time> {<command>} <label>
+#event <time> {<command>} <label>
+Remove any existing event with the same <label>, then add one.  The <command>
+must be enclosed in braces, otherwise the <label> would be considered a part
+of the command.
+
 Example:
 #action {~~-1~7~%1 starts casting fireball at you} {#delay 4 {counter $1}}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1108,6 +1114,12 @@ Example:
 #unevent <pattern>
 #undelay <pattern>
 Kills all timed events whose ~15::4~command~-1~ (not delay!) matches <pattern>.
+
+#unevent {} <label_pattern>
+Kills all events matching <label_pattern>.
+
+#unevent {<cmd_pattern>} <label_pattern>
+Kills all events which match both of the patterns.
 
 Example:
 #action {~~-1~7~%1 leaves } {#unevent {counter $1}}
