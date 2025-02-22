@@ -19,36 +19,15 @@ int msec(timens_t t)
     return t/1000000;
 }
 
-static void schedule_event(struct session *ses, struct eventnode *restrict ev)
+static void schedule_event(struct session *ses, struct eventnode *restrict ev1)
 {
-    // TODO: burn this code and replace without O(n)
-    struct eventnode *ptr, *ptrlast;
+    timens_t t1 = ev1->time;
+    struct eventnode **ev2 = &ses->events;
 
-    if (!ses->events)
-    {
-        ses->events = ev;
-        ev->next = NULL;
-    }
-    else if (ses->events->time > ev->time)
-    {
-        ev->next = ses->events;
-        ses->events = ev;
-    }
-    else
-    {
-        ptr = ses->events;
-        while ((ptrlast = ptr) && (ptr = ptr->next))
-        {
-            if (ptr->time > ev->time)
-            {
-                ev->next = ptr;
-                ptrlast->next = ev;
-                return;
-            }
-        }
-        ptrlast->next = ev;
-        ev->next = NULL;
-    }
+    while (*ev2 && (*ev2)->time <= t1)
+        ev2 = &(*ev2)->next;
+    ev1->next = *ev2;
+    *ev2 = ev1;
 }
 
 static void execute_event(struct eventnode *ev, struct session *ses)
