@@ -75,23 +75,9 @@ struct session *if_command(const char *line, struct session *ses)
     }
 
     if (eval_expression(left, ses))
-        ses=parse_input(right, true, ses);
-    else
-    {
-        line = get_arg_in_braces(line, left, 0);
-        if (*left == tintin_char)
-        {
+        return parse_input(right, true, ses);
 
-            if (is_abrev(left + 1, "else"))
-            {
-                line = get_arg_in_braces(line, right, 1);
-                ses=parse_input(right, true, ses);
-            }
-            if (is_abrev(left + 1, "elif"))
-                ses=if_command(line, ses);
-        }
-    }
-    return ses;
+    return ifelse("if", line, ses);
 }
 
 

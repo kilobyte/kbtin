@@ -614,3 +614,23 @@ static void write_com_arg_mud(const char *command, const char *argument, int nsp
         write_line_mud(outtext, ses);
     }
 }
+
+struct session *ifelse(const char *cmd, const char *line, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    line = get_arg_in_braces(line, left, 0);
+    if (*left == tintin_char)
+    {
+        if (is_abrev(left + 1, "else"))
+        {
+            line = get_arg_in_braces(line, right, 1);
+            return parse_input(right, true, ses);
+        }
+        if (is_abrev(left + 1, "elif"))
+            return if_command(line, ses);
+    }
+    if (*left)
+        tintin_eprintf(ses, "#ERROR: cruft after #%s: {%s}", cmd, left);
+    return ses;
+}

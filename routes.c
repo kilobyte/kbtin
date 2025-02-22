@@ -443,7 +443,7 @@ void dogoto_command(const char *arg, struct session *ses)
     int n=ses->num_locations;
     char A[BUFFER_SIZE], B[BUFFER_SIZE],
         distvar[BUFFER_SIZE], locvar[BUFFER_SIZE], pathvar[BUFFER_SIZE];
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
+    char tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
     int a, b, i, j;
     num_t s, d[n];
     int ok[n], way[n];
@@ -552,23 +552,8 @@ truncated_path:
     return;
 
 not_found:
-    arg=get_arg_in_braces(arg, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            get_arg_in_braces(arg, right, 1);
-            parse_input(right, true, ses);
-            return;
-        }
-        if (is_abrev(left + 1, "elif"))
-        {
-            if_command(arg, ses);
-            return;
-        }
-    }
-    if (*left)
-        tintin_eprintf(ses, "#ERROR: cruft after #dogoto: {%s}", left);
     if (!flag)
         tintin_printf(ses, "No paths from %s to %s found.", A, B);
+
+    ifelse("dogoto", arg, ses);
 }

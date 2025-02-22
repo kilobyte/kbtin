@@ -439,7 +439,6 @@ void match_command(const char *arg, struct session *ses)
 {
     pvars_t vars, *lastpvars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
-    bool flag=false;
 
     arg=get_arg_in_braces(arg, left, 0);
     arg=get_arg(arg, line, 0, ses);
@@ -454,27 +453,10 @@ void match_command(const char *arg, struct session *ses)
         pvars = &vars;
         parse_input(right, true, ses);
         pvars = lastpvars;
-        flag=true;
+        return;
     }
-    arg=get_arg_in_braces(arg, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            get_arg_in_braces(arg, right, 1);
-            if (!flag)
-                parse_input(right, true, ses);
-            return;
-        }
-        if (is_abrev(left + 1, "elif"))
-        {
-            if (!flag)
-                if_command(arg, ses);
-            return;
-        }
-    }
-    if (*left)
-        tintin_eprintf(ses, "#ERROR: cruft after #match: {%s}", left);
+
+    ifelse("match", arg, ses);
 }
 
 

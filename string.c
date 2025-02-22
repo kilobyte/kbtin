@@ -483,18 +483,7 @@ struct session *strcmp_command(const char *line, struct session *ses)
     if (!strcmp(left, right))
         return parse_input(cmd, true, ses);
 
-    line = get_arg_in_braces(line, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            line = get_arg_in_braces(line, right, 1);
-            ses=parse_input(right, true, ses);
-        }
-        if (is_abrev(left + 1, "elif"))
-            ses=if_command(line, ses);
-    }
-    return ses;
+    return ifelse("strcmp", line, ses);
 }
 
 /**********************/
@@ -539,18 +528,7 @@ struct session *ifexists_command(const char *line, struct session *ses)
     if (get_hash(ses->myvars, left))
         return parse_input(cmd, true, ses);
 
-    line = get_arg_in_braces(line, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            line = get_arg_in_braces(line, cmd, 1);
-            ses=parse_input(cmd, true, ses);
-        }
-        if (is_abrev(left + 1, "elif"))
-            ses=if_command(line, ses);
-    }
-    return ses;
+    return ifelse("ifexists", line, ses);
 }
 
 /*********************/
