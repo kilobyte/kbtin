@@ -43,7 +43,7 @@ static bool check_regexp(char *line, char *action, pvars_t *vars, struct session
 /*********************/
 /* the #grep command */
 /*********************/
-void grep_command(const char *arg, struct session *ses)
+struct session *grep_command(const char *arg, struct session *ses)
 {
     pvars_t vars, *lastpvars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
@@ -55,19 +55,19 @@ void grep_command(const char *arg, struct session *ses)
     if (!*left || !*right)
     {
         tintin_eprintf(ses, "#ERROR: valid syntax is: #grep <pattern> <line> <command> [#else ...]");
-        return;
+        return ses;
     }
 
     if (check_regexp(line, left, &vars, ses))
     {
         lastpvars = pvars;
         pvars = &vars;
-        parse_input(right, true, ses);
+        ses = parse_input(right, true, ses);
         pvars = lastpvars;
-        return;
+        return ses;
     }
 
-    ifelse("grep", arg, ses);
+    return ifelse("grep", arg, ses);
 }
 
 

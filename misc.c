@@ -555,7 +555,7 @@ void showme_command(const char *arg, struct session *ses)
 /***********************/
 /* the #loop command   */
 /***********************/
-void loop_command(const char *arg, struct session *ses)
+struct session *loop_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     int bound1, bound2;
@@ -564,7 +564,10 @@ void loop_command(const char *arg, struct session *ses)
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg_in_braces(arg, right, 1);
     if (sscanf(left, "%d,%d", &bound1, &bound2) != 2)
-        return tintin_eprintf(ses, "#Wrong number of arguments in #loop: {%s}.", left);
+    {
+        tintin_eprintf(ses, "#Wrong number of arguments in #loop: {%s}.", left);
+        return ses;
+    }
 
     if (pvars)
         for (int counter=1; counter<10; counter++)
@@ -580,7 +583,7 @@ void loop_command(const char *arg, struct session *ses)
     while (flag)
     {
         sprintf(vars[0], "%d", counter);
-        parse_input(right, true, ses);
+        ses = parse_input(right, true, ses);
         if (bound1 < bound2)
         {
             counter++;
@@ -595,6 +598,7 @@ void loop_command(const char *arg, struct session *ses)
         }
     }
     pvars=lastpvars;
+    return ses;
 }
 
 static const char *msNAME[]=

@@ -435,7 +435,7 @@ void check_all_promptactions(const char *line, struct session *ses)
 /**********************/
 /* the #match command */
 /**********************/
-void match_command(const char *arg, struct session *ses)
+struct session *match_command(const char *arg, struct session *ses)
 {
     pvars_t vars, *lastpvars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
@@ -445,18 +445,21 @@ void match_command(const char *arg, struct session *ses)
     arg=get_arg_in_braces(arg, right, 0);
 
     if (!*left || !*right)
-        return tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
+    {
+        tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
+        return ses;
+    }
 
     if (check_one_action(line, left, &vars, false))
     {
         lastpvars = pvars;
         pvars = &vars;
-        parse_input(right, true, ses);
+        ses = parse_input(right, true, ses);
         pvars = lastpvars;
-        return;
+        return ses;
     }
 
-    ifelse("match", arg, ses);
+    return ifelse("match", arg, ses);
 }
 
 

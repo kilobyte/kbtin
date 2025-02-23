@@ -438,7 +438,7 @@ void goto_command(const char *arg, struct session *ses)
 /************************/
 /* the #dogoto command  */
 /************************/
-void dogoto_command(const char *arg, struct session *ses)
+struct session * dogoto_command(const char *arg, struct session *ses)
 {
     int n=ses->num_locations;
     char A[BUFFER_SIZE], B[BUFFER_SIZE],
@@ -458,7 +458,7 @@ void dogoto_command(const char *arg, struct session *ses)
     if ((!*A)||(!*B))
     {
         tintin_eprintf(ses, "#SYNTAX: #dogoto <from> <to> [<distvar> [<locvar> [<pathvar>]]] [#else ...]");
-        return;
+        return ses;
     }
     bool flag=*distvar||*locvar||*pathvar;
 
@@ -549,11 +549,11 @@ truncated_path:
     pptr=path+(pptr!=path);
     if (*pathvar)
         set_variable(pathvar, pptr, ses);
-    return;
+    return ses;
 
 not_found:
     if (!flag)
         tintin_printf(ses, "No paths from %s to %s found.", A, B);
 
-    ifelse("dogoto", arg, ses);
+    return ifelse("dogoto", arg, ses);
 }
