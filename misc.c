@@ -451,7 +451,7 @@ void margins_command(const char *arg, struct session *ses)
 
     l=marginl;
     r=marginr;
-    if (arg)
+    if (*arg)
     {
         arg=get_arg(arg, num, 0, ses);
         if (*num)

@@ -283,7 +283,7 @@ void logcomment_command(const char *arg, struct session *ses)
 {
     char text[BUFFER_SIZE];
 
-    if (!arg)
+    if (!*arg)
         return tintin_eprintf(ses, "#Logcomment what?");
 
     if (!ses->logfile)
