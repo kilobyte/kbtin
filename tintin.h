@@ -433,3 +433,5 @@ static inline void stracpy(char *restrict dst, const char *restrict src, size_t 
 // Should be in globals.h but for the typedef...
 extern hs_scratch_t *hs_scratch;
 #endif
+
+#include "commands.h"

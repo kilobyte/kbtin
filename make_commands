@@ -15,10 +15,10 @@ while read FUNC
                     ;;
             \**)    FUNC=`echo "$FUNC"|sed 's/^\*//'`
                     echo "extern struct session *$FUNC$ARGS;" >>commands.h
-                    echo "add_command(c_commands, \"$FUNC\", (SC)${FUNC}_command);" >>load_commands.h
+                    echo "add_c_command( \"$FUNC\", ${FUNC}_command);" >>load_commands.h
                     ;;
             *)      echo "extern void            $FUNC$ARGS;" >>commands.h
-                    echo "add_command(commands, \"$FUNC\", ${FUNC}_command);" >>load_commands.h
+                    echo "add_command(\"$FUNC\", ${FUNC}_command);" >>load_commands.h
                     ;;
         esac
     done

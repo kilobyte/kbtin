@@ -313,7 +313,7 @@ static struct session* parse_tintin_command(const char *command, const char *arg
     return ses;
 }
 
-static void add_command(struct hashtable *h, const char *command, t_command func)
+static void add_Xcommand(struct hashtable *h, const char *command, void *func)
 {
     char cmd[BUFFER_SIZE];
 
@@ -330,15 +330,22 @@ static void add_command(struct hashtable *h, const char *command, t_command func
     }
 }
 
+static void add_command(const char *command, t_command func)
+{
+    add_Xcommand(commands, command, func);
+}
+
+static void add_c_command(const char *command, t_c_command func)
+{
+    add_Xcommand(c_commands, command, func);
+}
+
 void init_parse(void)
 {
     commands=init_hash();
     c_commands=init_hash();
     set_hash_nostring(commands, "end", (char*)end_command);
     set_hash_nostring(commands, "unlink", (char*)unlink_command);
-/* this terrible cast avoid gcc (-w → -Wcast-function-type) insisting it
-   still knows better despite an explicit cast */
-#define SC t_command)(void(*)(void)
 #include "load_commands.h"
 }
 
