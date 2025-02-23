@@ -295,6 +295,7 @@ void kill_all(struct session *ses, bool no_reinit)
         free((char*)ses->path[i].left), free((char*)ses->path[i].right);
     kill_hash(ses->pathdirs);
     kill_hash(ses->binds);
+    kill_hash(ses->ratelimits);
     kill_routes(ses);
     kill_events(ses);
     if (no_reinit)
@@ -308,6 +309,7 @@ void kill_all(struct session *ses, bool no_reinit)
     ses->subs = init_tlist();
     ses->antisubs = init_slist();
     ses->binds = init_hash();
+    ses->ratelimits = init_hash();
     ses->path_begin = ses->path_length = 0;
     ZERO(ses->path);
     ses->pathdirs = init_hash();
@@ -367,6 +369,7 @@ void init_nullses(void)
     nullsession->nagle = false;
     nullsession->antisubs = init_slist();
     nullsession->binds = init_hash();
+    nullsession->ratelimits = init_hash();
     nullsession->next = 0;
     nullsession->sessionstart = nullsession->idle_since =
         nullsession->server_idle_since = start_time;
@@ -467,6 +470,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->socket = sock;
     newsession->antisubs = copy_slist(ses->antisubs);
     newsession->binds = copy_hash(ses->binds);
+    newsession->ratelimits = init_hash(); // these are volatile
     newsession->sestype = sestype;
     newsession->naws = (sestype == SES_PTY);
 #ifdef HAVE_ZLIB

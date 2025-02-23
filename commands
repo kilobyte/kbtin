@@ -169,3 +169,5 @@ beep
 colorize
 shift
 inputcolors
+*ratelimit
+unratelimit

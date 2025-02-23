@@ -150,6 +150,7 @@ set(KBtin_sources
 	vars.c
 	tlist.c
 	mudcolors.c
+	ratelimit.c
 )
 
 set(protos ${KBtin_sources})

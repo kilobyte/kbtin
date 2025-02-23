@@ -333,7 +333,7 @@ struct session
     bool ignore;
     kbtree_t(trip) *subs, *actions, *prompts, *highs;
     kbtree_t(str) *antisubs;
-    struct hashtable *aliases, *myvars, *pathdirs, *binds;
+    struct hashtable *aliases, *myvars, *pathdirs, *binds, *ratelimits;
     struct pair path[MAX_PATH_LENGTH];
     struct routenode **routes;
     char **locations;

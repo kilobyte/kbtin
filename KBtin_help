@@ -49,6 +49,8 @@ Tickers:
    tick        tickon      tickoff     ticksize    pretick
 Events:
    delay=event remove=unevent=undelay  findevents
+Rate limiting:
+   ratelimit   unratelimit
 Routes:
    goto        >           route       unroute     dogoto
 Misc:
@@ -1180,6 +1182,32 @@ by KBtin that can be #ACTIONed or #GAGged.
 Toggles between no pre-tick at all and a pre-tick of the value 10.  This
 command had been added only for mainstream tintin++ compatibility, and is
 depreciated -- it's better to say "#pretick 10" explicitly.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~ratelimit
+
+#ratelimit <name> {<spec>} {<command>} [#elif ... #else ...]
+Execute <command> no more often than allowed by the <spec>, if the limit is
+exceeded then do the #elif/#else clause.
+
+The <spec> has the form of {<limit> <period>}.  Eg., {1 10m} can be executed
+only once per 10 minutes.
+
+#ratelimit <name> {} {<command>} [...]
+Reuse an already defined ratelimit.  This works the same as if you gave the
+same <spec> as before.
+
+#ratelimit <name> {<spec>}
+Define a ratelimit for later use.
+
+Example
+#rate {mobkill_$0} {10 1h} {kill $0} #else {#show No more $0 for now.}
+-- will slay no more than 10 orcs per hour, giving 10 elves an independent
+counter.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~unratelimit
+
+#unratelimit <pattern>
+Delete data for ratelimits whose name matches <pattern>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~end
 
