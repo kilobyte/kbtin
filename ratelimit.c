@@ -78,7 +78,8 @@ struct session *ratelimit_command(const char *arg, struct session *ses)
         sprintf(right, "%"PRId64" %"PRId64" %"PRId64, tip, limit, period);
         set_hash(ses->ratelimits, left, right);
 
-        tintin_printf(ses, "#Defined a ratelimit for %s", left);
+        if (ses->mesvar[MSG_RATELIMIT])
+            tintin_printf(ses, "#Defined a ratelimit for %s", left);
         return ses;
     }
 
@@ -95,6 +96,14 @@ struct session *ratelimit_command(const char *arg, struct session *ses)
         return parse_input(command, true, ses);
     }
 
+    if (ses->mesvar[MSG_RATELIMIT])
+    {
+        if (cost)
+            tintin_printf(ses, "#Ratelimit for {%s} exceeded", left);
+        else
+            tintin_printf(ses, "#Ratelimit for {%s} allows nothing", left);
+    }
+
     return ifelse("ratelimit", arg, ses);
 }
 
@@ -109,7 +118,7 @@ void unratelimit_command(const char *arg, struct session *ses)
     {
         arg = get_arg(arg, left, 0, ses);
         delete_hashlist(ses, ses->ratelimits, left,
-            ses->mesvar[MSG_VARIABLE]? "#Ok. Cleared ratelimit for %s." : 0,
-            ses->mesvar[MSG_VARIABLE]? "#THAT RATELIMIT (%s) IS NOT DEFINED." : 0);
+            ses->mesvar[MSG_RATELIMIT]? "#Ok. Cleared ratelimit for %s." : 0,
+            ses->mesvar[MSG_RATELIMIT]? "#THAT RATELIMIT (%s) IS NOT DEFINED." : 0);
     } while (*arg);
 }

@@ -412,6 +412,7 @@ void init_nullses(void)
     nullsession->mesvar[MSG_HOOK]= DEFAULT_HOOK_MESS;
     nullsession->mesvar[MSG_LOG]= DEFAULT_LOG_MESS;
     nullsession->mesvar[MSG_TICK]= DEFAULT_TICK_MESS;
+    nullsession->mesvar[MSG_RATELIMIT]= DEFAULT_RATELIMIT_MESS;
     nullsession->charset=mystrdup(DEFAULT_CHARSET);
     nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
                               DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
