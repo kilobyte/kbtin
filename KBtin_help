@@ -44,7 +44,7 @@ Time:
 Lists:
    finditem    deleteitems foreach     getitem     isatom      listlength
    splitlist   implode     explode     sortlist    collate     expand
-   reverselist
+   reverselist stretch
 Tickers:
    tick        tickon      tickoff     ticksize    pretick
 Events:
@@ -1970,6 +1970,15 @@ Reverses the order of elements in {list}.
 
 Example
 #reversel result {foo {oh my} fi}     -> result = "fi {oh my} foo"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~stretch
+
+#stretch <dest var> <length> {list}
+Expands or contracts the <list> to the given <length>, duplicating or deleting
+elements proportionally.
+
+Examples:
+#stretch out 5 a b c    -> a a b b c
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab

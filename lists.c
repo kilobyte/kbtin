@@ -862,3 +862,82 @@ void shift_command(const char *arg, struct session *ses)
         sec = space_out(get_arg_in_braces(sec, left, 0));
     memmove((*pvars)[0], sec, strlen(sec)+1);
 }
+
+/************************/
+/* the #stretch command */
+/************************/
+void stretch_command(const char *arg, struct session *ses)
+{
+    char var[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
+    char *tab[BUFFER_SIZE/2];
+
+    arg=get_arg(arg, var, 0, ses);
+    arg=get_arg(arg, left, 0, ses);
+    arg=get_arg(arg, right, 1, ses);
+
+    if (!*var || !*left)
+        return tintin_eprintf(ses, "#Syntax: #stretch var length {list}");
+
+    char *err;
+    int n = strtoul(left, &err, 10);
+    if (*err)
+        return tintin_eprintf(ses, "#Error: #stretch wants a number, got {%s}", left);
+    if (n > ARRAYSZ(tab)) // wouldn't fit in the variable anyway
+        return tintin_eprintf(ses, "#Error: insane length given to #stretch");
+    if (n <= 0) // < 0 possible if unsigned long overflows int
+    {
+        // anything stretched to 0
+empty:
+        set_variable(var, "", ses);
+        return;
+    }
+
+    int m = 0;
+    arg = right;
+    while (*arg)
+    {
+        arg = get_arg_in_braces(arg, left, 0);
+        tab[m++]=mystrdup(left);
+    }
+
+    if (!m)
+        goto empty; // nothing comes from nothing
+
+    char *out = left;
+    // When expanding, prefer the rightmost Bresenham ray as it makes output
+    // have longer repeats on the left which is more consitent with what people
+    // tend to make manually.  Ie, aaabbcc not aabbbcc (most "evenest") or
+    // aabbccc.
+    int d = (n>m)? n-1 : 0;
+    int j = 0;
+    for (int i=0; i<m; i++)
+    {
+        while (d >= 0)
+        {
+            d -= m;
+            j++;
+            if (out!=left)
+                *out++=' ';
+            int len = strlen(tab[i]);
+            if (out+len >= left+BUFFER_SIZE-4)
+            {
+                tintin_eprintf(ses, "#Error: stretched list too long");
+                goto abort;
+            }
+
+            if (*tab[i] && isatom(tab[i]))
+                out += sprintf(out, "%s", tab[i]);
+            else
+                out += sprintf(out, "{%s}", tab[i]);
+        }
+
+        d += n;
+    }
+    assert(j = n);
+
+abort:
+    for (int i=0; i<m; i++)
+        free(tab[i]);
+    *out=0;
+    set_variable(var, left, ses);
+}
