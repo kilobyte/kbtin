@@ -208,8 +208,11 @@ void undelay_command(const char *arg, struct session *ses)
     bool flag = false;
     struct eventnode **ev = &(ses->events);
     while (*ev)
+    {
+        const char *label2;
+
         if ((!*left || match(left, (*ev)->event))
-         && (!*label || match(label, (*ev)->label)))
+         && (!*label || (((label2=(*ev)->label)) && match(label, label2))))
         {
             flag=true;
             if (ses==activesession && ses->mesvar[MSG_EVENT])
@@ -219,6 +222,7 @@ void undelay_command(const char *arg, struct session *ses)
         }
         else
             ev=&((*ev)->next);
+    }
 
     if (!flag)
         tintin_printf(ses, "#THAT EVENT IS NOT DEFINED.");
