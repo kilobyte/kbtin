@@ -108,7 +108,7 @@ fresh_sock:
         {
             if (try_mptcp)
             {
-                    tintin_eprintf(ses, "#Kernel too old for MPTCP, disabling");
+                    //tintin_eprintf(ses, "#Kernel too old for MPTCP, disabling");
                     try_mptcp = false;
                     goto fresh_sock;
             }
