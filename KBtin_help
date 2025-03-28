@@ -1979,6 +1979,8 @@ elements proportionally.
 
 Examples:
 #stretch out 5 a b c    -> a a b b c
+#ali gradient {#strlen R {$2};#stret R $R {$1};#impl R / {$R};#colo R {$R} {$2}}
+gradient {8 4 12 14 15 14 12 4 8} {fiery text}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab
