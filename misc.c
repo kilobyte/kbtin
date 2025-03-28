@@ -519,7 +519,7 @@ void inputcolors_command(const char *arg, struct session *ses)
     if (!*num)
     {
         tintin_printf(ses, "Defined UI colors:");
-        for (int i=0; i<ARRAYSZ(iparts); i++)
+        for (int i=0; i<(int)ARRAYSZ(iparts); i++)
         {
             char tc[64];
             int c =input_c[i];

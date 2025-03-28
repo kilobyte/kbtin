@@ -522,7 +522,7 @@ static struct session *new_session(const char *name, const char *address, int so
             newsession->hooks[i]=0;
     newsession->closing=0;
     newsession->mudcolors = ses->mudcolors;
-    for (int i=0;i<ARRAYSZ(ses->MUDcolors);i++)
+    for (int i=0;i<(int)ARRAYSZ(ses->MUDcolors);i++)
         newsession->MUDcolors[i] = mystrdup(ses->MUDcolors[i]);
     newsession->charset = mystrdup(sestype==SES_SOCKET ? ses->charset : user_charset_name);
     newsession->logcharset = logcs_is_special(ses->logcharset) ?

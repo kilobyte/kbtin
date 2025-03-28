@@ -882,7 +882,7 @@ void stretch_command(const char *arg, struct session *ses)
     int n = strtoul(left, &err, 10);
     if (*err)
         return tintin_eprintf(ses, "#Error: #stretch wants a number, got {%s}", left);
-    if (n > ARRAYSZ(tab)) // wouldn't fit in the variable anyway
+    if (n > (int)ARRAYSZ(tab)) // wouldn't fit in the variable anyway
         return tintin_eprintf(ses, "#Error: insane length given to #stretch");
     if (n <= 0) // < 0 possible if unsigned long overflows int
     {
