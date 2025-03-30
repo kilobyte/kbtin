@@ -44,6 +44,6 @@ void user_setdriver(int dr)
         usertty_initdriver();
         break;
     default:
-        syserr("No such driver: %d", dr);
+        die("No such driver: %d", dr);
     }
 }

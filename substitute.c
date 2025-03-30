@@ -246,7 +246,7 @@ static void build_subs_hs(struct session *ses)
     uintptr_t *markers = MALLOC(n*sizeof(uintptr_t));
 
     if (!pat || !flags || !ids || !data || !markers)
-        syserr("out of memory");
+        die("out of memory");
 
     ses->subs_omni_last=ses->subs_omni_first=n;
 
@@ -293,7 +293,7 @@ done:
     MFREE(pat, n*sizeof(void*));
 
     if (ses->subs_hs && hs_alloc_scratch(ses->subs_hs, &hs_scratch))
-        syserr("out of memory");
+        die("out of memory");
 }
 
 static unsigned short longest_len[BUFFER_SIZE];

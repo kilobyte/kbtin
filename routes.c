@@ -51,7 +51,7 @@ void copyroutes(struct session *ses1, struct session *ses2)
     ses2->locations=MALLOC(n*sizeof(char*));
     ses2->routes=MALLOC(n*sizeof(void*));
     if (!ses2->locations||!ses2->routes)
-        syserr("out of memory");
+        die("out of memory");
     for (int i=0;i<n;i++)
     {
         if (ses1->locations[i])

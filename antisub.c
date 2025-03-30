@@ -107,7 +107,7 @@ static void build_antisubs_hs(struct session *ses)
     const char **pat = MALLOC(n*sizeof(void*));
     unsigned int *flags = MALLOC(n*sizeof(int));
     if (!pat || !flags)
-        syserr("out of memory");
+        die("out of memory");
 
     int j=0;
     {
@@ -136,7 +136,7 @@ static void build_antisubs_hs(struct session *ses)
     MFREE(pat, n*sizeof(void*));
 
     if (ses->antisubs_hs && hs_alloc_scratch(ses->antisubs_hs, &hs_scratch))
-        syserr("out of memory");
+        die("out of memory");
 }
 
 static int anti_match(unsigned int id, unsigned long long from,

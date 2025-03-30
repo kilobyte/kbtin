@@ -398,7 +398,7 @@ static void b_addline(void)
     char *new;
     while (!(new=MALLOC(o_len+1)))
         if (!b_shorten())
-            syserr("Out of memory");
+            die("Out of memory");
     out_line[o_len]=0;
     strcpy(new, out_line);
     if (b_bottom==b_first+CONSOLE_LENGTH)

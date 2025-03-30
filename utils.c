@@ -8,7 +8,7 @@
 #include <time.h>
 #include "protos/user.h"
 
-void syserr(const char *msg, ...);
+void die(const char *msg, ...);
 
 /*********************************************/
 /* return: true if s1 is an abrevation of s2 */
@@ -30,11 +30,27 @@ char* mystrdup(const char *s)
         return 0;
     int len = strlen(s) + 1;
     if (!(dup = MALLOC(len)))
-        syserr("Not enough memory for strdup.");
+        die("Not enough memory for strdup.");
     memcpy(dup, s, len);
     return dup;
 }
 
+/***********************************************/
+/* print non-errno error message and terminate */
+/***********************************************/
+void die(const char *msg, ...)
+{
+    va_list ap;
+
+    if (ui_own_output)
+        user_done();
+
+    va_start(ap, msg);
+    vfprintf(stderr, msg, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+    exit(1);
+}
 
 /*************************************************/
 /* print system call error message and terminate */
@@ -92,6 +108,7 @@ again:;
         len-=r;
         goto again;
     }
+    errno = r;
     syserr("write to stdout failed");
 }
 

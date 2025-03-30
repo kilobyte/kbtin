@@ -298,7 +298,7 @@ static void build_highs_hs(struct session *ses)
     unsigned int *ids = MALLOC(n*sizeof(int));
     const char **cols = MALLOC(n*sizeof(void*));
     if (!pat || !flags || !ids || !cols)
-        syserr("out of memory");
+        die("out of memory");
 
     int j=0;
     TRIP_ITER(ses->highs, ln)
@@ -331,7 +331,7 @@ static void build_highs_hs(struct session *ses)
     MFREE(pat, n*sizeof(void*));
 
     if (ses->highs_hs && hs_alloc_scratch(ses->highs_hs, &hs_scratch))
-        syserr("out of memory");
+        die("out of memory");
 }
 
 static int *gattr;

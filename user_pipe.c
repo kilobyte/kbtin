@@ -90,7 +90,7 @@ static void userpipe_resize(void)
 
 static void user_illegal(void)
 {
-    syserr("DRIVER: operation not supported");
+    die("DRIVER: operation not supported");
 }
 
 static void user_noop(void)

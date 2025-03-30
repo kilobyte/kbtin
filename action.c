@@ -286,7 +286,7 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
     ptrip *data = MALLOC(n*sizeof(ptrip));
 
     if (!pat || !flags || !ids || !data)
-        syserr("out of memory");
+        die("out of memory");
 
     int j=0;
     TRIP_ITER(acts, ln)
@@ -309,7 +309,7 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
         hs_free_compile_error(error);
     }
     else if (hs_alloc_scratch(ses->acts_hs[act], &hs_scratch))
-        syserr("out of memory");
+        die("out of memory");
 
     ses->acts_data[act]=data;
     for (int i=0; i<n; i++)
