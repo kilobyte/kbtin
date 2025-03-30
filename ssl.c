@@ -1,25 +1,57 @@
 #include "tintin.h"
 #include <sys/stat.h>
 #include "protos/print.h"
+#include "protos/utils.h"
 
 #ifdef HAVE_GNUTLS
 static gnutls_certificate_credentials_t ssl_cred=0;
-static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct session *oldses);
+static int ssl_check_cert(gnutls_session_t sslses, const char *host, int validate, struct session *oldses);
 
-gnutls_session_t ssl_negotiate(int sock, const char *host, struct session *oldses)
+#define FAIL(...) do{tintin_eprintf(oldses, "#Error: " __VA_ARGS__, gnutls_strerror(ret)); gnutls_deinit(sslses); return 0; }while(0)
+
+enum {VAL_NONE, VAL_CA, VAL_SAVE};
+
+gnutls_session_t ssl_negotiate(int sock, const char *host, const char *extra, struct session *oldses)
 {
     gnutls_session_t sslses;
     int ret;
+    int validate;
+
+    if (!*extra || !strcmp(extra, "ca") || !strcmp(extra, "CA"))
+        validate = VAL_CA;
+    else if (!strcmp(extra, "none"))
+        validate = VAL_NONE;
+    else if (!strcmp(extra, "save"))
+        validate = VAL_SAVE;
+    else
+    {
+        tintin_eprintf(oldses, "#Error: unknown security model '%s'", extra);
+        return 0;
+    }
 
     if (!ssl_cred)
     {
         gnutls_global_init();
-        gnutls_certificate_allocate_credentials(&ssl_cred);
+        if ((ret = gnutls_certificate_allocate_credentials(&ssl_cred)))
+            die("#Error: gnutls: %s", gnutls_strerror(ret));
+        if ((ret = gnutls_certificate_set_x509_system_trust(ssl_cred)) < 0)
+            tintin_eprintf(oldses, "#Warning: can't find system CAs: %s", gnutls_strerror(ret));
     }
-    gnutls_init(&sslses, GNUTLS_CLIENT);
-    gnutls_set_default_priority(sslses);
-    gnutls_credentials_set(sslses, GNUTLS_CRD_CERTIFICATE, ssl_cred);
-    gnutls_transport_set_ptr(sslses, (gnutls_transport_ptr_t)(intptr_t)sock);
+
+    if ((ret = gnutls_init(&sslses, GNUTLS_CLIENT)))
+    {
+        tintin_eprintf(oldses, "#Error: gnutls_init: %s", gnutls_strerror(ret));
+        return 0;
+    }
+    if ((ret = gnutls_set_default_priority(sslses)))
+        FAIL("gnutls_set_default_priority: %s");
+    if ((ret = gnutls_credentials_set(sslses, GNUTLS_CRD_CERTIFICATE, ssl_cred)))
+        FAIL("gnutls_credentials_set: %s");
+    if ((ret = gnutls_server_name_set(sslses, GNUTLS_NAME_DNS, host, strlen(host))))
+        FAIL("gnutls_server_name_set(%s): %s", host);
+    if (validate == VAL_CA)
+        gnutls_session_set_verify_cert(sslses, host, 0);
+    gnutls_transport_set_int(sslses, sock);
     do
     {
         ret=gnutls_handshake(sslses);
@@ -27,10 +59,20 @@ gnutls_session_t ssl_negotiate(int sock, const char *host, struct session *oldse
     if (ret)
     {
         tintin_eprintf(oldses, "#SSL handshake failed: %s", gnutls_strerror(ret));
+        if (ret == GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR)
+        {
+            ret = gnutls_session_get_verify_cert_status(sslses);
+            gnutls_certificate_type_t cert_type = gnutls_certificate_type_get(sslses);
+
+            gnutls_datum_t err = {0};
+            gnutls_certificate_verification_status_print(ret, cert_type, &err, 0);
+            tintin_eprintf(oldses, "#%s", err.data);
+            gnutls_free(err.data);
+        }
         gnutls_deinit(sslses);
         return 0;
     }
-    if (!ssl_check_cert(sslses, host, oldses))
+    if (validate!=VAL_CA && !ssl_check_cert(sslses, host, validate, oldses))
     {
         gnutls_deinit(sslses);
         return 0;
@@ -162,7 +204,7 @@ static bool diff_certs(gnutls_x509_crt_t c1, gnutls_x509_crt_t c2)
 }
 
 
-static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct session *oldses)
+static int ssl_check_cert(gnutls_session_t sslses, const char *host, int validate, struct session *oldses)
 {
     char fname[BUFFER_SIZE], buf2[BUFFER_SIZE], *bptr;
     time_t t;
@@ -172,7 +214,8 @@ static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct sess
     const char *err=0;
 
     oldcert=0;
-    load_cert(&oldcert, host);
+    if (validate == VAL_SAVE)
+        load_cert(&oldcert, host);
 
     if (gnutls_certificate_type_get(sslses)!=GNUTLS_CRT_X509)
     {
@@ -214,6 +257,9 @@ static int ssl_check_cert(gnutls_session_t sslses, const char *host, struct sess
         err=fname;
     }
 
+    if (validate == VAL_NONE)
+        goto badcert;
+
     if (!oldcert)
         save_cert(cert, host, 1, oldses);
     else if (diff_certs(cert, oldcert))
@@ -254,8 +300,35 @@ nocert:
         gnutls_x509_crt_deinit(oldcert);
     if (!err)
         return 1;
-    if (oldcert)
+
+    switch (validate)
     {
+#if 0
+    case VAL_CA:
+        tintin_eprintf(oldses, "#SSL error: %s", err);
+        tintin_eprintf(oldses, "############################################################");
+        tintin_eprintf(oldses, "##################### SECURITY ALERT #######################");
+        tintin_eprintf(oldses, "############################################################");
+        tintin_eprintf(oldses, "# SSL failed verification.  Either your connection is      #");
+        tintin_eprintf(oldses, "# being intercepted, your system is screwed up, or the     #");
+        tintin_eprintf(oldses, "# server's admin made an error.  In any case, something    #");
+        tintin_eprintf(oldses, "# is fishy.  Aborting connection.                          #");
+        tintin_eprintf(oldses, "############################################################");
+        tintin_eprintf(oldses, "# NOTE: with MUD server security being as bad as it is,    #");
+        tintin_eprintf(oldses, "# you may want to revert to old KBtin's security model by  #");
+        tintin_eprintf(oldses, "# appending 'save' or forego all checks with 'none'.       #");
+        tintin_eprintf(oldses, "############################################################");
+    return 0;
+#endif
+
+    case VAL_SAVE:
+        if (!oldcert)
+        {
+            tintin_printf(oldses, "#SSL warning: %s", err);
+            tintin_printf(oldses, "#You may be vulnerable to Man-in-the-Middle attacks.");
+            return 2;
+        }
+
         tintin_eprintf(oldses, "#SSL error: %s", err);
         tintin_eprintf(oldses, "############################################################");
         tintin_eprintf(oldses, "##################### SECURITY ALERT #######################");
@@ -274,12 +347,13 @@ nocert:
         tintin_eprintf(oldses, "############################################################");
         tintin_eprintf(oldses, "#Aborting connection!");
         return 0;
-    }
-    else
-    {
+
+    case VAL_NONE:
         tintin_printf(oldses, "#SSL warning: %s", err);
-        tintin_printf(oldses, "#You may be vulnerable to Man-in-the-Middle attacks.");
         return 2;
+
+    default:
+        abort();
     }
 }
 

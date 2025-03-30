@@ -1238,13 +1238,23 @@ Example:
 #sslsession
 Lists all active sessions, as in #session (also non-SSL ones).
 
-#sslsession <name> <host> <port>
+#sslsession <name> <host> <port> [<security>]
 Starts a new encrypted session, connecting over SSL to TCP <port> on <host>.
 The server's certificate will be retained, and compared during subsequent
 connections.
 
+The following <security> models are supported:
+* ca (default): the certificate must be signed by an Internet CA recognized
+    by your system.
+* save (as in KBtin ≤2.2): the first time you connect to a server, its
+    certificate is blindly accepted and saved on the disk in ~/.tintin/ssl/
+    On subsequent connections, changes are accepted if the old cert has
+    expired or will expire in less than a week.
+* none: no verification whatsoever.  You're vulnerable to Man-in-the-Middle
+    interception; you're still safe against passive snooping.
+
 Example:
-#sslses t2t t2tmud.org 443
+#sslses t2t t2tmud.org 444
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~run
 

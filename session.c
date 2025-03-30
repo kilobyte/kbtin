@@ -136,7 +136,7 @@ static int is_bad_session(struct session *ses, const char *left)
 /*****************************************/
 static struct session *socket_session(const char *arg, struct session *ses, bool ssl)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], host[BUFFER_SIZE];
+    char left[BUFFER_SIZE], right[BUFFER_SIZE], host[BUFFER_SIZE], extra[BUFFER_SIZE];
     int sock;
 #ifdef HAVE_GNUTLS
     gnutls_session_t sslses = 0;
@@ -147,6 +147,10 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, host, 0, ses);
     arg = get_arg(arg, right, 0, ses);
+    arg = get_arg(arg, extra, 0, ses);
+
+    if (*extra && !ssl)
+        return tintin_eprintf(ses, "#session: non-SSL takes no extra args"), ses;
 
     if (!*host)
     {
@@ -166,7 +170,7 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
         return ses;
 
 #ifdef HAVE_GNUTLS
-    if (ssl && !(sslses=ssl_negotiate(sock, host, ses)))
+    if (ssl && !(sslses=ssl_negotiate(sock, host, extra, ses)))
     {
         close(sock);
         return ses;
