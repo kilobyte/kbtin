@@ -156,7 +156,6 @@ fresh_sock:
 
         alarm(0);
         freeaddrinfo(ai);
-        user_textout_draft("~8~[connected]~-1~", false);
         return sock;
     }
 

@@ -144,7 +144,9 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
     int sock;
     char *port;
 #ifdef HAVE_GNUTLS
-    gnutls_session_t sslses;
+    gnutls_session_t sslses = 0;
+#else
+    #define sslses 0
 #endif
 
     if (list_sessions(arg, ses, left, right))
@@ -176,17 +178,14 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
         return ses;
 
 #ifdef HAVE_GNUTLS
-    if (ssl)
+    if (ssl && !(sslses=ssl_negotiate(sock, host, ses)))
     {
-        if (!(sslses=ssl_negotiate(sock, host, ses)))
-        {
-            close(sock);
-            return ses;
-        }
-        return new_session(left, right, sock, SES_SOCKET, sslses, ses);
+        close(sock);
+        return ses;
     }
 #endif
-    return new_session(left, right, sock, SES_SOCKET, 0, ses);
+    user_textout_draft("~8~[connected]~-1~", false);
+    return new_session(left, right, sock, SES_SOCKET, sslses, ses);
 }
 
 
