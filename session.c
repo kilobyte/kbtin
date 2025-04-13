@@ -40,7 +40,7 @@
 static struct session *new_session(const char *name, const char *address, int fd, sestype_t sestype, gnutls_session_t ssl, struct session *ses);
 static void show_session(struct session *ses);
 
-static bool session_exists(char *name)
+static bool session_exists(const char *name)
 {
     for (struct session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
         if (!strcmp(sesptr->name, name))
@@ -88,17 +88,9 @@ noname:
 }
 
 
-/*
-  common code for #session and #run for cases of:
-    #session            - list all sessions
-    #session {a}        - print info about session a
-  (opposed to #session {a} {mud.address.here 666} - starting a new session)
-*/
-static int list_sessions(const char *arg, struct session *ses, char *left, char *right)
+static void list_sessions(struct session *ses, const char *left)
 {
     struct session *sesptr;
-    arg = get_arg_in_braces(arg, left, 0);
-    arg = get_arg_in_braces(arg, right, 1);
 
     if (!*left)
     {
@@ -106,33 +98,37 @@ static int list_sessions(const char *arg, struct session *ses, char *left, char 
         for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
             if (sesptr!=nullsession)
                 show_session(sesptr);
+        return;
     }
-    else if (*left && !*right)
-    {
-        for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
-            if (!strcmp(sesptr->name, left))
-            {
-                show_session(sesptr);
-                break;
-            }
-        if (!sesptr)
-            tintin_eprintf(ses, "#THAT SESSION IS NOT DEFINED.");
-    }
-    else
-    {
-        if (strlen(left) > MAX_SESNAME_LENGTH)
+
+    for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
+        if (!strcmp(sesptr->name, left))
         {
-            tintin_eprintf(ses, "#SESSION NAME TOO LONG.");
-            return 1;
+            show_session(sesptr);
+            break;
         }
-        if (session_exists(left))
-        {
-            tintin_eprintf(ses, "#THERE'S A SESSION WITH THAT NAME ALREADY.");
-            return 1;
-        }
-        return 0;
+    if (!sesptr)
+        tintin_eprintf(ses, "#THAT SESSION IS NOT DEFINED.");
+}
+
+static int is_bad_session(struct session *ses, const char *left)
+{
+    if (!*left) // some joker did #ses {} {foo}
+    {
+        tintin_eprintf(ses, "#GIVE A SESSION NAME PLEASE.");
+        return 1;
     }
-    return 1;
+    if (strlen(left) > MAX_SESNAME_LENGTH)
+    {
+        tintin_eprintf(ses, "#SESSION NAME TOO LONG.");
+        return 1;
+    }
+    if (session_exists(left))
+    {
+        tintin_eprintf(ses, "#THERE'S A SESSION WITH THAT NAME ALREADY.");
+        return 1;
+    }
+    return 0;
 }
 
 /*****************************************/
@@ -142,39 +138,31 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], host[BUFFER_SIZE];
     int sock;
-    char *port;
 #ifdef HAVE_GNUTLS
     gnutls_session_t sslses = 0;
 #else
     #define sslses 0
 #endif
 
-    if (list_sessions(arg, ses, left, right))
-        return ses;     /* (!*left)||(!*right) */
-
-    strcpy(host, space_out(right));
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, host, 0, ses);
+    arg = get_arg(arg, right, 0, ses);
 
     if (!*host)
     {
-        tintin_eprintf(ses, "#session: HEY! SPECIFY AN ADDRESS WILL YOU?");
+        list_sessions(ses, left);
         return ses;
     }
 
-    port=host;
-    while (*port && !isaspace(*port))
-        port++;
-    if (*port)
-    {
-        *port++ = '\0';
-        port = (char*)space_out(port);
-    }
+    if (is_bad_session(ses, left))
+        return ses;
 
-    if (!*port)
+    if (!*right)
     {
         tintin_eprintf(ses, "#session: HEY! SPECIFY A PORT NUMBER WILL YOU?");
         return ses;
     }
-    if (!(sock = connect_mud(host, port, ses)))
+    if (!(sock = connect_mud(host, right, ses)))
         return ses;
 
 #ifdef HAVE_GNUTLS
@@ -185,7 +173,7 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
     }
 #endif
     user_textout_draft("~8~[connected]~-1~", false);
-    return new_session(left, right, sock, SES_SOCKET, sslses, ses);
+    return new_session(left, host, sock, SES_SOCKET, sslses, ses);
 }
 
 
@@ -213,14 +201,17 @@ struct session *run_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE], right[BUFFER_SIZE], ustr[BUFFER_SIZE];
     int sock;
 
-    if (list_sessions(arg, ses, left, right))
-        return ses;     /* (!*left)||(!*right) */
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
 
     if (!*right)
     {
-        tintin_eprintf(ses, "#run: HEY! SPECIFY A COMMAND, WILL YOU?");
+        list_sessions(ses, left);
         return ses;
     }
+
+    if (is_bad_session(ses, left))
+        return ses;
 
     if (!strcmp(right, "//selfpipe"))
     {
