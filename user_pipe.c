@@ -20,9 +20,10 @@ static void userpipe_init(void)
 
 static void userpipe_textout(const char *txt)
 {
-    char buf[BUFFER_SIZE], *b=buf;
+    char buf[BUFFER_SIZE+64], *b=buf;
 
     for (const char *a=txt; *a; )
+    {
         switch (*a)
         {
         case '~':
@@ -42,6 +43,9 @@ static void userpipe_textout(const char *txt)
         default:
             one_utf8_to_mb(&b, &a, &outstate);
         }
+        if (b>buf+BUFFER_SIZE)
+            write_stdout(buf, b-buf), b=buf;
+    }
     write_stdout(buf, b-buf);
 }
 
@@ -86,7 +90,7 @@ static void userpipe_resize(void)
 
 static void user_illegal(void)
 {
-    syserr("DRIVER: operation not supported");
+    die("DRIVER: operation not supported");
 }
 
 static void user_noop(void)
@@ -103,8 +107,8 @@ void userpipe_initdriver(void)
 
     user_init           = userpipe_init;
     user_done           = user_noop;
-    user_pause          = user_illegal;
-    user_resume         = user_illegal;
+    user_pause          = user_noop;
+    user_resume         = user_noop;
     user_textout        = userpipe_textout;
     user_textout_draft  = (void (*)(const char*, bool))user_noop;
     user_process_kbd    = userpipe_process_kbd;
@@ -117,4 +121,5 @@ void userpipe_initdriver(void)
     user_resize         = userpipe_resize;
     user_show_status    = user_illegal;
     user_mark_greeting  = user_noop;
+    user_input_color    = (void (*)(int))user_illegal;
 }

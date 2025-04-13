@@ -51,7 +51,7 @@ void copyroutes(struct session *ses1, struct session *ses2)
     ses2->locations=MALLOC(n*sizeof(char*));
     ses2->routes=MALLOC(n*sizeof(void*));
     if (!ses2->locations||!ses2->routes)
-        syserr("out of memory");
+        die("out of memory");
     for (int i=0;i<n;i++)
     {
         if (ses1->locations[i])
@@ -289,17 +289,23 @@ void unroute_command(const char *arg, struct session *ses)
     arg=get_arg(arg, a, 0, ses);
     arg=get_arg(arg, b, 1, ses);
 
-    if ((!*a)||(!*b))
+    if (!*a)
     {
         tintin_eprintf(ses, "#SYNTAX: #unroute <from> <to>");
         return;
     }
 
     for (int i=0;i<ses->num_locations;i++)
-        if (ses->locations[i]&&match(a, ses->locations[i]))
+    {
+        if (!ses->locations[i])
+            continue;
+        bool is_a = match(a, ses->locations[i]);
+
+        if (is_a || !*b)
             for (struct routenode**r=&ses->routes[i];*r;)
             {
-                if (match(b, ses->locations[(*r)->dest]))
+                if (*b ? match(b, ses->locations[(*r)->dest])
+                       : is_a || match(a, ses->locations[(*r)->dest]))
                 {
                     struct routenode *p=*r;
                     if (ses->mesvar[MSG_ROUTE])
@@ -317,6 +323,7 @@ void unroute_command(const char *arg, struct session *ses)
                 else
                     r=&((*r)->next);
             }
+    }
     if (found)
         kill_unused_locations(ses);
     else if (ses->mesvar[MSG_ROUTE])
@@ -431,12 +438,12 @@ void goto_command(const char *arg, struct session *ses)
 /************************/
 /* the #dogoto command  */
 /************************/
-void dogoto_command(const char *arg, struct session *ses)
+struct session * dogoto_command(const char *arg, struct session *ses)
 {
     int n=ses->num_locations;
     char A[BUFFER_SIZE], B[BUFFER_SIZE],
         distvar[BUFFER_SIZE], locvar[BUFFER_SIZE], pathvar[BUFFER_SIZE];
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
+    char tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
     int a, b, i, j;
     num_t s, d[n];
     int ok[n], way[n];
@@ -451,7 +458,7 @@ void dogoto_command(const char *arg, struct session *ses)
     if ((!*A)||(!*B))
     {
         tintin_eprintf(ses, "#SYNTAX: #dogoto <from> <to> [<distvar> [<locvar> [<pathvar>]]] [#else ...]");
-        return;
+        return ses;
     }
     bool flag=*distvar||*locvar||*pathvar;
 
@@ -542,26 +549,11 @@ truncated_path:
     pptr=path+(pptr!=path);
     if (*pathvar)
         set_variable(pathvar, pptr, ses);
-    return;
+    return ses;
 
 not_found:
-    arg=get_arg_in_braces(arg, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            get_arg_in_braces(arg, right, 1);
-            parse_input(right, true, ses);
-            return;
-        }
-        if (is_abrev(left + 1, "elif"))
-        {
-            if_command(arg, ses);
-            return;
-        }
-    }
-    if (*left)
-        tintin_eprintf(ses, "#ERROR: cruft after #dogoto: {%s}", left);
     if (!flag)
         tintin_printf(ses, "No paths from %s to %s found.", A, B);
+
+    return ifelse("dogoto", arg, ses);
 }

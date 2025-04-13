@@ -27,7 +27,7 @@ void antisubstitute_command(const char *arg, struct session *ses)
 
     if (!*left)
     {
-        tintin_puts("#THESE ANTISUBSTITUTES HAVE BEEN DEFINED:", ses);
+        tintin_printf(ses, "#THESE ANTISUBSTITUTES HAVE BEEN DEFINED:");
         show_slist(ass);
     }
     else
@@ -37,7 +37,7 @@ void antisubstitute_command(const char *arg, struct session *ses)
         antisubnum++;
         if (ses->mesvar[MSG_SUBSTITUTE])
             tintin_printf(ses, "Ok. Any line with {%s} will not be subbed.", left);
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
         ses->antisubs_dirty=true;
 #endif
     }
@@ -87,7 +87,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
         }
     }
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (had_any)
         ses->antisubs_dirty=true;
 #endif
@@ -96,7 +96,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
 }
 
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 static void build_antisubs_hs(struct session *ses)
 {
     hs_free_database(ses->antisubs_hs);
@@ -107,7 +107,7 @@ static void build_antisubs_hs(struct session *ses)
     const char **pat = MALLOC(n*sizeof(void*));
     unsigned int *flags = MALLOC(n*sizeof(int));
     if (!pat || !flags)
-        syserr("out of memory");
+        die("out of memory");
 
     int j=0;
     {
@@ -136,7 +136,7 @@ static void build_antisubs_hs(struct session *ses)
     MFREE(pat, n*sizeof(void*));
 
     if (ses->antisubs_hs && hs_alloc_scratch(ses->antisubs_hs, &hs_scratch))
-        syserr("out of memory");
+        die("out of memory");
 }
 
 static int anti_match(unsigned int id, unsigned long long from,
@@ -149,7 +149,7 @@ static int anti_match(unsigned int id, unsigned long long from,
 
 bool do_one_antisub(const char *line, struct session *ses)
 {
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (!kb_size(ses->antisubs))
         return false;
 

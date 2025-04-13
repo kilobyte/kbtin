@@ -19,6 +19,7 @@
 #include "protos/print.h"
 #include "protos/math.h"
 #include "protos/misc.h"
+#include "protos/mudcolors.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/session.h"
@@ -29,9 +30,9 @@
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
+#include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/resource.h>
 
 typedef void (*sighandler_t)(int);
@@ -49,8 +50,7 @@ static void myquitsig(int);
 
 static void tstphandler(int sig)
 {
-    if (ui_own_output)
-        user_pause();
+    user_pause();
     kill(getpid(), SIGSTOP);
 }
 
@@ -61,14 +61,12 @@ static void sigchild(void)
 
 static void sigcont(void)
 {
-    if (ui_own_output)
-        user_resume();
+    user_resume();
 }
 
 static void sigsegv(void)
 {
-    if (ui_own_output)
-        user_done();
+    user_done();
     fflush(0);
     signal(SIGSEGV, SIG_DFL);
     raise(SIGSEGV);
@@ -76,8 +74,7 @@ static void sigsegv(void)
 
 static void sigfpe(void)
 {
-    if (ui_own_output)
-        user_done();
+    user_done();
     fflush(0);
     signal(SIGFPE, SIG_DFL);
     raise(SIGFPE);
@@ -230,7 +227,7 @@ static void parse_options(int argc, char **argv)
                 o->left=argv[arg-2]+1, o->right=argv[arg-1], o++->pr=argv[arg];
         }
         else if (!strcmp(argv[arg], "--no-simd"))
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
             simd=false;
 #else
             ;
@@ -286,7 +283,7 @@ static void apply_options(void)
             if ((f=fopen(opt->right, "r")))
             {
                 if (activesession->verbose || !real_quiet)
-                    tintin_printf(0, "#READING {%s}", ustr);
+                    tintin_printf(activesession, "#READING {%s}", ustr);
                 activesession = do_read(f, ustr, activesession);
             }
             else
@@ -319,6 +316,42 @@ static void read_rc(void)
         read_rc_file(home);
 }
 
+static void banner(void)
+{
+    /*
+        Legal crap does _not_ belong here.  Anyone interested in the license
+    can check the files accompanying KBtin, without any need of being spammed
+    every time.  It is not GNU bc or something similar, we don't want half
+    a screenful of all-uppercase (cAPS kEY IS STUCK AGAIN?) text that no one
+    ever wants to read -- that is what docs are for.
+    */
+    tintin_printf(0, "~2~##########################################################");
+    tintin_printf(0, "#~7~               ~12~K B ~3~t i n~7~    v %-25s ~2~#", VERSION);
+    tintin_printf(0, "#                                                        #");
+    tintin_printf(0, "#~7~ current developer: ~9~Adam Borowski (~9~kilobyte@angband.pl~7~) ~2~#");
+    tintin_printf(0, "#                                                        #");
+    tintin_printf(0, "#~7~ based on ~12~tintin++~7~ v 2.1.9 by Peter Unold, Bill Reiss,  ~2~#");
+    tintin_printf(0, "#~7~   David A. Wagner, Joann Ellsworth, Jeremy C. Jack,    ~2~#");
+    tintin_printf(0, "#~7~          Ulan@GrimneMUD and Jakub Narębski             ~2~#");
+    tintin_printf(0, "##########################################################~7~");
+    tintin_printf(0, "~15~#session <name> <host> <port> ~7~to connect to a remote server");
+    tintin_printf(0, "                              ~8~#ses t2t t2tmud.org 9999");
+    tintin_printf(0, "~15~#run <name> <command>         ~7~to run a local command");
+    tintin_printf(0, "                              ~8~#run advent adventure");
+    tintin_printf(0, "                              ~8~#run sql mysql");
+    tintin_printf(0, "~15~#help                         ~7~to get the help index");
+}
+
+static void randomize(void)
+{
+    unsigned seed;
+#ifdef HAVE_GETENTROPY
+    if (getentropy(&seed, sizeof seed))
+#endif
+        seed = (((unsigned)getpid())*0x10001)^start_time^(start_time>>32);
+    srand(seed);
+}
+
 /**************************************************************************/
 /* main() - show title - setup signals - init lists - readcoms - tintin() */
 /**************************************************************************/
@@ -328,7 +361,7 @@ int main(int argc, char **argv)
     init_locale();
     user_setdriver(isatty(0)?1:0);
     parse_options(argc, argv);
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (simd && hs_valid_platform())
         simd=false;
 #endif
@@ -338,34 +371,11 @@ int main(int argc, char **argv)
     strcpy(status, EMPTY_LINE);
     user_init();
     /*  read_complete();            no tab-completion */
-    srand((getpid()*0x10001)^start_time^(start_time>>32));
+    randomize();
     lastdraft=0;
 
     if (ui_own_output || tty)
-    {
-/*
-    Legal crap does _not_ belong here.  Anyone interested in the license
-can check the files accompanying KBtin, without any need of being spammed
-every time.  It is not GNU bc or something similar, we don't want half
-a screenful of all-uppercase (cAPS kEY IS STUCK AGAIN?) text that no one
-ever wants to read -- that is what docs are for.
-*/
-        tintin_printf(0, "~2~##########################################################");
-        tintin_printf(0, "#~7~               ~12~K B ~3~t i n~7~    v %-25s ~2~#", VERSION);
-        tintin_printf(0, "#                                                        #");
-        tintin_printf(0, "#~7~ current developer: ~9~Adam Borowski (~9~kilobyte@angband.pl~7~) ~2~#");
-        tintin_printf(0, "#                                                        #");
-        tintin_printf(0, "#~7~ based on ~12~tintin++~7~ v 2.1.9 by Peter Unold, Bill Reiss,  ~2~#");
-        tintin_printf(0, "#~7~   David A. Wagner, Joann Ellsworth, Jeremy C. Jack,    ~2~#");
-        tintin_printf(0, "#~7~          Ulan@GrimneMUD and Jakub Narębski             ~2~#");
-        tintin_printf(0, "##########################################################~7~");
-        tintin_printf(0, "~15~#session <name> <host> <port> ~7~to connect to a remote server");
-        tintin_printf(0, "                              ~8~#ses t2t t2tmud.org 9999");
-        tintin_printf(0, "~15~#run <name> <command>         ~7~to run a local command");
-        tintin_printf(0, "                              ~8~#run advent adventure");
-        tintin_printf(0, "                              ~8~#run sql mysql");
-        tintin_printf(0, "~15~#help                         ~7~to get the help index");
-    }
+        banner();
     user_mark_greeting();
 
     setup_signals();

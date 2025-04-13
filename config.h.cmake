@@ -7,7 +7,6 @@
 #cmakedefine HAVE_LIBUTIL_H
 #cmakedefine HAVE_UTIL_H
 #cmakedefine HAVE_VALGRIND_VALGRIND_H
-#cmakedefine HAVE_UNISTD_H
 #cmakedefine HAVE_TERMIOS_H
 #cmakedefine HAVE_STROPTS_H
 #cmakedefine HAVE_OPENPTY
@@ -21,10 +20,11 @@
 #cmakedefine HAVE_POSIX_OPENPT
 #cmakedefine HAVE_STRLCPY
 #cmakedefine HAVE_WCWIDTH
+#cmakedefine HAVE_GETENTROPY
 
 #cmakedefine HAVE_ZLIB
 #cmakedefine HAVE_GNUTLS
-#cmakedefine HAVE_HS
+#cmakedefine HAVE_SIMD
 
 #cmakedefine DATA_PATH "@DATA_PATH@"
 

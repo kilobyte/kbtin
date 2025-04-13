@@ -6,7 +6,6 @@
 /*********************************************************************/
 #include "tintin.h"
 #include "protos/action.h"
-#include "protos/colors.h"
 #include "protos/events.h"
 #include "protos/files.h"
 #include "protos/globals.h"
@@ -15,6 +14,7 @@
 #include "protos/lists.h"
 #include "protos/print.h"
 #include "protos/math.h"
+#include "protos/mudcolors.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/routes.h"
@@ -40,7 +40,7 @@
 static struct session *new_session(const char *name, const char *address, int fd, sestype_t sestype, gnutls_session_t ssl, struct session *ses);
 static void show_session(struct session *ses);
 
-static bool session_exists(char *name)
+static bool session_exists(const char *name)
 {
     for (struct session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
         if (!strcmp(sesptr->name, name))
@@ -88,51 +88,47 @@ noname:
 }
 
 
-/*
-  common code for #session and #run for cases of:
-    #session            - list all sessions
-    #session {a}        - print info about session a
-  (opposed to #session {a} {mud.address.here 666} - starting a new session)
-*/
-static int list_sessions(const char *arg, struct session *ses, char *left, char *right)
+static void list_sessions(struct session *ses, const char *left)
 {
     struct session *sesptr;
-    arg = get_arg_in_braces(arg, left, 0);
-    arg = get_arg_in_braces(arg, right, 1);
 
     if (!*left)
     {
-        tintin_puts("#THESE SESSIONS HAVE BEEN DEFINED:", ses);
+        tintin_printf(ses, "#THESE SESSIONS HAVE BEEN DEFINED:");
         for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
             if (sesptr!=nullsession)
                 show_session(sesptr);
+        return;
     }
-    else if (*left && !*right)
-    {
-        for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
-            if (!strcmp(sesptr->name, left))
-            {
-                show_session(sesptr);
-                break;
-            }
-        if (!sesptr)
-            tintin_puts("#THAT SESSION IS NOT DEFINED.", ses);
-    }
-    else
-    {
-        if (strlen(left) > MAX_SESNAME_LENGTH)
+
+    for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
+        if (!strcmp(sesptr->name, left))
         {
-            tintin_eprintf(ses, "#SESSION NAME TOO LONG.");
-            return 1;
+            show_session(sesptr);
+            break;
         }
-        if (session_exists(left))
-        {
-            tintin_eprintf(ses, "#THERE'S A SESSION WITH THAT NAME ALREADY.");
-            return 1;
-        }
-        return 0;
+    if (!sesptr)
+        tintin_eprintf(ses, "#THAT SESSION IS NOT DEFINED.");
+}
+
+static int is_bad_session(struct session *ses, const char *left)
+{
+    if (!*left) // some joker did #ses {} {foo}
+    {
+        tintin_eprintf(ses, "#GIVE A SESSION NAME PLEASE.");
+        return 1;
     }
-    return 1;
+    if (strlen(left) > MAX_SESNAME_LENGTH)
+    {
+        tintin_eprintf(ses, "#SESSION NAME TOO LONG.");
+        return 1;
+    }
+    if (session_exists(left))
+    {
+        tintin_eprintf(ses, "#THERE'S A SESSION WITH THAT NAME ALREADY.");
+        return 1;
+    }
+    return 0;
 }
 
 /*****************************************/
@@ -140,53 +136,48 @@ static int list_sessions(const char *arg, struct session *ses, char *left, char 
 /*****************************************/
 static struct session *socket_session(const char *arg, struct session *ses, bool ssl)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], host[BUFFER_SIZE];
+    char left[BUFFER_SIZE], right[BUFFER_SIZE], host[BUFFER_SIZE], extra[BUFFER_SIZE];
     int sock;
-    char *port;
 #ifdef HAVE_GNUTLS
-    gnutls_session_t sslses;
+    gnutls_session_t sslses = 0;
+#else
+    #define sslses 0
 #endif
 
-    if (list_sessions(arg, ses, left, right))
-        return ses;     /* (!*left)||(!*right) */
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, host, 0, ses);
+    arg = get_arg(arg, right, 0, ses);
+    arg = get_arg(arg, extra, 0, ses);
 
-    strcpy(host, space_out(right));
+    if (*extra && !ssl)
+        return tintin_eprintf(ses, "#session: non-SSL takes no extra args"), ses;
 
     if (!*host)
     {
-        tintin_eprintf(ses, "#session: HEY! SPECIFY AN ADDRESS WILL YOU?");
+        list_sessions(ses, left);
         return ses;
     }
 
-    port=host;
-    while (*port && !isaspace(*port))
-        port++;
-    if (*port)
-    {
-        *port++ = '\0';
-        port = (char*)space_out(port);
-    }
+    if (is_bad_session(ses, left))
+        return ses;
 
-    if (!*port)
+    if (!*right)
     {
         tintin_eprintf(ses, "#session: HEY! SPECIFY A PORT NUMBER WILL YOU?");
         return ses;
     }
-    if (!(sock = connect_mud(host, port, ses)))
+    if (!(sock = connect_mud(host, right, ses)))
         return ses;
 
 #ifdef HAVE_GNUTLS
-    if (ssl)
+    if (ssl && !(sslses=ssl_negotiate(sock, host, extra, ses)))
     {
-        if (!(sslses=ssl_negotiate(sock, host, ses)))
-        {
-            close(sock);
-            return ses;
-        }
-        return new_session(left, right, sock, SES_SOCKET, sslses, ses);
+        close(sock);
+        return ses;
     }
 #endif
-    return new_session(left, right, sock, SES_SOCKET, 0, ses);
+    user_textout_draft("~8~[connected]~-1~", false);
+    return new_session(left, host, sock, SES_SOCKET, sslses, ses);
 }
 
 
@@ -214,14 +205,17 @@ struct session *run_command(const char *arg, struct session *ses)
     char left[BUFFER_SIZE], right[BUFFER_SIZE], ustr[BUFFER_SIZE];
     int sock;
 
-    if (list_sessions(arg, ses, left, right))
-        return ses;     /* (!*left)||(!*right) */
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
 
     if (!*right)
     {
-        tintin_eprintf(ses, "#run: HEY! SPECIFY A COMMAND, WILL YOU?");
+        list_sessions(ses, left);
         return ses;
     }
+
+    if (is_bad_session(ses, left))
+        return ses;
 
     if (!strcmp(right, "//selfpipe"))
     {
@@ -284,9 +278,6 @@ struct session* newactive_session(void)
 /*********************************************/
 void kill_all(struct session *ses, bool no_reinit)
 {
-    if (!ses) // can't happen
-        return;
-
     kill_hash(ses->aliases);
     kill_tlist(ses->actions);
     kill_tlist(ses->prompts);
@@ -298,6 +289,7 @@ void kill_all(struct session *ses, bool no_reinit)
         free((char*)ses->path[i].left), free((char*)ses->path[i].right);
     kill_hash(ses->pathdirs);
     kill_hash(ses->binds);
+    kill_hash(ses->ratelimits);
     kill_routes(ses);
     kill_events(ses);
     if (no_reinit)
@@ -311,10 +303,11 @@ void kill_all(struct session *ses, bool no_reinit)
     ses->subs = init_tlist();
     ses->antisubs = init_slist();
     ses->binds = init_hash();
+    ses->ratelimits = init_hash();
     ses->path_begin = ses->path_length = 0;
     ZERO(ses->path);
     ses->pathdirs = init_hash();
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     ses->highs_dirty = true;
 #endif
     tintin_printf(ses, "#Lists cleared.");
@@ -370,6 +363,7 @@ void init_nullses(void)
     nullsession->nagle = false;
     nullsession->antisubs = init_slist();
     nullsession->binds = init_hash();
+    nullsession->ratelimits = init_hash();
     nullsession->next = 0;
     nullsession->sessionstart = nullsession->idle_since =
         nullsession->server_idle_since = start_time;
@@ -391,6 +385,8 @@ void init_nullses(void)
     nullsession->verbose=false;
     nullsession->closing=false;
     nullsession->drafted=false;
+    nullsession->mudcolors=MUDC_NULL_WARN;
+    ZERO(nullsession->MUDcolors);
     sessionlist = nullsession;
     activesession = nullsession;
     pvars=0;
@@ -410,6 +406,7 @@ void init_nullses(void)
     nullsession->mesvar[MSG_HOOK]= DEFAULT_HOOK_MESS;
     nullsession->mesvar[MSG_LOG]= DEFAULT_LOG_MESS;
     nullsession->mesvar[MSG_TICK]= DEFAULT_TICK_MESS;
+    nullsession->mesvar[MSG_RATELIMIT]= DEFAULT_RATELIMIT_MESS;
     nullsession->charset=mystrdup(DEFAULT_CHARSET);
     nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
                               DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
@@ -419,7 +416,7 @@ void init_nullses(void)
 #ifdef HAVE_GNUTLS
     nullsession->ssl=0;
 #endif
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     nullsession->highs_dirty=false;
     nullsession->act_dirty[0]=nullsession->act_dirty[1]=false;
     nullsession->subs_dirty=false;
@@ -468,6 +465,7 @@ static struct session *new_session(const char *name, const char *address, int so
     newsession->socket = sock;
     newsession->antisubs = copy_slist(ses->antisubs);
     newsession->binds = copy_hash(ses->binds);
+    newsession->ratelimits = init_hash(); // these are volatile
     newsession->sestype = sestype;
     newsession->naws = (sestype == SES_PTY);
 #ifdef HAVE_ZLIB
@@ -517,6 +515,9 @@ static struct session *new_session(const char *name, const char *address, int so
         else
             newsession->hooks[i]=0;
     newsession->closing=0;
+    newsession->mudcolors = ses->mudcolors;
+    for (int i=0;i<(int)ARRAYSZ(ses->MUDcolors);i++)
+        newsession->MUDcolors[i] = mystrdup(ses->MUDcolors[i]);
     newsession->charset = mystrdup(sestype==SES_SOCKET ? ses->charset : user_charset_name);
     newsession->logcharset = logcs_is_special(ses->logcharset) ?
                               ses->logcharset : mystrdup(ses->logcharset);
@@ -527,7 +528,7 @@ static struct session *new_session(const char *name, const char *address, int so
 #ifdef HAVE_GNUTLS
     newsession->ssl=ssl;
 #endif
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     newsession->highs_dirty=true;
     newsession->act_dirty[0]=newsession->act_dirty[1]=true;
     newsession->subs_dirty=true;
@@ -610,7 +611,7 @@ void cleanup_session(struct session *ses)
     if (ses->ssl)
         gnutls_deinit(ses->ssl);
 #endif
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     hs_free_database(ses->highs_hs);
     hs_free_database(ses->acts_hs[0]);
     hs_free_database(ses->acts_hs[1]);

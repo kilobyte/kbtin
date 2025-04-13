@@ -1,0 +1,13 @@
+#Compare   to what ? (only one var between [ ])
+✗ [ ]
+#Compare  1  to what ? (only one var between [ ])
+✗ [ 1 ]
+✓ [ a b = a b ]
+✗ [ a b = a c ]
+✗ [ x != x ]
+✓ [ x == x ]
+✓ [ x =~ x ]
+✓ [ x =~ * ]
+✗ [ x = * ]
+✗ [ x !~ * ]
+✓ [ x !~ y ]

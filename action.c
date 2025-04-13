@@ -27,7 +27,7 @@ static char **stray_strings=0;
 static int max_strays=0;
 const char *match_start, *match_end;
 
-extern struct session *if_command(const char *arg, struct session *ses);
+extern struct session *if_command(const char *arg, struct session *ses) __attribute__((nonnull));
 static bool check_a_action(const char *line, const char *action, bool inside);
 
 static bool save_action(char **right)
@@ -75,11 +75,11 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
     if (!*left)
     {
         tintin_printf(ses, "#Defined %ss:", what);
-        show_tlist(l, 0, 0, false);
+        show_tlist(l, 0, 0, false, ses);
     }
     else if (*left && !*right)
     {
-        if (!show_tlist(l, left, 0, false) && ses->mesvar[MSG_ACTION])
+        if (!show_tlist(l, left, 0, false, ses) && ses->mesvar[MSG_ACTION])
             tintin_printf(ses, "#That %s (%s) is not defined.", what, left);
     }
     else
@@ -106,7 +106,7 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
             tintin_printf(ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
         acnum++;
         mutatedActions = true;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
         ses->act_dirty[l == ses->actions] = true;
 #endif
     }
@@ -139,14 +139,14 @@ void unaction_command(const char *arg, struct session *ses)
 
     if (!delete_tlist(ses->actions, left, ses->mesvar[MSG_ACTION]?
             "#Ok. {%s} is no longer an action." : 0,
-            inActions? save_action : 0, false)
+            inActions? save_action : 0, false, ses)
         && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
     {
         tintin_printf(ses, "#No match(es) found for {%s}", left);
     }
 
     mutatedActions = true;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     ses->act_dirty[1] = true;
 #endif
 }
@@ -164,20 +164,20 @@ void unpromptaction_command(const char *arg, struct session *ses)
 
     if (!delete_tlist(ses->prompts, left, ses->mesvar[MSG_ACTION]?
             "#Ok. {%s} is no longer a promptaction." : 0,
-            inActions? save_action : 0, false)
+            inActions? save_action : 0, false, ses)
         && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
     {
         tintin_printf(ses, "#No match(es) found for {%s}", left);
     }
 
     mutatedActions = true;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     ses->act_dirty[0] = true;
 #endif
 }
 
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 char *action_to_regex(const char *pat)
 {
     char buf[BUFFER_SIZE*2+3], *b=buf;
@@ -269,7 +269,7 @@ static void check_all_act_serially(const char *line, struct session *ses, kbtree
     ENDITER
 }
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
 {
     debuglog(ses, "SIMD: building %sactions", act?"":"prompt");
@@ -286,7 +286,7 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
     ptrip *data = MALLOC(n*sizeof(ptrip));
 
     if (!pat || !flags || !ids || !data)
-        syserr("out of memory");
+        die("out of memory");
 
     int j=0;
     TRIP_ITER(acts, ln)
@@ -309,7 +309,7 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
         hs_free_compile_error(error);
     }
     else if (hs_alloc_scratch(ses->acts_hs[act], &hs_scratch))
-        syserr("out of memory");
+        die("out of memory");
 
     ses->acts_data[act]=data;
     for (int i=0; i<n; i++)
@@ -408,7 +408,7 @@ static void check_all_act(const char *line, struct session *ses, bool act)
     bool oldMutated = mutatedActions;
     mutatedActions = false;
 
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     if (simd)
         check_all_act_simd(line, ses, acts, act);
     else
@@ -435,46 +435,31 @@ void check_all_promptactions(const char *line, struct session *ses)
 /**********************/
 /* the #match command */
 /**********************/
-void match_command(const char *arg, struct session *ses)
+struct session *match_command(const char *arg, struct session *ses)
 {
     pvars_t vars, *lastpvars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
-    bool flag=false;
 
     arg=get_arg_in_braces(arg, left, 0);
     arg=get_arg(arg, line, 0, ses);
     arg=get_arg_in_braces(arg, right, 0);
 
     if (!*left || !*right)
-        return tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
+    {
+        tintin_eprintf(ses, "#ERROR: valid syntax is: #match <pattern> <line> <command> [#else ...]");
+        return ses;
+    }
 
     if (check_one_action(line, left, &vars, false))
     {
         lastpvars = pvars;
         pvars = &vars;
-        parse_input(right, true, ses);
+        ses = parse_input(right, true, ses);
         pvars = lastpvars;
-        flag=true;
+        return ses;
     }
-    arg=get_arg_in_braces(arg, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            get_arg_in_braces(arg, right, 1);
-            if (!flag)
-                parse_input(right, true, ses);
-            return;
-        }
-        if (is_abrev(left + 1, "elif"))
-        {
-            if (!flag)
-                if_command(arg, ses);
-            return;
-        }
-    }
-    if (*left)
-        tintin_eprintf(ses, "#ERROR: cruft after #match: {%s}", left);
+
+    return ifelse("match", arg, ses);
 }
 
 

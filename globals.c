@@ -4,6 +4,16 @@ bool term_echoing = true;
 bool keypad= DEFAULT_KEYPAD;
 bool retain= DEFAULT_RETAIN;
 bool bold  = DEFAULT_BOLD;
+#define INPUT_BG (INPUT_COLOR&~CFG_MASK)
+int input_c[] =
+{
+    INPUT_COLOR,                // input
+#if 0
+    8|INPUT_BG,                 // retain
+    7|4<<CFG_BITS,              // margins
+    15|INPUT_BG,                // scroll
+#endif
+};
 int alnum = 0;
 int acnum = 0;
 int subnum = 0;
@@ -37,7 +47,7 @@ int LINES, COLS;
 bool isstatus;
 timens_t start_time;
 timens_t idle_since;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 bool simd=true;
 /**/ hs_scratch_t *hs_scratch=NULL;
 #endif

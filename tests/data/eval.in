@@ -1,0 +1,29 @@
+#var pi 3.14
+#var symb pi
+#ali m {#math x {$0};#show {$0  ⇒  $x}}
+m -3 * -3
+m -(3) * -(3)
+m -(2+1)*-(2+1)
+m - 3
+m !3
+m !0
+m ! 3
+m ! 0
+m !(3)
+m !(0)
+m F
+m T
+m $
+m $pi
+m ${$symb}
+m 1<2
+m 1>2
+m 1<=2
+m 1>=2
+m 1=2
+m 1!=2
+m 1&2
+m 1&&2
+m 1|1
+m 1||1
+#if {0} {#show if} #elif {1} #show elif

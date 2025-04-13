@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 2.8.12...3.27)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
 	cmake_policy(SET CMP0075 NEW) # hush the warning, either option works
 endif()
@@ -9,6 +9,7 @@ project(kbtin C)
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
+include(CheckSymbolExists)
 include(FindIconv)
 include(FindGnuTLS)
 include(GNUInstallDirs)
@@ -42,13 +43,9 @@ if (HAVE_LIB_UTIL)
 	set(libs ${libs} util)
 endif()
 CHECK_LIBRARY_EXISTS(hs hs_compile "" HAVE_HS)
-if (HAVE_HS)
-	set(CMAKE_REQUIRED_LIBRARIES hs)
-	set(libs ${libs} hs)
-endif()
+option(SIMD "fast pattern matching via hyperscan" ${HAVE_HS})
 
 CHECK_INCLUDE_FILES(valgrind/valgrind.h HAVE_VALGRIND_VALGRIND_H)
-CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
 CHECK_INCLUDE_FILES(termios.h HAVE_TERMIOS_H)
 CHECK_INCLUDE_FILES(stropts.h HAVE_STROPTS_H)
 CHECK_FUNCTION_EXISTS(openpty HAVE_OPENPTY)
@@ -62,6 +59,7 @@ CHECK_FUNCTION_EXISTS(_getpty HAVE__GETPTY)
 CHECK_FUNCTION_EXISTS(posix_openpt HAVE_POSIX_OPENPT)
 CHECK_FUNCTION_EXISTS(strlcpy HAVE_STRLCPY)
 CHECK_FUNCTION_EXISTS(wcwidth HAVE_WCWIDTH)
+CHECK_SYMBOL_EXISTS(getentropy "unistd.h" HAVE_GETENTROPY)
 
 if(Iconv_FOUND)
 	include_directories(SYSTEM ${Iconv_INCLUDE_DIRS})
@@ -91,6 +89,18 @@ if (SSL)
 else()
 	unset(HAVE_GNUTLS)
 endif()
+
+if (SIMD)
+	if (NOT HAVE_HS)
+		message(FATAL_ERROR "SIMD requires hyperscan/vectorscan")
+	endif()
+	set(CMAKE_REQUIRED_LIBRARIES hs)
+	set(libs ${libs} hs)
+	set(HAVE_SIMD 1)
+else()
+	unset(HAVE_SIMD)
+endif()
+
 
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 include_directories(${CMAKE_BINARY_DIR})
@@ -139,6 +149,8 @@ set(KBtin_sources
 	lists.c
 	vars.c
 	tlist.c
+	mudcolors.c
+	ratelimit.c
 )
 
 set(protos ${KBtin_sources})

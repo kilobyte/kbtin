@@ -1,4 +1,5 @@
 #include "tintin.h"
+#include <time.h>
 #include "protos/action.h"
 #include "protos/files.h"
 #include "protos/glob.h"
@@ -268,7 +269,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses, int r
             {
                 /* ordinary variable whose name contains no spaces and special characters  */
                 specvar = false;
-                while (isalpha(*(arg+varlen+counter))||
+                while (is7alpha(*(arg+varlen+counter))||
                        (*(arg+varlen+counter)=='_')||
                        isadigit(*(arg+varlen+counter)))
                     varlen++;

@@ -1,0 +1,6 @@
+#grep {.*} {} {#show ✓ empty} #else {#show ✗ empty}
+#grep {x.*} {} {#show ✓ empty} #else {#show ✗ empty}
+#grep {foo.*bar} {fooquuxbar} {#show ✓ foobar} #else {#show ✗ foobar}
+#grep {foo.*bar} {fooquuxbaz} {#show ✓ foobaz} #else {#show ✗ foobaz}
+#grep foo bar {#show foo=bar} #elif {#grep foo bar} {#show inline ✓ foo=bar} #else {#show inline ✗ foo=bar}
+#grep foo bar {#show foo=bar} #elif {#grep foo foo} {#show inline ✓ foo=foo} #else {#show inline ✗ foo=foo}

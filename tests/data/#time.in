@@ -2,3 +2,6 @@
 #time tmp 1y 245d 15h 30m 4s;#showme $tmp
 #time tmp 11 hours, 59 minutes and 45 seconds;#showme $tmp
 #time tmp 2 weeks 1 d;#showme $tmp
+#time tmp 0.5h;#showme $tmp
+#time tmp 0.25d 0.5m;#showme $tmp
+#time tmp 0.5h 10.001;#showme $tmp

@@ -7,18 +7,6 @@
 
 #include <stdbool.h>
 
-/**********************/
-/* color ANSI numbers */
-/**********************/
-#define COLOR_BLACK     0
-#define COLOR_BLUE      4
-#define COLOR_GREEN     2
-#define COLOR_CYAN      6
-#define COLOR_RED       1
-#define COLOR_MAGENTA   5
-#define COLOR_YELLOW    3
-#define COLOR_WHITE     7
-
 #define LOGCS_LOCAL     ((char*)1)
 #define LOGCS_REMOTE    ((char*)2)
 
@@ -56,10 +44,10 @@
 /* Some default values you might wanna change: */
 /***********************************************/
 #define CONSOLE_LENGTH 32768
-#define STATUS_COLOR COLOR_BLACK
-#define INPUT_COLOR  COLOR_BLUE
-#define MARGIN_COLOR COLOR_RED
-/* FIXME: neither INPUT_COLOR nor MARGIN_COLOR can be COLOR_WHITE */
+#define STATUS_COLOR 0
+#define INPUT_COLOR  (7 + (1<<CBG_BITS))
+#define MARGIN_COLOR_ANSI 1
+/* FIXME: neither INPUT_COLOR nor MARGIN_COLOR can be 7 */
 /*#define IGNORE_INT*//* uncomment to disable INT (usually ^C) from keyboard */
 #define XTERM_TITLE "KBtin - %s"
 #undef  PTY_ECHO_HACK   /* not working yet */
@@ -74,7 +62,7 @@
 #define BRACE_CLOSE '}' /*character that ends an argument */
 #define HISTORY_SIZE 128                  /* history size */
 #define MAX_PATH_LENGTH 256               /* max path length (#route) */
-#define DEFAULT_TINTIN_CHAR '#'           /* tintin char */
+#define DEFAULT_TINTIN_CHAR '#'           /* prefix for tintin commands */
 #define DEFAULT_TICK_SIZE 60
 #define DEFAULT_ROUTE_DISTANCE (10*DENOM)
 #define VERBATIM_CHAR '\\'                /* if an input starts with this
@@ -121,6 +109,7 @@
 #define DEFAULT_HOOK_MESS true
 #define DEFAULT_LOG_MESS true
 #define DEFAULT_TICK_MESS true
+#define DEFAULT_RATELIMIT_MESS true
 #define DEFAULT_PRETICK 10
 #define DEFAULT_CHARSET "UTF-8"           /* the MUD-side charset */
 #define DEFAULT_LOGCHARSET LOGCS_LOCAL
@@ -185,6 +174,7 @@ enum
     MSG_HOOK,
     MSG_LOG,
     MSG_TICK,
+    MSG_RATELIMIT,
     MAX_MESVAR
 };
 enum
@@ -219,23 +209,17 @@ enum
 #include <unistd.h>
 #include <stdarg.h>
 #include <wchar.h>
-#include <signal.h>
 #include <errno.h>
-#include <sys/time.h>
 #include <strings.h>
-#include <time.h>
 #ifdef HAVE_ZLIB
 # include <zlib.h>
 #endif
 #include <string.h>
-#if GWINSZ_IN_SYS_IOCTL
-# include <sys/ioctl.h>
-#endif
 #ifdef HAVE_GNUTLS
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
 #endif
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
 # include <hs/hs.h>
 #endif
 #include "malloc.h"
@@ -250,6 +234,7 @@ typedef int64_t timens_t;
 typedef struct trip *ptrip;
 
 #define NANO 1000000000LL
+#define INVALID_TIME ((int64_t)0x8000000000000000LL)
 
 #define ARRAYSZ(x) (sizeof(x)/sizeof((x)[0]))
 
@@ -292,8 +277,8 @@ struct completenode
 struct eventnode
 {
     struct eventnode *next;
-    char *event;
-    timens_t time;
+    char *event, *label;
+    timens_t time, period;
 };
 
 struct routenode
@@ -331,6 +316,8 @@ typedef enum { LOG_RAW, LOG_LF, LOG_TTYREC } logtype_t;
 
 typedef enum { SES_NULL, SES_SOCKET, SES_PTY, SES_SELFPIPE } sestype_t;
 
+typedef enum {MUDC_OFF, MUDC_ON, MUDC_ANSI, MUDC_NULL, MUDC_NULL_WARN} mudcolors_t;
+
 struct session
 {
     struct session *next;
@@ -348,7 +335,7 @@ struct session
     bool ignore;
     kbtree_t(trip) *subs, *actions, *prompts, *highs;
     kbtree_t(str) *antisubs;
-    struct hashtable *aliases, *myvars, *pathdirs, *binds;
+    struct hashtable *aliases, *myvars, *pathdirs, *binds, *ratelimits;
     struct pair path[MAX_PATH_LENGTH];
     struct routenode **routes;
     char **locations;
@@ -374,6 +361,8 @@ struct session
     int lastintitle;
     char *charset, *logcharset;
     struct charset_conv c_io, c_log;
+    mudcolors_t mudcolors;
+    char *MUDcolors[16];
 #ifdef HAVE_ZLIB
     bool can_mccp, mccp_more;
     z_stream *mccp;
@@ -385,7 +374,7 @@ struct session
     timens_t line_time;
     unsigned long long linenum;
     bool drafted;
-#ifdef HAVE_HS
+#ifdef HAVE_SIMD
     bool highs_dirty, act_dirty[2], subs_dirty, antisubs_dirty;
     hs_database_t *highs_hs, *subs_hs, *antisubs_hs, *acts_hs[2];
     const char **highs_cols;
@@ -435,7 +424,16 @@ static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
 #define assert(p) do if (!(p)){fprintf(stderr, "ASSERT FAILED in %s:%u : "#p "\n", __FILE__, __LINE__);abort();}while(0)
 #define ZERO(x) bzero(&(x), sizeof(x))
 
-#ifdef HAVE_HS
+static inline void stracpy(char *restrict dst, const char *restrict src, size_t sz)
+{
+    size_t len = strlen(src) + 1;
+    assert(len <= sz);
+    memcpy(dst, src, len);
+}
+
+#ifdef HAVE_SIMD
 // Should be in globals.h but for the typedef...
 extern hs_scratch_t *hs_scratch;
 #endif
+
+#include "commands.h"

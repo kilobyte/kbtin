@@ -1,0 +1,6 @@
+#match {%0} {} {#show ✓ empty} #else {#show ✗ empty}
+#match {x%0} {} {#show ✓ empty} #else {#show ✗ empty}
+#match {foo%0bar} {fooquuxbar} {#show ✓ foobar} #else {#show ✗ foobar}
+#match {foo%0bar} {fooquuxbaz} {#show ✓ foobaz} #else {#show ✗ foobaz}
+#match foo bar {#show foo=bar} #elif {#match foo bar} {#show inline ✓ foo=bar} #else {#show inline ✗ foo=bar}
+#match foo bar {#show foo=bar} #elif {#match foo foo} {#show inline ✓ foo=foo} #else {#show inline ✗ foo=foo}

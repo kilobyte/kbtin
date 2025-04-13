@@ -1,0 +1,8 @@
+#ifaliasexists ✓
+#ifaliasexists ✗
+#ifexists ✓
+#ifexists ✗
+#grep ✓
+#grep ✗
+#strcmp ✓
+#strcmp ✗

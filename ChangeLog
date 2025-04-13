@@ -1,3 +1,35 @@
+2.3:
+*	reworked SSL security, requiring validly signed certs.
+	For the old model, append "save".
+*	time-based commands accept compound units like {1h 20m 10.5s}
+*	periodic #delay
+*	labelled #delay auto-removes previous instances
+*	#inputcolor allows configuring the input bar
+*	#ratelimit
+*	#stretch
+
+2.2:
+*	#colorize/#highlight can apply partial changes (like, setting
+	background without altering foreground, underline, etc)
+*	remote charset defaults to #UTF-8
+*	tabs are allowed in places where spaces are expected
+*	.bz3 logging
+*	#deleteitems allows multiple patterns
+*	#unroute with a single argument to delete both ways
+*	display something in a new session before some text comes
+*	use MPTCP if available
+*	#strwidth (#strlen that ignores color codes)
+*	#info shows session duration
+*	#mudcolors ANSI
+*	bugfix: #mudcolors affected all sessions
+*	#colorize {} for canonicalizing color codes
+*	bugfix: file descriptor exhaustion if a session fails to connect
+	over a thousand times
+*	bugfix: some #substitute messaging
+*	bugfix: input bar was sometimes brightened
+*	bugfix: lock-up on unary minus
+*	#shift
+
 2.1:
 *	bugfix: patterns with %1$ and matching an empty string
 *	reworked action matching code, speedup w/ many priorities
@@ -283,7 +315,7 @@
 	*	\e -> \033
 	*	autoconf checks to test whether the code for inlined
 		functions is actually generated
-*	changes needes to compile on Cygwin:
+*	changes needed to compile on Cygwin:
 	*	checking for stropts.h
 	Note: As opposed to UNIX systems, which all enjoy the whole
 	functionality, KBtin is crippled on Win32 systems.  Basically,

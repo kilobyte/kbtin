@@ -19,7 +19,40 @@ int msec(timens_t t)
     return t/1000000;
 }
 
-void execute_event(struct eventnode *ev, struct session *ses)
+/* remove ev->next from list */
+static void remove_event(struct eventnode **ev)
+{
+    struct eventnode *tmp = (*ev)->next;
+    SFREE((*ev)->event);
+    SFREE((*ev)->label);
+    TFREE(*ev, struct eventnode);
+    *ev=tmp;
+}
+
+static void schedule_event(struct session *ses, struct eventnode *restrict ev1)
+{
+    const char *l1, *l2;
+
+    if ((l1=ev1->label))
+    {
+        struct eventnode **ev2 = &(ses->events);
+        while (*ev2)
+            if (((l2=(*ev2)->label)) && !strcmp(l1, l2))
+                remove_event(ev2);
+            else
+                ev2=&(*ev2)->next;
+    }
+
+    timens_t t1 = ev1->time;
+    struct eventnode **ev2 = &ses->events;
+
+    while (*ev2 && (*ev2)->time <= t1)
+        ev2 = &(*ev2)->next;
+    ev1->next = *ev2;
+    *ev2 = ev1;
+}
+
+static void execute_event(struct eventnode *ev, struct session *ses)
 {
     if (activesession==ses && ses->mesvar[MSG_EVENT])
         tintin_printf(ses, "[EVENT: %s]", ev->event);
@@ -27,19 +60,66 @@ void execute_event(struct eventnode *ev, struct session *ses)
     recursion=0;
 }
 
+/* execute due events, abort and return 1 if any_closed */
+bool do_events(struct session *ses, timens_t now)
+{
+    struct eventnode *ev;
+
+    while ((ev=ses->events) && (ev->time<=now))
+    {
+        ses->events=ev->next;
+        execute_event(ev, ses);
+
+        if (ev->period >= 0)
+        {
+            // If badly lagged, wait at least half of period.
+            timens_t old = ev->time - now;
+            timens_t del = ev->period;
+            timens_t new = old + del;
+            timens_t cap = del/2;
+            if (new < cap)
+                new = cap;
+            if (new <= 0)
+                new = 1; // rapid-fire events shouldn't starve others
+            ev->time = now + new;
+            schedule_event(ses, ev);
+        }
+        else
+        {
+            SFREE(ev->event);
+            TFREE(ev, struct eventnode);
+        }
+        if (any_closed)
+            return 1;
+    }
+
+    return 0;
+}
+
+static void show_event(struct session *ses, struct eventnode *ev, timens_t ct)
+{
+    char times[64];
+
+    if (ev->period >= 0)
+        sprintf(times, "(%lld.%03d, %lld.%03d)\t",
+            (ev->time-ct)/NANO, msec(ev->time-ct),
+            (ev->period)/NANO, msec(ev->period));
+    else
+        sprintf(times, "(%lld.%03d)\t\t", (ev->time-ct)/NANO, msec(ev->time-ct));
+
+    if (ev->label)
+        tintin_printf(ses, "%s {%s} {%s}", times, ev->event, ev->label);
+    else
+        tintin_printf(ses, "%s {%s}", times, ev->event);
+}
+
 /* list active events matching regexp arg */
 static void list_events(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE];
-    timens_t ct; /* current time */
-    bool flag;
-    struct eventnode *ev;
+    timens_t ct = current_time();
+    struct eventnode *ev = ses->events;
 
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
-
-    ct = current_time();
-    ev = ses->events;
     arg = get_arg_in_braces(arg, left, 1);
 
     if (!*left)
@@ -47,77 +127,64 @@ static void list_events(const char *arg, struct session *ses)
         tintin_printf(ses, "#Defined events:");
         while (ev)
         {
-            tintin_printf(ses, "(%lld.%03d)\t {%s}", (ev->time-ct)/NANO,
-                msec(ev->time-ct), ev->event);
+            show_event(ses, ev, ct);
             ev = ev->next;
         }
+        return;
     }
-    else
+
+    bool flag = false;
+    while (ev)
     {
-        flag = false;
-        while (ev)
+        if (match(left, ev->event))
         {
-            if (match(left, ev->event))
-            {
-                tintin_printf(ses, "(%lld.%03d)\t {%s}", (ev->time-ct)/NANO,
-                    msec(ev->time-ct), ev->event);
-                flag = true;
-            }
-            ev = ev->next;
+            show_event(ses, ev, ct);
+            flag = true;
         }
-        if (!flag)
-            tintin_printf(ses, "#THAT EVENT (%s) IS NOT DEFINED.", left);
+        ev = ev->next;
     }
+    if (!flag)
+        tintin_printf(ses, "#THAT EVENT (%s) IS NOT DEFINED.", left);
 }
 
 /* add new event to the list */
 void delay_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE], right[BUFFER_SIZE], *cptr;
-    timens_t delay;
-    struct eventnode *ev, *ptr, *ptrlast;
-
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
+    char left[BUFFER_SIZE], right[BUFFER_SIZE], label[BUFFER_SIZE];
+    timens_t period = -1;
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
+    arg = get_arg(arg, label, 0, ses);
     if (!*right)
+        return list_events(left, ses);
+
+    if (!*left)
+        return tintin_eprintf(ses, "#EVENT IGNORED, NO DELAY GIVEN");
+
+    char *slash = strchr(left, ',');
+    if (slash)
+        *slash = 0;
+
+    timens_t delay = time2secs(left, ses);
+    if (delay==INVALID_TIME || delay<0)
+        return tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), INVALID DELAY", left);
+
+    if (slash)
     {
-        list_events(left, ses);
-        return;
+        slash++;
+        period = time2secs(slash, ses);
+        if (period==INVALID_TIME || period<0)
+            return tintin_eprintf(ses, "#EVENT IGNORED (PERIOD={%s}), INVALID PERIOD", slash);
     }
 
-    if (!*left || (delay=str2timens(left, &cptr))<0 || *cptr)
-        return tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), NEGATIVE DELAY", left);
-
-    ev = TALLOC(struct eventnode);
+    struct eventnode *ev = TALLOC(struct eventnode);
     ev->time = current_time() + delay;
-    ev->next = NULL;
+    ev->period = period;
     ev->event = mystrdup(right);
+    ev->label = label[0]? mystrdup(label) : 0;
 
-    if (!ses->events)
-        ses->events = ev;
-    else if (ses->events->time > ev->time)
-    {
-        ev->next = ses->events;
-        ses->events = ev;
-    }
-    else
-    {
-        ptr = ses->events;
-        while ((ptrlast = ptr) && (ptr = ptr->next))
-        {
-            if (ptr->time > ev->time)
-            {
-                ev->next = ptr;
-                ptrlast->next = ev;
-                return;
-            }
-        }
-        ptrlast->next = ev;
-        ev->next = NULL;
-    }
+    schedule_event(ses, ev);
 }
 
 void event_command(const char *arg, struct session *ses)
@@ -125,40 +192,27 @@ void event_command(const char *arg, struct session *ses)
     delay_command(arg, ses);
 }
 
-/* remove ev->next from list */
-static void remove_event(struct eventnode **ev)
-{
-    struct eventnode *tmp;
-    if (*ev)
-    {
-        tmp = (*ev)->next;
-        SFREE((*ev)->event);
-        TFREE(*ev, struct eventnode);
-        *ev=tmp;
-    }
-}
-
 /* remove events matching regexp arg from list */
 void undelay_command(const char *arg, struct session *ses)
 {
-    char left[BUFFER_SIZE];
-    bool flag;
-    struct eventnode **ev;
-
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
+    char left[BUFFER_SIZE], label[BUFFER_SIZE];
 
     arg = get_arg(arg, left, 1, ses);
+    arg = get_arg(arg, label, 0, ses);
 
-    if (!*left)
-        return tintin_eprintf(ses, "#ERROR: valid syntax is: #undelay {event pattern}");
+    if (!*left && !*label)
+        return tintin_eprintf(ses, "#ERROR: valid syntax is: #undelay {event pattern} [{label pattern}]");
 
     timens_t ct = current_time();
 
-    flag = false;
-    ev = &(ses->events);
+    bool flag = false;
+    struct eventnode **ev = &(ses->events);
     while (*ev)
-        if (match(left, (*ev)->event))
+    {
+        const char *label2;
+
+        if ((!*left || match(left, (*ev)->event))
+         && (!*label || (((label2=(*ev)->label)) && match(label, label2))))
         {
             flag=true;
             if (ses==activesession && ses->mesvar[MSG_EVENT])
@@ -168,6 +222,7 @@ void undelay_command(const char *arg, struct session *ses)
         }
         else
             ev=&((*ev)->next);
+    }
 
     if (!flag)
         tintin_printf(ses, "#THAT EVENT IS NOT DEFINED.");
@@ -194,9 +249,6 @@ void kill_events(struct session *ses)
 void findevents_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
-
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO EVENTS!");
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);

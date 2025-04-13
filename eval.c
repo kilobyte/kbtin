@@ -13,10 +13,26 @@
 #include "protos/string.h"
 #include "protos/vars.h"
 
+typedef enum
+{
+    PRIO_LPAREN,
+    PRIO_RPAREN,
+    PRIO_NOT,
+    PRIO_MULT,
+    PRIO_ADD,
+    PRIO_INEQUAL,
+    PRIO_EQUAL,
+    PRIO_NONEQUAL, // wat?
+    PRIO_AND,
+    PRIO_OR,
+    PRIO_LITERAL,
+    PRIO_NONE
+} prio_t;
+
 static struct stacks
 {
     int pos;
-    int prio;
+    prio_t prio;
     num_t val;
     int op;
 } stacks[100];
@@ -59,23 +75,9 @@ struct session *if_command(const char *line, struct session *ses)
     }
 
     if (eval_expression(left, ses))
-        ses=parse_input(right, true, ses);
-    else
-    {
-        line = get_arg_in_braces(line, left, 0);
-        if (*left == tintin_char)
-        {
+        return parse_input(right, true, ses);
 
-            if (is_abrev(left + 1, "else"))
-            {
-                line = get_arg_in_braces(line, right, 1);
-                ses=parse_input(right, true, ses);
-            }
-            if (is_abrev(left + 1, "elif"))
-                ses=if_command(line, ses);
-        }
-    }
-    return ses;
+    return ifelse("if", line, ses);
 }
 
 
@@ -100,6 +102,8 @@ static bool do_inline(const char *line, num_t *res, struct session *ses)
         *res=N(listlength_inline(line, ses));
     else if (is_abrev(command, "strlen"))
         *res=N(strlen_inline(line, ses));
+    else if (is_abrev(command, "strwidth"))
+        *res=N(strwidth_inline(line, ses));
     else if (is_abrev(command, "random"))
         *res=N(random_inline(line, ses));
     else if (is_abrev(command, "grep"))
@@ -147,11 +151,11 @@ num_t eval_expression(char *arg, struct session *ses)
         int prev = -1;
         while (stacks[i].pos && flag)
         {
-            if (stacks[i].prio == 0)
+            if (stacks[i].prio == PRIO_LPAREN)
             {
                 begin = i;
             }
-            else if (stacks[i].prio == 1)
+            else if (stacks[i].prio == PRIO_RPAREN)
             {
                 end = i;
                 flag = false;
@@ -179,21 +183,79 @@ num_t eval_expression(char *arg, struct session *ses)
     }
 }
 
-static bool conv_to_nums(char *arg, struct session *ses)
+// comparing strings inside [ ] with = and !=
+static char *stringcmp(char *ptr, int i, struct session *ses)
 {
-    int i, flag;
     bool result, should_differ;
     bool regex=false; /* false=strncmp, true=regex match */
-    char *ptr;
-    char temp[BUFFER_SIZE];
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    i = 0;
-    ptr = arg;
+    ptr++;
+    char *tptr=left;
+    while ((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
+    {
+        *tptr = *ptr;
+        ptr++;
+        tptr++;
+    }
+    *tptr='\0';
+    if (!*ptr)
+        return false; /* error */
+    if (*ptr == ']')
+        tintin_eprintf(ses, "#Compare %s to what ? (only one var between [ ])", left);
+    switch (*ptr)
+    {
+    case '!' :
+        ptr++;
+        should_differ=true;
+        switch (*ptr)
+        {
+        case '=' : regex=false; ptr++; break;
+        case '~' : regex=true; ptr++; break;
+        default : return false;
+        }
+        break;
+    case '=' :
+        ptr++;
+        should_differ=false;
+        switch (*ptr)
+        {
+        case '=' : regex=false; ptr++; break;
+        case '~' : regex=true; ptr++; break;
+        default : break;
+        }
+        break;
+    default : return false;
+    }
+
+    tptr=right;
+    while ((*ptr) && (*ptr != ']'))
+    {
+        *tptr = *ptr;
+        ptr++;
+        tptr++;
+    }
+    *tptr='\0';
+    if (!*ptr)
+        return false;
+    if (regex)
+        result = !match(right, left);
+    else
+        result = strcmp(left, right);
+    stacks[i].prio = PRIO_LITERAL;
+    stacks[i].val = N(result == should_differ);
+    return ptr;
+}
+
+static bool conv_to_nums(char *arg, struct session *ses)
+{
+    char temp[BUFFER_SIZE];
+
+    int i = 0;
+    char *ptr = arg;
     while (*ptr)
     {
-        if (isaspace(*ptr)) ;
-        else if (*ptr == tintin_char)
+        if (*ptr == tintin_char)
             /* inline commands */
         {
             ptr=(char*)get_inline(ptr+1, temp)-1;
@@ -201,211 +263,146 @@ static bool conv_to_nums(char *arg, struct session *ses)
             if (!do_inline(temp, &res, ses))
                 return false;
             stacks[i].val=res;
-            stacks[i].prio=15;
+            stacks[i].prio=PRIO_LITERAL;
         }
-        /* jku: comparing strings with = and != */
-        else if (*ptr == '[')
+        else switch (*ptr)
         {
-            ptr++;
-            char *tptr=left;
-            while ((*ptr) && (*ptr != ']') && (*ptr != '=') && (*ptr != '!'))
-            {
-                *tptr = *ptr;
-                ptr++;
-                tptr++;
-            }
-            *tptr='\0';
-            if (!*ptr)
-                return false; /* error */
-            if (*ptr == ']')
-                tintin_eprintf(ses, "#Compare %s to what ? (only one var between [ ])", left);
-            switch (*ptr)
-            {
-            case '!' :
-                ptr++;
-                should_differ=true;
-                switch (*ptr)
-                {
-                case '=' : regex=false; ptr++; break;
-                case '~' : regex=true; ptr++; break;
-                default : return false;
-                }
-                break;
-            case '=' :
-                ptr++;
-                should_differ=false;
-                switch (*ptr)
-                {
-                case '=' : regex=false; ptr++; break;
-                case '~' : regex=true; ptr++; break;
-                default : break;
-                }
-                break;
-            default : return false;
-            }
+        case ' ': case '\t': case '\n': case 12: case '\v':
+            break;
 
-            tptr=right;
-            while ((*ptr) && (*ptr != ']'))
-            {
-                *tptr = *ptr;
-                ptr++;
-                tptr++;
-            }
-            *tptr='\0';
-            if (!*ptr)
+        case '[':
+            ptr = stringcmp(ptr, i, ses);
+            if (!ptr)
                 return false;
-            if (regex)
-                result = !match(right, left);
-            else
-                result = strcmp(left, right);
-            if (result == should_differ)
-            { /* success */
-                stacks[i].prio = 15;
-                stacks[i].val = N(1);
-            }
-            else
-            {
-                stacks[i].prio = 15;
-                stacks[i].val = N(0);
-            }
-        }
-        /* jku: end of comparing strings */
-        /* jku: undefined variables are now assigned value 0 (false) */
-        else if (*ptr == '$')
-        {
+            break;
+
+        case '$':
             if (ses->mesvar[MSG_VARIABLE])
                 tintin_eprintf(ses, "#Undefined variable in {%s}.", arg);
-            stacks[i].prio = 15;
+            stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = N(0);
             if (*(++ptr)==BRACE_OPEN)
-            {
                 ptr=(char*)get_arg_in_braces(ptr, temp, 0);
-            }
             else
-            {
-                while (isalpha(*ptr) || *ptr=='_' || isadigit(*ptr))
+                while (is7alpha(*ptr) || *ptr=='_' || isadigit(*ptr))
                     ptr++;
-            }
             ptr--;
-        }
-        /* jku: end of changes */
-        else if (*ptr == '(')
-            stacks[i].prio = 0;
-        else if (*ptr == ')')
-            stacks[i].prio = 1;
-        else if (*ptr == '!')
+            break;
+
+        case '(':
+            stacks[i].prio = PRIO_LPAREN;
+            break;
+        case ')':
+            stacks[i].prio = PRIO_RPAREN;
+            break;
+        case '!':
             if (*(ptr + 1) == '=')
-                stacks[i].prio = 12,
+                stacks[i].prio = PRIO_NONEQUAL,
                 ptr++;
             else
-                stacks[i].prio = 2;
-        else if (*ptr == '*')
-        {
-            stacks[i].prio = 3;
+                stacks[i].prio = PRIO_NOT,
+                stacks[i].op = 0;
+            break;
+        case '*':
+            stacks[i].prio = PRIO_MULT;
             stacks[i].op = 0;
-        }
-        else if (*ptr == '/')
-        {
-            stacks[i].prio = 3;
+            break;
+        case '/':
+            stacks[i].prio = PRIO_MULT;
             if (ptr[1] == '/') /* / is integer division, // fractional */
                 stacks[i].op = 2, ptr++;
             else
                 stacks[i].op = 1;
-        }
-        else if (*ptr == '%')
-        {
-            stacks[i].prio = 3;
+            break;
+        case '%':
+            stacks[i].prio = PRIO_MULT;
             stacks[i].op = 3;
-        }
-        else if (*ptr == '+')
-        {
-            stacks[i].prio = 5;
+            break;
+        case '+':
+            stacks[i].prio = PRIO_ADD;
             stacks[i].op = 2;
-        }
-        else if (*ptr == '-')
-        {
-            flag = -1;
-            if (i > 0)
-                flag = stacks[i - 1].prio;
-            if (flag == 15)
+            break;
+        case '-':
+            if (i > 0 && stacks[i - 1].prio == PRIO_LITERAL)
             {
-                stacks[i].prio = 5;
+                stacks[i].prio = PRIO_ADD;
                 stacks[i].op = 3;
             }
             else
             {
-                stacks[i].val = str2num(ptr, &ptr);
-                stacks[i].prio = 15;
-                ptr--;
+                char *rest;
+                stacks[i].val = str2num(ptr, &rest);
+                if (rest != ptr)
+                {
+                    stacks[i].prio = PRIO_LITERAL;
+                    ptr = rest - 1;
+                }
+                else
+                {
+                    stacks[i].prio = PRIO_NOT;
+                    stacks[i].op = 1;
+                }
             }
-        }
-        else if (*ptr == '>')
-        {
+            break;
+        case '>':
             if (*(ptr + 1) == '=')
             {
-                stacks[i].prio = 8;
+                stacks[i].prio = PRIO_INEQUAL;
                 stacks[i].op = 4;
                 ptr++;
             }
             else
             {
-                stacks[i].prio = 8;
+                stacks[i].prio = PRIO_INEQUAL;
                 stacks[i].op = 5;
             }
-        }
-        else if (*ptr == '<')
-        {
+            break;
+        case '<':
             if (*(ptr + 1) == '=')
             {
                 ptr++;
-                stacks[i].prio = 8;
+                stacks[i].prio = PRIO_INEQUAL;
                 stacks[i].op = 6;
             }
             else
             {
-                stacks[i].prio = 8;
+                stacks[i].prio = PRIO_INEQUAL;
                 stacks[i].op = 7;
             }
-        }
-        else if (*ptr == '=')
-        {
-            stacks[i].prio = 11;
+            break;
+        case '=':
+            stacks[i].prio = PRIO_EQUAL;
             if (*(ptr + 1) == '=')
                 ptr++;
-        }
-        else if (*ptr == '&')
-        {
-            stacks[i].prio = 13;
+            break;
+        case '&':
+            stacks[i].prio = PRIO_AND;
             if (*(ptr + 1) == '&')
                 ptr++;
-        }
-        else if (*ptr == '|')
-        {
-            stacks[i].prio = 14;
+            break;
+        case '|':
+            stacks[i].prio = PRIO_OR;
             if (*(ptr + 1) == '|')
                 ptr++;
-        }
-        else if (isadigit(*ptr))
-        {
-            stacks[i].prio = 15;
+            break;
+        case '0' ... '9':
+            stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = str2num(ptr, &ptr);
             ptr--;
-        }
-        else if (*ptr == 'T')
-        {
-            stacks[i].prio = 15;
+            break;
+        case 'T':
+            stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = N(1);
-        }
-        else if (*ptr == 'F')
-        {
-            stacks[i].prio = 15;
+            break;
+        case 'F':
+            stacks[i].prio = PRIO_LITERAL;
             stacks[i].val = N(0);
-        }
-        else
-        {
+            break;
+        default:
             tintin_eprintf(ses, "#Error. Invalid expression in #if or #math in {%s}.", arg);
             return false;
         }
+
         if (!isaspace(*ptr))
         {
             stacks[i].pos = i + 1;
@@ -428,7 +425,7 @@ static bool do_one_inside(int begin, int end)
     while (1)
     {
         int ptr = (begin > -1) ? stacks[begin].pos : 0;
-        int highest = 16;
+        prio_t highest = PRIO_NONE;
         int loc = -1;
         int ploc = -1;
         int prev = -1;
@@ -444,11 +441,11 @@ static bool do_one_inside(int begin, int end)
             ptr = stacks[ptr].pos;
         }
 
-        if (highest == 15)
+        if (highest == PRIO_LITERAL)
         {
             if (begin > -1)
             {
-                stacks[begin].prio = 15;
+                stacks[begin].prio = PRIO_LITERAL;
                 stacks[begin].val = stacks[loc].val;
                 stacks[begin].pos = stacks[end].pos;
                 return true;
@@ -456,32 +453,33 @@ static bool do_one_inside(int begin, int end)
             else
             {
                 stacks[0].pos = stacks[end].pos;
-                stacks[0].prio = 15;
+                stacks[0].prio = PRIO_LITERAL;
                 stacks[0].val = stacks[loc].val;
                 return true;
             }
         }
-        else if (highest == 2)
+        else if (highest == PRIO_NOT)
         {
             int next = stacks[loc].pos;
-            if (stacks[next].prio != 15 || stacks[next].pos == 0)
+            if (stacks[next].prio != PRIO_LITERAL || stacks[next].pos == 0)
                 return false;
             stacks[loc].pos = stacks[next].pos;
-            stacks[loc].prio = 15;
-            stacks[loc].val = N(!stacks[next].val);
+            stacks[loc].prio = PRIO_LITERAL;
+            stacks[loc].val = stacks[loc].op ? -stacks[next].val : N(!stacks[next].val);
         }
         else
         {
-            int next;
-            assert(loc >= 0);
-            next = stacks[loc].pos;
-            if (ploc == -1 || stacks[next].pos == 0 || stacks[next].prio != 15)
+            if (loc < 0)
                 return false;
-            if (stacks[ploc].prio != 15)
+
+            int next = stacks[loc].pos;
+            if (ploc == -1 || stacks[next].pos == 0 || stacks[next].prio != PRIO_LITERAL)
+                return false;
+            if (stacks[ploc].prio != PRIO_LITERAL)
                 return false;
             switch (highest)
             {
-            case 3:            /* highest priority is *,/ */
+            case PRIO_MULT:     /* *,/ */
                 stacks[ploc].pos = stacks[next].pos;
                 if (stacks[loc].op==0)
                     stacks[ploc].val = nmul(stacks[ploc].val, stacks[next].val);
@@ -497,14 +495,14 @@ static bool do_one_inside(int begin, int end)
                 else
                     stacks[ploc].val %= stacks[next].val;
                 break;
-            case 5:            /* highest priority is +,- */
+            case PRIO_ADD:      /* +,- */
                 stacks[ploc].pos = stacks[next].pos;
                 if (stacks[loc].op==2)
                     stacks[ploc].val += stacks[next].val;
                 else
                     stacks[ploc].val -= stacks[next].val;
                 break;
-            case 8:            /* highest priority is >,>=,<,<= */
+            case PRIO_INEQUAL:  /* >,>=,<,<= */
                 stacks[ploc].pos = stacks[next].pos;
                 switch (stacks[loc].op)
                 {
@@ -521,19 +519,19 @@ static bool do_one_inside(int begin, int end)
                     stacks[ploc].val = N(stacks[ploc].val <= stacks[next].val);
                 }
                 break;
-            case 11:            /* highest priority is == */
+            case PRIO_EQUAL:    /* == */
                 stacks[ploc].pos = stacks[next].pos;
                 stacks[ploc].val = N(stacks[ploc].val == stacks[next].val);
                 break;
-            case 12:            /* highest priority is != */
+            case PRIO_NONEQUAL: /* != */
                 stacks[ploc].pos = stacks[next].pos;
                 stacks[ploc].val = N(stacks[ploc].val != stacks[next].val);
                 break;
-            case 13:            /* highest priority is && */
+            case PRIO_AND:      /* && */
                 stacks[ploc].pos = stacks[next].pos;
                 stacks[ploc].val = N(stacks[ploc].val && stacks[next].val);
                 break;
-            case 14:            /* highest priority is || */
+            case PRIO_OR:       /* || */
                 stacks[ploc].pos = stacks[next].pos;
                 stacks[ploc].val = N(stacks[ploc].val || stacks[next].val);
                 break;

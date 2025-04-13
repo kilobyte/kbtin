@@ -310,15 +310,15 @@ void convert(struct charset_conv *conv, char *outbuf, const char *inbuf, int dir
     if (dir==-1)
     {
         if (conv->dir>0)
-            syserr("trying to do input on an output-only conversion");
+            die("trying to do input on an output-only conversion");
     }
     else if (dir==1)
     {
         if (conv->dir<0)
-            syserr("trying to do output on an input-only conversion");
+            die("trying to do output on an input-only conversion");
     }
     else
-        syserr("invalid conversion direction");
+        die("invalid conversion direction");
 #endif
 
     switch (conv->mode)
@@ -413,6 +413,6 @@ void convert(struct charset_conv *conv, char *outbuf, const char *inbuf, int dir
         *outbuf=0;
         return;
     default:
-        syserr("unknown conversion mode");
+        die("unknown conversion mode");
     }
 }

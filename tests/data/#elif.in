@@ -1,0 +1,8 @@
+#ifali foo {#show wrong} #elif 1 {#show #ifaliasexists ✓}
+#ifali foo {#show wrong} #elif 0 {#show #ifaliasexists ✓} #else {#show #ifaliasexists ✗}
+#ife foo {#show wrong} #elif 1 {#show #ifexists ✓}
+#ife foo {#show wrong} #elif 0 {#show #ifexists ✓} #else {#show #ifexists ✗}
+#grep foo bar {#show wrong} #elif 1 {#show #grep ✓}
+#grep foo bar {#show wrong} #elif 0 {#show #grep ✓} #else {#show #grep ✗}
+#strcmp foo bar {#show wrong} #elif 1 {#show #strcmp ✓}
+#strcmp foo bar {#show wrong} #elif 0 {#show #strcmp ✓} #else {#show #strcmp ✗}

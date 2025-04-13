@@ -30,6 +30,7 @@ void (*user_title)(const char *, ...);
 void (*user_resize)(void);
 void (*user_show_status)(void);
 void (*user_mark_greeting)(void);
+void (*user_input_color)(int);
 
 
 void user_setdriver(int dr)
@@ -43,6 +44,6 @@ void user_setdriver(int dr)
         usertty_initdriver();
         break;
     default:
-        syserr("No such driver: %d", dr);
+        die("No such driver: %d", dr);
     }
 }

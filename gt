@@ -1,0 +1,8 @@
+#!/bin/sh -e
+# cmake must be configured with -coverage for CFLAGS.
+
+find -name '*.gc*' -execdir rm '{}' +
+make clean
+make -j`nproc`
+ctest -j`nproc` --output-on-failure
+gcov -kH ./CMakeFiles/KBtin.dir/*.gcda

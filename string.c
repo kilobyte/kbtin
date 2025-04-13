@@ -6,6 +6,7 @@
 /*********************************************************************/
 #include "tintin.h"
 #include <math.h>
+#include <time.h>
 #include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/chinese.h"
@@ -25,7 +26,7 @@
 
 
 extern struct session *if_command(const char *arg, struct session *ses);
-
+static int cutws(WC *str, int len, WC **rstr, int *color);
 
 /*************************/
 /* the #variable command */
@@ -167,6 +168,42 @@ int strlen_inline(const char *arg, struct session *ses)
 
     arg = get_arg(arg, left, 1, ses);
     return utf8_width(left);
+}
+
+static int cwidth(char *s)
+{
+    WC txt[BUFFER_SIZE], *dum;
+    int color=7;
+
+    utf8_to_wc(txt, s, BUFFER_SIZE-1);
+    return cutws(txt, BUFFER_SIZE-1, &dum, &color);
+}
+
+/*************************/
+/* the #strwidth command */
+/*************************/
+void strwidth_command(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
+    if (!*left)
+        return tintin_eprintf(ses, "#Syntax: #strwidth <var> <text>");
+
+    sprintf(right, "%d", cwidth(right));
+    set_variable(left, right, ses);
+}
+
+/************************/
+/* the #strwidth inline */
+/************************/
+int strwidth_inline(const char *arg, struct session *ses)
+{
+    char left[BUFFER_SIZE];
+
+    arg = get_arg(arg, left, 1, ses);
+    return cwidth(left);
 }
 
 /****************************************************/
@@ -446,18 +483,7 @@ struct session *strcmp_command(const char *line, struct session *ses)
     if (!strcmp(left, right))
         return parse_input(cmd, true, ses);
 
-    line = get_arg_in_braces(line, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            line = get_arg_in_braces(line, right, 1);
-            ses=parse_input(right, true, ses);
-        }
-        if (is_abrev(left + 1, "elif"))
-            ses=if_command(line, ses);
-    }
-    return ses;
+    return ifelse("strcmp", line, ses);
 }
 
 /**********************/
@@ -502,18 +528,7 @@ struct session *ifexists_command(const char *line, struct session *ses)
     if (get_hash(ses->myvars, left))
         return parse_input(cmd, true, ses);
 
-    line = get_arg_in_braces(line, left, 0);
-    if (*left == tintin_char)
-    {
-        if (is_abrev(left + 1, "else"))
-        {
-            line = get_arg_in_braces(line, cmd, 1);
-            ses=parse_input(cmd, true, ses);
-        }
-        if (is_abrev(left + 1, "elif"))
-            ses=if_command(line, ses);
-    }
-    return ses;
+    return ifelse("ifexists", line, ses);
 }
 
 /*********************/
@@ -573,15 +588,12 @@ void trim_command(const char *arg, struct session *ses)
     set_variable(destvar, s, ses);
 }
 
-
-#define INVALID_TIME (int)0x80000000
-
 /************************************************************/
 /* parse time, return # of seconds or INVALID_TIME on error */
 /************************************************************/
-static int time2secs(const char *tt, struct session *ses)
+timens_t time2secs(const char *tt, struct session *ses)
 {
-    int w, t=0;
+    timens_t w, t=0;
 
     if (!*tt)
     {
@@ -594,7 +606,7 @@ bad:
     for (;;)
     {
         char *err;
-        w=strtol(tt, &err, 10);
+        w = str2timens(tt, &err);
         if (tt==err)
             goto bad;
         tt=err;
@@ -615,7 +627,7 @@ bad:
         case 'm':
             w*=60;
         case 's':
-            while (isalpha(*tt))
+            while (is7alpha(*tt))
                 tt++;
         case 0:
             t+=w;
@@ -646,10 +658,11 @@ void ctime_command(const char *arg, struct session *ses)
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, arg2, 1, ses);
     if (!*arg2)
-        tt=time(0);
+        tt = current_time();
     else if ((tt=time2secs(arg2, ses))==INVALID_TIME)
         return;
-    p = ct = ctime_r(&tt, arg2);
+    const time_t t = tt / NANO;
+    p = ct = ctime_r(&t, arg2);
     while (p && *p)
     {
         if (*p == '\n')
@@ -671,18 +684,19 @@ void ctime_command(const char *arg, struct session *ses)
 void time_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], ct[BUFFER_SIZE];
+    timens_t t;
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        int t=time2secs(ct, ses);
+        t=time2secs(ct, ses);
         if (t==INVALID_TIME)
             return;
-        sprintf(ct, "%d", t);
     }
     else
-        sprintf(ct, "%d", (int)time(0));
+        t = time(0) * NANO;
+    nsecstr(ct, t);
     if (!*left)
         tintin_printf(ses, "#%s.", ct);
     else
@@ -702,10 +716,11 @@ void localtime_command(const char *arg, struct session *ses)
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        t=time2secs(ct, ses);
-        if (t==INVALID_TIME)
+        timens_t tt=time2secs(ct, ses);
+        if (tt==INVALID_TIME)
             return;
-        sprintf(ct, "%ld", (long)t);
+        t = tt/NANO;
+        sprintf(ct, "%lld", (long long)(t));
     }
     else
         t=time(0);
@@ -733,9 +748,10 @@ void gmtime_command(const char *arg, struct session *ses)
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        t=time2secs(ct, ses);
-        if (t==INVALID_TIME)
+        timens_t tt = time2secs(ct, ses);
+        if (tt==INVALID_TIME)
             return;
+        t = tt/NANO;
         sprintf(ct, "%ld", (long)t);
     }
     else

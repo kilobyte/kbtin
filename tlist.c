@@ -92,15 +92,15 @@ void kill_tlist(kbtree_t(trip) *l)
     kb_destroy(trip, l);
 }
 
-void show_trip(const ptrip t)
+void show_trip(const ptrip t, struct session *ses)
 {
     if (t->pr)
-        tintin_printf(0, "~7~{%s~7~}={%s~7~} @ {%s}", t->left, t->right, t->pr);
+        tintin_printf(ses, "~7~{%s~7~}={%s~7~} @ {%s}", t->left, t->right, t->pr);
     else
-        tintin_printf(0, "~7~{%s~7~}={%s~7~}", t->left, t->right);
+        tintin_printf(ses, "~7~{%s~7~}={%s~7~}", t->left, t->right);
 }
 
-bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool no_pr)
+bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool no_pr, struct session *ses)
 {
     if (no_pr && pat && is_literal(pat))
     {
@@ -109,8 +109,8 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool no_pr)
         if (!t)
             return false;
         if (msg)
-            tintin_printf(0, msg);
-        show_trip(*t);
+            tintin_printf(ses, msg);
+        show_trip(*t, ses);
         return true;
     }
 
@@ -123,15 +123,15 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool no_pr)
         {
             had_any = true;
             if (msg)
-                tintin_printf(0, msg);
+                tintin_printf(ses, msg);
         }
-        show_trip(t);
+        show_trip(t, ses);
     ENDITER
 
     return had_any;
 }
 
-bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*checkright)(char **right), bool no_pr)
+bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*checkright)(char **right), bool no_pr, struct session *ses)
 {
     if (no_pr && pat && is_literal(pat))
     {
@@ -144,7 +144,7 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*ch
             return false;
         kb_del(trip, l, &srch);
         if (msg)
-            tintin_printf(0, msg, t->left);
+            tintin_printf(ses, msg, t->left);
         free(t->left);
         free(t->right);
         free(t->pr);
@@ -166,7 +166,7 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*ch
     for (ptrip *del = todel; del != last; del++)
     {
         if (msg)
-            tintin_printf(0, msg, (*del)->left);
+            tintin_printf(ses, msg, (*del)->left);
         kb_del(trip, l, *del);
         free((*del)->left);
         free((*del)->right);

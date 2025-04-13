@@ -12,30 +12,12 @@ bool puts_echoing = true;
 
 /****************************************************/
 /* output to screen should go through this function */
-/* text gets checked for actions                    */
-/****************************************************/
-void tintin_puts(const char *cptr, struct session *ses)
-{
-    char line[BUFFER_SIZE];
-    strcpy(line, cptr);
-    if (ses)
-    {
-        _=line;
-        check_all_actions(line, ses);
-        _=0;
-    }
-    tintin_printf(ses, "%s", line);
-}
-
-/****************************************************/
-/* output to screen should go through this function */
 /* text gets checked for substitutes and actions    */
 /****************************************************/
 void tintin_puts1(const char *cptr, struct session *ses)
 {
     char line[BUFFER_SIZE];
-
-    strcpy(line, cptr);
+    stracpy(line, cptr, sizeof line);
 
     _=line;
     if (!ses->presub && !ses->ignore)
@@ -59,6 +41,9 @@ void tintin_puts1(const char *cptr, struct session *ses)
         }
     _=0;
 }
+
+// In these two functions, ses=0 means a message whose context is not
+// attached to a specific session, not even the nullsession.
 
 void tintin_printf(struct session *ses, const char *format, ...)
 {
@@ -85,12 +70,10 @@ void tintin_eprintf(struct session *ses, const char *format, ...)
     va_list ap;
     char buf[BUFFER_SIZE];
 
-    /* note: the behavior on !ses is wrong */
-    if ((ses != activesession && ses != nullsession && ses)
-        || (!puts_echoing && ses && !ses->mesvar[MSG_ERROR]))
-    {
-        return;
-    }
+    if (ses && ses != activesession)
+        return; // we're not foreground
+    if (!puts_echoing && ses && !ses->mesvar[MSG_ERROR])
+        return; // disabled and not in "show errors" mode
 
     va_start(ap, format);
     int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);

@@ -26,6 +26,8 @@ for (split /\n/, <<ESC)
 35	color: #a0a
 36;1	color: #5ff
 36	color: #0aa
+38;5;214	color:#ffaf00
+38;5;231	color:#fff
 1;4	color: #fff;text-decoration:underline
 3	font-style: italic
 4	text-decoration:underline

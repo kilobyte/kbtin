@@ -183,7 +183,7 @@ bool isatom(const char *arg)
             return false;
     return true;
         /* argument contains spaces i.e. = 'elem1 elem2' */
-        /* this is incompatibile with supposed " behaviour */
+        /* this is incompatible with supposed " behaviour */
 }
 
 /***********************/
@@ -456,25 +456,29 @@ void splitlist_command(const char *arg, struct session *ses)
 void deleteitems_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE], item[BUFFER_SIZE],
-    temp[BUFFER_SIZE], right[BUFFER_SIZE], *lpos, *rpos;
+        pat[BUFFER_SIZE], right[BUFFER_SIZE], *lpos, *rpos;
 
     arg = get_arg(arg, left, 0, ses);
     if (!*left)
-        return tintin_eprintf(ses, "#Error - Syntax: #deleteitem {dest. variable} {list} {item}");
+        return tintin_eprintf(ses, "#Error - Syntax: #deleteitem {dest. variable} {list} {item} [{item} ...]");
 
     arg=get_arg(arg, list, 0, ses);
-    get_arg(arg, item, 1, ses);
-    arg = list;
-    rpos=right;
-    if (*arg)
-        do {
-            arg = get_arg_in_braces(arg, temp, 0);
-            if (!match(item, temp))
+
+    do
+    {
+        arg=get_arg(arg, pat, 0, ses);
+
+        const char *it = list;
+        rpos=right;
+        while (*it)
+        {
+            it = get_arg_in_braces(it, item, 0);
+            if (!match(pat, item))
             {
                 if (rpos!=right)
                     *rpos++=' ';
-                lpos=temp;
-                if (isatom(temp))
+                lpos=item;
+                if (isatom(item))
                     while (*lpos)
                         *rpos++=*lpos++;
                 else
@@ -485,8 +489,11 @@ void deleteitems_command(const char *arg, struct session *ses)
                     *rpos++=BRACE_CLOSE;
                 }
             }
-        } while (*arg);
-    *rpos=0;
+        }
+        *rpos=0;
+        strcpy(list, right);
+    } while (*(arg=space_out(arg)));
+
     set_variable(left, right, ses);
 }
 
@@ -782,9 +789,6 @@ void findvariables_command(const char *arg, struct session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    if (!ses)
-        return tintin_eprintf(ses, "#NO SESSION ACTIVE => NO VARS!");
-
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, right, 1, ses);
     if (!*left)
@@ -828,4 +832,112 @@ void findvariables_command(const char *arg, struct session *ses)
 
     set_variable(left, buf, ses);
     free(pl);
+}
+
+
+/*********************/
+/* the shift command */
+/*********************/
+void shift_command(const char *arg, struct session *ses)
+{
+    if (!pvars)
+        return tintin_eprintf(ses, "#Error: #shift: no positional variables in this context.");
+
+    char left[BUFFER_SIZE];
+    get_arg(arg, left, 1, ses);
+    int n = (*left)? atoi(left) : 1;
+    if (n<1)
+        return tintin_eprintf(ses, "#Error: #shift takes a positive number, got {%s}", left);
+    if (n>9)
+        n=9;
+    for (int i=1; i<10; i++)
+        if (i+n<10)
+            strcpy((*pvars)[i], (*pvars)[i+n]);
+        else
+            *(*pvars)[i]=0;
+
+    // update $0
+    const char *sec = (*pvars)[0];
+    for (; n>0; n--)
+        sec = space_out(get_arg_in_braces(sec, left, 0));
+    memmove((*pvars)[0], sec, strlen(sec)+1);
+}
+
+/************************/
+/* the #stretch command */
+/************************/
+void stretch_command(const char *arg, struct session *ses)
+{
+    char var[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
+    char *tab[BUFFER_SIZE/2];
+
+    arg=get_arg(arg, var, 0, ses);
+    arg=get_arg(arg, left, 0, ses);
+    arg=get_arg(arg, right, 1, ses);
+
+    if (!*var || !*left)
+        return tintin_eprintf(ses, "#Syntax: #stretch var length {list}");
+
+    char *err;
+    int n = strtoul(left, &err, 10);
+    if (*err)
+        return tintin_eprintf(ses, "#Error: #stretch wants a number, got {%s}", left);
+    if (n > (int)ARRAYSZ(tab)) // wouldn't fit in the variable anyway
+        return tintin_eprintf(ses, "#Error: insane length given to #stretch");
+    if (n <= 0) // < 0 possible if unsigned long overflows int
+    {
+        // anything stretched to 0
+empty:
+        set_variable(var, "", ses);
+        return;
+    }
+
+    int m = 0;
+    arg = right;
+    while (*arg)
+    {
+        arg = get_arg_in_braces(arg, left, 0);
+        tab[m++]=mystrdup(left);
+    }
+
+    if (!m)
+        goto empty; // nothing comes from nothing
+
+    char *out = left;
+    // When expanding, prefer the rightmost Bresenham ray as it makes output
+    // have longer repeats on the left which is more consitent with what people
+    // tend to make manually.  Ie, aaabbcc not aabbbcc (most "evenest") or
+    // aabbccc.
+    int d = (n>m)? n-1 : 0;
+    int j = 0;
+    for (int i=0; i<m; i++)
+    {
+        while (d >= 0)
+        {
+            d -= m;
+            j++;
+            if (out!=left)
+                *out++=' ';
+            int len = strlen(tab[i]);
+            if (out+len >= left+BUFFER_SIZE-4)
+            {
+                tintin_eprintf(ses, "#Error: stretched list too long");
+                goto abort;
+            }
+
+            if (*tab[i] && isatom(tab[i]))
+                out += sprintf(out, "%s", tab[i]);
+            else
+                out += sprintf(out, "{%s}", tab[i]);
+        }
+
+        d += n;
+    }
+    assert(j = n);
+
+abort:
+    for (int i=0; i<m; i++)
+        free(tab[i]);
+    *out=0;
+    set_variable(var, left, ses);
 }

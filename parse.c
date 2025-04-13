@@ -6,12 +6,12 @@
 /*********************************************************************/
 #include "tintin.h"
 #include "protos/action.h"
-#include "protos/colors.h"
 #include "protos/files.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
 #include "protos/hooks.h"
 #include "protos/print.h"
+#include "protos/mudcolors.h"
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/path.h"
@@ -250,7 +250,7 @@ static bool do_goto(const char *txt, struct session *ses)
         if (!(ch=get_hash(ses->myvars, "loc"))||(!*ch))
         {
             tintin_eprintf(ses, "#Cannot goto from $loc, it is not set!");
-            return true; // was syntaxically correct
+            return true; // was syntactically correct
         }
         snprintf(tmp, sizeof(tmp), "{%s} {%s}", ch, txt+1);
         goto_command(tmp, ses);
@@ -313,7 +313,7 @@ static struct session* parse_tintin_command(const char *command, const char *arg
     return ses;
 }
 
-static void add_command(struct hashtable *h, const char *command, t_command func)
+static void add_Xcommand(struct hashtable *h, const char *command, void *func)
 {
     char cmd[BUFFER_SIZE];
 
@@ -330,15 +330,22 @@ static void add_command(struct hashtable *h, const char *command, t_command func
     }
 }
 
+static void add_command(const char *command, t_command func)
+{
+    add_Xcommand(commands, command, func);
+}
+
+static void add_c_command(const char *command, t_c_command func)
+{
+    add_Xcommand(c_commands, command, func);
+}
+
 void init_parse(void)
 {
     commands=init_hash();
     c_commands=init_hash();
     set_hash_nostring(commands, "end", (char*)end_command);
     set_hash_nostring(commands, "unlink", (char*)unlink_command);
-/* this terrible cast avoid gcc (-w → -Wcast-function-type) insisting it
-   still knows better despite an explicit cast */
-#define SC t_command)(void(*)(void)
 #include "load_commands.h"
 }
 
@@ -610,7 +617,27 @@ static void write_com_arg_mud(const char *command, const char *argument, int nsp
                 nsp=1;
             snprintf(outtext+i, BUFFER_SIZE-i, "%*s%s", nsp, "", argument);
         }
-        do_out_MUD_colors(outtext);
+        do_out_MUD_colors(outtext, ses);
         write_line_mud(outtext, ses);
     }
+}
+
+struct session *ifelse(const char *cmd, const char *line, struct session *ses)
+{
+    char left[BUFFER_SIZE], right[BUFFER_SIZE];
+
+    line = get_arg_in_braces(line, left, 0);
+    if (*left == tintin_char)
+    {
+        if (is_abrev(left + 1, "else"))
+        {
+            line = get_arg_in_braces(line, right, 1);
+            return parse_input(right, true, ses);
+        }
+        if (is_abrev(left + 1, "elif"))
+            return if_command(line, ses);
+    }
+    if (*left)
+        tintin_eprintf(ses, "#ERROR: cruft after #%s: {%s}", cmd, left);
+    return ses;
 }

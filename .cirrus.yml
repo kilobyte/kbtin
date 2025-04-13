@@ -1,6 +1,6 @@
 freebsd_13_task:
   freebsd_instance:
-    image: freebsd-13-0-release-amd64
+    image: freebsd-13-2-release-amd64
   install_script:
     pkg install -y cmake gnutls perl5
   build_script:
@@ -37,9 +37,9 @@ ubuntu_amd64_task:
   test_script:
     ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
 
-ubuntu_i386_task:
+debian_i386_task:
   container:
-    image: ubuntu:jammy
+    image: debian:bookworm
   install_script:
     - dpkg --add-architecture i386
     - apt-get update
@@ -64,16 +64,16 @@ ubuntu_arm64_task:
   test_script:
     ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
 
-ubuntu_armhf_task:
-  arm_container:
-    image: ubuntu:jammy
-  install_script:
-    - dpkg --add-architecture armhf
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gcc-arm-linux-gnueabihf libc6:armhf libgnutls28-dev:armhf libz-dev:armhf
-  build_script:
-    - cmake -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc .
-    - make -j$(getconf _NPROCESSORS_ONLN)
-  test_script:
-    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
+#ubuntu_armhf_task:
+#  arm_container:
+#    image: ubuntu:jammy
+#  install_script:
+#    - dpkg --add-architecture armhf
+#    - apt-get update
+#    - DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+#    - DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gcc-arm-linux-gnueabihf libc6:armhf libgnutls28-dev:armhf libz-dev:armhf
+#  build_script:
+#    - cmake -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc .
+#    - make -j$(getconf _NPROCESSORS_ONLN)
+#  test_script:
+#    ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure

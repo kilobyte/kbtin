@@ -1,0 +1,20 @@
+#unro foo bar
+#THESE ROUTES HAVE BEEN DEFINED:
+{foo}->{baz}: {-} d=10
+{bar}->{baz}: {-} d=10
+{baz}->{bar}: {-} d=10
+#unro foo bax
+#THESE ROUTES HAVE BEEN DEFINED:
+{foo}->{bar}: {-} d=10
+{foo}->{baz}: {-} d=10
+{bar}->{baz}: {-} d=10
+{baz}->{bar}: {-} d=10
+#unro foo
+#THESE ROUTES HAVE BEEN DEFINED:
+{bar}->{baz}: {-} d=10
+{baz}->{bar}: {-} d=10
+#unro ba*
+#THESE ROUTES HAVE BEEN DEFINED:
+#unro baz
+#THESE ROUTES HAVE BEEN DEFINED:
+{foo}->{bar}: {-} d=10

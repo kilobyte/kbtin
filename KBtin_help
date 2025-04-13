@@ -9,9 +9,9 @@ Session management:
 Input/output:
    verbatim    char        echo        history     cr          mudcolors
    blank       speedwalk   showme      status      margins     bell
-   send        sendchar    charset     bold
+   send        sendchar    charset     bold        inputcolor
 Aliases:
-   alias       unalias     ifaliasexists
+   alias       unalias     ifaliasexists   shift
 Triggers:
    action      unaction    ignore      promptaction    unpromptaction
    hook        unhook      doactions   dopromptactions
@@ -37,18 +37,20 @@ Variables:
    angle       sqrt        abs         round       findvariables
 Text variables:
    firstupper  firstlower  tolower     toupper     decolorize
-   substring   prepad      postpad     reverse     strlen      atoi
-   chr         ord         hexord      trim
+   substring   prepad      postpad     reverse     strlen      strwidth
+   atoi        chr         ord         hexord      trim        colorize
 Time:
    ctime       time        localtime   gmtime
 Lists:
    finditem    deleteitems foreach     getitem     isatom      listlength
    splitlist   implode     explode     sortlist    collate     expand
-   reverselist
+   reverselist stretch
 Tickers:
    tick        tickon      tickoff     ticksize    pretick
 Events:
    delay=event remove=unevent=undelay  findevents
+Rate limiting:
+   ratelimit   unratelimit
 Routes:
    goto        >           route       unroute     dogoto
 Misc:
@@ -92,17 +94,19 @@ Note: use #verbatim to turn all parsing off.
 ~colorcodes
 The color codes for KBtin are enclosed by tilde (~) chars.  The general
 syntax is: ~foreground[:background[:attr]]~
-Foreground and ~0:7~background~-1~ colors:
+Foreground and ~0:7~background~-1~ colors (using your terminal's palette):
  0 - ~0~black~-1~       4 - ~4~red~-1~         8 - ~8~dark gray~-1~  12 - ~12~lt. red~-1~
  1 - ~1~blue~-1~        5 - ~5~magenta~-1~     9 - ~9~lt. blue~-1~   13 - ~13~pink~-1~
  2 - ~2~green~-1~       6 - ~6~brown~-1~      10 - ~10~lt. green~-1~  14 - ~14~yellow~-1~
  3 - ~3~cyan~-1~        7 - ~7~lt. gray~-1~   11 - ~11~aqua~-1~       15 - ~15~white~-1~
+Absolute colors:
+ ~rgb~ where r,g,b are 0..5: 530 is ~530~orange~-1~, 555 - ~555~white~-1~
 Attributes:
  0 - normal text 1 - ~::1~blinking~-1~  2 - ~::2~italic~-1~        4 - ~::4~underline~-1~   8 - ~::8~overstrike~-1~
- or a sum of the above: 15 for ~::15~blinking, italic, underlined and overstruck~7~ text
+ or a sum of the above: 15 for ~::15~blinking, italic, underlined and overstruck~-1~ text
 
 While color codes are supported on all post-1980 terminals, the support for
-extended attributes varies.  For example, only text console and rxvt provides
+extended attributes varies.  For example, only text console and rxvt provide
 blink, while italic and underlining is available on some xterms.
 
 You can omit a field to retain the old color, for example: ::1 turns
@@ -183,8 +187,8 @@ Examples:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~deleteitems
 
-#deleteitem <dest.var> {list} <pattern>
-removes from {list} all items matching <pattern> and stores result in
+#deleteitem <dest.var> {list} <pattern> [<pattern> ...]
+removes from {list} all items matching <pattern>s and stores result in
 <dest.var>
 
 Example:
@@ -379,6 +383,9 @@ in the text being sent to the MUD.
 #mudcolors 0
 The color codes will be sent verbatim.
 
+#mudcolors ANSI
+Color codes will be sent as ANSI (ESC [ m).
+
 #mudcolors {}
 Color codes will be ignored.
 
@@ -392,22 +399,29 @@ Color numbers:
 This command doesn't support background colors and blink (yet?).
 
 Example (color table for T2T):
-#mudcolors $0$ $BLU$ $GRN$ $CYN$ $RED$ $MAG$ $YEL$ $0$ $0$ $HIB$ $HIG$ $HIC$
-$HIR$ $HIM$ $HIY$ $BOLD$
+#mudcolors ~0:7~$0$~7~ ~1~$BLU$~7~ ~2~$GRN$~7~ ~3~$CYN$~7~ ~4~$RED$~7~ ~5~$MAG$~7~ ~6~$YEL$~7~ $0$ ~8~$HIK$~7~ ~9~$HIB$~7~ ~10~$HIG$~7~ ~11~$HIC$~7~
+ ~12~$HIR$~7~ ~13~$HIM$~7~ ~14~$HIY$~7~ ~15~$BOLD$~7~
+(for Duris):
+#mudc ~0:7~&+l~7~ ~1~&+b~7~ ~2~&+g~7~ ~3~&+c~7~ ~4~&+r~7~ ~5~&+m~7~ ~6~&+y~7~ &n ~8~&+L~7~ ~9~&+B~7~ ~10~&+G~7~ ~11~&+C~7~ ~12~&+R~7~ ~13~&+M~7~ ~14~&+Y~7~ ~15~&+W~7~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~bold
 
 Some terminals make bright colors wide-stroked as well.  You can use this
 command to try to disable this behaviour.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~inputcolor
+
+#inputcolor ~~7~7:1~
+Set the color of the input bar to the given code.  The default is ~~7~7:1~.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~showme
 
-#showme <text>
+#show <text>
 Echoes <text> to the user.
 
 #example
-#showme {Terminal size: $COLSx$LINES}
-#action {%1's mighty bash sends you sprawling} {#showme =======BASHED========}
+#show {Terminal size: $COLSx$LINES}
+#action {%1's mighty bash sends you sprawling} {#show =======BASHED========}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~charset
 
@@ -604,6 +618,15 @@ Removes all aliases whose name matches <pattern>.
 
 Queries whether <alias> has been defined; if yes, the <command> is executed.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~shift
+
+#shift [<n>]
+
+Reassigns positional variables: moves $2 to $1, $3 to $2, ..., clears $9.
+If <n> is given, shifts by that many positions.
+
+$0 is updated to drop first <n> arguments.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~substitute
 
 #substitute [<pattern>]
@@ -615,7 +638,7 @@ highlight stuff, remind you about items stats, etc.
 <pattern> can include positional variables %0..%9, which can be used in <new
 text> as well.  Use ^ and $ to anchor to the beginning or end of a line.
 Note:
-subsitutions, similarly to actions, do NOT ignore color codes.
+substitutions, similarly to actions, do NOT ignore color codes.
 
 Examples:
 #sub {Your mighty bash sends %1 sprawling.} {~~-1~15:1~BASH SUCCESS: [$1]~~-1~7~}
@@ -681,6 +704,26 @@ Examples:
 
 #unhighlight <pattern>
 You got it, this command removes all highlights matching <pattern>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~colorize
+
+#colorize <dest.var> <color> <text>
+Applies <color> to <text>, storing the result into <dest.var>.  All ways to
+express a color known to #highlight are allowed, including patterns.
+
+You probably want to use color codes with incomplete fields, that is, ~~-1~::~
+is no-op, ~~-1~:4:~ sets background to red without changing foreground or
+flags, etc.  Note that a field that's missing entirely rather than empty
+defaults to ~~-1~7:0:0~ rather than to ~~-1~::~.
+
+Referring to a color by name rather than code has been changed as of KBtin 2.2
+to mean ~~-1~2::~ rather than ~~-1~2:0:0~ as before.  Likewise, named flags don't
+clear other attributes.
+
+#colorize <dest.var> {} <text>
+Canonicalizes color codes inside <text> (getting rid of multiple codes in a
+row as produced by some MUDs, eliding redundant changing color to same,
+resolving empty mask fields, etc).  There's no visual change.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~presub
 
@@ -779,14 +822,13 @@ For all you quakers out here, the command to nuke all keybindings is
 ~keypad
 
 #keypad [<boolean>]
-Switches the keypad (rightmost part of keyboard) between the standard mode
+Switches the keypad (rightmost part of keyboard) between the "normal" mode
 (where it works as either arrow keys or numbers, depending on NumLock state)
-and the alternate mode, where it can be used for keybindings.  You will
-prefer the alternate mode if you enjoy walking using the keypad keys.
+and the application mode, where it can be used for keybindings.  You will
+prefer the latter mode if you enjoy walking using the keypad keys.
 NOTE: The support for this command is broken on some terminals which don't
 implement vt100 codes properly.  Ones that do work correctly include the
-Linux console, PuTTY, aterm and recent versions of rxvt;  some others (like
-xterm) can be coerced with some xmodmap tinkering (see the KEYPAD file).
+Linux console, PuTTY, aterm, rxvt, xterm, zutty.
 
 Example:
 #keypad on
@@ -844,7 +886,7 @@ Turns logging on.
 Disables logging.
 
 The log produced by this command is exactly what came from the MUD to you.
-No gags, no subsitutions, no spam generated by TinTin.  The log includes
+No gags, no substitutions, no spam generated by TinTin.  The log includes
 even the ANSI color codes -- if you want a plain-text log, pipe it through
 ansi2txt, ansi2html or similar.
 
@@ -987,6 +1029,7 @@ Example:
 
 #time
 Prints the current time as seconds since 1970.
+To get fractional seconds, you can #time {} $TIME
 
 #time <dest.var>
 Sets <dest.var> to the number of seconds elapsed since 1970.
@@ -996,6 +1039,7 @@ Parses the string <time> and converts it to seconds.  Allowed formats are:
 * "345"               (assumed to be given in seconds)
 * "1y 245d 15h 30m 4s"
 * "11 hours, 59 minutes and 45 seconds"
+* "0.5h 10.001s"
 
 Examples:
 #time now
@@ -1055,6 +1099,12 @@ The <time> must be non-negative; using <time> of 0 is an useful idiom that
 allows avoiding doing something in the middle of recursion, or doing long
 work without risk of starving other activity.
 
+#delay <time> {<command>} <label>
+#event <time> {<command>} <label>
+Remove any existing event with the same <label>, then add one.  The <command>
+must be enclosed in braces, otherwise the <label> would be considered a part
+of the command.
+
 Example:
 #action {~~-1~7~%1 starts casting fireball at you} {#delay 4 {counter $1}}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1066,6 +1116,12 @@ Example:
 #unevent <pattern>
 #undelay <pattern>
 Kills all timed events whose ~15::4~command~-1~ (not delay!) matches <pattern>.
+
+#unevent {} <label_pattern>
+Kills all events matching <label_pattern>.
+
+#unevent {<cmd_pattern>} <label_pattern>
+Kills all events which match both of the patterns.
 
 Example:
 #action {~~-1~7~%1 leaves } {#unevent {counter $1}}
@@ -1127,6 +1183,32 @@ Toggles between no pre-tick at all and a pre-tick of the value 10.  This
 command had been added only for mainstream tintin++ compatibility, and is
 depreciated -- it's better to say "#pretick 10" explicitly.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~ratelimit
+
+#ratelimit <name> {<spec>} {<command>} [#elif ... #else ...]
+Execute <command> no more often than allowed by the <spec>, if the limit is
+exceeded then do the #elif/#else clause.
+
+The <spec> has the form of {<limit> <period>}.  Eg., {1 10m} can be executed
+only once per 10 minutes.
+
+#ratelimit <name> {} {<command>} [...]
+Reuse an already defined ratelimit.  This works the same as if you gave the
+same <spec> as before.
+
+#ratelimit <name> {<spec>}
+Define a ratelimit for later use.
+
+Example
+#rate {mobkill_$0} {10 1h} {kill $0} #else {#show No more $0 for now.}
+-- will slay no more than 10 orcs per hour, giving 10 elves an independent
+counter.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~unratelimit
+
+#unratelimit <pattern>
+Delete data for ratelimits whose name matches <pattern>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~end
 
 #end
@@ -1156,13 +1238,23 @@ Example:
 #sslsession
 Lists all active sessions, as in #session (also non-SSL ones).
 
-#sslsession <name> <host> <port>
+#sslsession <name> <host> <port> [<security>]
 Starts a new encrypted session, connecting over SSL to TCP <port> on <host>.
 The server's certificate will be retained, and compared during subsequent
 connections.
 
+The following <security> models are supported:
+* ca (default): the certificate must be signed by an Internet CA recognized
+    by your system.
+* save (as in KBtin ≤2.2): the first time you connect to a server, its
+    certificate is blindly accepted and saved on the disk in ~/.tintin/ssl/
+    On subsequent connections, changes are accepted if the old cert has
+    expired or will expire in less than a week.
+* none: no verification whatsoever.  You're vulnerable to Man-in-the-Middle
+    interception; you're still safe against passive snooping.
+
 Example:
-#sslses t2t t2tmud.org 443
+#sslses t2t t2tmud.org 444
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~run
 
@@ -1254,12 +1346,16 @@ Converts <text> into ALL UPPERCASE and stores it into <dest.var>.
 ~substring
 
 #substr <dest.var> <l>[,<r>] <text>
-Cuts characters <l>..<r> from <text> and stores them into <dest.var>.
+Copies a substring of width <l>..<r> from <text> and stores it into <dest.var>.
+
+As usual, a CJK character has width 2, while combining decorations or
+color codes are considered a part of a character they're attached to.
 
 Examples:
 #substr result 3 abcde          -> result = "c"
 #substr result 2,3 abcde        -> result = "bc"
 #substr result 4,1000 abcde     -> result = "de"
+#substr result 2,4 ~4~~~4~4~~7~abcde     -> result = "~4~~~4~4~~7~bcd"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~prepad
 
@@ -1296,6 +1392,15 @@ Example:
 Stores the length of <text> into <dest.var>.
 
 inline #strlen <text>
+Evaluates to the length of <text>.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~strwidth
+
+#strwidth <dest.var> <text>
+Stores the visible length of <text> into <dest.var>.  That is, CJK characters
+count as 2, combining characters and color codes have 0 width.
+
+inline #strwidth <text>
 Evaluates to the length of <text>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~decolorize
@@ -1566,6 +1671,9 @@ Examples:
 #unroute <pattern a> <pattern b>
 Kills all direct routes whose starting location matches <pattern a> and
 destination matches <pattern b>.
+
+#unroute <pattern>
+Kills all direct routes going from or to a locationg matching <pattern>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~dogoto
 
@@ -1872,6 +1980,17 @@ Reverses the order of elements in {list}.
 
 Example
 #reversel result {foo {oh my} fi}     -> result = "fi {oh my} foo"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~stretch
+
+#stretch <dest var> <length> {list}
+Expands or contracts the <list> to the given <length>, duplicating or deleting
+elements proportionally.
+
+Examples:
+#stretch out 5 a b c    -> a a b b c
+#ali gradient {#strlen R {$2};#stret R $R {$1};#impl R / {$R};#colo R {$R} {$2}}
+gradient {8 4 12 14 15 14 12 4 8} {fiery text}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~H Tab completion
 ~retab

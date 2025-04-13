@@ -1,0 +1,1 @@
+#loop 1,6 {#split in {} {a b c d e f} $0;#loop 1,6 {#stre out $0 $in;#show $out}}

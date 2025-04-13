@@ -1,0 +1,6 @@
+✓ empty
+✗ empty
+✓ foobar
+✗ foobaz
+inline ✗ foo=bar
+inline ✓ foo=foo

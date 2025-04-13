@@ -1,0 +1,20 @@
+image: alpine/edge
+packages:
+ - cmake
+ - perl
+ - gnutls-dev
+ - zlib-dev
+ - vectorscan-dev
+sources:
+ - https://git.sr.ht/~kilobyte/kbtin
+tasks:
+ - configure:
+     cd kbtin && cmake .
+ - build:
+     cd kbtin && make -j$(getconf _NPROCESSORS_ONLN)
+ - test:
+     cd kbtin && ctest -j$(getconf _NPROCESSORS_ONLN) --output-on-failure
+triggers:
+ - action: email
+   condition: failure
+   to: kilobyte@angband.pl
