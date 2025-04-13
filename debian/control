@@ -14,7 +14,7 @@ Rules-Requires-Root: no
 Package: kbtin
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Recommends: colorized-logs
+Recommends: colorized-logs, ca-certificates
 Description: tintin++ style text-based MUD client
  KBtin is a console MUD client based on the once-popular tintin++.
  It is not limited for mudding, and can be used for running line-based local
