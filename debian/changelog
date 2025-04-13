@@ -1,5 +1,7 @@
-kbtin (2.1-3) UNRELEASED; urgency=medium
+kbtin (2.3-1) unstable; urgency=medium
 
+  * New upstream release.
+  * Add ca-certificates to Recommends.
   * Temporarily disable stack-clash-protection on armhf, it does accesses
     past SP not currently allowed by valgrind.  Thanks Emanuele Rocca,
     closes: #1061076.

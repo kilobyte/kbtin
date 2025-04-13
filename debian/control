@@ -5,7 +5,7 @@ Maintainer: Adam Borowski <kilobyte@angband.pl>
 Build-Depends: debhelper-compat (=13), libz-dev, libgnutls28-dev, cmake,
 	libhyperscan-dev [amd64 i386], libvectorscan-dev [arm64],
 	valgrind-if-available
-Standards-Version: 4.6.2
+Standards-Version: 4.7.2
 Homepage: https://git.sr.ht/~kilobyte/kbtin
 Vcs-Git: https://git.sr.ht/~kilobyte/kbtin.git -b debian
 Vcs-Browser: https://git.sr.ht/~kilobyte/kbtin/tree/debian
