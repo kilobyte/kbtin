@@ -1,3 +1,13 @@
+2.3:
+*	reworked SSL security, requiring validly signed certs.
+	For the old model, append "save".
+*	time-based commands accept compound units like {1h 20m 10.5s}
+*	periodic #delay
+*	labelled #delay auto-removes previous instances
+*	#inputcolor allows configuring the input bar
+*	#ratelimit
+*	#stretch
+
 2.2:
 *	#colorize/#highlight can apply partial changes (like, setting
 	background without altering foreground, underline, etc)
