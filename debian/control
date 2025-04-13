@@ -6,9 +6,9 @@ Build-Depends: debhelper-compat (=13), libz-dev, libgnutls28-dev, cmake,
 	libhyperscan-dev [amd64 i386], libvectorscan-dev [arm64],
 	valgrind-if-available
 Standards-Version: 4.6.2
-Homepage: https://github.com/kilobyte/kbtin
-Vcs-Git: https://github.com/kilobyte/kbtin.git -b debian
-Vcs-Browser: https://github.com/kilobyte/kbtin/tree/debian
+Homepage: https://git.sr.ht/~kilobyte/kbtin
+Vcs-Git: https://git.sr.ht/~kilobyte/kbtin.git -b debian
+Vcs-Browser: https://git.sr.ht/~kilobyte/kbtin/tree/debian
 Rules-Requires-Root: no
 
 Package: kbtin
