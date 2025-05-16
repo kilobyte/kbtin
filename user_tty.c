@@ -533,11 +533,11 @@ static void b_canceldraft(void)
 {
     if (b_bottom==b_screenb)
     {
-        tbuf+=sprintf(tbuf, "\0338\033[0m\033[2K");
+        tbuf = stpcpy(tbuf, "\0338\033[0m\033[2K");
         while (b_current>b_last)
         {
             b_current--;
-            tbuf+=sprintf(tbuf, "\033[A\033[2K");
+            tbuf = stpcpy(tbuf, "\033[A\033[2K");
             assert(tbuf-term_buf < (ssize_t)sizeof(term_buf));
         }
         *tbuf++='\r';

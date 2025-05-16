@@ -646,7 +646,8 @@ void implode_command(const char *arg, struct session *ses)
             tintin_eprintf(ses, "#ERROR: imploded line too long in #implode {%s} {%s} {%s}", left, del, right);
             break;
         }
-        r+=sprintf(r, "%s%s", del, temp);
+        r = stpcpy(r, del);
+        r = stpcpy(r, temp);
     }
     set_variable(left, res, ses);
 }
