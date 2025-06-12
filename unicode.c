@@ -108,45 +108,42 @@ int utf8_to_wc(wchar_t *d, const char *s, int n)
 int wc_to_utf8(char *d, const wchar_t *s, int n, int maxb)
 {
     char *maxd, *d0;
+    unsigned int uv;
 
     d0=d;
     maxd=d+maxb-8;
-#define uv ((unsigned int)(*s))
-#define vb d
-    for (;n-- && *s && d<maxd;s++)
+    for (;n-- && (uv=*s) && d<maxd;s++)
     {
         if (uv<0x80)
         {
-            *vb++=uv;
+            *d++=uv;
             continue;
         }
         if (uv < 0x800)
         {
-            *vb++ = ( uv >>  6)         | 0xc0;
-            *vb++ = ( uv        & 0x3f) | 0x80;
+            *d++ = ( uv >>  6)         | 0xc0;
+            *d++ = ( uv        & 0x3f) | 0x80;
             continue;
         }
         if (uv < 0x10000)
         {
-            *vb++ = ( uv >> 12)         | 0xe0;
-            *vb++ = ((uv >>  6) & 0x3f) | 0x80;
-            *vb++ = ( uv        & 0x3f) | 0x80;
+            *d++ = ( uv >> 12)         | 0xe0;
+            *d++ = ((uv >>  6) & 0x3f) | 0x80;
+            *d++ = ( uv        & 0x3f) | 0x80;
             continue;
         }
         if (uv < 0x110000)
         {
-            *vb++ = ( uv >> 18)         | 0xf0;
-            *vb++ = ((uv >> 12) & 0x3f) | 0x80;
-            *vb++ = ((uv >>  6) & 0x3f) | 0x80;
-            *vb++ = ( uv        & 0x3f) | 0x80;
+            *d++ = ( uv >> 18)         | 0xf0;
+            *d++ = ((uv >> 12) & 0x3f) | 0x80;
+            *d++ = ((uv >>  6) & 0x3f) | 0x80;
+            *d++ = ( uv        & 0x3f) | 0x80;
             continue;
         }
-        *vb++=0xef;
-        *vb++=0xbf;
-        *vb++=0xbd;
+        *d++=0xef;
+        *d++=0xbf;
+        *d++=0xbd;
     }
-#undef uv
-#undef vb
     *d=0;
     return d-d0;
 }
