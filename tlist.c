@@ -183,11 +183,11 @@ kbtree_t(trip) *copy_tlist(kbtree_t(trip) *a)
     kbtree_t(trip) *b = kb_init(trip, KB_DEFAULT_SIZE);
 
     TRIP_ITER(a, old)
-        ptrip new = MALLOC(sizeof(struct trip));
-        new->left = mystrdup(old->left);
-        new->right = mystrdup(old->right);
-        new->pr = mystrdup(old->pr);
-        kb_put(trip, b, new);
+        ptrip nt = MALLOC(sizeof(struct trip));
+        nt->left = mystrdup(old->left);
+        nt->right = mystrdup(old->right);
+        nt->pr = mystrdup(old->pr);
+        kb_put(trip, b, nt);
     ENDITER
 
     return b;

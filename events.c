@@ -75,13 +75,13 @@ bool do_events(struct session *ses, timens_t now)
             // If badly lagged, wait at least half of period.
             timens_t old = ev->time - now;
             timens_t del = ev->period;
-            timens_t new = old + del;
+            timens_t nxt = old + del;
             timens_t cap = del/2;
-            if (new < cap)
-                new = cap;
-            if (new <= 0)
-                new = 1; // rapid-fire events shouldn't starve others
-            ev->time = now + new;
+            if (nxt < cap)
+                nxt = cap;
+            if (nxt <= 0)
+                nxt = 1; // rapid-fire events shouldn't starve others
+            ev->time = now + nxt;
             schedule_event(ses, ev);
         }
         else
@@ -270,17 +270,17 @@ void findevents_command(const char *arg, struct session *ses)
     {
         if (match(right, ev->event))
         {
-            char time[BUFFER_SIZE], this[BUFFER_SIZE+10];
+            char time[BUFFER_SIZE], item[BUFFER_SIZE+10];
             // lie that overdue events are due right now
             nsecstr(time, (ev->time>ct)? ev->time-ct : 0);
             if (isatom(ev->event))
-                snprintf(this, sizeof this, "{%s %s}", time, ev->event);
+                snprintf(item, sizeof item, "{%s %s}", time, ev->event);
             else
-                snprintf(this, sizeof this, "{%s {%s}}", time, ev->event);
+                snprintf(item, sizeof item, "{%s {%s}}", time, ev->event);
 
             if (b!=buf)
                 *b++=' ';
-            b+=snprintf(b, buf-b+sizeof(buf), "%s", this);
+            b+=snprintf(b, buf-b+sizeof(buf), "%s", item);
             if (b >= buf+BUFFER_SIZE-10)
             {
                 tintin_eprintf(ses, "#Too many events to store.");

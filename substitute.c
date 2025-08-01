@@ -66,20 +66,20 @@ static void parse_sub(const char *left_, const char *right,  bool gag, struct se
 
     kbtree_t(trip) *sub = ses->subs;
 
-    ptrip new = MALLOC(sizeof(struct trip));
-    new->left = mystrdup(left_);
-    new->right = mystrdup(right);
-    new->pr = 0;
-    ptrip *t = kb_get(trip, sub, new);
+    ptrip nt = MALLOC(sizeof(struct trip));
+    nt->left = mystrdup(left_);
+    nt->right = mystrdup(right);
+    nt->pr = 0;
+    ptrip *t = kb_get(trip, sub, nt);
     if (t)
     {
         ptrip d = *t;
-        kb_del(trip, sub, new);
+        kb_del(trip, sub, nt);
         free(d->left);
         free(d->right);
         free(d);
     }
-    kb_put(trip, sub, new);
+    kb_put(trip, sub, nt);
     subnum++;
 #ifdef HAVE_SIMD
     ses->subs_dirty=true;

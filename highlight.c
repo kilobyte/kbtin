@@ -184,20 +184,20 @@ void highlight_command(const char *arg, struct session *ses)
         return;
     }
 
-    ptrip new = MALLOC(sizeof(struct trip));
-    new->left = mystrdup(right);
-    new->right = mystrdup(left);
-    new->pr = 0;
-    ptrip *old = kb_get(trip, ses->highs, new);
-    if (old)
+    ptrip nt = MALLOC(sizeof(struct trip));
+    nt->left = mystrdup(right);
+    nt->right = mystrdup(left);
+    nt->pr = 0;
+    ptrip *ot = kb_get(trip, ses->highs, nt);
+    if (ot)
     {
-        ptrip del = *old;
-        kb_del(trip, ses->highs, new);
-        free(del->left);
-        free(del->right);
-        free(del);
+        ptrip dt = *ot;
+        kb_del(trip, ses->highs, nt);
+        free(dt->left);
+        free(dt->right);
+        free(dt);
     }
-    kb_put(trip, ses->highs, new);
+    kb_put(trip, ses->highs, nt);
     hinum++;
 #ifdef HAVE_SIMD
     ses->highs_dirty = true;

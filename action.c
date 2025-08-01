@@ -97,11 +97,11 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
             }
         ENDITER
 
-        ptrip new = MALLOC(sizeof(struct trip));
-        new->left = mystrdup(left);
-        new->right = mystrdup(right);
-        new->pr = mystrdup(pr);
-        kb_put(trip, l, new);
+        ptrip nact = MALLOC(sizeof(struct trip));
+        nact->left = mystrdup(left);
+        nact->right = mystrdup(right);
+        nact->pr = mystrdup(pr);
+        kb_put(trip, l, nact);
         if (ses->mesvar[MSG_ACTION])
             tintin_printf(ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
         acnum++;

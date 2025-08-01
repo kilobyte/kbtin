@@ -139,7 +139,7 @@ static void load_cert(gnutls_x509_crt_t *cert, const char *name)
 }
 
 
-static void save_cert(gnutls_x509_crt_t cert, const char *name, bool new, struct session *oldses)
+static void save_cert(gnutls_x509_crt_t cert, const char *name, bool first, struct session *oldses)
 {
     char fname[BUFFER_SIZE], buf[BIGBUFSIZE];
     const char *home;
@@ -165,7 +165,7 @@ static void save_cert(gnutls_x509_crt_t cert, const char *name, bool new, struct
     }
     if (!cert_file(name, fname))
         return;
-    if (new)
+    if (first)
         tintin_printf(oldses, "#It is the first time you connect to this server.");
     tintin_printf(oldses, "#Saving server certificate to %s", fname);
     if (!(f=fopen(fname, "w")))

@@ -411,15 +411,15 @@ static void b_addline(void)
 {
     b_flush_newline();
     b_pending_newline=1;
-    char *new;
-    while (!(new=MALLOC(o_len+1)))
+    char *new_line;
+    while (!(new_line=MALLOC(o_len+1)))
         if (!b_shorten())
             die("Out of memory");
     out_line[o_len]=0;
-    strcpy(new, out_line);
+    strcpy(new_line, out_line);
     if (b_bottom==b_first+CONSOLE_LENGTH)
         b_shorten();
-    b_output[b_current%CONSOLE_LENGTH]=new;
+    b_output[b_current%CONSOLE_LENGTH]=new_line;
     o_pos=0;
     o_len=setcolor(out_line, o_oldcolor=o_color);
     if (b_bottom<++b_current)
