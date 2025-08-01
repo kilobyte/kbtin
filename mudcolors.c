@@ -455,7 +455,12 @@ error_msg:
     {
         arg=buf;
         if (!*arg)
-            goto null_codes;
+        {
+null_codes:
+            ses->mudcolors=MUDC_NULL;
+            tintin_printf(ses, "#outgoing color codes are now ignored.");
+            return;
+        }
     }
     /* we allow BOTH {a} {b} {c} _and_ {{a} {b} {c}} - inconsistency, but it's ok */
     for (int nc=0;nc<16;nc++)
@@ -463,12 +468,7 @@ error_msg:
         if (!*arg)
         {
             if ((nc==1)&&!*cc[0])
-            {
-null_codes:
-                ses->mudcolors=MUDC_NULL;
-                tintin_printf(ses, "#outgoing color codes are now ignored.");
-                return;
-            }
+                goto null_codes;
             else
                 goto error_msg;
         }
