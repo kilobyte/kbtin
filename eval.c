@@ -200,7 +200,7 @@ static char *stringcmp(char *ptr, int i, struct session *ses)
     }
     *tptr='\0';
     if (!*ptr)
-        return false; /* error */
+        return 0; /* error */
     if (*ptr == ']')
         tintin_eprintf(ses, "#Compare %s to what ? (only one var between [ ])", left);
     switch (*ptr)
@@ -212,7 +212,7 @@ static char *stringcmp(char *ptr, int i, struct session *ses)
         {
         case '=' : regex=false; ptr++; break;
         case '~' : regex=true; ptr++; break;
-        default : return false;
+        default : return 0;
         }
         break;
     case '=' :
@@ -225,7 +225,7 @@ static char *stringcmp(char *ptr, int i, struct session *ses)
         default : break;
         }
         break;
-    default : return false;
+    default : return 0;
     }
 
     tptr=right;
@@ -237,7 +237,7 @@ static char *stringcmp(char *ptr, int i, struct session *ses)
     }
     *tptr='\0';
     if (!*ptr)
-        return false;
+        return 0;
     if (regex)
         result = !match(right, left);
     else
