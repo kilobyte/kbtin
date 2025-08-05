@@ -222,6 +222,10 @@ enum
 #ifdef HAVE_SIMD
 # include <hs/hs.h>
 #endif
+#ifdef  __cplusplus
+# define restrict __restrict__
+# define _Static_assert static_assert
+#endif
 #include "malloc.h"
 #include "unicode.h"
 #ifndef HAVE_STRLCPY
