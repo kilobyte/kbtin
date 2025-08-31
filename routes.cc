@@ -270,9 +270,12 @@ void goto_command(const char *arg, session *ses)
     int n=ses->locations.size();
     char A[BUFFER_SIZE], B[BUFFER_SIZE], cond[BUFFER_SIZE];
     int a, b, i, j;
-    num_t s, d[n];
-    int ok[n], way[n];
-    char *path[n], *locs[n];
+    num_t s;
+    std::vector<num_t> d(n);
+    std::vector<int> ok(n);
+    std::vector<int> way(n);
+    std::vector<char*> path(n);
+    std::vector<char*> locs(n);
 
     arg=get_arg(arg, A, 0, ses);
     arg=get_arg(arg, B, 1, ses);
@@ -375,8 +378,10 @@ session * dogoto_command(const char *arg, session *ses)
         distvar[BUFFER_SIZE], locvar[BUFFER_SIZE], pathvar[BUFFER_SIZE];
     char tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
     int a, b, i, j;
-    num_t s, d[n];
-    int ok[n], way[n];
+    num_t s;
+    std::vector<num_t> d(n);
+    std::vector<int> ok(n);
+    std::vector<int> way(n);
     char path[BUFFER_SIZE], *pptr;
 
     arg=get_arg(arg, A, 0, ses);
