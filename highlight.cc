@@ -436,11 +436,11 @@ void do_all_high(char *line, struct session *ses)
             l+=txt-text;
             /* changed: no longer highlight in the middle of a word */
             if (((l==0)||(!is7alnum(text[l])||!is7alnum(text[l-1])))&&
-                    (!is7alnum(text[r])||!is7alnum(text[r+1])))
+                    (!is7alnum(text[r-1])||!is7alnum(text[r])))
             {
-                apply_high(attr+l, r+1-l);
+                apply_high(attr+l, r-l);
             }
-            txt=text+r+1;
+            txt=text+r;
         }
     ENDITER
 

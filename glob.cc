@@ -72,9 +72,9 @@ bool find(const char *text, const char *pattern, int *from, int *to, const char 
             return false;
         *from=txt-text;
         if (strchr(pattern, '*'))
-            *to=strlen(text)-1;
+            *to=strlen(text);
         else
-            *to=*from+strlen(fastener)-1;
+            *to=*from+strlen(fastener);
         return true;
     }
 
@@ -87,7 +87,7 @@ bool find(const char *text, const char *pattern, int *from, int *to, const char 
         if (!*pattern)
         {
             *from=0;
-            *to=txt-text-1;
+            *to=txt-text;
             return true;
         }
         strcpy(m1, pattern);
@@ -102,7 +102,7 @@ bool find(const char *text, const char *pattern, int *from, int *to, const char 
             if (fixed)
             {
                 *from = fixed - text;
-                *to = *from + strlen(pattern) - 1;
+                *to = *from + strlen(pattern);
                 return true;
             }
             else
@@ -126,7 +126,7 @@ bool find(const char *text, const char *pattern, int *from, int *to, const char 
     i=strlen(pat);
     if (!*pat)
     {
-        *to=strlen(text)-1;
+        *to=strlen(text);
         return true;
     }
     a=pat;
@@ -142,7 +142,7 @@ bool find(const char *text, const char *pattern, int *from, int *to, const char 
         *a--=*txt++;
     m2[i]=0;
     txt=m2;
-    *to=-1;
+    *to=0;
     do
     {
         b=strchr(pat, '*');
@@ -151,8 +151,8 @@ bool find(const char *text, const char *pattern, int *from, int *to, const char 
         a=strstr(txt, pat);
         if (!a)
             return false;
-        if (*to==-1)
-            *to=strlen(text)-(a-txt)-1;
+        if (!*to)
+            *to = strlen(text)-(a-txt);
         int len=strlen(pat);
         txt=a+len;
         if (b)
