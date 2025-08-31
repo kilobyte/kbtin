@@ -184,7 +184,7 @@ void highlight_command(const char *arg, struct session *ses)
         return;
     }
 
-    ptrip nt = MALLOC(sizeof(struct trip));
+    ptrip nt = new trip;
     nt->left = mystrdup(right);
     nt->right = mystrdup(left);
     nt->pr = 0;
@@ -195,7 +195,7 @@ void highlight_command(const char *arg, struct session *ses)
         kb_del(trip, ses->highs, nt);
         free(dt->left);
         free(dt->right);
-        free(dt);
+        delete dt;
     }
     kb_put(trip, ses->highs, nt);
     hinum++;
@@ -289,18 +289,18 @@ static void build_highs_hs(struct session *ses)
     hs_free_database(ses->highs_hs);
     ses->highs_hs=0;
     ses->highs_dirty=false;
-    free(ses->highs_cols);
+    delete[] ses->highs_cols;
     ses->highs_cols=0;
 
     int n = count_tlist(ses->highs);
-    const char **pat = MALLOC(n*sizeof(void*));
-    unsigned int *flags = MALLOC(n*sizeof(int));
-    unsigned int *ids = MALLOC(n*sizeof(int));
-    const char **cols = MALLOC(n*sizeof(void*));
+    auto pat = new const char *[n];
+    auto flags = new unsigned int[n];
+    auto ids = new unsigned int[n];
+    auto cols = new const char*[n];
     if (!pat || !flags || !ids || !cols)
         die("out of memory");
 
-    int j=0;
+    unsigned int j=0;
     TRIP_ITER(ses->highs, ln)
         pat[j]=glob_to_regex(ln->left);;
         flags[j]=HS_FLAG_DOTALL|HS_FLAG_SOM_LEFTMOST;
@@ -326,9 +326,9 @@ static void build_highs_hs(struct session *ses)
 
     for (int i=0; i<n; i++)
         SFREE((char*)pat[i]);
-    MFREE(ids, n*sizeof(int));
-    MFREE(flags, n*sizeof(int));
-    MFREE(pat, n*sizeof(void*));
+    delete[] ids;
+    delete[] flags;
+    delete[] pat;
 
     if (ses->highs_hs && hs_alloc_scratch(ses->highs_hs, &hs_scratch))
         die("out of memory");

@@ -832,7 +832,7 @@ void findvariables_command(const char *arg, struct session *ses)
     }
 
     set_variable(left, buf, ses);
-    free(pl);
+    delete[] pl;
 }
 
 

@@ -753,7 +753,7 @@ void write_command(const char *filename, struct session *ses)
     end = &hl->pairs[0] + hl->size;
     for (struct pair *n = &hl->pairs[0]; n<end; n++)
         cfcom(myfile, "alias", n->left, n->right, 0);
-    free(hl);
+    delete[] hl;
 
     TRIP_ITER(ses->actions, n)
         cfcom(myfile, "action", n->left, n->right, n->pr);
@@ -778,7 +778,7 @@ void write_command(const char *filename, struct session *ses)
     end = &hl->pairs[0] + hl->size;
     for (struct pair *n = &hl->pairs[0]; n<end; n++)
         cfcom(myfile, "var", n->left, n->right, 0);
-    free(hl);
+    delete[] hl;
 
     TRIP_ITER(ses->highs, n)
         cfcom(myfile, "highlight", n->right, n->left, 0);
@@ -788,7 +788,7 @@ void write_command(const char *filename, struct session *ses)
     end = &hl->pairs[0] + hl->size;
     for (struct pair *n = &hl->pairs[0]; n<end; n++)
         cfcom(myfile, "pathdir", n->left, n->right, 0);
-    free(hl);
+    delete[] hl;
 
     for (int nr=0;nr<ses->num_locations;nr++)
         if ((rptr=ses->routes[nr]))
@@ -810,7 +810,7 @@ void write_command(const char *filename, struct session *ses)
     end = &hl->pairs[0] + hl->size;
     for (struct pair *n = &hl->pairs[0]; n<end; n++)
         cfcom(myfile, "bind", n->left, n->right, 0);
-    free(hl);
+    delete[] hl;
 
     for (int nr=0;nr<NHOOKS;nr++)
         if (ses->hooks[nr])
@@ -857,7 +857,7 @@ static void ws_hash(struct hashtable *h1, struct hashtable *h0, const char *what
                 continue;
         cfcom(f, what, n->left, n->right, 0);
     }
-    free(pl);
+    delete[] pl;
 }
 
 /*****************************/

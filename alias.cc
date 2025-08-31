@@ -34,7 +34,7 @@ void show_hashlist(struct session *ses, struct hashtable *h, const char *pat, co
     }
     else if (*pat)
         tintin_printf(ses, msg_none, pat);
-    free(pl);
+    delete[] pl;
 }
 
 void delete_hashlist(struct session *ses, struct hashtable *h, const char *pat, const char *msg_ok, const char *msg_none)
@@ -63,7 +63,7 @@ void delete_hashlist(struct session *ses, struct hashtable *h, const char *pat, 
     }
     if (msg_none && !pl->size)
         tintin_printf(ses, msg_none, pat);
-    free(pl);
+    delete[] pl;
 }
 
 

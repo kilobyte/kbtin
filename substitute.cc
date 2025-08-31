@@ -66,7 +66,7 @@ static void parse_sub(const char *left_, const char *right,  bool gag, struct se
 
     kbtree_t(trip) *sub = ses->subs;
 
-    ptrip nt = MALLOC(sizeof(struct trip));
+    ptrip nt = new trip;
     nt->left = mystrdup(left_);
     nt->right = mystrdup(right);
     nt->pr = 0;
@@ -239,18 +239,18 @@ static void build_subs_hs(struct session *ses)
     ses->subs_markers=0;
 
     int n = count_tlist(ses->subs);
-    const char **pat = MALLOC(n*sizeof(void*));
-    unsigned int *flags = MALLOC(n*sizeof(int));
-    unsigned int *ids = MALLOC(n*sizeof(int));
-    ptrip *data = MALLOC(n*sizeof(ptrip));
-    uintptr_t *markers = MALLOC(n*sizeof(uintptr_t));
+    auto pat = new const char*[n];
+    auto flags = new unsigned int[n];
+    auto ids = new unsigned int[n];
+    auto data = new ptrip[n];
+    auto markers = new uintptr_t[n];
 
     if (!pat || !flags || !ids || !data || !markers)
         die("out of memory");
 
     ses->subs_omni_last=ses->subs_omni_first=n;
 
-    int j=0;
+    unsigned int j=0;
     TRIP_ITER(ses->subs, ln)
         pat[j]=action_to_regex(ln->left);
         if (is_omni_regex(pat[j]))
@@ -288,9 +288,9 @@ done:
     debuglog(ses, "SIMD: rebuilt subs");
     for (int i=0; i<n; i++)
         SFREE((char*)pat[i]);
-    MFREE(ids, n*sizeof(int));
-    MFREE(flags, n*sizeof(int));
-    MFREE(pat, n*sizeof(void*));
+    delete[] ids;
+    delete[] flags;
+    delete[] pat;
 
     if (ses->subs_hs && hs_alloc_scratch(ses->subs_hs, &hs_scratch))
         die("out of memory");

@@ -86,7 +86,7 @@ void kill_tlist(kbtree_t(trip) *l)
         free(i->left);
         free(i->right);
         free(i->pr);
-        free(i);
+        delete i;
     ENDITER
 
     kb_destroy(trip, l);
@@ -148,11 +148,11 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*ch
         free(t->left);
         free(t->right);
         free(t->pr);
-        free(t);
+        delete t;
         return true;
     }
 
-    ptrip *todel = malloc(kb_size(l) * sizeof(ptrip));
+    ptrip *todel = new ptrip[kb_size(l)];
     ptrip *last = todel;
 
     TRIP_ITER(l, t)
@@ -171,10 +171,10 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*ch
         free((*del)->left);
         free((*del)->right);
         free((*del)->pr);
-        free(*del);
+        delete del;
     }
 
-    free(todel);
+    delete[] todel;
     return last != todel;
 }
 
@@ -183,7 +183,7 @@ kbtree_t(trip) *copy_tlist(kbtree_t(trip) *a)
     kbtree_t(trip) *b = kb_init(trip, KB_DEFAULT_SIZE);
 
     TRIP_ITER(a, old)
-        ptrip nt = MALLOC(sizeof(struct trip));
+        ptrip nt = new trip;
         nt->left = mystrdup(old->left);
         nt->right = mystrdup(old->right);
         nt->pr = mystrdup(old->pr);

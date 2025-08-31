@@ -181,7 +181,7 @@ static void parse_options(int argc, char **argv)
 {
     bool noargs=false;
 
-    options=MALLOC(argc*sizeof(struct trip));
+    options = new trip[argc];
     struct trip *o = options;
 
     for (int arg=1;arg<argc;arg++)
@@ -292,7 +292,7 @@ static void apply_options(void)
         }
     }
 
-    free(options);
+    delete[] options;
 }
 
 static bool read_rc_file(const char *path)

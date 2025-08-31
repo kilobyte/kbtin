@@ -77,12 +77,12 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
                 free(old->left);
                 free(old->right);
                 free(old->pr);
-                free(old);
+                delete old;
                 break;
             }
         ENDITER
 
-        ptrip nact = MALLOC(sizeof(struct trip));
+        ptrip nact = new trip;
         nact->left = mystrdup(left);
         nact->right = mystrdup(right);
         nact->pr = mystrdup(pr);
@@ -261,19 +261,19 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
     hs_free_database(ses->acts_hs[act]);
     ses->acts_hs[act]=0;
     ses->act_dirty[act]=false;
-    free(ses->acts_data[act]);
+    delete[] ses->acts_data[act];
     ses->acts_data[act]=0;
 
     int n = count_tlist(acts);
-    const char **pat = MALLOC(n*sizeof(void*));
-    unsigned int *flags = MALLOC(n*sizeof(int));
-    unsigned int *ids = MALLOC(n*sizeof(int));
-    ptrip *data = MALLOC(n*sizeof(ptrip));
+    auto pat = new const char *[n];
+    auto flags = new unsigned int[n];
+    auto ids = new unsigned int[n];
+    auto data = new ptrip[n];
 
     if (!pat || !flags || !ids || !data)
         die("out of memory");
 
-    int j=0;
+    unsigned int j=0;
     TRIP_ITER(acts, ln)
         pat[j]=action_to_regex(ln->left);
         flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH|HS_FLAG_ALLOWEMPTY;
@@ -299,9 +299,9 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
     ses->acts_data[act]=data;
     for (int i=0; i<n; i++)
         SFREE((char*)pat[i]);
-    MFREE(ids, n*sizeof(int));
-    MFREE(flags, n*sizeof(int));
-    MFREE(pat, n*sizeof(void*));
+    delete[] ids;
+    delete[] flags;
+    delete[] pat;
     debuglog(ses, "SIMD: rebuilt %sactions", act?"":"prompt");
 }
 
@@ -329,14 +329,14 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
     lastpvars = pvars;
     pvars = &vars;
 
-    unsigned *ids=malloc(count_tlist(acts) * sizeof(unsigned));
+    auto ids = new unsigned[count_tlist(acts)];
     unsigned *nid=ids;
     hs_error_t err=hs_scan(ses->acts_hs[act], line, strlen(line), 0, hs_scratch,
         act_match, &nid);
     if (err)
     {
         tintin_eprintf(ses, "#Error in hs_scan: %d", err);
-        free(ids);
+        delete[] ids;
         pvars = lastpvars;
         return;
     }
@@ -350,13 +350,13 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
 
     // Copy all triggered actions, in case of a mutation.
     ptrip *data=ses->acts_data[act];
-    struct trip *trips=malloc(n*sizeof(struct trip));
+    auto trips = new struct trip[n];
     for (int i=0; i<n; i++)
     {
         ptrip ln = data[ids[i]];
         trips[i]=*ln;
     }
-    free(ids);
+    delete[] ids;
 
     for (int i=0; i<n; i++)
     {
@@ -378,7 +378,7 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
             recursion=0;
         }
     }
-    free(trips);
+    delete[] trips;
     pvars = lastpvars;
 }
 #endif

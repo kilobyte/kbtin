@@ -216,7 +216,7 @@ typedef int (*compar_t)(const void*, const void*);
 struct pairlist* hash2list(struct hashtable *h, const char *pat)
 {
     int n = h->nval;
-    struct pairlist *pl = MALLOC((n*2+1)*sizeof(void*));
+    auto pl = new struct pairlist[n*2+1];
     struct pair *p = &pl->pairs[0];
 
     for (int i=0;i<h->size;i++)

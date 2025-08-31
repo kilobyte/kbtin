@@ -617,11 +617,11 @@ void cleanup_session(struct session *ses)
     hs_free_database(ses->acts_hs[1]);
     hs_free_database(ses->subs_hs);
     hs_free_database(ses->antisubs_hs);
-    free(ses->highs_cols);
-    free(ses->subs_data);
-    free(ses->subs_markers);
-    free(ses->acts_data[0]);
-    free(ses->acts_data[1]);
+    delete[] ses->highs_cols;
+    delete[] ses->subs_data;
+    delete[] ses->subs_markers;
+    delete[] ses->acts_data[0];
+    delete[] ses->acts_data[1];
 #endif
 
     TFREE(ses, struct session);

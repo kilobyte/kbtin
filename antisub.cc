@@ -54,7 +54,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
 
     if (strchr(left, '*')) /* wildcard deletion -- have to check all */
     {
-        char **todel = malloc(kb_size(ass) * sizeof(char*));
+        auto todel = new char*[kb_size(ass)];
         char **last = todel;
 
         STR_ITER(ass, p)
@@ -73,7 +73,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
                 free(*del);
             }
         }
-        free(todel);
+        delete[] todel;
     }
     else /* single item deletion */
     {
@@ -104,8 +104,8 @@ static void build_antisubs_hs(struct session *ses)
     ses->antisubs_dirty=false;
 
     int n = kb_size(ses->antisubs);
-    const char **pat = MALLOC(n*sizeof(void*));
-    unsigned int *flags = MALLOC(n*sizeof(int));
+    auto pat = new const char *[n];
+    auto flags = new unsigned int[n];
     if (!pat || !flags)
         die("out of memory");
 
@@ -132,8 +132,8 @@ static void build_antisubs_hs(struct session *ses)
 
     for (int i=0; i<n; i++)
         SFREE((char*)pat[i]);
-    MFREE(flags, n*sizeof(int));
-    MFREE(pat, n*sizeof(void*));
+    delete[] flags;
+    delete[] pat;
 
     if (ses->antisubs_hs && hs_alloc_scratch(ses->antisubs_hs, &hs_scratch))
         die("out of memory");
