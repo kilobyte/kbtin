@@ -238,6 +238,7 @@ void cfmakeraw(struct termios *ta)
 #ifdef  __cplusplus
 } // extern "C"
 #endif
+#include <vector>
 #include "malloc.h"
 #include "unicode.h"
 #include "kbtree.h"

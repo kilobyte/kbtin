@@ -22,9 +22,7 @@ static const char *var_ptr[10];
 
 static int inActions=0;
 static bool mutatedActions;
-static int deletedActions=0;
-static char **stray_strings=0;
-static int max_strays=0;
+static std::vector<char*> stray_strings;
 const char *match_start, *match_end;
 
 extern struct session *if_command(const char *arg, struct session *ses) __attribute__((nonnull));
@@ -32,30 +30,17 @@ static bool check_a_action(const char *line, const char *action, bool inside);
 
 static bool save_action(char **right)
 {
-    if (deletedActions==max_strays)
-    {
-        if (!max_strays)
-            max_strays=16;
-        else
-            max_strays*=2;
-        stray_strings = realloc(stray_strings, max_strays*sizeof(char*));
-    }
-    stray_strings[deletedActions] = *right;
+    stray_strings.emplace_back(*right);
     **right=0;
     *right=0;
-    deletedActions++;
 
     return false;
 }
 
 static void zap_actions(void)
 {
-    for (int i=0;i<deletedActions;i++)
-        free(stray_strings[i]);
-    free(stray_strings);
-    stray_strings=0;
-    max_strays=0;
-    deletedActions=0;
+    for(char* str : stray_strings)
+        free(str);
 }
 
 /***********************/
@@ -417,7 +402,7 @@ static void check_all_act(const char *line, struct session *ses, bool act)
 
     mutatedActions = oldMutated;
     inActions--;
-    if (deletedActions && !inActions)
+    if (!stray_strings.empty() && !inActions)
         zap_actions();
 }
 
