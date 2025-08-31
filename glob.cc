@@ -92,33 +92,37 @@ bool find(const char *text, const char *pattern, int *from, int *to, const char 
         }
         strcpy(m1, pattern);
         pat=m1;
-        goto start;
     }
-    if (!(b=strchr(pattern, '*')))
+    else
     {
-        a=strstr(txt, pattern);
-        if (a)
+        const char* star = strchr(pattern, '*');
+        if (!star)
         {
-            *from=a-text;
-            *to=*from+strlen(pattern)-1;
-            return true;
+            const char* fixed = strstr(txt, pattern);
+            if (fixed)
+            {
+                *from = fixed - text;
+                *to = *from + strlen(pattern) - 1;
+                return true;
+            }
+            else
+                return false;
         }
-        else
+
+        i = star - pattern;
+        strcpy(m1, pattern);
+        m1[i]=0;
+        pat=m1;
+        txt=strstr(txt, pat);
+        if (!txt)
             return false;
+        *from=txt-text;
+        txt+=i;
+        pat+=i+1;
+        while (*pat=='*')
+            pat++;
     }
-    i=b-pattern;
-    strcpy(m1, pattern);
-    m1[i]=0;
-    pat=m1;
-    txt=strstr(txt, pat);
-    if (!txt)
-        return false;
-    *from=txt-text;
-    txt+=i;
-    pat+=i+1;
-    while (*pat=='*')
-        pat++;
-start:
+
     i=strlen(pat);
     if (!*pat)
     {
