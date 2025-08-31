@@ -338,7 +338,7 @@ static int *gattr;
 static int high_match(unsigned int id, unsigned long long from,
     unsigned long long to, unsigned int flags, void *context)
 {
-    struct session *ses = context;
+    auto ses = static_cast<struct session *>(context);
     if (!get_high(ses->highs_cols[id]))
         return 0;
     apply_high(gattr + from, to - from);

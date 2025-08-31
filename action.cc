@@ -308,7 +308,7 @@ static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
 static int act_match(unsigned int id, unsigned long long from,
     unsigned long long to, unsigned int flags, void *context)
 {
-    unsigned **nid=context;
+    auto nid = static_cast<unsigned **>(context);
     *(*nid)++=id;
     return 0;
 }
