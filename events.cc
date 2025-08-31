@@ -29,7 +29,7 @@ static void remove_event(struct eventnode **ev)
     *ev=tmp;
 }
 
-static void schedule_event(struct session *ses, struct eventnode *restrict ev1)
+static void schedule_event(session *ses, struct eventnode *restrict ev1)
 {
     const char *l1, *l2;
 
@@ -52,7 +52,7 @@ static void schedule_event(struct session *ses, struct eventnode *restrict ev1)
     *ev2 = ev1;
 }
 
-static void execute_event(struct eventnode *ev, struct session *ses)
+static void execute_event(struct eventnode *ev, session *ses)
 {
     if (activesession==ses && ses->mesvar[MSG_EVENT])
         tintin_printf(ses, "[EVENT: %s]", ev->event);
@@ -61,7 +61,7 @@ static void execute_event(struct eventnode *ev, struct session *ses)
 }
 
 /* execute due events, abort and return 1 if any_closed */
-bool do_events(struct session *ses, timens_t now)
+bool do_events(session *ses, timens_t now)
 {
     struct eventnode *ev;
 
@@ -96,7 +96,7 @@ bool do_events(struct session *ses, timens_t now)
     return 0;
 }
 
-static void show_event(struct session *ses, struct eventnode *ev, timens_t ct)
+static void show_event(session *ses, struct eventnode *ev, timens_t ct)
 {
     char times[64];
 
@@ -114,7 +114,7 @@ static void show_event(struct session *ses, struct eventnode *ev, timens_t ct)
 }
 
 /* list active events matching regexp arg */
-static void list_events(const char *arg, struct session *ses)
+static void list_events(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
     timens_t ct = current_time();
@@ -148,7 +148,7 @@ static void list_events(const char *arg, struct session *ses)
 }
 
 /* add new event to the list */
-void delay_command(const char *arg, struct session *ses)
+void delay_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], label[BUFFER_SIZE];
     timens_t period = -1;
@@ -187,13 +187,13 @@ void delay_command(const char *arg, struct session *ses)
     schedule_event(ses, ev);
 }
 
-void event_command(const char *arg, struct session *ses)
+void event_command(const char *arg, session *ses)
 {
     delay_command(arg, ses);
 }
 
 /* remove events matching regexp arg from list */
-void undelay_command(const char *arg, struct session *ses)
+void undelay_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], label[BUFFER_SIZE];
 
@@ -228,17 +228,17 @@ void undelay_command(const char *arg, struct session *ses)
         tintin_printf(ses, "#THAT EVENT IS NOT DEFINED.");
 }
 
-void removeevent_command(const char *arg, struct session *ses)
+void removeevent_command(const char *arg, session *ses)
 {
     undelay_command(arg, ses);
 }
 
-void unevent_command(const char *arg, struct session *ses)
+void unevent_command(const char *arg, session *ses)
 {
     undelay_command(arg, ses);
 }
 
-void kill_events(struct session *ses)
+void kill_events(session *ses)
 {
     struct eventnode *ev = ses->events;
     while (ev)
@@ -246,7 +246,7 @@ void kill_events(struct session *ses)
     ses->events = 0;
 }
 
-void findevents_command(const char *arg, struct session *ses)
+void findevents_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 

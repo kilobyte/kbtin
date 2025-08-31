@@ -2,7 +2,7 @@
 
 rm -f commands.h
 rm -f load_commands.h
-ARGS="_command(const char *arg, struct session *ses) __attribute__((nonnull))"
+ARGS="_command(const char *arg, session *ses) __attribute__((nonnull))"
 while read FUNC
     do
         if [ -z "$FUNC" ]
@@ -14,7 +14,7 @@ while read FUNC
             \#*)    echo "$FUNC" >>commands.h;echo "$FUNC">>load_commands.h
                     ;;
             \**)    FUNC=`echo "$FUNC"|sed 's/^\*//'`
-                    echo "extern struct session *$FUNC$ARGS;" >>commands.h
+                    echo "extern session *$FUNC$ARGS;" >>commands.h
                     echo "add_c_command( \"$FUNC\", ${FUNC}_command);" >>load_commands.h
                     ;;
             *)      echo "extern void            $FUNC$ARGS;" >>commands.h

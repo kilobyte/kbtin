@@ -19,7 +19,7 @@
 /*       Ex:  #listl {listlength} {smile {say Hi!} flip bounce}  */
 /*            -> listlength = 4                                  */
 /*****************************************************************/
-void listlength_command(const char *arg, struct session *ses)
+void listlength_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE],
     temp[BUFFER_SIZE];
@@ -43,7 +43,7 @@ void listlength_command(const char *arg, struct session *ses)
 /**************************/
 /* the #listlength inline */
 /**************************/
-int listlength_inline(const char *arg, struct session *ses)
+int listlength_inline(const char *arg, session *ses)
 {
     char list[BUFFER_SIZE], temp[BUFFER_SIZE];
 
@@ -75,7 +75,7 @@ static int find_item(const char *item, const char *list)
 /*************************/
 /* the #finditem command */
 /*************************/
-void finditem_command(const char *arg, struct session *ses)
+void finditem_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE], item[BUFFER_SIZE];
 
@@ -92,7 +92,7 @@ void finditem_command(const char *arg, struct session *ses)
 /************************/
 /* the #finditem inline */
 /************************/
-int finditem_inline(const char *arg, struct session *ses)
+int finditem_inline(const char *arg, session *ses)
 {
     char list[BUFFER_SIZE], item[BUFFER_SIZE];
 
@@ -113,7 +113,7 @@ int finditem_inline(const char *arg, struct session *ses)
 /*       Ex:  #geti {dothis} {2} {smile {say Hi!} flip bounce}      */
 /*            -> dothis = say Hi!                                   */
 /********************************************************************/
-void getitem_command(const char *arg, struct session *ses)
+void getitem_command(const char *arg, session *ses)
 {
     char destvar[BUFFER_SIZE], itemnrtxt[BUFFER_SIZE],
     list[BUFFER_SIZE], temp1[BUFFER_SIZE];
@@ -189,7 +189,7 @@ bool isatom(const char *arg)
 /***********************/
 /* the #isatom command */
 /***********************/
-void isatom_command(const char *line, struct session *ses)
+void isatom_command(const char *line, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[8];
 
@@ -206,7 +206,7 @@ void isatom_command(const char *line, struct session *ses)
 /**********************/
 /* the #isatom inline */
 /**********************/
-int isatom_inline(const char *arg, struct session *ses)
+int isatom_inline(const char *arg, session *ses)
 {
     char list[BUFFER_SIZE];
 
@@ -278,7 +278,7 @@ static char* get_split_pos(char *list, int head_length)
 /* RESULT:    true if list is braced atom e.g. '{atom}'               */
 /*            i.e. whole list begins with BRACE_OPEN end ends with    */
 /*            BRACE_CLOSE and whole is inside group (inside braces)   */
-static bool is_braced_atom_2(const char *beg, const char *end, struct session *ses)
+static bool is_braced_atom_2(const char *beg, const char *end, session *ses)
 {
     /* we define where list ends */
 #define AT_END(beg, end) (!*beg || beg >= end)
@@ -333,7 +333,7 @@ static bool is_braced_atom_2(const char *beg, const char *end, struct session *s
 /*            If you don't like this behavior simply undefine         */
 /*            REMOVE_ONEELEM_BRACES.                                  */
 /*            see also: getitemnr_command, REMOVE_ONEELEM_BRACES      */
-static void simplify_list(char **beg, char **end, bool flag, struct session *ses)
+static void simplify_list(char **beg, char **end, bool flag, session *ses)
 {
     /* remember: we do not check arguments (e.g. if they are not NULL) */
 
@@ -375,7 +375,7 @@ static char* copy_part(char *dest, char *beg, char *end)
 /*            if head or/and tail contains only one element                */
 /*            and REMOVE_ONEELEM_BRACES is defined the element is unbraced */
 /*            if necessary                                                 */
-static void split_list(char *head, char *tail, char *list, int head_length, struct session *ses)
+static void split_list(char *head, char *tail, char *list, int head_length, session *ses)
 {
     /* these are pointers, not strings */
     char *headbeg, *headend;
@@ -404,7 +404,7 @@ static void split_list(char *head, char *tail, char *list, int head_length, stru
 /**************************/
 /* the #splitlist command */
 /**************************/
-void splitlist_command(const char *arg, struct session *ses)
+void splitlist_command(const char *arg, session *ses)
 {
     /* command arguments */
     char headvar[BUFFER_SIZE], tailvar[BUFFER_SIZE];
@@ -453,7 +453,7 @@ void splitlist_command(const char *arg, struct session *ses)
 /****************************/
 /* the #deleteitems command */
 /****************************/
-void deleteitems_command(const char *arg, struct session *ses)
+void deleteitems_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE], item[BUFFER_SIZE],
         pat[BUFFER_SIZE], right[BUFFER_SIZE], *lpos, *rpos;
@@ -500,7 +500,7 @@ void deleteitems_command(const char *arg, struct session *ses)
 /**************************/
 /* the #foreach command   */
 /**************************/
-struct session *foreach_command(const char *arg, struct session *ses)
+session *foreach_command(const char *arg, session *ses)
 {
     char temp[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
     const char *p, *list;
@@ -529,7 +529,7 @@ struct session *foreach_command(const char *arg, struct session *ses)
     return ses;
 }
 
-struct session *forall_command(const char *arg, struct session *ses)
+session *forall_command(const char *arg, session *ses)
 {
     return foreach_command(arg, ses);
 }
@@ -542,7 +542,7 @@ static int compar(const void *a, const void *b)
 /***************************/
 /* the #sortlist command   */
 /***************************/
-void sortlist_command(const char *arg, struct session *ses)
+void sortlist_command(const char *arg, session *ses)
 {
     char *list, temp[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
     char *tab[BUFFER_SIZE];
@@ -578,7 +578,7 @@ void sortlist_command(const char *arg, struct session *ses)
 /************************/
 /* the #explode command */
 /************************/
-void explode_command(const char *arg, struct session *ses)
+void explode_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], del[BUFFER_SIZE], right[BUFFER_SIZE],
          *p, *n, *r,
@@ -622,7 +622,7 @@ void explode_command(const char *arg, struct session *ses)
 /************************/
 /* the #implode command */
 /************************/
-void implode_command(const char *arg, struct session *ses)
+void implode_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], del[BUFFER_SIZE], right[BUFFER_SIZE],
          res[BUFFER_SIZE], temp[BUFFER_SIZE];
@@ -656,7 +656,7 @@ void implode_command(const char *arg, struct session *ses)
 /************************/
 /* the #collate command */
 /************************/
-void collate_command(const char *arg, struct session *ses)
+void collate_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE],
          cur[BUFFER_SIZE], last[BUFFER_SIZE], out[BUFFER_SIZE],
@@ -707,7 +707,7 @@ void collate_command(const char *arg, struct session *ses)
 /***********************/
 /* the #expand command */
 /***********************/
-void expand_command(const char *arg, struct session *ses)
+void expand_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE],
          cur[BUFFER_SIZE], out[BUFFER_SIZE], *outptr, *err;
@@ -749,7 +749,7 @@ void expand_command(const char *arg, struct session *ses)
 /******************************/
 /* the #reverselist command   */
 /******************************/
-void reverselist_command(const char *arg, struct session *ses)
+void reverselist_command(const char *arg, session *ses)
 {
     char temp[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
     char *tab[BUFFER_SIZE];
@@ -786,7 +786,7 @@ void reverselist_command(const char *arg, struct session *ses)
 /*****************************/
 /* the findvariables command */
 /*****************************/
-void findvariables_command(const char *arg, struct session *ses)
+void findvariables_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
@@ -839,7 +839,7 @@ void findvariables_command(const char *arg, struct session *ses)
 /*********************/
 /* the shift command */
 /*********************/
-void shift_command(const char *arg, struct session *ses)
+void shift_command(const char *arg, session *ses)
 {
     if (!pvars)
         return tintin_eprintf(ses, "#Error: #shift: no positional variables in this context.");
@@ -867,7 +867,7 @@ void shift_command(const char *arg, struct session *ses)
 /************************/
 /* the #stretch command */
 /************************/
-void stretch_command(const char *arg, struct session *ses)
+void stretch_command(const char *arg, session *ses)
 {
     char var[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
     char *tab[BUFFER_SIZE/2];

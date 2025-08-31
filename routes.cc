@@ -11,10 +11,10 @@
 #include "protos/vars.h"
 
 
-extern struct session *if_command(const char *arg, struct session *ses);
+extern session *if_command(const char *arg, session *ses);
 
 
-static void addroute(struct session *ses, int a, int b, char *way, num_t dist, char *cond)
+static void addroute(session *ses, int a, int b, char *way, num_t dist, char *cond)
 {
     struct routenode *r;
 
@@ -41,7 +41,7 @@ static void addroute(struct session *ses, int a, int b, char *way, num_t dist, c
     }
 }
 
-void copyroutes(struct session *ses1, struct session *ses2)
+void copyroutes(session *ses1, session *ses2)
 {
     if (!ses1->num_locations)
         return;
@@ -75,7 +75,7 @@ void copyroutes(struct session *ses1, struct session *ses2)
     }
 }
 
-void kill_routes(struct session *ses)
+void kill_routes(session *ses)
 {
     for (int i=0;i<ses->num_locations;i++)
     {
@@ -97,7 +97,7 @@ void kill_routes(struct session *ses)
     ses->num_locations=0;
 }
 
-int count_routes(struct session *ses)
+int count_routes(session *ses)
 {
     int num=0;
 
@@ -107,7 +107,7 @@ int count_routes(struct session *ses)
     return num;
 }
 
-static void kill_unused_locations(struct session *ses)
+static void kill_unused_locations(session *ses)
 {
     bool us[ses->num_locations];
     struct routenode *r;
@@ -129,7 +129,7 @@ static void kill_unused_locations(struct session *ses)
         }
 }
 
-static void show_route(struct session *ses, int a, struct routenode *r)
+static void show_route(session *ses, int a, struct routenode *r)
 {
     char num[32];
     num2str(num, r->distance);
@@ -149,7 +149,7 @@ static void show_route(struct session *ses, int a, struct routenode *r)
             num);
 }
 
-static void more_locations(struct session *ses)
+static void more_locations(session *ses)
 {
     int j = ses->num_locations;
     int n = j? j*2 : 64;
@@ -163,7 +163,7 @@ static void more_locations(struct session *ses)
 /***********************/
 /* the #route command  */
 /***********************/
-void route_command(const char *arg, struct session *ses)
+void route_command(const char *arg, session *ses)
 {
     char a[BUFFER_SIZE], b[BUFFER_SIZE], way[BUFFER_SIZE], dist[BUFFER_SIZE], cond[BUFFER_SIZE];
     num_t d;
@@ -281,7 +281,7 @@ found_j:
 /*************************/
 /* the #unroute command  */
 /*************************/
-void unroute_command(const char *arg, struct session *ses)
+void unroute_command(const char *arg, session *ses)
 {
     char a[BUFFER_SIZE], b[BUFFER_SIZE];
     bool found=false;
@@ -335,7 +335,7 @@ void unroute_command(const char *arg, struct session *ses)
 /**********************/
 /* the #goto command  */
 /**********************/
-void goto_command(const char *arg, struct session *ses)
+void goto_command(const char *arg, session *ses)
 {
     int n=ses->num_locations;
     char A[BUFFER_SIZE], B[BUFFER_SIZE], cond[BUFFER_SIZE];
@@ -438,7 +438,7 @@ void goto_command(const char *arg, struct session *ses)
 /************************/
 /* the #dogoto command  */
 /************************/
-struct session * dogoto_command(const char *arg, struct session *ses)
+session * dogoto_command(const char *arg, session *ses)
 {
     int n=ses->num_locations;
     char A[BUFFER_SIZE], B[BUFFER_SIZE],

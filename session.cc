@@ -37,12 +37,12 @@
 # define gnutls_session_t int
 #endif
 
-static struct session *new_session(const char *name, const char *address, int fd, sestype_t sestype, gnutls_session_t ssl, struct session *ses);
-static void show_session(struct session *ses);
+static session *new_session(const char *name, const char *address, int fd, sestype_t sestype, gnutls_session_t ssl, session *ses);
+static void show_session(session *ses);
 
 static bool session_exists(const char *name)
 {
-    for (struct session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
+    for (session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
         if (!strcmp(sesptr->name, name))
             return true;
     return false;
@@ -88,9 +88,9 @@ noname:
 }
 
 
-static void list_sessions(struct session *ses, const char *left)
+static void list_sessions(session *ses, const char *left)
 {
-    struct session *sesptr;
+    session *sesptr;
 
     if (!*left)
     {
@@ -111,7 +111,7 @@ static void list_sessions(struct session *ses, const char *left)
         tintin_eprintf(ses, "#THAT SESSION IS NOT DEFINED.");
 }
 
-static int is_bad_session(struct session *ses, const char *left)
+static int is_bad_session(session *ses, const char *left)
 {
     if (!*left) // some joker did #ses {} {foo}
     {
@@ -134,7 +134,7 @@ static int is_bad_session(struct session *ses, const char *left)
 /*****************************************/
 /* the #session and #sslsession commands */
 /*****************************************/
-static struct session *socket_session(const char *arg, struct session *ses, bool ssl)
+static session *socket_session(const char *arg, session *ses, bool ssl)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], host[BUFFER_SIZE], extra[BUFFER_SIZE];
     int sock;
@@ -181,12 +181,12 @@ static struct session *socket_session(const char *arg, struct session *ses, bool
 }
 
 
-struct session *session_command(const char *arg, struct session *ses)
+session *session_command(const char *arg, session *ses)
 {
     return socket_session(arg, ses, false);
 }
 
-struct session *sslsession_command(const char *arg, struct session *ses)
+session *sslsession_command(const char *arg, session *ses)
 {
 #ifdef HAVE_GNUTLS
     return socket_session(arg, ses, true);
@@ -200,7 +200,7 @@ struct session *sslsession_command(const char *arg, struct session *ses)
 /********************/
 /* the #run command */
 /********************/
-struct session *run_command(const char *arg, struct session *ses)
+session *run_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], ustr[BUFFER_SIZE];
     int sock;
@@ -241,7 +241,7 @@ struct session *run_command(const char *arg, struct session *ses)
 /******************/
 /* show a session */
 /******************/
-static void show_session(struct session *ses)
+static void show_session(session *ses)
 {
     tintin_printf(0, "%-10s{%s}%s%s%s", ses->name, ses->address,
         ses == activesession ? " (active)":"",
@@ -252,7 +252,7 @@ static void show_session(struct session *ses)
 /**********************************/
 /* find a new session to activate */
 /**********************************/
-struct session* newactive_session(void)
+session* newactive_session(void)
 {
     if ((activesession=sessionlist)==nullsession)
         activesession=activesession->next;
@@ -276,7 +276,7 @@ struct session* newactive_session(void)
 /*********************************************/
 /* clear all lists associated with a session */
 /*********************************************/
-void kill_all(struct session *ses, bool no_reinit)
+void kill_all(session *ses, bool no_reinit)
 {
     kill_hash(ses->aliases);
     kill_tlist(ses->actions);
@@ -436,7 +436,7 @@ void init_nullses(void)
 /**********************/
 /* open a new session */
 /**********************/
-static struct session *new_session(const char *name, const char *address, int sock, sestype_t sestype, gnutls_session_t ssl, struct session *ses)
+static session *new_session(const char *name, const char *address, int sock, sestype_t sestype, gnutls_session_t ssl, session *ses)
 {
     session *newsession = new session;
 
@@ -550,10 +550,10 @@ static struct session *new_session(const char *name, const char *address, int so
 /*****************************************************************************/
 /* cleanup after session died. if session=activesession, try find new active */
 /*****************************************************************************/
-void cleanup_session(struct session *ses)
+void cleanup_session(session *ses)
 {
     char buf[BUFFER_SIZE+1];
-    struct session *sesptr, *act;
+    session *sesptr, *act;
 
     if (ses->closing)
         return;
@@ -633,7 +633,7 @@ void seslist(char *result)
     if (sessionlist==nullsession && !nullsession->next)
         return;
 
-    for (struct session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
+    for (session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
         if (sesptr!=nullsession)
         {
             if (flag)

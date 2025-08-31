@@ -29,7 +29,7 @@ bool got_more_kludge=false;
 int hist_num;
 bool need_resize=false;
 char *tintin_exec;
-struct session *lastdraft;
+session *lastdraft;
 bool aborting=false;
 bool any_closed=false;
 bool in_alias=false;
@@ -38,7 +38,7 @@ int recursion;
 char *_; /* incoming line being processed */
 bool real_quiet=false; /* if set, #verbose 0 will be really quiet */
 char *history[HISTORY_SIZE];
-struct session *sessionlist, *activesession, *nullsession;
+session *sessionlist, *activesession, *nullsession;
 pvars_t *pvars; /* the %0, %1, %2,....%9 variables */
 char tintin_char = DEFAULT_TINTIN_CHAR;
 char tintin_char_set = false;

@@ -20,7 +20,7 @@
 /***************************/
 /* the #substitute command */
 /***************************/
-static void list_subs(const char *left, bool gag, struct session *ses)
+static void list_subs(const char *left, bool gag, session *ses)
 {
     bool flag = false;
     kbtree_t(trip) *sub = ses->subs;
@@ -56,7 +56,7 @@ static void list_subs(const char *left, bool gag, struct session *ses)
         tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
 }
 
-static void parse_sub(const char *left_, const char *right,  bool gag, struct session *ses)
+static void parse_sub(const char *left_, const char *right,  bool gag, session *ses)
 {
     char left[BUFFER_SIZE];
     substitute_myvars(left_, left, ses, 0);
@@ -93,7 +93,7 @@ static void parse_sub(const char *left_, const char *right,  bool gag, struct se
     }
 }
 
-void substitute_command(const char *arg, struct session *ses)
+void substitute_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     arg = get_arg_in_braces(arg, left, 0);
@@ -102,7 +102,7 @@ void substitute_command(const char *arg, struct session *ses)
     parse_sub(left, right, 0, ses);
 }
 
-void gag_command(const char *arg, struct session *ses)
+void gag_command(const char *arg, session *ses)
 {
     char temp[BUFFER_SIZE];
 
@@ -125,7 +125,7 @@ static bool is_gag(char **right)
     return !strcmp(*right, EMPTY_LINE);
 }
 
-static void unsub(const char *arg, bool gag, struct session *ses)
+static void unsub(const char *arg, bool gag, session *ses)
 {
     char left[BUFFER_SIZE];
     arg = get_arg_in_braces(arg, left, 1);
@@ -144,12 +144,12 @@ static void unsub(const char *arg, bool gag, struct session *ses)
 #endif
 }
 
-void unsubstitute_command(const char *arg, struct session *ses)
+void unsubstitute_command(const char *arg, session *ses)
 {
     unsub(arg, false, ses);
 }
 
-void ungag_command(const char *arg, struct session *ses)
+void ungag_command(const char *arg, session *ses)
 {
     unsub(arg, true, ses);
 }
@@ -160,7 +160,7 @@ void ungag_command(const char *arg, struct session *ses)
                         rlen+=len;
 
 // returns true if gagged
-static bool do_one_sub(char *line, ptrip ln, struct session *ses)
+static bool do_one_sub(char *line, ptrip ln, session *ses)
 {
     char result[BUFFER_SIZE], tmp[BUFFER_SIZE];
     const char *l;
@@ -200,7 +200,7 @@ static bool do_one_sub(char *line, ptrip ln, struct session *ses)
     return false;
 }
 
-static void do_all_sub_serially(char *line, struct session *ses)
+static void do_all_sub_serially(char *line, session *ses)
 {
     pvars_t vars, *lastpvars;
     lastpvars=pvars;
@@ -227,7 +227,7 @@ static bool is_omni_regex(const char *pat)
     return !*pat;
 }
 
-static void build_subs_hs(struct session *ses)
+static void build_subs_hs(session *ses)
 {
     debuglog(ses, "SIMD: building subs");
     hs_free_database(ses->subs_hs);
@@ -311,7 +311,7 @@ static int sub_match(unsigned int id, unsigned long long from,
     return 0;
 }
 
-static void do_all_sub_simd(char *line, struct session *ses)
+static void do_all_sub_simd(char *line, session *ses)
 {
     if (ses->subs_dirty)
         build_subs_hs(ses);
@@ -358,7 +358,7 @@ gagged:
 }
 #endif
 
-void do_all_sub(char *line, struct session *ses)
+void do_all_sub(char *line, session *ses)
 {
 #ifdef HAVE_SIMD
     if (!kb_size(ses->subs))
@@ -371,7 +371,7 @@ void do_all_sub(char *line, struct session *ses)
     do_all_sub_serially(line, ses);
 }
 
-void changeto_command(const char *arg, struct session *ses)
+void changeto_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 
@@ -382,7 +382,7 @@ void changeto_command(const char *arg, struct session *ses)
     strcpy(_, left);
 }
 
-void gagthis_command(const char *arg, struct session *ses)
+void gagthis_command(const char *arg, session *ses)
 {
     if (!_)
         return tintin_eprintf(ses, "#ERROR: #gagthis is allowed only inside an action/promptaction");

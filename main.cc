@@ -36,15 +36,15 @@
 
 typedef void (*sighandler_t)(int);
 
-extern void end_command(const char *arg, struct session *ses);
+extern void end_command(const char *arg, session *ses);
 
 static void echo_input(const char *txt);
 static bool eofinput=false;
 static char prev_command[BUFFER_SIZE];
 static void tintin(void);
-static void read_mud(struct session *ses);
-static void do_one_line(char *line, int nl, struct session *ses);
-static void snoop(const char *buffer, struct session *ses);
+static void read_mud(session *ses);
+static void do_one_line(char *line, int nl, session *ses);
+static void snoop(const char *buffer, session *ses);
 static void myquitsig(int);
 
 static void tstphandler(int sig)
@@ -95,7 +95,7 @@ static void sigwinch(void)
 /************************/
 /* the #suspend command */
 /************************/
-void suspend_command(const char *arg, struct session *ses)
+void suspend_command(const char *arg, session *ses)
 {
     tstphandler(SIGTSTP);
 }
@@ -398,7 +398,7 @@ static timens_t check_events(void)
     curr_time = current_time();
 restart:
     any_closed=false;
-    for (struct session *sp = sessionlist; sp; sp = sp->next)
+    for (session *sp = sessionlist; sp; sp = sp->next)
     {
         tt = check_event(curr_time, sp);
         if (any_closed)
@@ -421,7 +421,7 @@ static void tintin(void)
     struct timeval tv;
     fd_set readfdmask;
 #ifdef XTERM_TITLE
-    struct session *lastsession=0;
+    session *lastsession=0;
 #endif
     char kbdbuf[BUFFER_SIZE];
     WC ch;
@@ -453,7 +453,7 @@ static void tintin(void)
             FD_SET(0, &readfdmask);
         else if (activesession==nullsession)
             end_command(0, activesession);
-        for (struct session *ses = sessionlist; ses; ses = ses->next)
+        for (session *ses = sessionlist; ses; ses = ses->next)
         {
             if (ses==nullsession)
                 continue;
@@ -540,7 +540,7 @@ static void tintin(void)
             inbuf=0;
         partial:;
         }
-        for (struct session *ses = sessionlist; ses; ses = ses->next)
+        for (session *ses = sessionlist; ses; ses = ses->next)
         {
             if (ses->socket && FD_ISSET(ses->socket, &readfdmask))
             {
@@ -579,7 +579,7 @@ static void tintin(void)
 /*************************************************************/
 /* read text from mud and test for actions/snoop/substitutes */
 /*************************************************************/
-static void read_mud(struct session *ses)
+static void read_mud(session *ses)
 {
     char buffer[BUFFER_SIZE], linebuffer[BUFFER_SIZE], *cpsource, *cpdest;
     char temp[BUFFER_SIZE];
@@ -688,7 +688,7 @@ static void read_mud(struct session *ses)
 /**********************************************************/
 /* do all of the functions to one line of buffer          */
 /**********************************************************/
-static void do_one_line(char *text, int nl, struct session *ses)
+static void do_one_line(char *text, int nl, session *ses)
 {
     bool isnb;
     char line[BUFFER_SIZE];
@@ -781,7 +781,7 @@ static void do_one_line(char *text, int nl, struct session *ses)
 /**********************************************************/
 /* snoop session ses - chop up lines and put'em in buffer */
 /**********************************************************/
-static void snoop(const char *buffer, struct session *ses)
+static void snoop(const char *buffer, session *ses)
 {
     tintin_printf(0, "%s%% %s\n", ses->name, buffer);
 }
@@ -824,10 +824,10 @@ static void echo_input(const char *txt)
 /**********************************************************/
 static void myquitsig(int sig)
 {
-    struct session *t;
+    session *t;
     int err=errno;
 
-    for (struct session *ses = sessionlist; ses; ses = t)
+    for (session *ses = sessionlist; ses; ses = t)
     {
         t = ses->next;
         if (ses!=nullsession && !ses->closing)

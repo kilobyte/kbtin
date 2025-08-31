@@ -16,7 +16,7 @@ static void insert_history(const char *buffer);
 /************************/
 /* the #history command */
 /************************/
-void history_command(const char *arg, struct session *ses)
+void history_command(const char *arg, session *ses)
 {
     for (int i = HISTORY_SIZE - 1; i >= 0; i--)
         if (history[i])
@@ -24,7 +24,7 @@ void history_command(const char *arg, struct session *ses)
 }
 
 
-void do_history(char *buffer, struct session *ses)
+void do_history(char *buffer, session *ses)
 {
     char temp[BUFFER_SIZE];
     const char *cptr;

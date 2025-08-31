@@ -110,7 +110,7 @@ static bool get_high(const char *hig)
     return true;
 }
 
-static void show_high_help(struct session *ses)
+static void show_high_help(session *ses)
 {
     char buf[BUFFER_SIZE], *bp=buf;
     buf[0]=0;
@@ -136,7 +136,7 @@ static void show_high_help(struct session *ses)
 /***************************/
 /* the #highlight command  */
 /***************************/
-void highlight_command(const char *arg, struct session *ses)
+void highlight_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     char *pright, *bp, *cp, buf[BUFFER_SIZE];
@@ -209,7 +209,7 @@ void highlight_command(const char *arg, struct session *ses)
 /*****************************/
 /* the #unhighlight command */
 /*****************************/
-void unhighlight_command(const char *arg, struct session *ses)
+void unhighlight_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 
@@ -283,7 +283,7 @@ static char *glob_to_regex(const char *pat)
     return txt;
 }
 
-static void build_highs_hs(struct session *ses)
+static void build_highs_hs(session *ses)
 {
     debuglog(ses, "SIMD: building highs");
     hs_free_database(ses->highs_hs);
@@ -338,7 +338,7 @@ static int *gattr;
 static int high_match(unsigned int id, unsigned long long from,
     unsigned long long to, unsigned int flags, void *context)
 {
-    auto ses = static_cast<struct session *>(context);
+    auto ses = static_cast<session *>(context);
     if (!get_high(ses->highs_cols[id]))
         return 0;
     apply_high(gattr + from, to - from);
@@ -397,7 +397,7 @@ static void deattributize_colors(char *restrict line, const char *restrict text,
     *pos=0;
 }
 
-void do_all_high(char *line, struct session *ses)
+void do_all_high(char *line, session *ses)
 {
     if (!count_tlist(ses->highs))
         return;
@@ -454,7 +454,7 @@ done:
 /*************************/
 /* the #colorize command */
 /*************************/
-void colorize_command(const char *arg, struct session *ses)
+void colorize_command(const char *arg, session *ses)
 {
     char var[BUFFER_SIZE], color[BUFFER_SIZE], line[BUFFER_SIZE];
 

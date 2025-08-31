@@ -20,7 +20,7 @@
 extern char **environ;
 
 
-static void print_stty(struct session *ses)
+static void print_stty(session *ses)
 {
     int fd = ses->socket;
 
@@ -127,7 +127,7 @@ static void print_stty(struct session *ses)
             ws.ws_col, ws.ws_row);
 }
 
-void stty_command(const char *arg, struct session *ses)
+void stty_command(const char *arg, session *ses)
 {
     print_stty(ses);
 }

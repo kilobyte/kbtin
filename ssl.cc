@@ -5,13 +5,13 @@
 
 #ifdef HAVE_GNUTLS
 static gnutls_certificate_credentials_t ssl_cred=0;
-static int ssl_check_cert(gnutls_session_t sslses, const char *host, int validate, struct session *oldses);
+static int ssl_check_cert(gnutls_session_t sslses, const char *host, int validate, session *oldses);
 
 #define FAIL(...) do{tintin_eprintf(oldses, "#Error: " __VA_ARGS__, gnutls_strerror(ret)); gnutls_deinit(sslses); return 0; }while(0)
 
 enum {VAL_NONE, VAL_CA, VAL_SAVE};
 
-gnutls_session_t ssl_negotiate(int sock, const char *host, const char *extra, struct session *oldses)
+gnutls_session_t ssl_negotiate(int sock, const char *host, const char *extra, session *oldses)
 {
     gnutls_session_t sslses;
     int ret;
@@ -139,7 +139,7 @@ static void load_cert(gnutls_x509_crt_t *cert, const char *name)
 }
 
 
-static void save_cert(gnutls_x509_crt_t cert, const char *name, bool first, struct session *oldses)
+static void save_cert(gnutls_x509_crt_t cert, const char *name, bool first, session *oldses)
 {
     char fname[BUFFER_SIZE], buf[BIGBUFSIZE];
     const char *home;
@@ -204,7 +204,7 @@ static bool diff_certs(gnutls_x509_crt_t c1, gnutls_x509_crt_t c2)
 }
 
 
-static int ssl_check_cert(gnutls_session_t sslses, const char *host, int validate, struct session *oldses)
+static int ssl_check_cert(gnutls_session_t sslses, const char *host, int validate, session *oldses)
 {
     char fname[BUFFER_SIZE], buf2[BUFFER_SIZE], *bptr;
     time_t t;

@@ -22,14 +22,14 @@
 
 static bool return_flag = true;
 
-void mark_command(const char *arg, struct session *ses)
+void mark_command(const char *arg, session *ses)
 {
     ses->path_length = 0;
     if (ses->mesvar[MSG_PATH])
         tintin_printf(ses, "#Beginning of path marked.");
 }
 
-void map_command(const char *arg, struct session *ses)
+void map_command(const char *arg, session *ses)
 {
     char cmd[BUFFER_SIZE];
     get_arg_in_braces(arg, cmd, 1);
@@ -37,7 +37,7 @@ void map_command(const char *arg, struct session *ses)
     check_insert_path(cmd, ses);
 }
 
-void savepath_command(const char *arg, struct session *ses)
+void savepath_command(const char *arg, session *ses)
 {
     char alias[BUFFER_SIZE], result[BUFFER_SIZE], *r=result;
     get_arg_in_braces(arg, alias, 1);
@@ -68,7 +68,7 @@ void savepath_command(const char *arg, struct session *ses)
 }
 
 
-void path2var(char *var, struct session *ses)
+void path2var(char *var, session *ses)
 {
     char *r;
     int dirlen, len = 0;
@@ -103,7 +103,7 @@ void path2var(char *var, struct session *ses)
 }
 
 
-void path_command(const char *arg, struct session *ses)
+void path_command(const char *arg, session *ses)
 {
     char mypath[BUFFER_SIZE];
 
@@ -124,7 +124,7 @@ void path_command(const char *arg, struct session *ses)
     tintin_printf(ses, "%s", mypath);
 }
 
-void return_command(const char *arg, struct session *ses)
+void return_command(const char *arg, session *ses)
 {
     int n;
     char *err, how[BUFFER_SIZE];
@@ -161,7 +161,7 @@ void return_command(const char *arg, struct session *ses)
     return_flag = true;  /* restore path tracking */
 }
 
-void unmap_command(const char *arg, struct session *ses)
+void unmap_command(const char *arg, session *ses)
 {
     if (!ses->path_length)
         return tintin_eprintf(ses, "#No move to forget!");
@@ -171,7 +171,7 @@ void unmap_command(const char *arg, struct session *ses)
         tintin_eprintf(ses, "#Ok.  Forgot that move.");
 }
 
-void check_insert_path(const char *command, struct session *ses)
+void check_insert_path(const char *command, session *ses)
 {
     if (!return_flag)
         return;
@@ -190,7 +190,7 @@ void check_insert_path(const char *command, struct session *ses)
     p->right=mystrdup(ret);
 }
 
-void pathdir_command(const char *arg, struct session *ses)
+void pathdir_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
@@ -211,7 +211,7 @@ void pathdir_command(const char *arg, struct session *ses)
         "#That PATHDIR (%s) is not defined.");
 }
 
-void unpathdir_command(const char *arg, struct session *ses)
+void unpathdir_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 

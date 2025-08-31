@@ -31,7 +31,7 @@
 static void alarm_func(int);
 
 #ifdef HAVE_ZLIB
-static int init_mccp(struct session *ses, int cplen, const char *cpsrc);
+static int init_mccp(session *ses, int cplen, const char *cpsrc);
 #endif
 
 static bool abort_connect;
@@ -70,7 +70,7 @@ static bool try_mptcp = true;
 /* try connect to the mud specified by the args   */
 /* return fd on success / 0 on failure            */
 /**************************************************/
-int connect_mud(const char *host, const char *port, struct session *ses)
+int connect_mud(const char *host, const char *port, session *ses)
 {
     int err, val;
     struct addrinfo *ai, hints;
@@ -176,7 +176,7 @@ static void alarm_func(int k)
 /********************************************************************/
 /* write line to the mud ses is connected to - add \n or \r\n first */
 /********************************************************************/
-void write_line_mud(const char *line, struct session *ses)
+void write_line_mud(const char *line, session *ses)
 {
     char rstr[BUFFER_SIZE];
     convert(&ses->c_io, rstr, line, 1);
@@ -210,7 +210,7 @@ void write_line_mud(const char *line, struct session *ses)
 /******************************************/
 /* write control chars, without a newline */
 /******************************************/
-void write_raw_mud(const char *line, int len, struct session *ses)
+void write_raw_mud(const char *line, int len, session *ses)
 {
     const char *lp=line;
     char *rp, rstr[BUFFER_SIZE];
@@ -262,7 +262,7 @@ void write_raw_mud(const char *line, int len, struct session *ses)
     }
 }
 
-void flush_socket(struct session *ses)
+void flush_socket(session *ses)
 {
     setsockopt(ses->socket, IPPROTO_TCP, TCP_NODELAY, &ses->nagle,
         sizeof(ses->nagle));
@@ -272,7 +272,7 @@ void flush_socket(struct session *ses)
 /***************************************************/
 /* low-level read/write, includes encryption layer */
 /***************************************************/
-static int read_socket(struct session *ses, char *buffer, int len)
+static int read_socket(session *ses, char *buffer, int len)
 {
     int ret;
 #ifdef HAVE_GNUTLS
@@ -296,7 +296,7 @@ static int read_socket(struct session *ses, char *buffer, int len)
     return ret;
 }
 
-int write_socket(struct session *ses, char *buffer, int len)
+int write_socket(session *ses, char *buffer, int len)
 {
     int ret;
 #ifdef HAVE_GNUTLS
@@ -323,7 +323,7 @@ int write_socket(struct session *ses, char *buffer, int len)
 /***********************************************************************/
 /* read at most BUFFER_SIZE chars from mud - do compression and telnet */
 /***********************************************************************/
-int read_buffer_mud(char *buffer, struct session *ses)
+int read_buffer_mud(char *buffer, session *ses)
 {
     int i, didget, b;
     char *cpsource, *cpdest;
@@ -464,7 +464,7 @@ int read_buffer_mud(char *buffer, struct session *ses)
 }
 
 #ifdef HAVE_ZLIB
-static int init_mccp(struct session *ses, int cplen, const char *cpsrc)
+static int init_mccp(session *ses, int cplen, const char *cpsrc)
 {
     if (ses->mccp)
         return 0;

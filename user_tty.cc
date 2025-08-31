@@ -732,7 +732,7 @@ static enum
 static int bits = 0;
 #define MAXNVAL 10
 static int val[MAXNVAL+1], nval;
-static bool usertty_process_kbd(struct session *ses, WC ch)
+static bool usertty_process_kbd(session *ses, WC ch)
 {
     char txt[16];
 

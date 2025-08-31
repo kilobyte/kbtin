@@ -113,7 +113,7 @@ static const char *XTERM_KEYNAMES[]=
 /*********************/
 /* the #bind command */
 /*********************/
-void bind_command(const char *arg, struct session *ses)
+void bind_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
@@ -141,7 +141,7 @@ void bind_command(const char *arg, struct session *ses)
 /***********************/
 /* the #unbind command */
 /***********************/
-void unbind_command(const char *arg, struct session *ses)
+void unbind_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 
@@ -172,7 +172,7 @@ static const char *bitted(const char *key, uint8_t bits)
 }
 
 
-bool find_bind(const char *key, uint8_t bits, int msg, struct session *ses)
+bool find_bind(const char *key, uint8_t bits, int msg, session *ses)
 {
     char *val;
 

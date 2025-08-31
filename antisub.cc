@@ -17,7 +17,7 @@
 /*******************************/
 /* the #antisubstitute command */
 /*******************************/
-void antisubstitute_command(const char *arg, struct session *ses)
+void antisubstitute_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], tmp[BUFFER_SIZE];
     kbtree_t(str) *ass = ses->antisubs;
@@ -44,7 +44,7 @@ void antisubstitute_command(const char *arg, struct session *ses)
 }
 
 
-void unantisubstitute_command(const char *arg, struct session *ses)
+void unantisubstitute_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
     bool had_any = false;
@@ -97,7 +97,7 @@ void unantisubstitute_command(const char *arg, struct session *ses)
 
 
 #ifdef HAVE_SIMD
-static void build_antisubs_hs(struct session *ses)
+static void build_antisubs_hs(session *ses)
 {
     hs_free_database(ses->antisubs_hs);
     ses->antisubs_hs=0;
@@ -147,7 +147,7 @@ static int anti_match(unsigned int id, unsigned long long from,
 #endif
 
 
-bool do_one_antisub(const char *line, struct session *ses)
+bool do_one_antisub(const char *line, session *ses)
 {
 #ifdef HAVE_SIMD
     if (!kb_size(ses->antisubs))

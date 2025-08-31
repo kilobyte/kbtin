@@ -49,7 +49,7 @@ static void userpipe_textout(const char *txt)
     write_stdout(buf, b-buf);
 }
 
-static bool userpipe_process_kbd(struct session *ses, WC ch)
+static bool userpipe_process_kbd(session *ses, WC ch)
 {
 
     switch (ch)

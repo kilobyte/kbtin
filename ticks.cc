@@ -19,7 +19,7 @@
 /*********************/
 /* the #tick command */
 /*********************/
-void tick_command(const char *arg, struct session *ses)
+void tick_command(const char *arg, session *ses)
 {
     timens_t to_tick = ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
     tintin_printf(ses, "THERE'S NOW %lld.%03d SECONDS TO NEXT TICK.",
@@ -29,7 +29,7 @@ void tick_command(const char *arg, struct session *ses)
 /************************/
 /* the #tickoff command */
 /************************/
-void tickoff_command(const char *arg, struct session *ses)
+void tickoff_command(const char *arg, session *ses)
 {
     ses->tickstatus = false;
     if (ses->mesvar[MSG_TICK])
@@ -39,7 +39,7 @@ void tickoff_command(const char *arg, struct session *ses)
 /***********************/
 /* the #tickon command */
 /***********************/
-void tickon_command(const char *arg, struct session *ses)
+void tickon_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
     timens_t x=0;
@@ -81,7 +81,7 @@ void tickon_command(const char *arg, struct session *ses)
 /*************************/
 /* the #ticksize command */
 /*************************/
-void ticksize_command(const char *arg, struct session *ses)
+void ticksize_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 
@@ -103,7 +103,7 @@ void ticksize_command(const char *arg, struct session *ses)
 /************************/
 /* the #pretick command */
 /************************/
-void pretick_command(const char *arg, struct session *ses)
+void pretick_command(const char *arg, session *ses)
 {
     timens_t x;
     char left[BUFFER_SIZE];
@@ -143,19 +143,19 @@ void pretick_command(const char *arg, struct session *ses)
 }
 
 
-void show_pretick_command(const char *arg, struct session *ses)
+void show_pretick_command(const char *arg, session *ses)
 {
     pretick_command(arg, ses);
 }
 
 
-timens_t timetilltick(struct session *ses)
+timens_t timetilltick(session *ses)
 {
     return ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
 }
 
 /* returns the time (since 1970) of next event (tick) */
-timens_t check_event(timens_t time, struct session *ses)
+timens_t check_event(timens_t time, session *ses)
 {
     timens_t tt; /* tick time */
     timens_t et; /* event time */

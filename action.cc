@@ -25,7 +25,7 @@ static bool mutatedActions;
 static std::vector<char*> stray_strings;
 const char *match_start, *match_end;
 
-extern struct session *if_command(const char *arg, struct session *ses) __attribute__((nonnull));
+extern session *if_command(const char *arg, session *ses) __attribute__((nonnull));
 static bool check_a_action(const char *line, const char *action, bool inside);
 
 static bool save_action(char **right)
@@ -46,7 +46,7 @@ static void zap_actions(void)
 /***********************/
 /* the #action command */
 /***********************/
-static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l, const char *what)
+static void parse_action(const char *arg, session *ses, kbtree_t(trip) *l, const char *what)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     char pr[BUFFER_SIZE];
@@ -97,7 +97,7 @@ static void parse_action(const char *arg, struct session *ses, kbtree_t(trip) *l
     }
 }
 
-void action_command(const char *arg, struct session *ses)
+void action_command(const char *arg, session *ses)
 {
     parse_action(arg, ses, ses->actions, "action");
 }
@@ -105,7 +105,7 @@ void action_command(const char *arg, struct session *ses)
 /*****************************/
 /* the #promptaction command */
 /*****************************/
-void promptaction_command(const char *arg, struct session *ses)
+void promptaction_command(const char *arg, session *ses)
 {
     parse_action(arg, ses, ses->prompts, "promptaction");
 }
@@ -114,7 +114,7 @@ void promptaction_command(const char *arg, struct session *ses)
 /*************************/
 /* the #unaction command */
 /*************************/
-void unaction_command(const char *arg, struct session *ses)
+void unaction_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 
@@ -139,7 +139,7 @@ void unaction_command(const char *arg, struct session *ses)
 /*******************************/
 /* the #unpromptaction command */
 /*******************************/
-void unpromptaction_command(const char *arg, struct session *ses)
+void unpromptaction_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 
@@ -215,7 +215,7 @@ char *action_to_regex(const char *pat)
 /**********************************************/
 /* check actions from a sessions against line */
 /**********************************************/
-static void check_all_act_serially(const char *line, struct session *ses, kbtree_t(trip) *acts, bool act)
+static void check_all_act_serially(const char *line, session *ses, kbtree_t(trip) *acts, bool act)
 {
     pvars_t vars, *lastpvars;
 
@@ -255,7 +255,7 @@ static void check_all_act_serially(const char *line, struct session *ses, kbtree
 }
 
 #ifdef HAVE_SIMD
-static void build_act_hs(kbtree_t(trip) *acts, struct session *ses, bool act)
+static void build_act_hs(kbtree_t(trip) *acts, session *ses, bool act)
 {
     debuglog(ses, "SIMD: building %sactions", act?"":"prompt");
     hs_free_database(ses->acts_hs[act]);
@@ -320,7 +320,7 @@ static int uintcmp(const void *a, const void *b)
     return A>B? 1 : A<B? -1 : 0;
 }
 
-static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(trip) *acts, bool act)
+static void check_all_act_simd(const char *line, session *ses, kbtree_t(trip) *acts, bool act)
 {
     if (ses->act_dirty[act])
         build_act_hs(acts, ses, act);
@@ -383,7 +383,7 @@ static void check_all_act_simd(const char *line, struct session *ses, kbtree_t(t
 }
 #endif
 
-static void check_all_act(const char *line, struct session *ses, bool act)
+static void check_all_act(const char *line, session *ses, bool act)
 {
     kbtree_t(trip) *acts = act? ses->actions : ses->prompts;
     if (!kb_size(acts))
@@ -406,12 +406,12 @@ static void check_all_act(const char *line, struct session *ses, bool act)
         zap_actions();
 }
 
-void check_all_actions(const char *line, struct session *ses)
+void check_all_actions(const char *line, session *ses)
 {
     check_all_act(line, ses, 1);
 }
 
-void check_all_promptactions(const char *line, struct session *ses)
+void check_all_promptactions(const char *line, session *ses)
 {
     check_all_act(line, ses, 0);
 }
@@ -420,7 +420,7 @@ void check_all_promptactions(const char *line, struct session *ses)
 /**********************/
 /* the #match command */
 /**********************/
-struct session *match_command(const char *arg, struct session *ses)
+session *match_command(const char *arg, session *ses)
 {
     pvars_t vars, *lastpvars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
@@ -451,7 +451,7 @@ struct session *match_command(const char *arg, struct session *ses)
 /*********************/
 /* the #match inline */
 /*********************/
-int match_inline(const char *arg, struct session *ses)
+int match_inline(const char *arg, session *ses)
 {
     pvars_t vars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE];
@@ -593,7 +593,7 @@ static bool check_a_action(const char *line, const char *action, bool inside)
 }
 
 
-void doactions_command(const char *arg, struct session *ses)
+void doactions_command(const char *arg, session *ses)
 {
     char line[BUFFER_SIZE];
 
@@ -604,7 +604,7 @@ void doactions_command(const char *arg, struct session *ses)
 }
 
 
-void dopromptactions_command(const char *arg, struct session *ses)
+void dopromptactions_command(const char *arg, session *ses)
 {
     char line[BUFFER_SIZE];
 

@@ -106,7 +106,7 @@ static const char *option_names[]=
     };
 #endif
 
-static void telnet_send_naws(struct session *ses)
+static void telnet_send_naws(session *ses)
 {
     unsigned char nego[128], *np;
 
@@ -136,7 +136,7 @@ static void telnet_send_naws(struct session *ses)
 #endif
 }
 
-static void telnet_send_ttype(struct session *ses)
+static void telnet_send_ttype(session *ses)
 {
     char nego[128];
     const char *ttype;
@@ -169,7 +169,7 @@ static void telnet_send_ttype(struct session *ses)
 
 void telnet_resize_all(void)
 {
-    for (struct session *sp=sessionlist; sp; sp=sp->next)
+    for (session *sp=sessionlist; sp; sp=sp->next)
         if (sp->naws)
             switch (sp->sestype)
             {
@@ -183,7 +183,7 @@ void telnet_resize_all(void)
             }
 }
 
-int do_telnet_protocol(const char *data, int nb, struct session *ses)
+int do_telnet_protocol(const char *data, int nb, session *ses)
 {
     const unsigned char *cp = (const unsigned char*)data+1;
     unsigned char wt;
@@ -371,7 +371,7 @@ nego_too_long:
     return 2; /* we leave everything but IAC SB */
 }
 
-void telnet_write_line(const char *line, struct session *ses, bool nl)
+void telnet_write_line(const char *line, session *ses, bool nl)
 {
     char outtext[6*BUFFER_SIZE + 2], *out;
 

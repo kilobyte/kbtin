@@ -8,7 +8,7 @@
 #include "protos/string.h"
 #include "protos/utils.h"
 
-struct session *ratelimit_command(const char *arg, struct session *ses)
+session *ratelimit_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], command[BUFFER_SIZE], *old;
     arg = get_arg(arg, left, 0, ses);
@@ -110,7 +110,7 @@ struct session *ratelimit_command(const char *arg, struct session *ses)
 /****************************/
 /* the #unratelimit command */
 /****************************/
-void unratelimit_command(const char *arg, struct session *ses)
+void unratelimit_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 

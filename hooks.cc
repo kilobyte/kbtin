@@ -27,7 +27,7 @@ const char *hook_names[]=
 /*********************/
 /* the #hook command */
 /*********************/
-void hooks_command(const char *arg, struct session *ses)
+void hooks_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
@@ -67,7 +67,7 @@ void hooks_command(const char *arg, struct session *ses)
 /***********************/
 /* the #unhook command */
 /***********************/
-void unhook_command(const char *arg, struct session *ses)
+void unhook_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 
@@ -99,7 +99,7 @@ void unhook_command(const char *arg, struct session *ses)
     tintin_eprintf(ses, "#Invalid hook: {%s}", left);
 }
 
-struct session* do_hook(struct session *ses, int t, const char *data, bool blockzap)
+session* do_hook(session *ses, int t, const char *data, bool blockzap)
 {
     char hookcmd[BUFFER_SIZE];
 
@@ -143,7 +143,7 @@ struct session* do_hook(struct session *ses, int t, const char *data, bool block
     return ses;
 }
 
-void set_magic_hook(struct session *ses)
+void set_magic_hook(session *ses)
 {
     char temp[BUFFER_SIZE];
 

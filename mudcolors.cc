@@ -111,7 +111,7 @@ static int rgb_to_256(struct rgb c)
 
 #define MAXTOK 16
 
-void do_in_MUD_colors(char *txt, bool quotetype, struct session *ses)
+void do_in_MUD_colors(char *txt, bool quotetype, session *ses)
 {
     static int ccolor=7;
     /* worst case: buffer full of FormFeeds, with color=1023 */
@@ -379,7 +379,7 @@ error:
     strcpy(TXT, OUT);
 }
 
-void do_out_MUD_colors(char *line, struct session *ses)
+void do_out_MUD_colors(char *line, session *ses)
 {
     char buf[BUFFER_SIZE*2], *txt=buf;
     int c=7;
@@ -426,7 +426,7 @@ color:
 /**************************/
 /* the #mudcolors command */
 /**************************/
-void mudcolors_command(const char *arg, struct session *ses)
+void mudcolors_command(const char *arg, session *ses)
 {
     char cc[BUFFER_SIZE][16], buf[BUFFER_SIZE];
 

@@ -14,7 +14,7 @@ bool puts_echoing = true;
 /* output to screen should go through this function */
 /* text gets checked for substitutes and actions    */
 /****************************************************/
-void tintin_puts1(const char *cptr, struct session *ses)
+void tintin_puts1(const char *cptr, session *ses)
 {
     char line[BUFFER_SIZE];
     stracpy(line, cptr, sizeof line);
@@ -45,7 +45,7 @@ void tintin_puts1(const char *cptr, struct session *ses)
 // In these two functions, ses=0 means a message whose context is not
 // attached to a specific session, not even the nullsession.
 
-void tintin_printf(struct session *ses, const char *format, ...)
+void tintin_printf(session *ses, const char *format, ...)
 {
     va_list ap;
     char buf[BUFFER_SIZE];
@@ -65,7 +65,7 @@ void tintin_printf(struct session *ses, const char *format, ...)
     user_textout(buf);
 }
 
-void tintin_eprintf(struct session *ses, const char *format, ...)
+void tintin_eprintf(session *ses, const char *format, ...)
 {
     va_list ap;
     char buf[BUFFER_SIZE];

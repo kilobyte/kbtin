@@ -173,7 +173,7 @@ novar2:
 }
 
 
-void set_variable(const char *left, const char *right, struct session *ses)
+void set_variable(const char *left, const char *right, session *ses)
 {
     set_hash(ses->myvars, left, right);
     varnum++;       /* we don't care for exactness of this */
@@ -181,7 +181,7 @@ void set_variable(const char *left, const char *right, struct session *ses)
         tintin_printf(ses, "#Ok. $%s is now set to {%s}.", left, right);
 }
 
-static int builtin_var(const char *varname, char *value, struct session *ses)
+static int builtin_var(const char *varname, char *value, session *ses)
 {
     if (!strcmp(varname, "secstotick"))
         sprintf(value, "%lld", timetilltick(ses)/NANO);
@@ -249,7 +249,7 @@ static int builtin_var(const char *varname, char *value, struct session *ses)
     return 1;
 }
 
-void substitute_myvars(const char *arg, char *result, struct session *ses, int recur)
+void substitute_myvars(const char *arg, char *result, session *ses, int recur)
 {
     char varname[BUFFER_SIZE], value[BUFFER_SIZE];
     int nest = 0;
@@ -355,7 +355,7 @@ void substitute_myvars(const char *arg, char *result, struct session *ses, int r
 }
 
 
-void substitute_vars(const char *string, char *result, struct session *ses)
+void substitute_vars(const char *string, char *result, session *ses)
 {
     char arg[BUFFER_SIZE];
 

@@ -28,7 +28,7 @@ static FILE* check_file(const char *filestring)
 #endif
 }
 
-void help_command(const char *arg, struct session *ses)
+void help_command(const char *arg, session *ses)
 {
     FILE *myfile=NULL;
     char text[BUFFER_SIZE], line[BUFFER_SIZE], filestring[BUFFER_SIZE];

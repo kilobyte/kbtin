@@ -20,17 +20,17 @@
 #include "protos/vars.h"
 
 #include "commands.h"
-typedef void (*t_command)(const char*, struct session*);
-typedef struct session *(*t_c_command)(const char*, struct session*);
+typedef void (*t_command)(const char*, session*);
+typedef session *(*t_c_command)(const char*, session*);
 
-static struct session *parse_tintin_command(const char *command, const char *arg, struct session *ses);
-static void do_speedwalk(const char *cp, struct session *ses);
-static bool do_goto(char *txt, struct session *ses);
+static session *parse_tintin_command(const char *command, const char *arg, session *ses);
+static void do_speedwalk(const char *cp, session *ses);
+static bool do_goto(char *txt, session *ses);
 static inline const char *get_arg_with_spaces(const char *s, char *arg);
 static const char* get_command(const char *s, char *arg);
-static void write_com_arg_mud(const char *command, const char *argument, int nsp, struct session *ses);
-extern void end_command(const char *arg, struct session *ses);
-extern void unlink_command(const char *arg, struct session *ses);
+static void write_com_arg_mud(const char *command, const char *argument, int nsp, session *ses);
+extern void end_command(const char *arg, session *ses);
+extern void unlink_command(const char *arg, session *ses);
 
 static inline bool is_speedwalk_dirs(const char *cp);
 
@@ -54,7 +54,7 @@ bool inc_recursion(void)
 /**************************************************************************/
 /* parse input, check for TINTIN commands and aliases and send to session */
 /**************************************************************************/
-struct session* parse_input(const char *input, bool override_verbatim, struct session *ses)
+session* parse_input(const char *input, bool override_verbatim, session *ses)
 {
     char command[BUFFER_SIZE], arg[BUFFER_SIZE], *al;
     int nspaces;
@@ -198,7 +198,7 @@ static inline bool is_speedwalk_dirs(const char *cp)
 /**************************/
 /* do the speedwalk thing */
 /**************************/
-static void do_speedwalk(const char *cp, struct session *ses)
+static void do_speedwalk(const char *cp, session *ses)
 {
     char sc[2];
 
@@ -230,7 +230,7 @@ static void do_speedwalk(const char *cp, struct session *ses)
 }
 
 
-static bool do_goto(char *txt, struct session *ses)
+static bool do_goto(char *txt, session *ses)
 {
     char *ch;
 
@@ -261,12 +261,12 @@ static bool do_goto(char *txt, struct session *ses)
 /*************************************/
 /* parse most of the tintin-commands */
 /*************************************/
-static struct session* parse_tintin_command(const char *command, const char *arg, struct session *ses)
+static session* parse_tintin_command(const char *command, const char *arg, session *ses)
 {
     const char *func, *a;
     char *b, cmd[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    for (struct session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
+    for (session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
         if (strcmp(sesptr->name, command) == 0)
         {
             if (*arg)
@@ -536,7 +536,7 @@ static inline const char* get_arg_stop_spaces(const char *s, char *arg)
 }
 
 
-const char* get_arg(const char *s, char *arg, bool allow_spaces, struct session *ses)
+const char* get_arg(const char *s, char *arg, bool allow_spaces, session *ses)
 {
     const char *cptr=get_arg_in_braces(s, arg, allow_spaces);
     substitute_vars(arg, arg, ses);
@@ -594,7 +594,7 @@ const char* space_out(const char *s)
 /************************************/
 /* send command+argument to the mud */
 /************************************/
-static void write_com_arg_mud(const char *command, const char *argument, int nsp, struct session *ses)
+static void write_com_arg_mud(const char *command, const char *argument, int nsp, session *ses)
 {
     char outtext[BUFFER_SIZE];
     int i;
@@ -622,7 +622,7 @@ static void write_com_arg_mud(const char *command, const char *argument, int nsp
     }
 }
 
-struct session *ifelse(const char *cmd, const char *line, struct session *ses)
+session *ifelse(const char *cmd, const char *line, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 

@@ -92,7 +92,7 @@ void kill_tlist(kbtree_t(trip) *l)
     kb_destroy(trip, l);
 }
 
-void show_trip(const ptrip t, struct session *ses)
+void show_trip(const ptrip t, session *ses)
 {
     if (t->pr)
         tintin_printf(ses, "~7~{%s~7~}={%s~7~} @ {%s}", t->left, t->right, t->pr);
@@ -100,7 +100,7 @@ void show_trip(const ptrip t, struct session *ses)
         tintin_printf(ses, "~7~{%s~7~}={%s~7~}", t->left, t->right);
 }
 
-bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool no_pr, struct session *ses)
+bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool no_pr, session *ses)
 {
     if (no_pr && pat && is_literal(pat))
     {
@@ -131,7 +131,7 @@ bool show_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool no_pr,
     return had_any;
 }
 
-bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*checkright)(char **right), bool no_pr, struct session *ses)
+bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*checkright)(char **right), bool no_pr, session *ses)
 {
     if (no_pr && pat && is_literal(pat))
     {

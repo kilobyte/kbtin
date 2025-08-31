@@ -7,9 +7,9 @@
 #include <regex.h>
 
 
-extern struct session *if_command(const char *arg, struct session *ses);
+extern session *if_command(const char *arg, session *ses);
 
-static bool check_regexp(char *line, char *action, pvars_t *vars, struct session *ses)
+static bool check_regexp(char *line, char *action, pvars_t *vars, session *ses)
 {
     regex_t preg;
     regmatch_t pmatch[10];
@@ -43,7 +43,7 @@ static bool check_regexp(char *line, char *action, pvars_t *vars, struct session
 /*********************/
 /* the #grep command */
 /*********************/
-struct session *grep_command(const char *arg, struct session *ses)
+session *grep_command(const char *arg, session *ses)
 {
     pvars_t vars, *lastpvars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
@@ -74,7 +74,7 @@ struct session *grep_command(const char *arg, struct session *ses)
 /********************/
 /* the #grep inline */
 /********************/
-int grep_inline(const char *arg, struct session *ses)
+int grep_inline(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], line[BUFFER_SIZE];
 

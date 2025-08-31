@@ -15,7 +15,7 @@ for f in ${*:--}
     grep -Eh '^[a-zA-Z_]+.*[a-zA-Z_][a-zA-Z0-9_]*\(.*\)$' "$f"|
     grep -v '^static'|
     grep -Ev '^void [a-z_]+_command\('|
-    grep -Ev '^struct session \*[a-z_]+_command\('|
+    grep -Ev '^session \*[a-z_]+_command\('|
     sed 's/.*/extern &;/'
 
     # variables

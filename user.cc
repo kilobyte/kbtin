@@ -19,7 +19,7 @@ void (*user_pause)(void);
 void (*user_resume)(void);
 void (*user_textout)(const char*);
 void (*user_textout_draft)(const char*, bool);
-bool (*user_process_kbd)(struct session*, WC);
+bool (*user_process_kbd)(session*, WC);
 void (*user_beep)(void);
 void (*user_done)(void);
 void (*user_keypad)(bool);

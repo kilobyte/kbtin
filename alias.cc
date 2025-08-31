@@ -13,9 +13,9 @@
 #include "protos/utils.h"
 
 
-extern struct session *if_command(const char *arg, struct session *ses);
+extern session *if_command(const char *arg, session *ses);
 
-void show_hashlist(struct session *ses, struct hashtable *h, const char *pat, const char *msg_all, const char *msg_none)
+void show_hashlist(session *ses, struct hashtable *h, const char *pat, const char *msg_all, const char *msg_none)
 {
     struct pairlist *pl;
 
@@ -37,7 +37,7 @@ void show_hashlist(struct session *ses, struct hashtable *h, const char *pat, co
     delete[] pl;
 }
 
-void delete_hashlist(struct session *ses, struct hashtable *h, const char *pat, const char *msg_ok, const char *msg_none)
+void delete_hashlist(session *ses, struct hashtable *h, const char *pat, const char *msg_ok, const char *msg_none)
 {
     if (is_literal(pat))
     {
@@ -70,7 +70,7 @@ void delete_hashlist(struct session *ses, struct hashtable *h, const char *pat, 
 /**********************/
 /* the #alias command */
 /**********************/
-void alias_command(const char *arg, struct session *ses)
+void alias_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], *ch;
 
@@ -101,7 +101,7 @@ void alias_command(const char *arg, struct session *ses)
 /************************/
 /* the #unalias command */
 /************************/
-void unalias_command(const char *arg, struct session *ses)
+void unalias_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
 
@@ -114,7 +114,7 @@ void unalias_command(const char *arg, struct session *ses)
 /******************************/
 /* the #ifaliasexists command */
 /******************************/
-struct session *ifaliasexists_command(const char *line, struct session *ses)
+session *ifaliasexists_command(const char *line, session *ses)
 {
     char left[BUFFER_SIZE], cmd[BUFFER_SIZE];
 

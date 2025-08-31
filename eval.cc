@@ -36,14 +36,14 @@ static struct stacks
     num_t val;
     int op;
 } stacks[100];
-static bool conv_to_nums(char *arg, struct session *ses);
+static bool conv_to_nums(char *arg, session *ses);
 static bool do_one_inside(int begin, int end);
 
 
 /*********************/
 /* the #math command */
 /*********************/
-void math_command(const char *line, struct session *ses)
+void math_command(const char *line, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE], temp[BUFFER_SIZE];
 
@@ -61,7 +61,7 @@ void math_command(const char *line, struct session *ses)
 /*******************/
 /* the #if command */
 /*******************/
-struct session *if_command(const char *line, struct session *ses)
+session *if_command(const char *line, session *ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
@@ -81,7 +81,7 @@ struct session *if_command(const char *line, struct session *ses)
 }
 
 
-static bool do_inline(const char *line, num_t *res, struct session *ses)
+static bool do_inline(const char *line, num_t *res, session *ses)
 {
     char command[BUFFER_SIZE], *ptr;
     struct stacks savestacks[ARRAYSZ(stacks)];
@@ -137,7 +137,7 @@ static bool do_inline(const char *line, num_t *res, struct session *ses)
 }
 
 
-num_t eval_expression(char *arg, struct session *ses)
+num_t eval_expression(char *arg, session *ses)
 {
     if (!conv_to_nums(arg, ses))
         return 0;
@@ -184,7 +184,7 @@ num_t eval_expression(char *arg, struct session *ses)
 }
 
 // comparing strings inside [ ] with = and !=
-static char *stringcmp(char *ptr, int i, struct session *ses)
+static char *stringcmp(char *ptr, int i, session *ses)
 {
     bool result, should_differ;
     bool regex=false; /* false=strncmp, true=regex match */
@@ -247,7 +247,7 @@ static char *stringcmp(char *ptr, int i, struct session *ses)
     return ptr;
 }
 
-static bool conv_to_nums(char *arg, struct session *ses)
+static bool conv_to_nums(char *arg, session *ses)
 {
     char temp[BUFFER_SIZE];
 
