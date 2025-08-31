@@ -152,30 +152,29 @@ bool delete_tlist(kbtree_t(trip) *l, const char *pat, const char *msg, bool (*ch
         return true;
     }
 
-    ptrip *todel = new ptrip[kb_size(l)];
-    ptrip *last = todel;
+    std::vector<ptrip> todel;
+    todel.reserve(kb_size(l));
 
     TRIP_ITER(l, t)
         if (pat && !match(pat, t->left))
             continue;
         if (checkright && checkright(&t->right))
             continue;
-        *last++ = t;
+        todel.emplace_back(t);
     ENDITER
 
-    for (ptrip *del = todel; del != last; del++)
+    for (ptrip del : todel)
     {
         if (msg)
-            tintin_printf(ses, msg, (*del)->left);
-        kb_del(trip, l, *del);
-        free((*del)->left);
-        free((*del)->right);
-        free((*del)->pr);
+            tintin_printf(ses, msg, del->left);
+        kb_del(trip, l, del);
+        free(del->left);
+        free(del->right);
+        free(del->pr);
         delete del;
     }
 
-    delete[] todel;
-    return last != todel;
+    return !todel.empty();
 }
 
 kbtree_t(trip) *copy_tlist(kbtree_t(trip) *a)
