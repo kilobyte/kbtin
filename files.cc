@@ -1068,10 +1068,10 @@ void logtype_command(const char *arg, struct session *ses)
     arg=get_arg(arg, left, 1, ses);
     if (!*left)
         return tintin_printf(ses, "#The log type is: %s", logtypes[ses->logtype]);
-    for (unsigned t=0;t<sizeof(logtypes)/sizeof(char*);t++)
+    for (unsigned t=0; t<ARRAYSZ(logtypes); t++)
         if (is_abrev(left, logtypes[t]))
         {
-            ses->logtype=t;
+            ses->logtype = static_cast<logtype_t>(t);
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, "#Ok, log type is now %s.", logtypes[t]);
             return;
