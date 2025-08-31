@@ -36,7 +36,7 @@ num_t ndiv(num_t x, num_t y)
 
 int num2str(char *buf, num_t v)
 {
-    char *b = buf + sprintf(buf, "%s%"PRId64, (v<0 && v>-DENOM)? "-":"",
+    char *b = buf + sprintf(buf, "%s%" PRId64, (v<0 && v>-DENOM)? "-":"",
         (int64_t)(v/DENOM));
     unsigned x = llabs(v%DENOM);
     if (!x)

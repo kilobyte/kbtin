@@ -787,14 +787,14 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 goto key_end;
             }
         touch_bottom();
-        sprintf(txt, "ESCO"WCC, (WCI)ch);
+        sprintf(txt, "ESCO" WCC, (WCI)ch);
         find_bind(txt, bits, 1, ses);
         break;
     //-----------------------------------------------------------------------
     case TS_ESC_S_S:            /* ESC [ [ */
         state=TS_NORMAL;
         touch_bottom();
-        sprintf(txt, "ESC[["WCC, (WCI)ch);
+        sprintf(txt, "ESC[[" WCC, (WCI)ch);
         find_bind(txt, bits, 1, ses);
         break;
     //-----------------------------------------------------------------------
@@ -893,7 +893,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
                 goto key_end;
             default:
                 touch_bottom();
-                sprintf(txt, "ESC["WCC, (WCI)ch);
+                sprintf(txt, "ESC[" WCC, (WCI)ch);
                 find_bind(txt, 0, 1, ses);
                 break;
             }
@@ -901,7 +901,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         else if (ch>='A' && ch <='Z') // && bits
         {
             touch_bottom();
-            sprintf(txt, "ESC["WCC, (WCI)ch);
+            sprintf(txt, "ESC[" WCC, (WCI)ch);
             find_bind(txt, bits, 1, ses);
         }
         else if (ch=='[')
@@ -1030,7 +1030,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         if (ch==127)
             sprintf(txt, "Alt-Backspace");
         else if ((unsigned char)ch>32)
-            sprintf(txt, "Alt-"WCC, (WCI)ch);
+            sprintf(txt, "Alt-" WCC, (WCI)ch);
         else if (ch==32)
             sprintf(txt, "Alt-Space");
 #if 0
@@ -1042,7 +1042,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
         else if (ch==9)
             sprintf(txt, "Alt-Tab");
         else
-            sprintf(txt, "Alt-^"WCC, (WCI)(ch+64));
+            sprintf(txt, "Alt-^" WCC, (WCI)(ch+64));
         if (find_bind(txt, 0, 0, ses)) // Alt- already included
             break;
         switch (ch)
@@ -1428,7 +1428,7 @@ static bool usertty_process_kbd(struct session *ses, WC ch)
             touch_bottom();
             if ((ch>0)&&(ch<32))
             {
-                sprintf(txt, "^"WCC, (WCI)(ch+64));
+                sprintf(txt, "^" WCC, (WCI)(ch+64));
                 find_bind(txt, 0, 1, ses);
                 break;
             }

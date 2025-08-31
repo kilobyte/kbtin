@@ -157,7 +157,7 @@ static void telnet_send_ttype(struct session *ses)
     default:
         ses->last_term_type=0;
     case 3:
-        ttype="KBtin-"VERSION;
+        ttype="KBtin-" VERSION;
     }
     write_socket(ses, nego,
         sprintf(nego, "%c%c%c%c%s%c%c", IAC, SB,

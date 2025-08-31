@@ -192,7 +192,7 @@ static void parse_options(int argc, char **argv)
             noargs=true;
         else if (!strcmp(argv[arg], "--version")) /* make autotest happy */
         {
-            printf("KBtin version "VERSION"\n");
+            printf("KBtin version " VERSION "\n");
             exit(0);
         }
         else if (!strcmp(argv[arg], "-v"))
