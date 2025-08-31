@@ -1,6 +1,5 @@
 #define _XOPEN_SOURCE 500
 #define __EXTENSIONS__
-#define _GNU_SOURCE
 #include "config.h"
 #include <fcntl.h>
 #include <limits.h>
