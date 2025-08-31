@@ -148,7 +148,7 @@ bool find(const char *text, const char *pattern, int *from, int *to, const char 
         b=strchr(pat, '*');
         if (b)
             *b=0;
-        a=strstr(txt, pat);
+        a=const_cast<char*>(strstr(txt, pat));
         if (!a)
             return false;
         if (!*to)

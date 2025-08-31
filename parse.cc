@@ -25,7 +25,7 @@ typedef struct session *(*t_c_command)(const char*, struct session*);
 
 static struct session *parse_tintin_command(const char *command, const char *arg, struct session *ses);
 static void do_speedwalk(const char *cp, struct session *ses);
-static bool do_goto(const char *txt, struct session *ses);
+static bool do_goto(char *txt, struct session *ses);
 static inline const char *get_arg_with_spaces(const char *s, char *arg);
 static const char* get_command(const char *s, char *arg);
 static void write_com_arg_mud(const char *command, const char *argument, int nsp, struct session *ses);
@@ -230,7 +230,7 @@ static void do_speedwalk(const char *cp, struct session *ses)
 }
 
 
-static bool do_goto(const char *txt, struct session *ses)
+static bool do_goto(char *txt, struct session *ses)
 {
     char *ch;
 

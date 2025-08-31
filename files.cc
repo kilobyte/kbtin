@@ -48,7 +48,7 @@ static void expand_filename(const char *arg, char *result, char *lstr)
             result+=snprintf(result, BUFFER_SIZE, "%s", getenv("HOME")), arg++;
         else
         {
-            char *p=strchr(arg+1, '/');
+            const char *p=strchr(arg+1, '/');
             if (p)
             {
                 char name[BUFFER_SIZE];
