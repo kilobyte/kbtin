@@ -6,10 +6,9 @@
 #include "protos/utils.h"
 #include "protos/hooks.h"
 
-typedef unsigned char u8;
-struct rgb { u8 r; u8 g; u8 b; };
+struct rgb { unsigned int r:8; unsigned int g:8; unsigned int b:8; };
 
-static inline u8 ramp256_6(int i)
+static inline unsigned int ramp256_6(int i)
 {
     /* 00 5f 87 af d7 ff = 0 95 135 175 215 255 */
     return i ? 55 + i * 40 : 0;
@@ -43,7 +42,7 @@ static struct rgb rgb_from_256(int i)
 
 static int rgb_to_16(struct rgb c)
 {
-    u8 fg, max = c.r;
+    unsigned int fg, max = c.r;
     if (c.g > max)
         max = c.g;
     if (c.b > max)
