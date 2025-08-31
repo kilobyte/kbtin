@@ -278,7 +278,7 @@ static char *glob_to_regex(const char *pat)
     *b=0;
 
     int len=b-buf+1;
-    char *txt=MALLOC(len);
+    char *txt = static_cast<char*>(malloc(len));
     memcpy(txt, buf, len);
     return txt;
 }

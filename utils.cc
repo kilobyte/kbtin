@@ -29,7 +29,7 @@ char* mystrdup(const char *s)
     if (!s)
         return 0;
     int len = strlen(s) + 1;
-    if (!(dup = MALLOC(len)))
+    if (!(dup = static_cast<char*>(malloc(len))))
         die("Not enough memory for strdup.");
     memcpy(dup, s, len);
     return dup;

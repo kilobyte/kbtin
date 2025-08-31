@@ -412,7 +412,7 @@ static void b_addline(void)
     b_flush_newline();
     b_pending_newline=1;
     char *new_line;
-    while (!(new_line=MALLOC(o_len+1)))
+    while (!(new_line = static_cast<char*>(malloc(o_len+1))))
         if (!b_shorten())
             die("Out of memory");
     out_line[o_len]=0;
