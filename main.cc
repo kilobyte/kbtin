@@ -26,7 +26,6 @@
 #include "protos/slist.h"
 #include "protos/substitute.h"
 #include "protos/ticks.h"
-#include "protos/tlist.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
@@ -175,14 +174,15 @@ static void opterror(const char *msg, ...)
     exit(1);
 }
 
-static struct trip *options;
+typedef struct { const char *left, *right, *pr; } opt_t;
+static opt_t *options;
 
 static void parse_options(int argc, char **argv)
 {
     bool noargs=false;
 
-    options = new trip[argc];
-    struct trip *o = options;
+    options = new opt_t[argc];
+    opt_t *o = options;
 
     for (int arg=1;arg<argc;arg++)
     {
@@ -246,7 +246,7 @@ static void apply_options(void)
 # define DO_INPUT(str,iv) local_to_utf8(ustr, str, BUFFER_SIZE, 0);\
                           activesession=parse_input(ustr, iv, activesession);
 
-    for (struct trip *opt=options; opt->left; opt++)
+    for (opt_t *opt=options; opt->left; opt++)
     {
         switch (*opt->left)
         {
