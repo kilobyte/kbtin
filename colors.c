@@ -2,8 +2,6 @@
 #include "protos/globals.h"
 
 
-const int rgbbgr[8]={0,4,2,6,1,5,3,7};
-
 static int getco(const char *restrict txt, const char **err)
 {
     if (!isadigit(txt[1]))
@@ -144,7 +142,7 @@ char* ansicolor(char *s, int c)
             *s++=';', *s++='1', *s++=';', *s++='3';
         else
             *s++=';', *s++='9';
-        *s++='0'+rgbbgr[k&7];
+        *s++='0'+rgbbgr(k&7);
     }
     else
         s+=sprintf(s, ";38;5;%d", k);
@@ -155,7 +153,7 @@ char* ansicolor(char *s, int c)
             *s++=';', *s++='1', *s++='0';
         else
             *s++=';', *s++='4';
-        *s++='0'+rgbbgr[k&7];
+        *s++='0'+rgbbgr(k&7);
     }
     else
         s+=sprintf(s, ";48;5;%d", k);

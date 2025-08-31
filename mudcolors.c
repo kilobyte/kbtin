@@ -6,8 +6,6 @@
 #include "protos/utils.h"
 #include "protos/hooks.h"
 
-extern const int rgbbgr[8];
-
 typedef unsigned char u8;
 struct rgb { u8 r; u8 g; u8 b; };
 
@@ -235,7 +233,7 @@ again:
                                 if (k < 256)
                                 {
                                     if (k < 16)
-                                        k = (k&8) | rgbbgr[k&7];
+                                        k = (k&8) | rgbbgr(k&7);
                                     ccolor=(ccolor&~CFG_MASK) | k;
                                 }
                             }
@@ -265,7 +263,7 @@ again:
                                 if (k < 256)
                                 {
                                     if (k < 16)
-                                        k = (k&8) | rgbbgr[k&7];
+                                        k = (k&8) | rgbbgr(k&7);
                                     ccolor=(ccolor&~CBG_MASK) | k<<CBG_AT;
                                 }
                             }
@@ -290,13 +288,13 @@ again:
                             break;
                         default:
                             if (tok[i]>=30 && tok[i]<38)
-                                ccolor=(ccolor&~0x07)|rgbbgr[tok[i]-30];
+                                ccolor=(ccolor&~0x07)|rgbbgr(tok[i]-30);
                             else if (tok[i]>=40 && tok[i]<48)
-                                ccolor=(ccolor&~CBG_MASK)|rgbbgr[tok[i]-40]<<CBG_AT;
+                                ccolor=(ccolor&~CBG_MASK)|rgbbgr(tok[i]-40)<<CBG_AT;
                             else if (tok[i]>=90 && tok[i]<98)
-                                ccolor=(ccolor&~0x07)|8|rgbbgr[tok[i]-90];
+                                ccolor=(ccolor&~0x07)|8|rgbbgr(tok[i]-90);
                             else if (tok[i]>=100 && tok[i]<108)
-                                ccolor=(ccolor&~CBG_MASK)|(rgbbgr[tok[i]-100]|8)<<CBG_AT;
+                                ccolor=(ccolor&~CBG_MASK)|(rgbbgr(tok[i]-100)|8)<<CBG_AT;
                             /* ignore unknown attributes */
                         }
                     out+=setcolor(out, ccolor);

@@ -435,6 +435,11 @@ static inline void stracpy(char *restrict dst, const char *restrict src, size_t 
     memcpy(dst, src, len);
 }
 
+static inline int rgbbgr(int x)
+{
+    return ((x&1) << 2) | (x&2) | ((x&4) >> 2);
+}
+
 #ifdef HAVE_SIMD
 // Should be in globals.h but for the typedef...
 extern hs_scratch_t *hs_scratch;
