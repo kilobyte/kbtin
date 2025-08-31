@@ -352,7 +352,7 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
             if ((f=fopen(lfname, "a")))
             {
                 if (lock_file(fileno(f), ses, fname))
-                    return fclose(f), NULL;
+                    return fclose(f), nullptr;
                 if (ses->mesvar[MSG_LOG])
                     tintin_printf(ses, appendmsg, fname);
             }
@@ -364,7 +364,7 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         if ((f=fopen(lfname, "w")))
         {
             if (lock_file(fileno(f), ses, fname))
-                return fclose(f), NULL;
+                return fclose(f), nullptr;
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, filemsg, fname);
         }
@@ -396,7 +396,7 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
         }
 
         if (lock_file(fd, ses, fname))
-            return close(fd), NULL;
+            return close(fd), nullptr;
 
         if ((f = mypopen(zip, true, fd)))
         {
@@ -409,7 +409,7 @@ static FILE* open_logfile(struct session *ses, const char *name, const char *fil
     else if ((f = fopen(lfname, "w")))
         {
             if (lock_file(fileno(f), ses, fname))
-                return fclose(f), NULL;
+                return fclose(f), nullptr;
             if (ses->mesvar[MSG_LOG])
                 tintin_printf(ses, filemsg, fname);
         }
