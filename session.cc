@@ -321,7 +321,7 @@ void init_nullses(void)
 {
     start_time = idle_since = current_time();
 
-    nullsession=TALLOC(struct session);
+    nullsession = new session;
     nullsession->name=mystrdup("main");
     nullsession->address=0;
     nullsession->tickstatus = false;
@@ -438,9 +438,7 @@ void init_nullses(void)
 /**********************/
 static struct session *new_session(const char *name, const char *address, int sock, sestype_t sestype, gnutls_session_t ssl, struct session *ses)
 {
-    struct session *newsession;
-
-    newsession = TALLOC(struct session);
+    session *newsession = new session;
 
     newsession->name = mystrdup(name);
     newsession->address = mystrdup(address);
@@ -624,7 +622,7 @@ void cleanup_session(struct session *ses)
     delete[] ses->acts_data[1];
 #endif
 
-    TFREE(ses, struct session);
+    delete ses;
 }
 
 void seslist(char *result)
