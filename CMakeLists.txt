@@ -5,7 +5,7 @@ endif()
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
 	cmake_policy(SET CMP0110 NEW)
 endif()
-project(kbtin C)
+project(kbtin CXX)
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
@@ -30,7 +30,7 @@ option(SSL "SSL encryption via gnutls" ON)
 set(DATA_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/kbtin"
 	CACHE PATH "Directory for data (currently help file)")
 
-set(CMAKE_C_FLAGS "-Wall -Werror=format-security ${CMAKE_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Wall -Werror=format-security -fpermissive ${CMAKE_CXX_FLAGS}")
 
 set(libs m)
 
@@ -106,55 +106,55 @@ configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 include_directories(${CMAKE_BINARY_DIR})
 
 set(KBtin_sources
-	action.c
-	alias.c
-	antisub.c
-	files.c
-	glob.c
-	help.c
-	highlight.c
-	history.c
-	eval.c
-	main.c
-	misc.c
-	net.c
-	parse.c
-	path.c
-	session.c
-	substitute.c
-	ticks.c
-	utils.c
-	string.c
-	events.c
-	user.c
-	run.c
-	colors.c
-	routes.c
-	bind.c
-	telnet.c
-	hash.c
-	regexp.c
-	hooks.c
-	unicode.c
-	user_pipe.c
-	user_tty.c
-	wcwidth.c
-	chinese.c
-	print.c
-	ssl.c
-	pty.c
-	globals.c
-	math.c
-	slist.c
-	lists.c
-	vars.c
-	tlist.c
-	mudcolors.c
-	ratelimit.c
+	action.cc
+	alias.cc
+	antisub.cc
+	files.cc
+	glob.cc
+	help.cc
+	highlight.cc
+	history.cc
+	eval.cc
+	main.cc
+	misc.cc
+	net.cc
+	parse.cc
+	path.cc
+	session.cc
+	substitute.cc
+	ticks.cc
+	utils.cc
+	string.cc
+	events.cc
+	user.cc
+	run.cc
+	colors.cc
+	routes.cc
+	bind.cc
+	telnet.cc
+	hash.cc
+	regexp.cc
+	hooks.cc
+	unicode.cc
+	user_pipe.cc
+	user_tty.cc
+	wcwidth.cc
+	chinese.cc
+	print.cc
+	ssl.cc
+	pty.cc
+	globals.cc
+	math.cc
+	slist.cc
+	lists.cc
+	vars.cc
+	tlist.cc
+	mudcolors.cc
+	ratelimit.cc
 )
 
 set(protos ${KBtin_sources})
-list(TRANSFORM protos REPLACE "([^;]*)\\.c" "${CMAKE_BINARY_DIR}/protos/\\1.h")
+list(TRANSFORM protos REPLACE "([^;]*)\\.cc" "${CMAKE_BINARY_DIR}/protos/\\1.h")
 add_custom_command(OUTPUT ${protos}
 	COMMAND ${CMAKE_SOURCE_DIR}/make_protos ${CMAKE_SOURCE_DIR} ${KBtin_sources}
 	DEPENDS make_protos ${KBtin_sources}

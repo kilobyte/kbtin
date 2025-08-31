@@ -1,7 +1,7 @@
 set(CTEST_OUTPUT_ON_FAILURE ON)
 
-add_executable(ttyrec2ansi ttyrec2ansi.c)
-add_executable(get-utf8 get-utf8.c)
+add_executable(ttyrec2ansi ttyrec2ansi.cc)
+add_executable(get-utf8 get-utf8.cc)
 
 file(GLOB tests
 	LIST_DIRECTORIES false
@@ -22,5 +22,5 @@ foreach(t ${tests})
 		COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/runtest.sh "${t}")
 endforeach()
 
-add_executable(kbitr kbitr.c)
+add_executable(kbitr kbitr.cc)
 add_test(NAME kbtree_itr COMMAND ${CMAKE_CURRENT_BINARY_DIR}/kbitr)

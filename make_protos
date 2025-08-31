@@ -9,7 +9,7 @@ mkdir -p "protos"
 
 for f in ${*:--}
   do
-    h="${f%.c}.h"
+    h="${f%.cc}.h"
     (cd "$DIR";
     # functions
     grep -Eh '^[a-zA-Z_]+.*[a-zA-Z_][a-zA-Z0-9_]*\(.*\)$' "$f"|
