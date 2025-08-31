@@ -225,12 +225,22 @@ enum
 #ifdef  __cplusplus
 # define restrict __restrict__
 # define _Static_assert static_assert
+extern "C" {
 #endif
-#include "malloc.h"
-#include "unicode.h"
+#ifndef HAVE_FORKPTY
+int forkpty(int *amaster, char *dummy, struct termios *termp, struct winsize *wp);
+#endif
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
+#ifndef HAVE_CFMAKERAW
+void cfmakeraw(struct termios *ta)
+#endif
+#ifdef  __cplusplus
+} // extern "C"
+#endif
+#include "malloc.h"
+#include "unicode.h"
 #include "kbtree.h"
 
 typedef int64_t num_t;

@@ -166,7 +166,7 @@ ok:
     return 0;
 }
 
-int forkpty(int *amaster, char *dummy, struct termios *termp, struct winsize *wp)
+/*C*/ int forkpty(int *amaster, char *dummy, struct termios *termp, struct winsize *wp)
 {
     int master, slave;
     int pid;
@@ -198,7 +198,7 @@ int forkpty(int *amaster, char *dummy, struct termios *termp, struct winsize *wp
 #endif
 
 #ifndef HAVE_CFMAKERAW
-void cfmakeraw(struct termios *ta)
+/*C*/ void cfmakeraw(struct termios *ta)
 {
     ta->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP
                     |INLCR|IGNCR|ICRNL|IXON);
