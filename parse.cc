@@ -332,12 +332,12 @@ static void add_Xcommand(struct hashtable *h, const char *command, void *func)
 
 static void add_command(const char *command, t_command func)
 {
-    add_Xcommand(commands, command, func);
+    add_Xcommand(commands, command, reinterpret_cast<void*>(func));
 }
 
 static void add_c_command(const char *command, t_c_command func)
 {
-    add_Xcommand(c_commands, command, func);
+    add_Xcommand(c_commands, command, reinterpret_cast<void*>(func));
 }
 
 void init_parse(void)
