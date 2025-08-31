@@ -239,6 +239,7 @@ void cfmakeraw(struct termios *ta)
 } // extern "C"
 #endif
 #include <vector>
+#include <list> // TODO: use a hive if available
 #include "malloc.h"
 #include "unicode.h"
 #include "kbtree.h"
@@ -297,11 +298,11 @@ struct eventnode
 
 struct routenode
 {
-    struct routenode *next;
     int dest;
     char *path;
     num_t distance;
     char *cond;
+    ~routenode();
 };
 
 struct pair
@@ -351,10 +352,9 @@ struct session
     kbtree_t(str) *antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds, *ratelimits;
     struct pair path[MAX_PATH_LENGTH];
-    struct routenode **routes;
-    char **locations;
+    std::vector<std::list<routenode> > routes;
+    std::vector<char *> locations;
     struct eventnode *events;
-    int num_locations;
     int path_begin, path_length;
     int socket, last_term_type;
     sestype_t sestype;

@@ -1053,8 +1053,8 @@ void info_command(const char *arg, session *ses)
     int binds     = ses->binds->nval;
     int pathdirs  = ses->pathdirs->nval;
     int locs = 0;
-    for (int i=0;i<ses->num_locations;i++)
-        if (ses->locations[i])
+    for (auto i : ses->locations)
+        if (*i)
             locs++;
     int routes=count_routes(ses);
     switch (ses->sestype)

@@ -13,123 +13,67 @@
 
 extern session *if_command(const char *arg, session *ses);
 
+routenode::~routenode()
+{
+    SFREE(path);
+    SFREE(cond);
+}
 
 static void addroute(session *ses, int a, int b, char *way, num_t dist, char *cond)
 {
-    struct routenode *r;
-
-    r=ses->routes[a];
-    while (r&&(r->dest!=b))
-        r=r->next;
-    if (r)
+    auto R = ses->routes[a].begin();
+    while (R!=ses->routes[a].end() && R->dest!=b)
+        R++;
+    if (R!=ses->routes[a].end())
     {
-        SFREE(r->path);
-        r->path=mystrdup(way);
-        r->distance=dist;
-        SFREE(r->cond);
-        r->cond=mystrdup(cond);
+        auto &r = *R;
+        SFREE(r.path);
+        r.path=mystrdup(way);
+        r.distance=dist;
+        SFREE(r.cond);
+        r.cond=mystrdup(cond);
     }
     else
     {
-        r=TALLOC(struct routenode);
-        r->dest=b;
-        r->path=mystrdup(way);
-        r->distance=dist;
-        r->cond=mystrdup(cond);
-        r->next=ses->routes[a];
-        ses->routes[a]=r;
+        auto &r = ses->routes[a].emplace_back();
+        r.dest=b;
+        r.path=mystrdup(way);
+        r.distance=dist;
+        r.cond=mystrdup(cond);
     }
-}
-
-void copyroutes(session *ses1, session *ses2)
-{
-    if (!ses1->num_locations)
-        return;
-    int n = ses2->num_locations=ses1->num_locations;
-
-    // called only with nothing in the target
-    ses2->locations=MALLOC(n*sizeof(char*));
-    ses2->routes=MALLOC(n*sizeof(void*));
-    if (!ses2->locations||!ses2->routes)
-        die("out of memory");
-    for (int i=0;i<n;i++)
-    {
-        if (ses1->locations[i])
-            ses2->locations[i]=mystrdup(ses1->locations[i]);
-        else
-            ses2->locations[i]=0;
-    }
-    for (int i=0;i<n;i++)
-    {
-        ses2->routes[i]=0;
-        for (struct routenode *r=ses1->routes[i];r;r=r->next)
-        {
-            struct routenode *p=TALLOC(struct routenode);
-            p->dest=r->dest;
-            p->path=mystrdup(r->path);
-            p->distance=r->distance;
-            p->cond=mystrdup(r->cond);
-            p->next=ses2->routes[i];
-            ses2->routes[i]=p;
-        }
-    }
-}
-
-void kill_routes(session *ses)
-{
-    for (int i=0;i<ses->num_locations;i++)
-    {
-        SFREE(ses->locations[i]);
-        ses->locations[i]=0;
-        struct routenode *r=ses->routes[i];
-        while (r)
-        {
-            struct routenode *p=r;
-            r=r->next;
-            SFREE(p->path);
-            SFREE(p->cond);
-            TFREE(p, struct routenode);
-        }
-        ses->routes[i]=0;
-    }
-    MFREE(ses->locations, n*sizeof(char*));
-    MFREE(ses->routes, n*sizeof(void*));
-    ses->num_locations=0;
 }
 
 int count_routes(session *ses)
 {
     int num=0;
 
-    for (int i=0;i<ses->num_locations;i++)
-        for (struct routenode *r=ses->routes[i];r;r=r->next)
+    for (auto i : ses->locations)
+        for (auto&& r [[maybe_unused]] : ses->routes[*i])
             num++;
     return num;
 }
 
 static void kill_unused_locations(session *ses)
 {
-    bool us[ses->num_locations];
-    struct routenode *r;
+    size_t n = ses->locations.size();
+    std::vector<bool> us(n);
 
-    for (int i=0;i<ses->num_locations;i++)
-        us[i]=false;
-    for (int i=0;i<ses->num_locations;i++)
-        if ((r=ses->routes[i]))
+    for (unsigned i=0; i<n; i++)
+        if (!ses->routes[i].empty())
         {
-            us[i]=true;
-            for (;r;r=r->next)
-                us[r->dest]=true;
+            us[i] = true;
+            for (auto&& r : ses->routes[i])
+                us[r.dest]=true;
         }
-    for (int i=0;i<ses->num_locations;i++)
-        if (ses->locations[i]&&!us[i])
+    for (unsigned i=0; i<n; i++)
+        if (ses->locations[i] && !us[i])
         {
             SFREE(ses->locations[i]);
-            ses->locations[i]=0;
+            ses->locations[i] = 0;
         }
 }
 
-static void show_route(session *ses, int a, struct routenode *r)
+static void show_route(session *ses, int a, routenode *r)
 {
     char num[32];
     num2str(num, r->distance);
@@ -149,17 +93,6 @@ static void show_route(session *ses, int a, struct routenode *r)
             num);
 }
 
-static void more_locations(session *ses)
-{
-    int j = ses->num_locations;
-    int n = j? j*2 : 64;
-    ses->locations=realloc(ses->locations, n*sizeof(char*));
-    ses->routes=realloc(ses->routes, n*sizeof(void*));
-    for (; j<n; j++)
-        ses->locations[j]=0, ses->routes[j]=0;
-    ses->num_locations=n;
-}
-
 /***********************/
 /* the #route command  */
 /***********************/
@@ -167,7 +100,7 @@ void route_command(const char *arg, session *ses)
 {
     char a[BUFFER_SIZE], b[BUFFER_SIZE], way[BUFFER_SIZE], dist[BUFFER_SIZE], cond[BUFFER_SIZE];
     num_t d;
-    int n=ses->num_locations;
+    int n=ses->locations.size();
 
     arg=get_arg(arg, a, 0, ses);
     arg=get_arg(arg, b, 0, ses);
@@ -178,8 +111,8 @@ void route_command(const char *arg, session *ses)
     {
         tintin_printf(ses, "#THESE ROUTES HAVE BEEN DEFINED:");
         for (int i=0;i<n;i++)
-            for (struct routenode *r=ses->routes[i];r;r=r->next)
-                show_route(ses, i, r);
+            for (auto&& r : ses->routes[i])
+                show_route(ses, i, &r);
         return;
     }
     if (!*way)
@@ -189,16 +122,16 @@ void route_command(const char *arg, session *ses)
             strcpy(b, "*");
         for (int i=0;i<n;i++)
             if (ses->locations[i]&&match(a, ses->locations[i]))
-                for (struct routenode *r=ses->routes[i];r;r=r->next)
+                for (auto&& r : ses->routes[i])
                     if (ses->locations[i]&&
-                          match(b, ses->locations[r->dest]))
+                          match(b, ses->locations[r.dest]))
                     {
                         if (first)
                         {
                             tintin_printf(ses, "#THESE ROUTES HAVE BEEN DEFINED:");
                             first=false;
                         }
-                        show_route(ses, i, r);
+                        show_route(ses, i, &r);
                     }
         if (first)
             tintin_printf(ses, "#THAT ROUTE (%s) IS NOT DEFINED.", b);
@@ -217,9 +150,9 @@ void route_command(const char *arg, session *ses)
                 goto found_i;
             }
 
-        more_locations(ses);
-        n=ses->num_locations;
-        ses->locations[i]=mystrdup(a);
+        ses->locations.emplace_back(mystrdup(a));
+        ses->routes.emplace_back();
+        n++;
     }
 found_i:;
     int j;
@@ -235,9 +168,9 @@ found_i:;
                 goto found_j;
             }
 
-        more_locations(ses);
-        n=ses->num_locations;
-        ses->locations[j]=mystrdup(b);
+        ses->locations.emplace_back(mystrdup(b));
+        ses->routes.emplace_back();
+        n++;
     }
 found_j:
     if (*dist)
@@ -295,34 +228,31 @@ void unroute_command(const char *arg, session *ses)
         return;
     }
 
-    for (int i=0;i<ses->num_locations;i++)
+    int n = ses->locations.size();
+    for (int i=0;i<n;i++)
     {
         if (!ses->locations[i])
             continue;
         bool is_a = match(a, ses->locations[i]);
 
         if (is_a || !*b)
-            for (struct routenode**r=&ses->routes[i];*r;)
+            ses->routes[i].remove_if([&](routenode &r)
             {
-                if (*b ? match(b, ses->locations[(*r)->dest])
-                       : is_a || match(a, ses->locations[(*r)->dest]))
+                if (*b ? match(b, ses->locations[r.dest])
+                       : is_a || match(a, ses->locations[r.dest]))
                 {
-                    struct routenode *p=*r;
                     if (ses->mesvar[MSG_ROUTE])
                     {
                         tintin_printf(ses, "#Ok. There is no longer a route from {%s~-1~} to {%s~-1~}.",
                             ses->locations[i],
-                            ses->locations[p->dest]);
+                            ses->locations[r.dest]);
                     }
                     found=true;
-                    *r=(*r)->next;
-                    SFREE(p->path);
-                    SFREE(p->cond);
-                    TFREE(p, struct routenode);
+                    return true;
                 }
                 else
-                    r=&((*r)->next);
-            }
+                    return false;
+            });
     }
     if (found)
         kill_unused_locations(ses);
@@ -337,7 +267,7 @@ void unroute_command(const char *arg, session *ses)
 /**********************/
 void goto_command(const char *arg, session *ses)
 {
-    int n=ses->num_locations;
+    int n=ses->locations.size();
     char A[BUFFER_SIZE], B[BUFFER_SIZE], cond[BUFFER_SIZE];
     int a, b, i, j;
     num_t s, d[n];
@@ -387,17 +317,17 @@ void goto_command(const char *arg, session *ses)
             return;
         }
         ok[i]=1;
-        for (struct routenode *r=ses->routes[i];r;r=r->next)
-            if (d[r->dest]>s+r->distance)
+        for (auto&& r : ses->routes[i])
+            if (d[r.dest]>s+r.distance)
             {
-                if (!*(r->cond))
+                if (!*(r.cond))
                     goto good;
-                substitute_vars(r->cond, cond, ses);
+                substitute_vars(r.cond, cond, ses);
                 if (eval_expression(cond, ses))
                 {
                 good:
-                    d[r->dest]=s+r->distance;
-                    way[r->dest]=i;
+                    d[r.dest]=s+r.distance;
+                    way[r.dest]=i;
                 }
             }
     } while (!ok[b]);
@@ -407,9 +337,9 @@ void goto_command(const char *arg, session *ses)
     for (d[i=j]=a;i>0;i--)
     {
         locs[i]=mystrdup(ses->locations[d[i]]);
-        for (struct routenode *r=ses->routes[d[i]];r;r=r->next)
-            if (r->dest==d[i-1])
-                path[i]=mystrdup(r->path);
+        for (auto&& r : ses->routes[d[i]])
+            if (r.dest==d[i-1])
+                path[i]=mystrdup(r.path);
     }
 
     /*
@@ -440,7 +370,7 @@ void goto_command(const char *arg, session *ses)
 /************************/
 session * dogoto_command(const char *arg, session *ses)
 {
-    int n=ses->num_locations;
+    int n=ses->locations.size();
     char A[BUFFER_SIZE], B[BUFFER_SIZE],
         distvar[BUFFER_SIZE], locvar[BUFFER_SIZE], pathvar[BUFFER_SIZE];
     char tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
@@ -487,17 +417,17 @@ session * dogoto_command(const char *arg, session *ses)
         if (s==INF)
             goto not_found;
         ok[i]=1;
-        for (struct routenode *r=ses->routes[i];r;r=r->next)
-            if (d[r->dest]>s+r->distance)
+        for (auto&& r : ses->routes[i])
+            if (d[r.dest] > s+r.distance)
             {
-                if (!*(r->cond))
+                if (!*(r.cond))
                     goto good;
-                substitute_vars(r->cond, cond, ses);
+                substitute_vars(r.cond, cond, ses);
                 if (eval_expression(cond, ses))
                 {
                 good:
-                    d[r->dest]=s+r->distance;
-                    way[r->dest]=i;
+                    d[r.dest] = s + r.distance;
+                    way[r.dest] = i;
                 }
             }
     } while (!ok[b]);
@@ -521,15 +451,15 @@ session * dogoto_command(const char *arg, session *ses)
     pptr=path;
     for (i=j;i>0;i--)
     {
-        for (struct routenode *r=ses->routes[d[i]];r;r=r->next)
-            if (r->dest==d[i-1])
+        for (auto&& r : ses->routes[d[i]])
+            if (r.dest == d[i-1])
             {
                 if (flag)
                 {
                     pptr+=snprintf(pptr,
                         path-pptr+BUFFER_SIZE-1,
                         " {%s}",
-                        r->path);
+                        r.path);
                     if (pptr>=path+BUFFER_SIZE-2)
                     {
                         tintin_eprintf(ses, "#Path too long in #dogoto");
@@ -541,7 +471,7 @@ session * dogoto_command(const char *arg, session *ses)
                     tintin_printf(ses, "%-10s>%-10s {%s}",
                         ses->locations[d[i]],
                         ses->locations[d[i-1]],
-                        r->path);
+                        r.path);
                 }
             }
     }

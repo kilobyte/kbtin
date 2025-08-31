@@ -698,7 +698,6 @@ void write_command(const char *filename, session *ses)
     char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
     struct pairlist *hl;
     struct pair *end;
-    struct routenode *rptr;
 
     get_arg_in_braces(filename, buffer, 1);
     substitute_vars(buffer, buffer, ses);
@@ -790,21 +789,21 @@ void write_command(const char *filename, session *ses)
         cfcom(myfile, "pathdir", n->left, n->right, 0);
     delete[] hl;
 
-    for (int nr=0;nr<ses->num_locations;nr++)
-        if ((rptr=ses->routes[nr]))
-            do
-            {
-                num2str(num, rptr->distance);
-                cfprintf(myfile, (*(rptr->cond))
-                        ?"%croute {%s} {%s} {%s} %s {%s}\n"
-                        :"%croute {%s} {%s} {%s} %s\n",
-                        tintin_char,
-                        ses->locations[nr],
-                        ses->locations[rptr->dest],
-                        rptr->path,
-                        num,
-                        rptr->cond);
-            } while ((rptr=rptr->next));
+    int n = ses->locations.size();
+    for (int nr=0; nr<n; nr++)
+        for (auto&& r : ses->routes[nr])
+        {
+            num2str(num, r.distance);
+            cfprintf(myfile, (*(r.cond))
+                    ?"%croute {%s} {%s} {%s} %s {%s}\n"
+                    :"%croute {%s} {%s} {%s} %s\n",
+                    tintin_char,
+                    ses->locations[nr],
+                    ses->locations[r.dest],
+                    r.path,
+                    num,
+                    r.cond);
+        };
 
     hl = hash2list(ses->binds, 0);
     end = &hl->pairs[0] + hl->size;
@@ -826,21 +825,22 @@ static bool route_exists(const char *A, const char *B, const char *path, num_t d
 {
     int a, b;
 
-    for (a=0;a<ses->num_locations;a++)
+    int n = ses->locations.size();
+    for (a=0; a<n; a++)
         if (ses->locations[a]&&!strcmp(ses->locations[a], A))
             break;
-    if (a==ses->num_locations)
+    if (a == n)
         return false;
-    for (b=0;b<ses->num_locations;b++)
+    for (b=0; b<n; b++)
         if (ses->locations[b]&&!strcmp(ses->locations[b], B))
             break;
-    if (b==ses->num_locations)
+    if (b == n)
         return false;
-    for (struct routenode *rptr=ses->routes[a];rptr;rptr=rptr->next)
-        if ((rptr->dest==b)&&
-                (!strcmp(rptr->path, path))&&
-                (rptr->distance==dist)&&
-                (!strcmp(rptr->cond, cond)))
+    for (auto&& r : ses->routes[a])
+        if ((r.dest ==b )&&
+                (!strcmp(r.path, path))&&
+                (r.distance==dist)&&
+                (!strcmp(r.cond, cond)))
             return true;
     return false;
 }
@@ -867,7 +867,6 @@ void writesession_command(const char *filename, session *ses)
 {
     FILE *myfile;
     char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
-    struct routenode *rptr;
     kbtree_t(str) *sl;
 
     if (ses==nullsession)
@@ -964,29 +963,29 @@ void writesession_command(const char *filename, session *ses)
 
     ws_hash(ses->pathdirs, nullsession->pathdirs, "pathdir", myfile);
 
-    for (int nr=0;nr<ses->num_locations;nr++)
-        if ((rptr=ses->routes[nr]))
-            do
+    int n = ses->locations.size();
+    for (int nr=0 ;nr<n; nr++)
+        for (auto&& r : ses->routes[nr])
+        {
+            if (!route_exists(ses->locations[nr],
+                              ses->locations[r.dest],
+                              r.path,
+                              r.distance,
+                              r.cond,
+                              nullsession))
             {
-                if (!route_exists(ses->locations[nr],
-                                  ses->locations[rptr->dest],
-                                  rptr->path,
-                                  rptr->distance,
-                                  rptr->cond,
-                                  nullsession))
-                {
-                    num2str(num, rptr->distance);
-                    cfprintf(myfile, (*(rptr->cond))
-                            ?"%croute {%s} {%s} {%s} %s {%s}\n"
-                            :"%croute {%s} {%s} {%s} %s\n",
-                            tintin_char,
-                            ses->locations[nr],
-                            ses->locations[rptr->dest],
-                            rptr->path,
-                            num,
-                            rptr->cond);
-                }
-            } while ((rptr=rptr->next));
+                num2str(num, r.distance);
+                cfprintf(myfile, (*(r.cond))
+                        ?"%croute {%s} {%s} {%s} %s {%s}\n"
+                        :"%croute {%s} {%s} {%s} %s\n",
+                        tintin_char,
+                        ses->locations[nr],
+                        ses->locations[r.dest],
+                        r.path,
+                        num,
+                        r.cond);
+            }
+        };
 
     ws_hash(ses->binds, nullsession->binds, "bind", myfile);
 

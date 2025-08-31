@@ -290,7 +290,8 @@ void kill_all(session *ses, bool no_reinit)
     kill_hash(ses->pathdirs);
     kill_hash(ses->binds);
     kill_hash(ses->ratelimits);
-    kill_routes(ses);
+    ses->routes.clear();
+    ses->locations.clear();
     kill_events(ses);
     if (no_reinit)
         return;
@@ -371,9 +372,6 @@ void init_nullses(void)
     nullsession->debuglogname=0;
     for (int i=0;i<HISTORY_SIZE;i++)
         history[i]=0;
-    nullsession->routes=0;
-    nullsession->locations=0;
-    nullsession->num_locations=0;
     for (int i=0;i<NHOOKS;i++)
         nullsession->hooks[i]=0;
     nullsession->path_begin = 0;
@@ -502,10 +500,8 @@ static session *new_session(const char *name, const char *address, int sock, ses
     newsession->partial_line_marker = mystrdup(ses->partial_line_marker);
     for (int i=0;i<MAX_MESVAR;i++)
         newsession->mesvar[i] = ses->mesvar[i];
-    newsession->routes=0;
-    newsession->locations=0;
-    newsession->num_locations=0;
-    copyroutes(ses, newsession);
+    newsession->locations = ses->locations;
+    newsession->routes = ses->routes;
     newsession->last_line[0]=0;
     for (int i=0;i<NHOOKS;i++)
         if (ses->hooks[i])
