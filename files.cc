@@ -762,9 +762,8 @@ void write_command(const char *filename, session *ses)
         cfcom(myfile, "promptaction", n->left, n->right, n->pr);
     ENDITER
 
-    STR_ITER(ses->antisubs, s)
+    for (auto s : ses->antisubs)
         cfcom(myfile, "antisub", s, 0, 0);
-    ENDITER
 
     TRIP_ITER(ses->subs, n)
         if (strcmp(n->right, EMPTY_LINE))
@@ -867,7 +866,6 @@ void writesession_command(const char *filename, session *ses)
 {
     FILE *myfile;
     char buffer[BUFFER_SIZE*4], num[32], fname[BUFFER_SIZE], lfname[BUFFER_SIZE];
-    kbtree_t(str) *sl;
 
     if (ses==nullsession)
         return tintin_eprintf(ses, "#THIS IS THE NULL SESSION -- NO DELTA!");
@@ -936,11 +934,9 @@ void writesession_command(const char *filename, session *ses)
         cfcom(myfile, "promptaction", n->left, n->right, n->pr);
     ENDITER
 
-    sl = nullsession->antisubs;
-    STR_ITER(ses->antisubs, p)
-        if (!kb_get(str, sl, p))
+    for (auto p : ses->antisubs)
+        if (!nullsession->antisubs.count(p))
             cfcom(myfile, "antisub", p, 0, 0);
-    ENDITER
 
     TRIP_ITER(ses->subs, n)
         ptrip *m = kb_get(trip, nullsession->subs, n);

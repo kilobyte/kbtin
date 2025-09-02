@@ -30,7 +30,7 @@ option(SSL "SSL encryption via gnutls" ON)
 set(DATA_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/kbtin"
 	CACHE PATH "Directory for data (currently help file)")
 
-set(CMAKE_CXX_FLAGS "-Wall -Werror=format-security ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Wall -Werror=format-security --std=c++20 ${CMAKE_CXX_FLAGS}")
 
 set(libs m)
 
@@ -145,7 +145,6 @@ set(KBtin_sources
 	pty.cc
 	globals.cc
 	math.cc
-	slist.cc
 	lists.cc
 	vars.cc
 	tlist.cc

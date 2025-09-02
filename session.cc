@@ -19,7 +19,6 @@
 #include "protos/parse.h"
 #include "protos/routes.h"
 #include "protos/run.h"
-#include "protos/slist.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
@@ -284,7 +283,9 @@ void kill_all(session *ses, bool no_reinit)
     kill_hash(ses->myvars);
     kill_tlist(ses->highs);
     kill_tlist(ses->subs);
-    kill_slist(ses->antisubs);
+    for (auto s : ses->antisubs)
+        SFREE(s);
+    ses->antisubs.clear();
     for (int i=0; i<MAX_PATH_LENGTH; i++)
         free((char*)ses->path[i].left), free((char*)ses->path[i].right);
     kill_hash(ses->pathdirs);
@@ -302,7 +303,6 @@ void kill_all(session *ses, bool no_reinit)
     ses->myvars = init_hash();
     ses->highs = init_tlist();
     ses->subs = init_tlist();
-    ses->antisubs = init_slist();
     ses->binds = init_hash();
     ses->ratelimits = init_hash();
     ses->path_begin = ses->path_length = 0;
@@ -362,7 +362,6 @@ void init_nullses(void)
     nullsession->last_term_type=0;
     nullsession->server_echo = 0;
     nullsession->nagle = false;
-    nullsession->antisubs = init_slist();
     nullsession->binds = init_hash();
     nullsession->ratelimits = init_hash();
     nullsession->next = 0;
@@ -459,7 +458,8 @@ static session *new_session(const char *name, const char *address, int sock, ses
     newsession->highs = copy_tlist(ses->highs);
     newsession->pathdirs = copy_hash(ses->pathdirs);
     newsession->socket = sock;
-    newsession->antisubs = copy_slist(ses->antisubs);
+    for (auto s : ses->antisubs)
+        newsession->antisubs.emplace(mystrdup(s));
     newsession->binds = copy_hash(ses->binds);
     newsession->ratelimits = init_hash(); // these are volatile
     newsession->sestype = sestype;

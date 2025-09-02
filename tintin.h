@@ -240,6 +240,7 @@ void cfmakeraw(struct termios *ta)
 #endif
 #include <vector>
 #include <list> // TODO: use a hive if available
+#include <set>
 #include "malloc.h"
 #include "unicode.h"
 #include "kbtree.h"
@@ -264,6 +265,14 @@ KBTREE_HEADER(trip, ptrip, tripcmp)
 #define ENDITER }}
 
 /************************ structures *********************/
+struct Cstrcmp
+{
+    bool operator() (const char* s1, const char* s2) const
+    {
+        return strcmp(s1, s2) < 0;
+    }
+};
+
 struct trip
 {
     char *left, *right, *pr;
@@ -349,7 +358,7 @@ struct session
     logtype_t logtype;
     bool ignore;
     kbtree_t(trip) *subs, *actions, *prompts, *highs;
-    kbtree_t(str) *antisubs;
+    std::set<char*, Cstrcmp> antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds, *ratelimits;
     struct pair path[MAX_PATH_LENGTH];
     std::vector<std::list<routenode> > routes;

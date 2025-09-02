@@ -77,7 +77,7 @@ static void parse_sub(const char *left_, const char *right,  bool gag, session *
         kb_del(trip, sub, nt);
         free(d->left);
         free(d->right);
-        free(d);
+        delete d;
     }
     kb_put(trip, sub, nt);
     subnum++;

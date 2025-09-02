@@ -10,9 +10,9 @@
 #include "protos/globals.h"
 #include "protos/print.h"
 #include "protos/parse.h"
-#include "protos/slist.h"
 #include "protos/utils.h"
 #include "protos/vars.h"
+
 
 /*******************************/
 /* the #antisubstitute command */
@@ -20,7 +20,6 @@
 void antisubstitute_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], tmp[BUFFER_SIZE];
-    kbtree_t(str) *ass = ses->antisubs;
 
     arg = get_arg_in_braces(arg, tmp, 1);
     substitute_myvars(tmp, left, ses, 0);
@@ -28,12 +27,13 @@ void antisubstitute_command(const char *arg, session *ses)
     if (!*left)
     {
         tintin_printf(ses, "#THESE ANTISUBSTITUTES HAVE BEEN DEFINED:");
-        show_slist(ass);
+        for (auto p : ses->antisubs)
+            tintin_printf(0, "~7~{%s~7~}", p);
     }
     else
     {
-        if (!kb_get(str, ass, left))
-            kb_put(str, ass, mystrdup(left));
+        if (!ses->antisubs.count(left))
+            ses->antisubs.insert(mystrdup(left));
         antisubnum++;
         if (ses->mesvar[MSG_SUBSTITUTE])
             tintin_printf(ses, "Ok. Any line with {%s} will not be subbed.", left);
@@ -48,42 +48,32 @@ void unantisubstitute_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
     bool had_any = false;
-    kbtree_t(str) *ass = ses->antisubs;
 
     get_arg_in_braces(arg, left, 1);
 
     if (strchr(left, '*')) /* wildcard deletion -- have to check all */
     {
-        auto todel = new char*[kb_size(ass)];
-        char **last = todel;
-
-        STR_ITER(ass, p)
-            if (match(left, p))
-                *last++ = (char*)p;
-        ENDITER
-
-        if (last!=todel)
+        std::erase_if(ses->antisubs, [&](char* p)
         {
+            if (!match(left, p))
+                return false;
             had_any = true;
-            for (char **del = todel; del != last; del++)
-            {
-                if (ses->mesvar[MSG_SUBSTITUTE])
-                    tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", *del);
-                kb_del(str, ass, *del);
-                free(*del);
-            }
-        }
-        delete[] todel;
+            if (ses->mesvar[MSG_SUBSTITUTE])
+                tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", p);
+            SFREE(p);
+            return true;
+        });
     }
     else /* single item deletion */
     {
-        char **str = kb_get(str, ass, left);
-        if ((had_any = !!str))
+        std::set<char*>::iterator str = ses->antisubs.find(left);
+        if (str != ses->antisubs.end())
         {
+            had_any = true;
             if (ses->mesvar[MSG_SUBSTITUTE])
                 tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", left);
-            kb_del(str, ass, left);
-            free(*str);
+            SFREE(*str);
+            ses->antisubs.erase(str);
         }
     }
 
@@ -103,19 +93,18 @@ static void build_antisubs_hs(session *ses)
     ses->antisubs_hs=0;
     ses->antisubs_dirty=false;
 
-    int n = kb_size(ses->antisubs);
+    int n = ses->antisubs.size();
     auto pat = new const char *[n];
     auto flags = new unsigned int[n];
     if (!pat || !flags)
         die("out of memory");
 
     int j=0;
+    for (auto p : ses->antisubs)
     {
-        STR_ITER(ses->antisubs, p)
-            pat[j]=action_to_regex(p);
-            flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH;
-            j++;
-        ENDITER
+        pat[j]=action_to_regex(p);
+        flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH;
+        j++;
     }
 
     hs_compile_error_t *error;
@@ -150,7 +139,7 @@ static int anti_match(unsigned int id, unsigned long long from,
 bool do_one_antisub(const char *line, session *ses)
 {
 #ifdef HAVE_SIMD
-    if (!kb_size(ses->antisubs))
+    if (ses->antisubs.empty())
         return false;
 
     if (simd && ses->antisubs_dirty)
@@ -169,9 +158,8 @@ bool do_one_antisub(const char *line, session *ses)
 #endif
 
     pvars_t vars;
-    STR_ITER(ses->antisubs, p)
+    for (auto p : ses->antisubs)
         if (check_one_action(line, p, &vars, false))
             return true;
-    ENDITER
     return false;
 }

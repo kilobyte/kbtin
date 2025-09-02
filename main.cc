@@ -23,7 +23,6 @@
 #include "protos/net.h"
 #include "protos/parse.h"
 #include "protos/session.h"
-#include "protos/slist.h"
 #include "protos/substitute.h"
 #include "protos/ticks.h"
 #include "protos/unicode.h"

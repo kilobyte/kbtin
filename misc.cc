@@ -25,7 +25,6 @@
 #include "protos/routes.h"
 #include "protos/run.h"
 #include "protos/session.h"
-#include "protos/slist.h"
 #include "protos/substitute.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
@@ -1047,7 +1046,7 @@ void info_command(const char *arg, session *ses)
     int practions = count_tlist(ses->prompts);
     int aliases   = ses->aliases->nval;
     int subs      = count_tlist(ses->subs);
-    int antisubs  = count_slist(ses->antisubs);
+    int antisubs  = ses->antisubs.size();
     int vars      = ses->myvars->nval;
     int highs     = count_tlist(ses->highs);
     int binds     = ses->binds->nval;
