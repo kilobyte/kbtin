@@ -331,10 +331,12 @@ static void do_all_sub_simd(char *line, session *ses)
     if (!ses->subs_hs) // compilation error
         return do_all_sub_serially(line, ses);
 
-    int len = strlen(line);
-    for (int i=0; i<len; i++)
+    unsigned len = strlen(line);
+    assert(len < ARRAYSZ(longest_len));
+    static_assert(ARRAYSZ(longest_len) == ARRAYSZ(longest_id));
+    for (unsigned i=0; i<len; i++)
         longest_len[i]=0;
-    for (int i=0; i<len; i++)
+    for (unsigned i=0; i<len; i++)
         longest_id[i]=0;
 
     hs_error_t err=hs_scan(ses->subs_hs, line, len, 0, hs_scratch,
@@ -349,7 +351,7 @@ static void do_all_sub_simd(char *line, session *ses)
     static uintptr_t marker;
     marker++;
 
-    for (int i=0; i<len; i++)
+    for (unsigned i=0; i<len; i++)
     {
         if (!longest_len[i])
             continue;
