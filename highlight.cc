@@ -202,8 +202,7 @@ void highlight_command(const char *arg, session *ses)
 #ifdef HAVE_SIMD
     ses->highs_dirty = true;
 #endif
-    if (ses->mesvar[MSG_HIGHLIGHT])
-        tintin_printf(ses, "#Ok. {%s} is now highlighted %s.", right, left);
+    tintin_printf(MSG_HIGHLIGHT, ses, "#Ok. {%s} is now highlighted %s.", right, left);
 }
 
 /*****************************/
@@ -225,8 +224,8 @@ void unhighlight_command(const char *arg, session *ses)
         ses->highs_dirty = true;
 #endif
     }
-    else if (ses->mesvar[MSG_ACTION])
-        tintin_printf(ses, "#THAT HIGHLIGHT IS NOT DEFINED.");
+    else
+        tintin_printf(MSG_ACTION, ses, "#THAT HIGHLIGHT IS NOT DEFINED.");
 }
 
 

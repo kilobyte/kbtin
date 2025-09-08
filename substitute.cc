@@ -77,13 +77,11 @@ static void parse_sub(const char *left_, const char *right,  bool gag, session *
 #ifdef HAVE_SIMD
     ses->subs_dirty=true;
 #endif
-    if (ses->mesvar[MSG_SUBSTITUTE])
-    {
-        if (strcmp(right, EMPTY_LINE))
-            tintin_printf(ses, "#Ok. {%s} now replaces {%s}.", right, left);
-        else
-            tintin_printf(ses, "#Ok. {%s} is now gagged.", left);
-    }
+
+    if (gag)
+        tintin_printf(MSG_SUBSTITUTE, ses, "#Ok. {%s} now replaces {%s}.", right, left);
+    else
+        tintin_printf(MSG_SUBSTITUTE, ses, "#Ok. {%s} is now gagged.", left);
 }
 
 void substitute_command(const char *arg, session *ses)
@@ -146,10 +144,7 @@ static void unsub(const char *arg, bool gag, session *ses)
         "#Ok. {%s} is no longer substituted." : 0;
 
     if (!delete_subs(left, msg, gag, ses))
-    {
-        if (ses->mesvar[MSG_SUBSTITUTE])
-            tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
-    }
+        tintin_printf(MSG_SUBSTITUTE, ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
 
 #ifdef HAVE_SIMD
     ses->subs_dirty=true;

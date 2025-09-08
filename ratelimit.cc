@@ -78,8 +78,7 @@ session *ratelimit_command(const char *arg, session *ses)
         sprintf(right, "%" PRId64" %" PRId64" %" PRId64, tip, limit, period);
         set_hash(ses->ratelimits, left, right);
 
-        if (ses->mesvar[MSG_RATELIMIT])
-            tintin_printf(ses, "#Defined a ratelimit for %s", left);
+        tintin_printf(MSG_RATELIMIT, ses, "#Defined a ratelimit for %s", left);
         return ses;
     }
 
@@ -96,13 +95,10 @@ session *ratelimit_command(const char *arg, session *ses)
         return parse_input(command, true, ses);
     }
 
-    if (ses->mesvar[MSG_RATELIMIT])
-    {
-        if (cost)
-            tintin_printf(ses, "#Ratelimit for {%s} exceeded", left);
-        else
-            tintin_printf(ses, "#Ratelimit for {%s} allows nothing", left);
-    }
+    if (cost)
+        tintin_printf(MSG_RATELIMIT, ses, "#Ratelimit for {%s} exceeded", left);
+    else
+        tintin_printf(MSG_RATELIMIT, ses, "#Ratelimit for {%s} allows nothing", left);
 
     return ifelse("ratelimit", arg, ses);
 }

@@ -306,9 +306,8 @@ void loginputformat_command(const char *arg, session *ses)
     arg=get_arg(arg, text, 1, ses);
     SFREE(ses->loginputsuffix);
     ses->loginputsuffix = mystrdup(text);
-    if (ses->mesvar[MSG_LOG])
-        tintin_printf(ses, "#OK. INPUT LOG FORMAT NOW: %s%%0%s",
-            ses->loginputprefix, ses->loginputsuffix);
+    tintin_printf(MSG_LOG, ses, "#OK. INPUT LOG FORMAT NOW: %s%%0%s",
+        ses->loginputprefix, ses->loginputsuffix);
 }
 
 static bool lock_file(int fd, session *ses, const char *fname)
@@ -336,10 +335,7 @@ static FILE* open_logfile(session *ses, const char *name, const char *filemsg, c
             return 0;
         }
         if ((f=mypopen(name, true, -1)))
-        {
-            if (ses->mesvar[MSG_LOG])
-                tintin_printf(ses, pipemsg, name);
-        }
+            tintin_printf(MSG_LOG, ses, pipemsg, name);
         else
             tintin_eprintf(ses, "#ERROR: COULDN'T OPEN PIPE: {%s}.", name);
         return f;
@@ -353,8 +349,7 @@ static FILE* open_logfile(session *ses, const char *name, const char *filemsg, c
             {
                 if (lock_file(fileno(f), ses, fname))
                     return fclose(f), nullptr;
-                if (ses->mesvar[MSG_LOG])
-                    tintin_printf(ses, appendmsg, fname);
+                tintin_printf(MSG_LOG, ses, appendmsg, fname);
             }
             else
                 tintin_eprintf(ses, "ERROR: COULDN'T APPEND TO FILE: {%s}.", fname);
@@ -365,8 +360,7 @@ static FILE* open_logfile(session *ses, const char *name, const char *filemsg, c
         {
             if (lock_file(fileno(f), ses, fname))
                 return fclose(f), nullptr;
-            if (ses->mesvar[MSG_LOG])
-                tintin_printf(ses, filemsg, fname);
+            tintin_printf(MSG_LOG, ses, filemsg, fname);
         }
         else
             tintin_eprintf(ses, "ERROR: COULDN'T OPEN FILE: {%s}.", fname);
@@ -399,10 +393,7 @@ static FILE* open_logfile(session *ses, const char *name, const char *filemsg, c
             return close(fd), nullptr;
 
         if ((f = mypopen(zip, true, fd)))
-        {
-            if (ses->mesvar[MSG_LOG])
-                tintin_printf(ses, filemsg, fname);
-        }
+            tintin_printf(MSG_LOG, ses, filemsg, fname);
         else
             tintin_eprintf(ses, "#ERROR: COULDN'T OPEN PIPE {%s >%s}.", zip, fname);
     }
@@ -410,8 +401,7 @@ static FILE* open_logfile(session *ses, const char *name, const char *filemsg, c
         {
             if (lock_file(fileno(f), ses, fname))
                 return fclose(f), nullptr;
-            if (ses->mesvar[MSG_LOG])
-                tintin_printf(ses, filemsg, fname);
+            tintin_printf(MSG_LOG, ses, filemsg, fname);
         }
         else
             tintin_eprintf(ses, "#ERROR: COULDN'T OPEN FILE {%s}.", fname);
@@ -460,8 +450,7 @@ void log_command(const char *arg, session *ses)
         if (ses->logfile)
         {
             log_off(ses);
-            if (ses->mesvar[MSG_LOG])
-                tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
+            tintin_printf(MSG_LOG, ses, "#OK. LOGGING TURNED OFF.");
         }
 
         if (ses->logfile)
@@ -483,11 +472,10 @@ void log_command(const char *arg, session *ses)
     else if (ses->logfile)
     {
         log_off(ses);
-        if (ses->mesvar[MSG_LOG])
-            tintin_printf(ses, "#OK. LOGGING TURNED OFF.");
+        tintin_printf(MSG_LOG, ses, "#OK. LOGGING TURNED OFF.");
     }
-    else if (ses->mesvar[MSG_LOG])
-        tintin_printf(ses, "#LOGGING ALREADY OFF.");
+    else
+        tintin_printf(MSG_LOG, ses, "#LOGGING ALREADY OFF.");
 }
 
 /*************************/
@@ -500,8 +488,7 @@ void debuglog_command(const char *arg, session *ses)
         if (ses->debuglogfile)
         {
             fclose(ses->debuglogfile);
-            if (ses->mesvar[MSG_LOG])
-                tintin_printf(ses, "#OK. DEBUGLOG TURNED OFF.");
+            tintin_printf(MSG_LOG, ses, "#OK. DEBUGLOG TURNED OFF.");
             ses->debuglogfile = NULL;
             SFREE(ses->debuglogname);
             ses->debuglogname = NULL;
@@ -522,8 +509,7 @@ void debuglog_command(const char *arg, session *ses)
         ses->debuglogfile = NULL;
         SFREE(ses->debuglogname);
         ses->debuglogname = NULL;
-        if (ses->mesvar[MSG_LOG])
-            tintin_printf(ses, "#OK. DEBUGLOG TURNED OFF.");
+        tintin_printf(MSG_LOG, ses, "#OK. DEBUGLOG TURNED OFF.");
     }
     else
         tintin_printf(ses, "#DEBUGLOG ALREADY OFF.");
@@ -1070,8 +1056,7 @@ void logtype_command(const char *arg, session *ses)
         if (is_abrev(left, logtypes[t]))
         {
             ses->logtype = static_cast<logtype_t>(t);
-            if (ses->mesvar[MSG_LOG])
-                tintin_printf(ses, "#Ok, log type is now %s.", logtypes[t]);
+            tintin_printf(MSG_LOG, ses, "#Ok, log type is now %s.", logtypes[t]);
             return;
         }
     tintin_eprintf(ses, "#No such logtype: {%s}", left);
@@ -1106,6 +1091,5 @@ void logcharset_command(const char *arg, session *ses)
     }
     else
         cleanup_conv(&nc);
-    if (ses->mesvar[MSG_LOG])
-        tintin_printf(ses, "#Log charset set to %s", logcs_name(cset));
+    tintin_printf(MSG_LOG, ses, "#Log charset set to %s", logcs_name(cset));
 }

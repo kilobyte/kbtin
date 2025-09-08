@@ -241,12 +241,10 @@ void unroute_command(const char *arg, session *ses)
                 if (*b ? match(b, ses->locations[r.dest])
                        : is_a || match(a, ses->locations[r.dest]))
                 {
-                    if (ses->mesvar[MSG_ROUTE])
-                    {
-                        tintin_printf(ses, "#Ok. There is no longer a route from {%s~-1~} to {%s~-1~}.",
-                            ses->locations[i],
-                            ses->locations[r.dest]);
-                    }
+                    tintin_printf(MSG_ROUTE, ses,
+                        "#Ok. There is no longer a route from {%s~-1~} to {%s~-1~}.",
+                        ses->locations[i],
+                        ses->locations[r.dest]);
                     found=true;
                     return true;
                 }
@@ -256,8 +254,8 @@ void unroute_command(const char *arg, session *ses)
     }
     if (found)
         kill_unused_locations(ses);
-    else if (ses->mesvar[MSG_ROUTE])
-        tintin_printf(ses, "#THAT ROUTE (%s) IS NOT DEFINED.", b);
+    else
+        tintin_printf(MSG_ROUTE, ses, "#THAT ROUTE (%s) IS NOT DEFINED.", b);
 }
 
 #define INF 0x7FFFFFFFffffffffLL
@@ -353,12 +351,7 @@ void goto_command(const char *arg, session *ses)
     locs[0]=mystrdup(ses->locations[b]);
     for (i=j;i>0;i--)
     {
-        if (ses->mesvar[MSG_GOTO])
-        {
-            tintin_printf(ses, "#going from %s to %s",
-                locs[i],
-                locs[i-1]);
-        }
+        tintin_printf(MSG_GOTO, ses, "#going from %s to %s", locs[i], locs[i-1]);
         parse_input(path[i], true, ses);
     }
     for (i=j;i>=0;i--)

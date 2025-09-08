@@ -65,6 +65,28 @@ void tintin_printf(session *ses, const char *format, ...)
     user_textout(buf);
 }
 
+void tintin_printf(msg_t msgt, session *ses, const char *format, ...)
+{
+    va_list ap;
+    char buf[BUFFER_SIZE];
+
+    if (!ses->mesvar[msgt])
+        return;
+    if ((ses != activesession && ses != nullsession && ses) || !puts_echoing)
+        return;
+
+    va_start(ap, format);
+    int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
+    if (n>BUFFER_SIZE-2)
+    {
+        buf[BUFFER_SIZE-3]='>';
+        n=BUFFER_SIZE-2;
+    }
+    va_end(ap);
+    strcpy(buf+n, "\n");
+    user_textout(buf);
+}
+
 void tintin_eprintf(session *ses, const char *format, ...)
 {
     va_list ap;

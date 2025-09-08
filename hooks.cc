@@ -55,8 +55,7 @@ void hooks_command(const char *arg, session *ses)
         {
             SFREE(ses->hooks[t]);
             ses->hooks[t]=mystrdup(right);
-            if (ses->mesvar[MSG_HOOK])
-                tintin_printf(ses, "#Ok, will do {%s} on %s.", right, hook_names[t]);
+            tintin_printf(MSG_HOOK, ses, "#Ok, will do {%s} on %s.", right, hook_names[t]);
             magic_close_hook=false;
             hooknum++;
             return;
@@ -89,8 +88,7 @@ void unhook_command(const char *arg, session *ses)
     for (int t=0;t<NHOOKS;t++)
         if (is_abrev(left, hook_names[t]))
         {
-            if (ses->mesvar[MSG_HOOK])
-                tintin_printf(ses, ses->hooks[t]?"#Removing hook on {%s}":
+            tintin_printf(MSG_HOOK, ses, ses->hooks[t]?"#Removing hook on {%s}":
                     "#There was no hook on {%s} anyway", hook_names[t]);
             SFREE(ses->hooks[t]);
             ses->hooks[t]=0;

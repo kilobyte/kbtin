@@ -35,8 +35,7 @@ void antisubstitute_command(const char *arg, session *ses)
         if (!ses->antisubs.count(left))
             ses->antisubs.insert(mystrdup(left));
         antisubnum++;
-        if (ses->mesvar[MSG_SUBSTITUTE])
-            tintin_printf(ses, "Ok. Any line with {%s} will not be subbed.", left);
+        tintin_printf(MSG_SUBSTITUTE, ses, "Ok. Any line with {%s} will not be subbed.", left);
 #ifdef HAVE_SIMD
         ses->antisubs_dirty=true;
 #endif
@@ -58,8 +57,7 @@ void unantisubstitute_command(const char *arg, session *ses)
             if (!match(left, p))
                 return false;
             had_any = true;
-            if (ses->mesvar[MSG_SUBSTITUTE])
-                tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", p);
+            tintin_printf(MSG_SUBSTITUTE, ses, "#Ok. Lines with {%s} will now be subbed.", p);
             SFREE(p);
             return true;
         });
@@ -70,8 +68,7 @@ void unantisubstitute_command(const char *arg, session *ses)
         if (str != ses->antisubs.end())
         {
             had_any = true;
-            if (ses->mesvar[MSG_SUBSTITUTE])
-                tintin_printf(ses, "#Ok. Lines with {%s} will now be subbed.", left);
+            tintin_printf(MSG_SUBSTITUTE, ses, "#Ok. Lines with {%s} will now be subbed.", left);
             SFREE(*str);
             ses->antisubs.erase(str);
         }
@@ -81,8 +78,8 @@ void unantisubstitute_command(const char *arg, session *ses)
     if (had_any)
         ses->antisubs_dirty=true;
 #endif
-    if (!had_any && ses->mesvar[MSG_SUBSTITUTE])
-        tintin_printf(ses, "#THAT ANTISUBSTITUTE (%s) IS NOT DEFINED.", left);
+    if (!had_any)
+        tintin_printf(MSG_SUBSTITUTE, ses, "#THAT ANTISUBSTITUTE (%s) IS NOT DEFINED.", left);
 }
 
 

@@ -25,8 +25,7 @@ static bool return_flag = true;
 void mark_command(const char *arg, session *ses)
 {
     ses->path_length = 0;
-    if (ses->mesvar[MSG_PATH])
-        tintin_printf(ses, "#Beginning of path marked.");
+    tintin_printf(MSG_PATH, ses, "#Beginning of path marked.");
 }
 
 void map_command(const char *arg, session *ses)
@@ -167,8 +166,7 @@ void unmap_command(const char *arg, session *ses)
         return tintin_eprintf(ses, "#No move to forget!");
 
     ses->path_length--;
-    if (ses->mesvar[MSG_PATH])
-        tintin_eprintf(ses, "#Ok.  Forgot that move.");
+    tintin_printf(MSG_PATH, ses, "#Ok.  Forgot that move.");
 }
 
 void check_insert_path(const char *command, session *ses)
@@ -200,9 +198,8 @@ void pathdir_command(const char *arg, session *ses)
     if (*left && *right)
     {
         set_hash(ses->pathdirs, left, right);
-        if (ses->mesvar[MSG_PATH])
-            tintin_printf(ses, "#Ok.  {%s} is marked in #path. {%s} is its #return.",
-                    left, right);
+        tintin_printf(MSG_PATH, ses, "#Ok.  {%s} is marked in #path. {%s} is its #return.",
+            left, right);
         pdnum++;
         return;
     }

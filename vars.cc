@@ -177,8 +177,7 @@ void set_variable(const char *left, const char *right, session *ses)
 {
     set_hash(ses->myvars, left, right);
     varnum++;       /* we don't care for exactness of this */
-    if (ses->mesvar[MSG_VARIABLE])
-        tintin_printf(ses, "#Ok. $%s is now set to {%s}.", left, right);
+    tintin_printf(MSG_VARIABLE, ses, "#Ok. $%s is now set to {%s}.", left, right);
 }
 
 static int builtin_var(const char *varname, char *value, session *ses)

@@ -54,8 +54,8 @@ static void schedule_event(session *ses, struct eventnode *restrict ev1)
 
 static void execute_event(struct eventnode *ev, session *ses)
 {
-    if (activesession==ses && ses->mesvar[MSG_EVENT])
-        tintin_printf(ses, "[EVENT: %s]", ev->event);
+    if (activesession==ses)
+        tintin_printf(MSG_EVENT, ses, "[EVENT: %s]", ev->event);
     parse_input(ev->event, true, ses);
     recursion=0;
 }
@@ -215,8 +215,8 @@ void undelay_command(const char *arg, session *ses)
          && (!*label || (((label2=(*ev)->label)) && match(label, label2))))
         {
             flag=true;
-            if (ses==activesession && ses->mesvar[MSG_EVENT])
-                tintin_printf(ses, "#Ok. Event {%s} at %lld.%03d won't be executed.",
+            if (ses==activesession)
+                tintin_printf(MSG_EVENT, ses, "#Ok. Event {%s} at %lld.%03d won't be executed.",
                     (*ev)->event, ((*ev)->time-ct)/NANO, msec((*ev)->time-ct));
             remove_event(ev);
         }

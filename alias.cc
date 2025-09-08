@@ -85,11 +85,10 @@ void alias_command(const char *arg, session *ses)
             if (ch==left)
                 return;
             *ch=0;
-            tintin_printf(ses, "#Converted offending alias to {%s}.", left);
+            tintin_eprintf(ses, "#Converted offending alias to {%s}.", left);
         }
         set_hash(ses->aliases, left, right);
-        if (ses->mesvar[MSG_ALIAS])
-            tintin_printf(ses, "#Ok. {%s} aliases {%s}.", left, right);
+        tintin_printf(MSG_ALIAS, ses, "#Ok. {%s} aliases {%s}.", left, right);
         alnum++;
         return;
     }

@@ -64,8 +64,8 @@ static void parse_action(const char *arg, session *ses, kbtree_t(trip) *l, const
     }
     else if (*left && !*right)
     {
-        if (!show_tlist(l, left, 0, false, ses) && ses->mesvar[MSG_ACTION])
-            tintin_printf(ses, "#That %s (%s) is not defined.", what, left);
+        if (!show_tlist(l, left, 0, false, ses))
+            tintin_printf(MSG_ACTION, ses, "#That %s (%s) is not defined.", what, left);
     }
     else
     {
@@ -87,8 +87,7 @@ static void parse_action(const char *arg, session *ses, kbtree_t(trip) *l, const
         nact->right = mystrdup(right);
         nact->pr = mystrdup(pr);
         kb_put(trip, l, nact);
-        if (ses->mesvar[MSG_ACTION])
-            tintin_printf(ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
+        tintin_printf(MSG_ACTION, ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
         acnum++;
         mutatedActions = true;
 #ifdef HAVE_SIMD
@@ -124,10 +123,9 @@ void unaction_command(const char *arg, session *ses)
 
     if (!delete_tlist(ses->actions, left, ses->mesvar[MSG_ACTION]?
             "#Ok. {%s} is no longer an action." : 0,
-            inActions? save_action : 0, false, ses)
-        && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
-    {
-        tintin_printf(ses, "#No match(es) found for {%s}", left);
+            inActions? save_action : 0, false, ses))
+    {	/* is it an error or not? */
+        tintin_printf(MSG_ACTION, ses, "#No match(es) found for {%s}", left);
     }
 
     mutatedActions = true;
@@ -149,10 +147,9 @@ void unpromptaction_command(const char *arg, session *ses)
 
     if (!delete_tlist(ses->prompts, left, ses->mesvar[MSG_ACTION]?
             "#Ok. {%s} is no longer a promptaction." : 0,
-            inActions? save_action : 0, false, ses)
-        && ses->mesvar[MSG_ACTION])    /* is it an error or not? */
+            inActions? save_action : 0, false, ses))
     {
-        tintin_printf(ses, "#No match(es) found for {%s}", left);
+        tintin_printf(MSG_ACTION, ses, "#No match(es) found for {%s}", left);
     }
 
     mutatedActions = true;

@@ -32,8 +32,7 @@ void tick_command(const char *arg, session *ses)
 void tickoff_command(const char *arg, session *ses)
 {
     ses->tickstatus = false;
-    if (ses->mesvar[MSG_TICK])
-        tintin_printf(ses, "#TICKER IS NOW OFF.");
+    tintin_printf(MSG_TICK, ses, "#TICKER IS NOW OFF.");
 }
 
 /***********************/
@@ -60,20 +59,18 @@ void tickon_command(const char *arg, session *ses)
     else if (!ses->time0)
         ses->time0 = ct;
 
-    if (ses->mesvar[MSG_TICK])
-    {
-        if (!ses->tickstatus)
-            tintin_printf(ses, "#TICKER IS NOW ON.");
-        else if (!*left)
-            tintin_printf(ses, "#TICKER IS ALREADY ON.");
-    }
+    if (!ses->tickstatus)
+        tintin_printf(MSG_TICK, ses, "#TICKER IS NOW ON.");
+    else if (!*left)
+        tintin_printf(MSG_TICK, ses, "#TICKER IS ALREADY ON.");
+
     ses->tickstatus = true;
     if (ses->time0 + ses->tick_size - ses->pretick <= ct)
         ses->time10 = ses->time0;
-    if (*left && ses->mesvar[MSG_TICK])
+    if (*left)
     {
         nsecstr(left, x);
-        tintin_eprintf(ses, "#TICKER SET TO %s", left);
+        tintin_printf(MSG_TICK, ses, "#TICKER SET TO %s", left);
     }
 }
 
@@ -95,8 +92,7 @@ void ticksize_command(const char *arg, session *ses)
     ses->time0 = current_time();
     ses->time10 = 0;
     usecstr(left, x);
-    if (ses->mesvar[MSG_TICK])
-        tintin_printf(ses, "#OK. TICKSIZE SET TO %s", left);
+    tintin_printf(MSG_TICK, ses, "#OK. TICKSIZE SET TO %s", left);
 }
 
 
@@ -131,14 +127,13 @@ void pretick_command(const char *arg, session *ses)
         ses->time10 = ses->time0;
     else
         ses->time10 = 0;
-    if (!ses->mesvar[MSG_TICK])
-        return;
+
     if (!x)
-        tintin_printf(ses, "#OK. PRETICK TURNED OFF");
+        tintin_printf(MSG_TICK, ses, "#OK. PRETICK TURNED OFF");
     else
     {
         usecstr(left, x);
-        tintin_printf(ses, "#OK. PRETICK SET TO %s", left);
+        tintin_printf(MSG_TICK, ses, "#OK. PRETICK SET TO %s", left);
     }
 }
 

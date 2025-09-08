@@ -157,7 +157,7 @@
 #define CFL_UNDERLINE (C_UNDERLINE<<CFL_AT)
 #define CFL_STRIKETHRU (C_STRIKETHRU<<CFL_AT)
 
-enum
+enum msg_t
 {
     MSG_ALIAS,
     MSG_ACTION,

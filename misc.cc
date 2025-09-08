@@ -802,8 +802,7 @@ void system_command(const char *arg, session *ses)
     }
     ses->lastintitle=save_lastintitle;
     fclose(output);
-    if (ses->mesvar[MSG_SYSTEM])
-        tintin_printf(ses, "#OK COMMAND EXECUTED.");
+    tintin_printf(MSG_SYSTEM, ses, "#OK COMMAND EXECUTED.");
 }
 
 /**********************/
