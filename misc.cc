@@ -1045,7 +1045,7 @@ void info_command(const char *arg, session *ses)
     int actions   = count_tlist(ses->actions);
     int practions = count_tlist(ses->prompts);
     int aliases   = ses->aliases->nval;
-    int subs      = count_tlist(ses->subs);
+    int subs      = ses->subs.size();
     int antisubs  = ses->antisubs.size();
     int vars      = ses->myvars->nval;
     int highs     = count_tlist(ses->highs);

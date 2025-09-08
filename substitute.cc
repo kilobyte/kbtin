@@ -12,7 +12,6 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/string.h"
-#include "protos/tlist.h"
 #include "protos/utils.h"
 #include "protos/vars.h"
 
@@ -22,32 +21,32 @@
 /***************************/
 static void list_subs(const char *left, bool gag, session *ses)
 {
-    bool flag = false;
-    kbtree_t(trip) *sub = ses->subs;
+    bool any = false;
 
-    TRIP_ITER(sub, mysubs)
-        if (!match(left, mysubs->left))
+    for (auto& s : ses->subs)
+    {
+        if (!match(left, s.first))
             continue;
         if (gag)
         {
-            if (!strcmp(mysubs->right, EMPTY_LINE))
+            if (!strcmp(s.second, EMPTY_LINE))
             {
-                if (!flag)
+                if (!any)
                     tintin_printf(ses, "#THESE GAGS HAVE BEEN DEFINED:");
-                tintin_printf(ses, "{%s~7~}", mysubs->left);
-                flag=true;
+                tintin_printf(ses, "{%s~7~}", s.first);
+                any=true;
             }
         }
         else
         {
-            if (!flag)
+            if (!any)
                 tintin_printf(ses, "#THESE SUBSTITUTES HAVE BEEN DEFINED:");
-            flag=true;
-            show_trip(mysubs, ses);
+            any=true;
+            tintin_printf(ses, "~7~{%s~7~}={%s~7~}", s.first, s.second);
         }
-    ENDITER
+    }
 
-    if (flag)
+    if (any)
         return;
 
     if (strcmp(left, "*"))
@@ -64,22 +63,16 @@ static void parse_sub(const char *left_, const char *right,  bool gag, session *
     if (!*right)
         return list_subs(*left? left : "*", gag, ses);
 
-    kbtree_t(trip) *sub = ses->subs;
-
-    ptrip nt = new trip;
-    nt->left = mystrdup(left_);
-    nt->right = mystrdup(right);
-    nt->pr = 0;
-    ptrip *t = kb_get(trip, sub, nt);
-    if (t)
+    char *a = mystrdup(left);
+    char *b = mystrdup(right);
+    auto res = ses->subs.try_emplace(a, b);
+    if (!res.second)
     {
-        ptrip d = *t;
-        kb_del(trip, sub, nt);
-        free(d->left);
-        free(d->right);
-        delete d;
+        const auto& old = &*res.first;
+        SFREE(a);
+        SFREE(const_cast<char*>(old->second));
+        old->second = b;
     }
-    kb_put(trip, sub, nt);
     subnum++;
 #ifdef HAVE_SIMD
     ses->subs_dirty=true;
@@ -115,28 +108,47 @@ void gag_command(const char *arg, session *ses)
 /*****************************/
 /* the #unsubstitute command */
 /*****************************/
-static bool is_not_gag(char **right)
+static bool delete_subs(const char *pat, const char *msg, bool gag, session *ses)
 {
-    return strcmp(*right, EMPTY_LINE);
-}
+    if (is_literal(pat))
+    {
+        const auto& d = ses->subs.find(pat);
+        if (d == ses->subs.cend())
+            return false;
+        if (gag != !strcmp(d->second, EMPTY_LINE))
+            return false;
+        if (msg)
+            tintin_printf(ses, msg, d->first);
+        SFREE(const_cast<char*>(d->first));
+        SFREE(const_cast<char*>(d->second));
+        ses->subs.erase(d);
+        return true;
+    }
 
-static bool is_gag(char **right)
-{
-    return !strcmp(*right, EMPTY_LINE);
+    return erase_if(ses->subs, [&](const auto& i)
+    {
+        if (pat && !match(pat, i.first))
+            return false;
+        if (gag != !strcmp(i.second, EMPTY_LINE))
+            return false;
+        SFREE(const_cast<char*>(i.first));
+        SFREE(const_cast<char*>(i.second));
+        return true;
+    });
 }
 
 static void unsub(const char *arg, bool gag, session *ses)
 {
     char left[BUFFER_SIZE];
     arg = get_arg_in_braces(arg, left, 1);
-
-    if (!delete_tlist(ses->subs, left, ses->mesvar[MSG_SUBSTITUTE]?
+    const char *msg = ses->mesvar[MSG_SUBSTITUTE]?
         gag? "#Ok. {%s} is no longer gagged." :
-        "#Ok. {%s} is no longer substituted." : 0,
-        gag? is_not_gag : is_gag, true, ses)
-        && ses->mesvar[MSG_SUBSTITUTE])
+        "#Ok. {%s} is no longer substituted." : 0;
+
+    if (!delete_subs(left, msg, gag, ses))
     {
-        tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
+        if (ses->mesvar[MSG_SUBSTITUTE])
+            tintin_printf(ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
     }
 
 #ifdef HAVE_SIMD
@@ -160,32 +172,32 @@ void ungag_command(const char *arg, session *ses)
                         rlen+=len;
 
 // returns true if gagged
-static bool do_one_sub(char *line, ptrip ln, session *ses)
+static bool do_one_sub(char *line, const char* const left, const char *right, session *ses)
 {
     char result[BUFFER_SIZE], tmp[BUFFER_SIZE];
     const char *l;
     int rlen, len;
 
-    if (!check_one_action(line, ln->left, pvars, false))
+    if (!check_one_action(line, left, pvars, false))
         return false;
 
-    if (!strcmp(ln->right, EMPTY_LINE))
+    if (!strcmp(right, EMPTY_LINE))
     {
         strcpy(line, EMPTY_LINE);
         return true;
     }
-    substitute_vars(ln->right, tmp, ses);
+    substitute_vars(right, tmp, ses);
     rlen=match_start-line;
     memcpy(result, line, rlen);
     len=strlen(tmp);
     APPEND(tmp);
     while (*match_end)
-        if (check_one_action(l=match_end, ln->left, pvars, true))
+        if (check_one_action(l=match_end, left, pvars, true))
         {
             /* no gags possible here */
             len=match_start-l;
             APPEND(l);
-            substitute_vars(ln->right, tmp, ses);
+            substitute_vars(right, tmp, ses);
             len=strlen(tmp);
             APPEND(tmp);
         }
@@ -206,10 +218,9 @@ static void do_all_sub_serially(char *line, session *ses)
     lastpvars=pvars;
     pvars=&vars;
 
-    TRIP_ITER(ses->subs, ln)
-        if (do_one_sub(line, ln, ses))
+    for (auto& s : ses->subs)
+        if (do_one_sub(line, s.first, s.second, ses))
             break;
-    ENDITER
 
     pvars=lastpvars;
 }
@@ -238,32 +249,33 @@ static void build_subs_hs(session *ses)
     free(ses->subs_markers);
     ses->subs_markers=0;
 
-    int n = count_tlist(ses->subs);
+    int n = ses->subs.size();
     auto pat = new const char*[n];
     auto flags = new unsigned int[n];
     auto ids = new unsigned int[n];
-    auto data = new ptrip[n];
+    auto data = new pCstrpair[n];
     auto markers = new uintptr_t[n];
 
     if (!pat || !flags || !ids || !data || !markers)
         die("out of memory");
 
-    ses->subs_omni_last=ses->subs_omni_first=n;
+    ses->subs_omni_last = ses->subs_omni_first = n;
 
     unsigned int j=0;
-    TRIP_ITER(ses->subs, ln)
-        pat[j]=action_to_regex(ln->left);
+    for (auto& s : ses->subs)
+    {
+        pat[j]=action_to_regex(s.first);
         if (is_omni_regex(pat[j]))
         {
-            pat[--ses->subs_omni_first]=pat[j];
-            data[ses->subs_omni_first]=ln;
+            pat[--ses->subs_omni_first] = pat[j];
+            data[ses->subs_omni_first] = &s;
             continue;
         }
-        flags[j]=HS_FLAG_DOTALL|HS_FLAG_SOM_LEFTMOST;
-        ids[j]=j;
-        data[j]=ln;
+        flags[j] = HS_FLAG_DOTALL|HS_FLAG_SOM_LEFTMOST;
+        ids[j]   = j;
+        data[j]  = &s;
         j++;
-    ENDITER
+    }
     ses->subs_data=data;
     bzero(markers, n*sizeof(uintptr_t));
     ses->subs_markers=markers;
@@ -341,16 +353,16 @@ static void do_all_sub_simd(char *line, session *ses)
     {
         if (!longest_len[i])
             continue;
-        ptrip ln = ses->subs_data[longest_id[i]];
+        pCstrpair ln = ses->subs_data[longest_id[i]];
         if (ses->subs_markers[longest_id[i]] == marker)
             continue; // already done
-        if (do_one_sub(line, ln, ses))
+        if (do_one_sub(line, ln->first, ln->second, ses))
             goto gagged;
         ses->subs_markers[longest_id[i]] = marker;
     }
 
     for (int i=ses->subs_omni_first; i<ses->subs_omni_last; i++)
-        if (do_one_sub(line, ses->subs_data[i], ses))
+        if (do_one_sub(line, ses->subs_data[i]->first, ses->subs_data[i]->second, ses))
             goto gagged;
 gagged:
 
@@ -361,7 +373,7 @@ gagged:
 void do_all_sub(char *line, session *ses)
 {
 #ifdef HAVE_SIMD
-    if (!kb_size(ses->subs))
+    if (ses->subs.empty())
         return;
 
     if (simd)

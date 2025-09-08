@@ -762,15 +762,17 @@ void write_command(const char *filename, session *ses)
         cfcom(myfile, "promptaction", n->left, n->right, n->pr);
     ENDITER
 
-    for (auto s : ses->antisubs)
+    for (const auto s : ses->antisubs)
         cfcom(myfile, "antisub", s, 0, 0);
 
-    TRIP_ITER(ses->subs, n)
-        if (strcmp(n->right, EMPTY_LINE))
-            cfcom(myfile, "sub", n->left, n->right, 0);
+    for (const auto& i: ses->subs)
+    {
+        const auto& n = i;
+        if (strcmp(n.second, EMPTY_LINE))
+            cfcom(myfile, "sub", n.first, n.second, 0);
         else
-            cfcom(myfile, "gag", n->left, 0, 0);
-    ENDITER
+            cfcom(myfile, "gag", n.first, 0, 0);
+    }
 
     hl = hash2list(ses->myvars, 0);
     end = &hl->pairs[0] + hl->size;
@@ -934,19 +936,20 @@ void writesession_command(const char *filename, session *ses)
         cfcom(myfile, "promptaction", n->left, n->right, n->pr);
     ENDITER
 
-    for (auto p : ses->antisubs)
+    for (const auto p : ses->antisubs)
         if (!nullsession->antisubs.count(p))
             cfcom(myfile, "antisub", p, 0, 0);
 
-    TRIP_ITER(ses->subs, n)
-        ptrip *m = kb_get(trip, nullsession->subs, n);
-        if (m && !strcmp(n->right, (*m)->right))
-                continue;
-        if (strcmp(n->right, EMPTY_LINE))
-            cfcom(myfile, "sub", n->left, n->right, 0);
+    for (const auto& n : ses->subs)
+    {
+        const auto& m = nullsession->subs.find(n.first);
+        if (m!=nullsession->subs.cend() && !strcmp(n.second, m->second))
+            continue;
+        if (strcmp(n.second, EMPTY_LINE))
+            cfcom(myfile, "sub", n.first, n.second, 0);
         else
-            cfcom(myfile, "gag", n->left, 0, 0);
-    ENDITER
+            cfcom(myfile, "gag", n.first, 0, 0);
+    }
 
     ws_hash(ses->myvars, nullsession->myvars, "var", myfile);
 

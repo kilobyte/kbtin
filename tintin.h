@@ -241,6 +241,7 @@ void cfmakeraw(struct termios *ta)
 #include <vector>
 #include <list> // TODO: use a hive if available
 #include <set>
+#include <map>
 #include "malloc.h"
 #include "unicode.h"
 #include "kbtree.h"
@@ -277,6 +278,18 @@ struct trip
 {
     char *left, *right, *pr;
 };
+
+struct Tripcmp
+{
+    bool operator() (const trip* a, const trip* b) const;
+};
+
+struct Cstrlongercmp
+{
+    bool operator() (const char* s1, const char* s2) const;
+};
+
+typedef std::pair<const char* const, const char*> Cstrpair, *pCstrpair;
 
 struct hashentry
 {
@@ -357,7 +370,8 @@ struct session
     char *loginputprefix, *loginputsuffix;
     logtype_t logtype;
     bool ignore;
-    kbtree_t(trip) *subs, *actions, *prompts, *highs;
+    std::map<const char*, const char*, Cstrlongercmp> subs;
+    kbtree_t(trip) *actions, *prompts, *highs;
     std::set<char*, Cstrcmp> antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds, *ratelimits;
     struct pair path[MAX_PATH_LENGTH];
@@ -401,7 +415,8 @@ struct session
     bool highs_dirty, act_dirty[2], subs_dirty, antisubs_dirty;
     hs_database_t *highs_hs, *subs_hs, *antisubs_hs, *acts_hs[2];
     const char **highs_cols;
-    ptrip *subs_data, *acts_data[2];
+    pCstrpair *subs_data;
+    ptrip *acts_data[2];
     int subs_omni_first, subs_omni_last;
     uintptr_t *subs_markers;
 #endif

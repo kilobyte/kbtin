@@ -61,7 +61,12 @@ next:
     return 1;
 }
 
-static int tripcmp(const ptrip a, const ptrip b)
+bool Cstrlongercmp::operator() (const char *a, const char *b) const
+{
+    return strlongercmp(a, b) < 0;
+}
+
+static int tripcmp(const trip *a, const trip *b)
 {
     if (a->pr)
     {
@@ -71,6 +76,11 @@ static int tripcmp(const ptrip a, const ptrip b)
             return r;
     }
     return strlongercmp(a->left, b->left);
+}
+
+bool Tripcmp::operator() (const trip* a, const trip* b) const
+{
+    return tripcmp(a, b) < 0;
 }
 
 /**/ KBTREE_CODE(trip, ptrip, tripcmp)
@@ -92,7 +102,7 @@ void kill_tlist(kbtree_t(trip) *l)
     kb_destroy(trip, l);
 }
 
-void show_trip(const ptrip t, session *ses)
+static void show_trip(const ptrip t, session *ses)
 {
     if (t->pr)
         tintin_printf(ses, "~7~{%s~7~}={%s~7~} @ {%s}", t->left, t->right, t->pr);
