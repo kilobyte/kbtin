@@ -1305,6 +1305,7 @@ void elif_command(const char *arg, session *ses)
 void killall_command(const char *arg, session *ses)
 {
     kill_all(ses, false);
+    tintin_printf(ses, "#Lists cleared.");
 }
 
 /****************************/

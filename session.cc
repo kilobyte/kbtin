@@ -315,7 +315,6 @@ void kill_all(session *ses, bool no_reinit)
 #ifdef HAVE_SIMD
     ses->highs_dirty = true;
 #endif
-    tintin_printf(ses, "#Lists cleared.");
 }
 
 
