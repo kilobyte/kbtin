@@ -1,14 +1,42 @@
 #Defined aliases:
+{bar}={y}
+{baz}={z}
+{foo}={x}
+#Defined aliases:
 {foo}={x}
 #Defined actions:
+{bar}={y} @ {5}
+{baz}={z} @ {5}
+{foo}={x} @ {5}
+#Defined actions:
+{foo}={x} @ {5}
+#Defined promptactions:
+{bar}={y} @ {5}
+{baz}={z} @ {5}
 {foo}={x} @ {5}
 #Defined promptactions:
 {foo}={x} @ {5}
 #THESE SUBSTITUTES HAVE BEEN DEFINED:
+{bar}={y}
+{baz}={z}
 {foo}={x}
+#THESE SUBSTITUTES HAVE BEEN DEFINED:
+{foo}={x}
+#THESE ANTISUBSTITUTES HAVE BEEN DEFINED:
+{bar}
+{baz}
+{foo}
 #THESE ANTISUBSTITUTES HAVE BEEN DEFINED:
 {foo}
 #THESE HIGHLIGHTS HAVE BEEN DEFINED:
+{bar}={red}
+{baz}={red}
 {foo}={red}
+#THESE HIGHLIGHTS HAVE BEEN DEFINED:
+{foo}={red}
+#THESE ROUTES HAVE BEEN DEFINED:
+{foo}->{x}: {X} d=10
+{bar}->{x}: {Y} d=10
+{baz}->{x}: {Z} d=10
 #THESE ROUTES HAVE BEEN DEFINED:
 {foo}->{x}: {X} d=10

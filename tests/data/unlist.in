@@ -3,6 +3,7 @@
 #ali baz z
 #ali quux !
 #unali quux
+#ali
 #unali b*
 #ali
 #act foo x
@@ -11,6 +12,7 @@
 #act quux ?
 #act quux !
 #unact quux
+#act
 #unact b*
 #act
 #prom foo x
@@ -19,6 +21,7 @@
 #prom quux ?
 #prom quux !
 #unprom quux
+#prom
 #unprom b*
 #prom
 #sub foo x
@@ -26,6 +29,7 @@
 #sub baz z
 #sub quux !
 #unsub quux
+#sub
 #unsub b*
 #sub
 #antisub foo
@@ -33,6 +37,7 @@
 #antisub baz
 #antisub quux
 #unantisub quux
+#antisub
 #unantisub b*
 #antisub
 #hi red foo
@@ -40,6 +45,7 @@
 #hi red baz
 #hi red quux
 #unhi quux
+#hi
 #unhi b*
 #hi
 #ro foo x X
@@ -47,5 +53,6 @@
 #ro baz x Z
 #ro quux x !
 #unro quux x
+#ro
 #unro b* x
 #ro
