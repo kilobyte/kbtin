@@ -68,7 +68,9 @@ void make_name(char *str, const char *basis)
     i=2;
     do sprintf(t, "%d", i++); while (session_exists(str));
     return;
+
 noname:
+    // Generates: a b c ... z aa ab ac ... ba bb ... zz aaa aab ...
     for (i=1; ; i++)
     {
         j=i;
