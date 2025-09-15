@@ -114,7 +114,7 @@ static void add_doublewidth(WC *right, WC *left, int len)
 }
 
 /* len=-1 for infinite */
-static void zap_doublewidth(WC *right, const WC *left, int len)
+static void zap_doublewidth(WC *right, const WC *left, size_t len)
 {
     bool norm=false;
 
@@ -151,7 +151,23 @@ static void wrap_wc(char *d, const WC *s)
     wc_to_utf8(d, buf, -1, BUFFER_SIZE);
 }
 
-static int out_wc(char *d, const WC *s, int n)
+static int wc_to_mb(char *d, const wchar_t *s, size_t n, mbstate_t *cs)
+{
+    int res, len=0;
+
+    while (*s && n--)
+    {
+        res=wcrtomb(d, *s++, cs);
+
+        if (res!=-1)
+            d+=res, len+=res;
+        else
+            *d++=translit(s[-1]), len++;
+    }
+    return len;
+}
+
+static int out_wc(char *d, const WC *s, size_t n)
 {
     WC buf[BUFFER_SIZE];
 

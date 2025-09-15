@@ -178,22 +178,6 @@ void utf8_to_mb(char **d, const char *s, mbstate_t *cs)
     while (*s && one_utf8_to_mb(d, &s, cs));
 }
 
-int wc_to_mb(char *d, const wchar_t *s, int n, mbstate_t *cs)
-{
-    int res, len=0;
-
-    while (*s && n--)
-    {
-        res=wcrtomb(d, *s++, cs);
-
-        if (res!=-1)
-            d+=res, len+=res;
-        else
-            *d++=translit(s[-1]), len++;
-    }
-    return len;
-}
-
 
 /* do an entire buffer at once */
 void utf8_to_local(char *d, const char *s)
