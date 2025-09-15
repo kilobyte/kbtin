@@ -1047,7 +1047,7 @@ void info_command(const char *arg, session *ses)
     int subs      = ses->subs.size();
     int antisubs  = ses->antisubs.size();
     int vars      = ses->myvars->nval;
-    int highs     = count_tlist(ses->highs);
+    int highs     = ses->highs.size();
     int binds     = ses->binds->nval;
     int pathdirs  = ses->pathdirs->nval;
     int locs = 0;

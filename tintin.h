@@ -370,8 +370,8 @@ struct session
     char *loginputprefix, *loginputsuffix;
     logtype_t logtype;
     bool ignore;
-    std::map<const char*, const char*, Cstrlongercmp> subs;
-    kbtree_t(trip) *actions, *prompts, *highs;
+    std::map<const char*, const char*, Cstrlongercmp> subs, highs;
+    kbtree_t(trip) *actions, *prompts;
     std::set<char*, Cstrcmp> antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds, *ratelimits;
     struct pair path[MAX_PATH_LENGTH];

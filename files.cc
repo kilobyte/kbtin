@@ -766,9 +766,8 @@ void write_command(const char *filename, session *ses)
         cfcom(myfile, "var", n->left, n->right, 0);
     delete[] hl;
 
-    TRIP_ITER(ses->highs, n)
-        cfcom(myfile, "highlight", n->right, n->left, 0);
-    ENDITER
+    for (const auto& i: ses->highs)
+        cfcom(myfile, "highlight", i.first, i.second, 0);
 
     hl = hash2list(ses->pathdirs, 0);
     end = &hl->pairs[0] + hl->size;
@@ -939,12 +938,13 @@ void writesession_command(const char *filename, session *ses)
 
     ws_hash(ses->myvars, nullsession->myvars, "var", myfile);
 
-    TRIP_ITER(ses->highs, n)
-        ptrip *m = kb_get(trip, nullsession->highs, n);
-        if (m && !strcmp(n->right, (*m)->right))
+    for (const auto& n : ses->highs)
+    {
+        const auto& m = nullsession->highs.find(n.first);
+        if (m!=nullsession->highs.cend() && !strcmp(n.second, m->second))
             continue;
-        cfcom(myfile, "highlight", n->left, n->right, 0);
-    ENDITER
+        cfcom(myfile, "highlight", n.first, n.second, 0);
+    }
 
     ws_hash(ses->pathdirs, nullsession->pathdirs, "pathdir", myfile);
 

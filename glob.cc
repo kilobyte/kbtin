@@ -59,24 +59,11 @@ bool is_literal(const char *txt)
 }
 
 
-bool find(const char *text, const char *pattern, int *from, int *to, const char *fastener)
+bool find(const char *text, const char *pattern, int *from, int *to)
 {
     const char *txt;
     char *a, *b, *pat, m1[BUFFER_SIZE], m2[BUFFER_SIZE];
     int i;
-
-    if (fastener)
-    {
-        txt=strstr(text, fastener);
-        if (!txt)
-            return false;
-        *from=txt-text;
-        if (strchr(pattern, '*'))
-            *to=strlen(text);
-        else
-            *to=*from+strlen(fastener);
-        return true;
-    }
 
     txt=text;
     if (*pattern=='^')

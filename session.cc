@@ -283,7 +283,12 @@ void kill_all(session *ses, bool no_reinit)
     kill_tlist(ses->actions);
     kill_tlist(ses->prompts);
     kill_hash(ses->myvars);
-    kill_tlist(ses->highs);
+    erase_if(ses->highs, [](const auto& i)
+    {
+        SFREE(const_cast<char*>(i.first));
+        SFREE(const_cast<char*>(i.second));
+        return true;
+    });
     erase_if(ses->subs, [](const auto& i)
     {
         SFREE(const_cast<char*>(i.first));
@@ -308,7 +313,6 @@ void kill_all(session *ses, bool no_reinit)
     ses->actions = init_tlist();
     ses->prompts = init_tlist();
     ses->myvars = init_hash();
-    ses->highs = init_tlist();
     ses->binds = init_hash();
     ses->ratelimits = init_hash();
     ses->path_begin = ses->path_length = 0;
@@ -353,7 +357,6 @@ void init_nullses(void)
     nullsession->actions = init_tlist();
     nullsession->prompts = init_tlist();
     nullsession->myvars = init_hash();
-    nullsession->highs = init_tlist();
     nullsession->pathdirs = init_hash();
     nullsession->socket = 0;
     nullsession->sestype = SES_NULL;
@@ -460,7 +463,8 @@ static session *new_session(const char *name, const char *address, int sock, ses
     for (auto s : ses->subs)
         newsession->subs.emplace(mystrdup(s.first), mystrdup(s.second));
     newsession->myvars = copy_hash(ses->myvars);
-    newsession->highs = copy_tlist(ses->highs);
+    for (auto s : ses->highs)
+        newsession->highs.emplace(mystrdup(s.first), mystrdup(s.second));
     newsession->pathdirs = copy_hash(ses->pathdirs);
     newsession->socket = sock;
     for (auto s : ses->antisubs)

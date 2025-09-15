@@ -8,7 +8,6 @@
 #include "protos/parse.h"
 #include "protos/utils.h"
 #include "protos/string.h"
-#include "protos/tlist.h"
 #include "protos/vars.h"
 
 
@@ -133,6 +132,32 @@ static void show_high_help(session *ses)
     tintin_printf(ses, "%sor 0..15:0..7:0..1", buf);
 }
 
+static bool delete_highs(const char *pat, session *ses)
+{
+    if (is_literal(pat))
+    {
+        const auto& d = ses->highs.find(pat);
+        if (d == ses->highs.cend())
+            return false;
+        tintin_printf(MSG_HIGHLIGHT, ses, "#Ok. {%s} is no longer highlighted.", d->first);
+        SFREE(const_cast<char*>(d->first));
+        SFREE(const_cast<char*>(d->second));
+        ses->highs.erase(d);
+        return true;
+    }
+
+    return erase_if(ses->highs, [&](const auto& i)
+    {
+        if (pat && !match(pat, i.first))
+            return false;
+        tintin_printf(MSG_HIGHLIGHT, ses, "#Ok. {%s} is no longer highlighted.", i.first);
+        SFREE(const_cast<char*>(i.first));
+        SFREE(const_cast<char*>(i.second));
+        return true;
+    });
+}
+
+
 /***************************/
 /* the #highlight command  */
 /***************************/
@@ -148,7 +173,12 @@ void highlight_command(const char *arg, session *ses)
     if (!*left)
     {
         tintin_printf(ses, "#THESE HIGHLIGHTS HAVE BEEN DEFINED:");
-        show_tlist(ses->highs, 0, 0, true, ses);
+        for (auto& s : ses->highs)
+        {
+            if (*right && !match(right, s.first))
+                continue;
+            tintin_printf(ses, "~7~{%s~7~}={%s~7~}", s.first, s.second);
+        }
         return;
     }
 
@@ -184,20 +214,16 @@ void highlight_command(const char *arg, session *ses)
         return;
     }
 
-    ptrip nt = new trip;
-    nt->left = mystrdup(right);
-    nt->right = mystrdup(left);
-    nt->pr = 0;
-    ptrip *ot = kb_get(trip, ses->highs, nt);
-    if (ot)
+    char *a = mystrdup(right);
+    char *b = mystrdup(left);
+    auto res = ses->highs.try_emplace(a, b);
+    if (!res.second)
     {
-        ptrip dt = *ot;
-        kb_del(trip, ses->highs, nt);
-        free(dt->left);
-        free(dt->right);
-        delete dt;
+        const auto& old = &*res.first;
+        SFREE(a);
+        SFREE(const_cast<char*>(old->second));
+        old->second = b;
     }
-    kb_put(trip, ses->highs, nt);
     hinum++;
 #ifdef HAVE_SIMD
     ses->highs_dirty = true;
@@ -217,15 +243,14 @@ void unhighlight_command(const char *arg, session *ses)
     if (!*left)
         return tintin_eprintf(ses, "#Syntax: #unhighlight <pattern>");
 
-    if (delete_tlist(ses->highs, left, ses->mesvar[MSG_HIGHLIGHT]?
-            "#Ok. {%s} is no longer highlighted." : 0, 0, true, ses))
+    if (delete_highs(left, ses))
     {
 #ifdef HAVE_SIMD
         ses->highs_dirty = true;
 #endif
     }
     else
-        tintin_printf(MSG_ACTION, ses, "#THAT HIGHLIGHT IS NOT DEFINED.");
+        tintin_printf(MSG_HIGHLIGHT, ses, "#THAT HIGHLIGHT IS NOT DEFINED.");
 }
 
 
@@ -291,7 +316,7 @@ static void build_highs_hs(session *ses)
     delete[] ses->highs_cols;
     ses->highs_cols=0;
 
-    int n = count_tlist(ses->highs);
+    int n = ses->highs.size();
     auto pat = new const char *[n];
     auto flags = new unsigned int[n];
     auto ids = new unsigned int[n];
@@ -300,13 +325,14 @@ static void build_highs_hs(session *ses)
         die("out of memory");
 
     unsigned int j=0;
-    TRIP_ITER(ses->highs, ln)
-        pat[j]=glob_to_regex(ln->left);;
+    for (const auto& ln : ses->highs)
+    {
+        pat[j]=glob_to_regex(ln.first);;
         flags[j]=HS_FLAG_DOTALL|HS_FLAG_SOM_LEFTMOST;
         ids[j]=j;
-        cols[j]=ln->right;
+        cols[j]=ln.second;
         j++;
-    ENDITER
+    }
     ses->highs_cols=cols;
 
     debuglog(ses, "SIMD: compiling highs");
@@ -398,7 +424,7 @@ static void deattributize_colors(char *restrict line, const char *restrict text,
 
 void do_all_high(char *line, session *ses)
 {
-    if (!count_tlist(ses->highs))
+    if (ses->highs.empty())
         return;
 
 #ifdef HAVE_SIMD
@@ -424,12 +450,13 @@ void do_all_high(char *line, session *ses)
     }
 #endif
 
-    TRIP_ITER(ses->highs, ln)
+    for (const auto& ln : ses->highs)
+    {
         char *txt=text;
         int l, r;
-        while (*txt&&find(txt, ln->left, &l, &r, ln->pr))
+        while (*txt&&find(txt, ln.first, &l, &r))
         {
-            if (!get_high(ln->right))
+            if (!get_high(ln.second))
                 break;
             r+=txt-text;
             l+=txt-text;
@@ -441,7 +468,7 @@ void do_all_high(char *line, session *ses)
             }
             txt=text+r;
         }
-    ENDITER
+    }
 
 #ifdef HAVE_SIMD
 done:
