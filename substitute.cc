@@ -70,7 +70,7 @@ static void parse_sub(const char *left_, const char *right,  bool gag, session *
     {
         const auto& old = &*res.first;
         SFREE(a);
-        SFREE(const_cast<char*>(old->second));
+        SFREE(old->second);
         old->second = b;
     }
     subnum++;
@@ -117,8 +117,8 @@ static bool delete_subs(const char *pat, const char *msg, bool gag, session *ses
             return false;
         if (msg)
             tintin_printf(ses, msg, d->first);
-        SFREE(const_cast<char*>(d->first));
-        SFREE(const_cast<char*>(d->second));
+        SFREE(d->first);
+        SFREE(d->second);
         ses->subs.erase(d);
         return true;
     }
@@ -129,8 +129,8 @@ static bool delete_subs(const char *pat, const char *msg, bool gag, session *ses
             return false;
         if (gag != !strcmp(i.second, EMPTY_LINE))
             return false;
-        SFREE(const_cast<char*>(i.first));
-        SFREE(const_cast<char*>(i.second));
+        SFREE(i.first);
+        SFREE(i.second);
         return true;
     });
 }

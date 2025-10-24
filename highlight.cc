@@ -140,8 +140,8 @@ static bool delete_highs(const char *pat, session *ses)
         if (d == ses->highs.cend())
             return false;
         tintin_printf(MSG_HIGHLIGHT, ses, "#Ok. {%s} is no longer highlighted.", d->first);
-        SFREE(const_cast<char*>(d->first));
-        SFREE(const_cast<char*>(d->second));
+        SFREE(d->first);
+        SFREE(d->second);
         ses->highs.erase(d);
         return true;
     }
@@ -151,8 +151,8 @@ static bool delete_highs(const char *pat, session *ses)
         if (pat && !match(pat, i.first))
             return false;
         tintin_printf(MSG_HIGHLIGHT, ses, "#Ok. {%s} is no longer highlighted.", i.first);
-        SFREE(const_cast<char*>(i.first));
-        SFREE(const_cast<char*>(i.second));
+        SFREE(i.first);
+        SFREE(i.second);
         return true;
     });
 }
@@ -221,7 +221,7 @@ void highlight_command(const char *arg, session *ses)
     {
         const auto& old = &*res.first;
         SFREE(a);
-        SFREE(const_cast<char*>(old->second));
+        SFREE(old->second);
         old->second = b;
     }
     hinum++;

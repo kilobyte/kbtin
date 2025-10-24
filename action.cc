@@ -240,8 +240,8 @@ static void check_all_act_serially(const char *line, session *ses, Acts &acts, b
             pvars = lastpvars;
         }
 
-        SFREE(const_cast<char*>(a.first));
-        SFREE(const_cast<char*>(a.second));
+        SFREE(a.first);
+        SFREE(a.second);
     }
 }
 
@@ -291,7 +291,7 @@ static void build_act_hs(Acts &acts, session *ses, bool act)
 
     ses->acts_data[act]=data;
     for (int i=0; i<n; i++)
-        SFREE((char*)pat[i]);
+        SFREE(pat[i]);
     delete[] ids;
     delete[] flags;
     delete[] pat;
@@ -374,8 +374,8 @@ static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool 
     }
     for (int i=0; i<n; i++)
     {
-        SFREE(const_cast<char*>(trig[i].first));
-        SFREE(const_cast<char*>(trig[i].second));
+        SFREE(trig[i].first);
+        SFREE(trig[i].second);
     }
     delete[] trig;
     pvars = lastpvars;

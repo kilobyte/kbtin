@@ -16,5 +16,5 @@
 # define MFREE(x,s)     free(x)
 # define TFREE(x,t)     free(x)
 # define CFREE(x,n,t)   free(x)
-# define SFREE(x)       free(x) /* string */
+# define SFREE(x)       free(const_cast<char*>(x))
 #endif

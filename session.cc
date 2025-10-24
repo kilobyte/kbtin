@@ -285,14 +285,14 @@ void kill_all(session *ses, bool no_reinit)
     kill_hash(ses->myvars);
     erase_if(ses->highs, [](const auto& i)
     {
-        SFREE(const_cast<char*>(i.first));
-        SFREE(const_cast<char*>(i.second));
+        SFREE(i.first);
+        SFREE(i.second);
         return true;
     });
     erase_if(ses->subs, [](const auto& i)
     {
-        SFREE(const_cast<char*>(i.first));
-        SFREE(const_cast<char*>(i.second));
+        SFREE(i.first);
+        SFREE(i.second);
         return true;
     });
     for (auto s : ses->antisubs)
