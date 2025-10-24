@@ -242,28 +242,17 @@ void cfmakeraw(struct termios *ta)
 #include <list> // TODO: use a hive if available
 #include <set>
 #include <map>
+#include <string>
 #include "malloc.h"
 #include "unicode.h"
-#include "kbtree.h"
 
 typedef int64_t num_t;
 typedef int64_t timens_t;
-typedef struct trip *ptrip;
 
 #define NANO 1000000000LL
 #define INVALID_TIME ((int64_t)0x8000000000000000LL)
 
 #define ARRAYSZ(x) (sizeof(x)/sizeof((x)[0]))
-
-KBTREE_HEADER(str, char*, strcmp)
-KBTREE_HEADER(trip, ptrip, tripcmp)
-
-#define TYPE_ITER(kind, type, tree, ip) {kbitr_t itr; kbtree_t(kind) *itrtr = (tree); \
-    for (kb_itr_first(kind, itrtr, &itr); kb_itr_valid(&itr); kb_itr_next(kind, itrtr, &itr)) \
-    { const type ip = kb_itr_key(type, &itr);
-#define STR_ITER(tree, ip) TYPE_ITER(str, char*, (tree), ip)
-#define TRIP_ITER(tree, ip) TYPE_ITER(trip, ptrip, (tree), ip)
-#define ENDITER }}
 
 /************************ structures *********************/
 struct Cstrcmp
@@ -274,15 +263,6 @@ struct Cstrcmp
     }
 };
 
-struct trip
-{
-    char *left, *right, *pr;
-};
-
-struct Tripcmp
-{
-    bool operator() (const trip* a, const trip* b) const;
-};
 
 struct Cstrlongercmp
 {
@@ -290,6 +270,13 @@ struct Cstrlongercmp
 };
 
 typedef std::pair<const char* const, const char*> Cstrpair, *pCstrpair;
+typedef std::pair<const std::string, const std::string> Strpair, *pStrpair;
+typedef std::map<Strpair, const std::string, struct Prioritycmp> Acts, *pActs;
+
+struct Prioritycmp
+{
+    bool operator() (const Strpair& a, const Strpair& b) const;
+};
 
 struct hashentry
 {
@@ -371,7 +358,8 @@ struct session
     logtype_t logtype;
     bool ignore;
     std::map<const char*, const char*, Cstrlongercmp> subs, highs;
-    kbtree_t(trip) *actions, *prompts;
+    Acts actions, prompts;
+    std::map<std::string, std::string> actpr[2];
     std::set<char*, Cstrcmp> antisubs;
     struct hashtable *aliases, *myvars, *pathdirs, *binds, *ratelimits;
     struct pair path[MAX_PATH_LENGTH];
@@ -416,7 +404,7 @@ struct session
     hs_database_t *highs_hs, *subs_hs, *antisubs_hs, *acts_hs[2];
     const char **highs_cols;
     pCstrpair *subs_data;
-    ptrip *acts_data[2];
+    Cstrpair *acts_data[2];
     int subs_omni_first, subs_omni_last;
     uintptr_t *subs_markers;
 #endif

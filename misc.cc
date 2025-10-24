@@ -1041,8 +1041,8 @@ static void format_time(char *buf, timens_t t)
 void info_command(const char *arg, session *ses)
 {
     char buffer[BUFFER_SIZE], *bptr, tim1[64], tim2[64];
-    int actions   = count_tlist(ses->actions);
-    int practions = count_tlist(ses->prompts);
+    int actions   = ses->actions.size();
+    int practions = ses->prompts.size();
     int aliases   = ses->aliases->nval;
     int subs      = ses->subs.size();
     int antisubs  = ses->antisubs.size();

@@ -20,36 +20,51 @@
 static int var_len[10];
 static const char *var_ptr[10];
 
-static int inActions=0;
-static bool mutatedActions;
-static std::vector<char*> stray_strings;
 const char *match_start, *match_end;
 
 extern session *if_command(const char *arg, session *ses) __attribute__((nonnull));
 static bool check_a_action(const char *line, const char *action, bool inside);
 
-static bool save_action(char **right)
+static bool delete_acts(Acts &l, const char *pat, const char *msg, session *ses)
 {
-    stray_strings.emplace_back(*right);
-    **right=0;
-    *right=0;
+    return std::erase_if(l, [&](const auto& i)
+    {
+        if (match(pat, i.first.second.c_str()))
+        {
+            ses->actpr[l == ses->actions].erase(i.first.second);
+            tintin_printf(MSG_ACTION, ses, msg, i.first.second.c_str());
+            return true;
+        }
 
-    return false;
+        return false;
+    });
 }
 
-static void zap_actions(void)
+static bool show_acts(Acts &acts, const char *pat, session *ses)
 {
-    for(char* str : stray_strings)
-        free(str);
+    bool had_any = false;
+
+    for (const auto &a : acts)
+    {
+        if (pat && !match(pat, a.first.second.c_str()))
+            continue;
+        had_any = true;
+        tintin_printf(ses, "~7~{%s~7~}={%s~7~} @ {%s}",
+            a.first.second.c_str(), a.second.c_str(), a.first.first.c_str());
+    }
+
+    return had_any;
 }
 
 /***********************/
 /* the #action command */
 /***********************/
-static void parse_action(const char *arg, session *ses, kbtree_t(trip) *l, const char *what)
+static void parse_action(const char *arg, session *ses, Acts &l, const char *what)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
     char pr[BUFFER_SIZE];
+    bool isact = l == ses->actions;
+    auto &actpr = ses->actpr[isact];
 
     arg = get_arg_in_braces(arg, right, 0);
     substitute_myvars(right, left, ses, 0);
@@ -60,38 +75,24 @@ static void parse_action(const char *arg, session *ses, kbtree_t(trip) *l, const
     if (!*left)
     {
         tintin_printf(ses, "#Defined %ss:", what);
-        show_tlist(l, 0, 0, false, ses);
+        show_acts(l, 0, ses);
     }
     else if (*left && !*right)
     {
-        if (!show_tlist(l, left, 0, false, ses))
+        if (!show_acts(l, left, ses))
             tintin_printf(MSG_ACTION, ses, "#That %s (%s) is not defined.", what, left);
     }
     else
     {
-        // FIXME: O(n²)
-        TRIP_ITER(l, old)
-            if (!strcmp(old->left, left))
-            {
-                kb_del(trip, l, old);
-                free(old->left);
-                free(old->right);
-                free(old->pr);
-                delete old;
-                break;
-            }
-        ENDITER
-
-        ptrip nact = new trip;
-        nact->left = mystrdup(left);
-        nact->right = mystrdup(right);
-        nact->pr = mystrdup(pr);
-        kb_put(trip, l, nact);
+        const auto &op = actpr.find(left);
+        if (op != actpr.cend())
+            l.erase(Strpair(pr, left));
+        actpr[left] = pr;
+        l.emplace(Strpair(pr, left), right);
         tintin_printf(MSG_ACTION, ses, "#Ok. {%s} now triggers {%s} @ {%s}", left, right, pr);
         acnum++;
-        mutatedActions = true;
 #ifdef HAVE_SIMD
-        ses->act_dirty[l == ses->actions] = true;
+        ses->act_dirty[isact] = true;
 #endif
     }
 }
@@ -121,14 +122,12 @@ void unaction_command(const char *arg, session *ses)
     if (!*left)
         return tintin_eprintf(ses, "#Syntax: #unaction <pattern>");
 
-    if (!delete_tlist(ses->actions, left, ses->mesvar[MSG_ACTION]?
-            "#Ok. {%s} is no longer an action." : 0,
-            inActions? save_action : 0, false, ses))
-    {	/* is it an error or not? */
+    if (!delete_acts(ses->actions, left, "#Ok. {%s} is no longer an action.", ses))
+    {
         tintin_printf(MSG_ACTION, ses, "#No match(es) found for {%s}", left);
+        return;
     }
 
-    mutatedActions = true;
 #ifdef HAVE_SIMD
     ses->act_dirty[1] = true;
 #endif
@@ -145,14 +144,12 @@ void unpromptaction_command(const char *arg, session *ses)
     if (!*left)
         return tintin_eprintf(ses, "#Syntax: #unpromptaction <pattern>");
 
-    if (!delete_tlist(ses->prompts, left, ses->mesvar[MSG_ACTION]?
-            "#Ok. {%s} is no longer a promptaction." : 0,
-            inActions? save_action : 0, false, ses))
+    if (!delete_acts(ses->prompts, left, "#Ok. {%s} is no longer a promptaction.", ses))
     {
         tintin_printf(MSG_ACTION, ses, "#No match(es) found for {%s}", left);
+        return;
     }
 
-    mutatedActions = true;
 #ifdef HAVE_SIMD
     ses->act_dirty[0] = true;
 #endif
@@ -212,47 +209,44 @@ char *action_to_regex(const char *pat)
 /**********************************************/
 /* check actions from a sessions against line */
 /**********************************************/
-static void check_all_act_serially(const char *line, session *ses, kbtree_t(trip) *acts, bool act)
+static void check_all_act_serially(const char *line, session *ses, Acts &acts, bool act)
 {
     pvars_t vars, *lastpvars;
+    std::vector<Cstrpair> found;
 
-    TRIP_ITER(acts, ln)
-        if (!*ln->right) // marker for deleted actions
-            continue;
+    for (const auto& a : acts)
+    {
+        const char *left = a.first.second.c_str();
+        if (check_a_action(line, left, false))
+            found.emplace_back(Cstrpair(mystrdup(left), mystrdup(a.second)));
+    }
 
-        if (check_one_action(line, ln->left, &vars, false))
+    for (const auto& a : found)
+    {
+        if (check_one_action(line, a.first, &vars, false))
         {
-            char mleft[BUFFER_SIZE], mpr[BUFFER_SIZE];
-            strlcpy(mleft, ln->left, sizeof mleft);
-            strlcpy(mpr, ln->pr, sizeof mpr);
-
             lastpvars = pvars;
             pvars = &vars;
             if (ses->mesvar[MSG_ACTION] && activesession == ses)
             {
                 char buffer[BUFFER_SIZE];
 
-                substitute_vars(ln->right, buffer, ses);
+                substitute_vars(a.second, buffer, ses);
                 tintin_printf(ses, "[%sACTION: %s]", act? "":"PROMPT", buffer);
             }
-            debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line,
-                ln->right);
-            parse_input(ln->right, true, ses);
+            debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line, a.second);
+            parse_input(a.second, true, ses);
             recursion=0;
             pvars = lastpvars;
-
-            if (mutatedActions)
-            {
-                mutatedActions=false;
-                struct trip srch = {mleft, 0, mpr};
-                kb_itr_after(trip, acts, &itr, &srch);
-            }
         }
-    ENDITER
+
+        SFREE(const_cast<char*>(a.first));
+        SFREE(const_cast<char*>(a.second));
+    }
 }
 
 #ifdef HAVE_SIMD
-static void build_act_hs(kbtree_t(trip) *acts, session *ses, bool act)
+static void build_act_hs(Acts &acts, session *ses, bool act)
 {
     debuglog(ses, "SIMD: building %sactions", act?"":"prompt");
     hs_free_database(ses->acts_hs[act]);
@@ -261,23 +255,25 @@ static void build_act_hs(kbtree_t(trip) *acts, session *ses, bool act)
     delete[] ses->acts_data[act];
     ses->acts_data[act]=0;
 
-    int n = count_tlist(acts);
+    int n = acts.size();
     auto pat = new const char *[n];
     auto flags = new unsigned int[n];
     auto ids = new unsigned int[n];
-    auto data = new ptrip[n];
+    auto data = new Cstrpair[n];
 
     if (!pat || !flags || !ids || !data)
         die("out of memory");
 
     unsigned int j=0;
-    TRIP_ITER(acts, ln)
-        pat[j]=action_to_regex(ln->left);
+    for (const auto &a : acts)
+    {
+        pat[j]=action_to_regex(a.first.second.c_str());
         flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH|HS_FLAG_ALLOWEMPTY;
         ids[j]=j;
-        data[j]=ln;
+        const_cast<const char*&>(data[j].first) = a.first.second.c_str();
+        data[j].second = a.second.c_str();
         j++;
-    ENDITER
+    }
 
     debuglog(ses, "SIMD: compiling");
     hs_compile_error_t *error;
@@ -317,7 +313,7 @@ static int uintcmp(const void *a, const void *b)
     return A>B? 1 : A<B? -1 : 0;
 }
 
-static void check_all_act_simd(const char *line, session *ses, kbtree_t(trip) *acts, bool act)
+static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool act)
 {
     if (ses->act_dirty[act])
         build_act_hs(acts, ses, act);
@@ -326,7 +322,7 @@ static void check_all_act_simd(const char *line, session *ses, kbtree_t(trip) *a
     lastpvars = pvars;
     pvars = &vars;
 
-    auto ids = new unsigned[count_tlist(acts)];
+    auto ids = new unsigned[acts.size()];
     unsigned *nid=ids;
     hs_error_t err=hs_scan(ses->acts_hs[act], line, strlen(line), 0, hs_scratch,
         act_match, &nid);
@@ -346,49 +342,51 @@ static void check_all_act_simd(const char *line, session *ses, kbtree_t(trip) *a
     qsort(ids, n, sizeof(unsigned), uintcmp);
 
     // Copy all triggered actions, in case of a mutation.
-    ptrip *data=ses->acts_data[act];
-    auto trips = new struct trip[n];
+    const Cstrpair *data = ses->acts_data[act];
+    const auto trig = new Cstrpair[n];
     for (int i=0; i<n; i++)
     {
-        ptrip ln = data[ids[i]];
-        trips[i]=*ln;
+        const Strpair& t = data[ids[i]];
+        const_cast<const char*&>(trig[i].first) = mystrdup(t.first);
+        trig[i].second = mystrdup(t.second);
     }
     delete[] ids;
 
     for (int i=0; i<n; i++)
     {
-        struct trip ln = trips[i];
-        if (!*ln.right) // marker for deleted
-            continue;
-        if (check_one_action(line, ln.left, &vars, false))
+        const auto& t = trig[i];
+        const char *left  = t.first;
+        const char *right = t.second;
+
+        if (check_one_action(line, left, &vars, false))
         {
             if (ses->mesvar[MSG_ACTION] && activesession == ses)
             {
                 char buffer[BUFFER_SIZE];
 
-                substitute_vars(ln.right, buffer, ses);
+                substitute_vars(right, buffer, ses);
                 tintin_printf(ses, "[%sACTION: %s]", act? "":"PROMPT", buffer);
             }
-            debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line,
-                ln.right);
-            parse_input(ln.right, true, ses);
+            debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line, right);
+            parse_input(right, true, ses);
             recursion=0;
         }
     }
-    delete[] trips;
+    for (int i=0; i<n; i++)
+    {
+        SFREE(const_cast<char*>(trig[i].first));
+        SFREE(const_cast<char*>(trig[i].second));
+    }
+    delete[] trig;
     pvars = lastpvars;
 }
 #endif
 
 static void check_all_act(const char *line, session *ses, bool act)
 {
-    kbtree_t(trip) *acts = act? ses->actions : ses->prompts;
-    if (!kb_size(acts))
+    Acts &acts = act? ses->actions : ses->prompts;
+    if (acts.empty())
         return;
-
-    inActions++;
-    bool oldMutated = mutatedActions;
-    mutatedActions = false;
 
 #ifdef HAVE_SIMD
     if (simd)
@@ -396,11 +394,6 @@ static void check_all_act(const char *line, session *ses, bool act)
     else
 #endif
     check_all_act_serially(line, ses, acts, act);
-
-    mutatedActions = oldMutated;
-    inActions--;
-    if (!stray_strings.empty() && !inActions)
-        zap_actions();
 }
 
 void check_all_actions(const char *line, session *ses)

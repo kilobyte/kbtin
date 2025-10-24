@@ -280,8 +280,8 @@ session* newactive_session(void)
 void kill_all(session *ses, bool no_reinit)
 {
     kill_hash(ses->aliases);
-    kill_tlist(ses->actions);
-    kill_tlist(ses->prompts);
+    ses->actions.clear();
+    ses->prompts.clear();
     kill_hash(ses->myvars);
     erase_if(ses->highs, [](const auto& i)
     {
@@ -310,8 +310,6 @@ void kill_all(session *ses, bool no_reinit)
         return;
 
     ses->aliases = init_hash();
-    ses->actions = init_tlist();
-    ses->prompts = init_tlist();
     ses->myvars = init_hash();
     ses->binds = init_hash();
     ses->ratelimits = init_hash();
@@ -354,8 +352,6 @@ void init_nullses(void)
     nullsession->ignore = DEFAULT_IGNORE;
     nullsession->partial_line_marker = mystrdup(DEFAULT_PARTIAL_LINE_MARKER);
     nullsession->aliases = init_hash();
-    nullsession->actions = init_tlist();
-    nullsession->prompts = init_tlist();
     nullsession->myvars = init_hash();
     nullsession->pathdirs = init_hash();
     nullsession->socket = 0;
@@ -458,8 +454,10 @@ static session *new_session(const char *name, const char *address, int sock, ses
     newsession->loginputsuffix = mystrdup(ses->loginputsuffix);
     newsession->ignore = ses->ignore;
     newsession->aliases = copy_hash(ses->aliases);
-    newsession->actions = copy_tlist(ses->actions);
-    newsession->prompts = copy_tlist(ses->prompts);
+    newsession->actions = ses->actions;
+    newsession->prompts = ses->prompts;
+    newsession->actpr[0] = ses->actpr[0];
+    newsession->actpr[1] = ses->actpr[1];
     for (auto s : ses->subs)
         newsession->subs.emplace(mystrdup(s.first), mystrdup(s.second));
     newsession->myvars = copy_hash(ses->myvars);

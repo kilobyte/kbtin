@@ -35,6 +35,17 @@ char* mystrdup(const char *s)
     return dup;
 }
 
+char* mystrdup(const std::string &s)
+{
+    char *dup;
+
+    int len = s.size() + 1;
+    if (!(dup = static_cast<char*>(malloc(len))))
+        die("Not enough memory for strdup.");
+    memcpy(dup, s.c_str(), len);
+    return dup;
+}
+
 /***********************************************/
 /* print non-errno error message and terminate */
 /***********************************************/

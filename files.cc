@@ -31,6 +31,7 @@
 #endif
 
 static void cfcom(FILE *f, const char *command, const char *left, const char *right, const char *pr);
+static void cfcom(FILE *f, const char *command, const std::string &left, const std::string &right, const std::string &pr);
 extern void char_command(const char *arg, session *ses);
 
 /*******************************/
@@ -740,13 +741,11 @@ void write_command(const char *filename, session *ses)
         cfcom(myfile, "alias", n->left, n->right, 0);
     delete[] hl;
 
-    TRIP_ITER(ses->actions, n)
-        cfcom(myfile, "action", n->left, n->right, n->pr);
-    ENDITER
+    for (const auto& n : ses->actions)
+        cfcom(myfile, "action", n.first.second, n.second, n.first.first);
 
-    TRIP_ITER(ses->prompts, n)
-        cfcom(myfile, "promptaction", n->left, n->right, n->pr);
-    ENDITER
+    for (const auto& n : ses->prompts)
+        cfcom(myfile, "promptaction", n.first.second, n.second, n.first.first);
 
     for (const auto s : ses->antisubs)
         cfcom(myfile, "antisub", s, 0, 0);
@@ -907,19 +906,21 @@ void writesession_command(const char *filename, session *ses)
 
     ws_hash(ses->aliases, nullsession->aliases, "alias", myfile);
 
-    TRIP_ITER(ses->actions, n)
-        ptrip *m = kb_get(trip, nullsession->actions, n);
-        if (m && !strcmp(n->right, (*m)->right))
+    for (const auto& n : ses->actions)
+    {
+        const auto& m = nullsession->actions.find(n.first); // (pr, left)
+        if (m!=nullsession->actions.cend() && n.second == m->second)
             continue;
-        cfcom(myfile, "action", n->left, n->right, n->pr);
-    ENDITER
+        cfcom(myfile, "action", n.first.second, n.second, n.first.first);
+    }
 
-    TRIP_ITER(ses->prompts, n)
-        ptrip *m = kb_get(trip, nullsession->prompts, n);
-        if (m && !strcmp(n->right, (*m)->right))
+    for (const auto& n : ses->prompts)
+    {
+        const auto& m = nullsession->prompts.find(n.first); // (pr, left)
+        if (m!=nullsession->prompts.cend() && n.second == m->second)
             continue;
-        cfcom(myfile, "promptaction", n->left, n->right, n->pr);
-    ENDITER
+        cfcom(myfile, "promptaction", n.first.second, n.second, n.first.first);
+    }
 
     for (const auto p : ses->antisubs)
         if (!nullsession->antisubs.count(p))
@@ -1000,6 +1001,11 @@ static void cfcom(FILE *f, const char *command, const char *left, const char *ri
         b+=sprintf(b, " {%s}", pr);
     *b++='\n'; *b=0;
     cfputs(buffer, f);
+}
+
+static void cfcom(FILE *f, const char *command, const std::string &left, const std::string &right, const std::string &pr)
+{
+    cfcom(f, command, left.c_str(), right.c_str(), pr.c_str());
 }
 
 
