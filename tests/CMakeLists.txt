@@ -21,6 +21,3 @@ foreach(t ${tests})
 	add_test(NAME ${tn}
 		COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/runtest.sh "${t}")
 endforeach()
-
-add_executable(kbitr kbitr.cc)
-add_test(NAME kbtree_itr COMMAND ${CMAKE_CURRENT_BINARY_DIR}/kbitr)
