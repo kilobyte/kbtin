@@ -2,9 +2,7 @@
 #define __EXTENSIONS__
 #include "config.h"
 #include <fcntl.h>
-#include <limits.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #ifdef HAVE_TERMIOS_H

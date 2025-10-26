@@ -5,7 +5,6 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
-#include "protos/action.h"
 #include "protos/events.h"
 #include "protos/files.h"
 #include "protos/globals.h"
@@ -13,17 +12,13 @@
 #include "protos/hooks.h"
 #include "protos/lists.h"
 #include "protos/print.h"
-#include "protos/math.h"
 #include "protos/mudcolors.h"
 #include "protos/net.h"
 #include "protos/parse.h"
-#include "protos/routes.h"
 #include "protos/run.h"
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
-#include "protos/string.h"
-#include "protos/tlist.h"
 #ifdef HAVE_GNUTLS
 #include "protos/ssl.h"
 #else

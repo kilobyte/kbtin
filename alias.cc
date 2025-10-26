@@ -10,7 +10,6 @@
 #include "protos/hash.h"
 #include "protos/print.h"
 #include "protos/parse.h"
-#include "protos/utils.h"
 
 
 extern session *if_command(const char *arg, session *ses);

@@ -1,5 +1,4 @@
 #include "tintin.h"
-#include "protos/action.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/eval.h"
@@ -7,7 +6,6 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
-#include "protos/string.h"
 #include "protos/vars.h"
 
 

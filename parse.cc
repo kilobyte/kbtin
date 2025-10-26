@@ -5,7 +5,6 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
-#include "protos/action.h"
 #include "protos/files.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
@@ -16,10 +15,8 @@
 #include "protos/parse.h"
 #include "protos/path.h"
 #include "protos/utils.h"
-#include "protos/string.h"
 #include "protos/vars.h"
 
-#include "commands.h"
 typedef void (*t_command)(const char*, session*);
 typedef session *(*t_c_command)(const char*, session*);
 

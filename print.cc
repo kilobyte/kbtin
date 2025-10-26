@@ -3,7 +3,6 @@
 #include "protos/antisub.h"
 #include "protos/globals.h"
 #include "protos/highlight.h"
-#include "protos/print.h"
 #include "protos/misc.h"
 #include "protos/substitute.h"
 #include "protos/user.h"

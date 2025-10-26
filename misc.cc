@@ -5,7 +5,6 @@
 /*                     coded by peter unold 1992                     */
 /*********************************************************************/
 #include "tintin.h"
-#include <sys/stat.h>
 #include <sys/time.h>
 #ifdef HAVE_VALGRIND_VALGRIND_H
 #include <valgrind/valgrind.h>
@@ -29,8 +28,6 @@
 #include "protos/unicode.h"
 #include "protos/user.h"
 #include "protos/utils.h"
-#include "protos/string.h"
-#include "protos/tlist.h"
 #include "protos/vars.h"
 
 

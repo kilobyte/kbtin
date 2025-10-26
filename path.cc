@@ -6,7 +6,6 @@
 /*                  recoded by Jeremy C. Jack 1994                   */
 /*********************************************************************/
 #include "tintin.h"
-#include "protos/action.h"
 #include "protos/alias.h"
 #include "protos/globals.h"
 #include "protos/hash.h"
@@ -14,7 +13,6 @@
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/path.h"
-#include "protos/string.h"
 #include "protos/utils.h"
 #include "protos/vars.h"
 

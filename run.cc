@@ -3,7 +3,6 @@
 #include "tintin.h"
 #include <fcntl.h>
 #include <signal.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -14,7 +13,6 @@
 # include <pty.h>
 #endif
 #include "protos/print.h"
-#include "protos/pty.h"
 #include "protos/utils.h"
 
 extern char **environ;

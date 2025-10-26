@@ -1,6 +1,5 @@
 #include "tintin.h"
 #include <inttypes.h>
-#include <math.h>
 
 num_t nmul(num_t x, num_t y)
 {

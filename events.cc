@@ -1,5 +1,4 @@
 #include "tintin.h"
-#include "protos/action.h"
 #include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/lists.h"

@@ -1,5 +1,4 @@
 #include "tintin.h"
-#include "protos/action.h"
 #include "protos/globals.h"
 #include "protos/print.h"
 #include "protos/parse.h"

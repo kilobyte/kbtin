@@ -1,23 +1,14 @@
 #include "tintin.h"
 #include <time.h>
-#include "protos/action.h"
-#include "protos/files.h"
-#include "protos/glob.h"
 #include "protos/globals.h"
 #include "protos/print.h"
 #include "protos/parse.h"
 #include "protos/utils.h"
-#include "protos/string.h"
-#include "protos/alias.h"
-#include "protos/chinese.h"
 #include "protos/hash.h"
-#include "protos/eval.h"
 #include "protos/math.h"
 #include "protos/path.h"
 #include "protos/session.h"
 #include "protos/ticks.h"
-#include "protos/unicode.h"
-#include "protos/vars.h"
 
 
 /*****************************************/

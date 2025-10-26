@@ -2,7 +2,6 @@
 #include "protos/globals.h"
 #include "protos/print.h"
 #include "protos/parse.h"
-#include "protos/utils.h"
 #include <sys/types.h>
 #include <regex.h>
 

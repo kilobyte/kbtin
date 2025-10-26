@@ -6,21 +6,17 @@
 /*********************************************************************/
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <signal.h>
 #include "tintin.h"
 #include "protos/files.h"
-#include "protos/globals.h"
 #include "protos/hooks.h"
-#include "protos/math.h"
 #include "protos/print.h"
 #include "protos/run.h"
 #include "protos/telnet.h"
 #include "protos/unicode.h"
-#include "protos/user.h"
 #include "protos/utils.h"
 
 #ifndef BADSIG
