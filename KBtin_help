@@ -697,7 +697,7 @@ Examples:
 #hi 10 {A young lad trudges off to war}
 #hi 10 {A worried merchant flees off to safety}
 #foreach {$SoU} #hi 4
-#hi 13:2 {* swiches targets..}
+#hi 13:2 {* switches targets..}
 #hi 13:2 {* is enveloped by * as * tries to pass through the shimmering wall.}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~unhighlight

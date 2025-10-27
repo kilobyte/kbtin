@@ -905,7 +905,7 @@ empty:
 
     char *out = left;
     // When expanding, prefer the rightmost Bresenham ray as it makes output
-    // have longer repeats on the left which is more consitent with what people
+    // have longer repeats on the left which is more consistent with what people
     // tend to make manually.  Ie, aaabbcc not aabbbcc (most "evenest") or
     // aabbccc.
     int d = (n>m)? n-1 : 0;

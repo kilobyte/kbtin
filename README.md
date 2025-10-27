@@ -67,7 +67,7 @@ DO NOT EVER CONNECT TO A REMOTE SERVER WHOSE ADMINS YOU DO NOT TRUST.
 
 Then why even bother with KBtin?  Well, a sizeable minority of players still
 swear by clients like CMUD or zMUD that haven't been updated since beginning
-of this millenium, and sky isn't falling.
+of this millennium, and sky isn't falling.
 
 Still, you should not use KBtin (nor play most remote-accessing games) from
 any account/machine you have sensitive data -- including credentials -- on.
