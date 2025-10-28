@@ -3,7 +3,7 @@ KBtin
 
 KBtin is a very heavily extended clone of well-known TinTin++.
 
-If you're new to MUDding, I would really recommend using one of modern
+If you're new to MUDding, I would really recommend using one of the modern
 clients, such as Mudlet instead.  The TinTin++ language is awful to use;
 the codebase in ancient; user-friendliness is an unthing.
 
@@ -67,7 +67,7 @@ DO NOT EVER CONNECT TO A REMOTE SERVER WHOSE ADMINS YOU DO NOT TRUST.
 
 Then why even bother with KBtin?  Well, a sizeable minority of players still
 swear by clients like CMUD or zMUD that haven't been updated since beginning
-of this millennium, and sky isn't falling.
+of this millennium, and the sky isn't falling.
 
 Still, you should not use KBtin (nor play most remote-accessing games) from
 any account/machine you have sensitive data -- including credentials -- on.
