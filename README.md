@@ -31,17 +31,20 @@ The features include:
 * native SSL, with certificate retention to avoid MitM attacks
 * fractional arithmetic
 
-KBtin has been ported to the following systems:
+KBtin should work on any Unix system that supports the usual semi-modern
+toolchain.  Today this tends to mean Linux, sometimes MacOS X or *BSD, but
+at least the following systems used to work, and should it should be easy to
+fix bit rot if someone requests:
 
 * Linux
-* SunOS<sup>long untested</sup>
+* SunOS
 * MacOS X
 * {Free,Open,Net}BSD
-* Tru64 Unix<sup>long untested</sup>
-* HP-UX<sup>long untested</sup>
-* IRIX<sup>long untested</sup>
-* SCO OpenServer<sup>long untested</sup>
-* Solaris<sup>long untested</sup>
+* Tru64 Unix
+* HP-UX
+* IRIX
+* SCO OpenServer
+* Solaris
 
 Dependencies required to build:
 
