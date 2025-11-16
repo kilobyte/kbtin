@@ -124,6 +124,7 @@ void bind_command(const char *arg, session *ses)
 
     if (*left && *right)
     {
+        set_hash(ses->binds, left, right);
         tintin_printf(MSG_BIND, ses, "#Ok. {%s} is now bound to {%s}.", left, right);
         bindnum++;
         return;
