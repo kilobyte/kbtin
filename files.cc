@@ -777,15 +777,15 @@ void write_command(const char *filename, session *ses)
         for (auto&& r : ses->routes[nr])
         {
             num2str(num, r.distance);
-            cfprintf(myfile, (*(r.cond))
+            cfprintf(myfile, (!r.cond.empty())
                     ?"%croute {%s} {%s} {%s} %s {%s}\n"
                     :"%croute {%s} {%s} {%s} %s\n",
                     tintin_char,
                     ses->locations[nr].c_str(),
                     ses->locations[r.dest].c_str(),
-                    r.path,
+                    r.path.c_str(),
                     num,
-                    r.cond);
+                    r.cond.c_str());
         };
 
     hl = hash2list(ses->binds, 0);
@@ -804,7 +804,7 @@ void write_command(const char *filename, session *ses)
 }
 
 
-static bool route_exists(const std::string &A, const std::string &B, const char *path, num_t dist, const char *cond, session *ses)
+static bool route_exists(const std::string &A, const std::string &B, const std::string &path, num_t dist, const std::string &cond, session *ses)
 {
     int a, b;
 
@@ -820,10 +820,7 @@ static bool route_exists(const std::string &A, const std::string &B, const char 
     if (b == n)
         return false;
     for (auto&& r : ses->routes[a])
-        if ((r.dest ==b )&&
-                (!strcmp(r.path, path))&&
-                (r.distance==dist)&&
-                (!strcmp(r.cond, cond)))
+        if (r.dest == b && r.path == path && r.distance == dist && r.cond == cond)
             return true;
     return false;
 }
@@ -959,15 +956,15 @@ void writesession_command(const char *filename, session *ses)
                               nullsession))
             {
                 num2str(num, r.distance);
-                cfprintf(myfile, (*(r.cond))
+                cfprintf(myfile, (!r.cond.empty())
                         ?"%croute {%s} {%s} {%s} %s {%s}\n"
                         :"%croute {%s} {%s} {%s} %s\n",
                         tintin_char,
                         ses->locations[nr].c_str(),
                         ses->locations[r.dest].c_str(),
-                        r.path,
+                        r.path.c_str(),
                         num,
-                        r.cond);
+                        r.cond.c_str());
             }
         };
 

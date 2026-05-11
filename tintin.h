@@ -308,10 +308,9 @@ struct eventnode
 struct routenode
 {
     int dest;
-    char *path;
+    std::string path;
     num_t distance;
-    char *cond;
-    ~routenode();
+    std::string cond;
 };
 
 struct pair

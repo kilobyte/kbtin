@@ -11,33 +11,25 @@
 
 extern session *if_command(const char *arg, session *ses);
 
-routenode::~routenode()
-{
-    SFREE(path);
-    SFREE(cond);
-}
-
 static void addroute(session *ses, int a, int b, char *way, num_t dist, char *cond)
 {
     auto R = ses->routes[a].begin();
-    while (R!=ses->routes[a].end() && R->dest!=b)
-        R++;
+    while (R != ses->routes[a].end() && R->dest != b)
+        ++R;
     if (R!=ses->routes[a].end())
     {
         auto &r = *R;
-        SFREE(r.path);
-        r.path=mystrdup(way);
-        r.distance=dist;
-        SFREE(r.cond);
-        r.cond=mystrdup(cond);
+        r.path = way;
+        r.distance = dist;
+        r.cond = cond;
     }
     else
     {
         auto &r = ses->routes[a].emplace_back();
-        r.dest=b;
-        r.path=mystrdup(way);
-        r.distance=dist;
-        r.cond=mystrdup(cond);
+        r.dest = b;
+        r.path = way;
+        r.distance = dist;
+        r.cond = cond;
     }
 }
 
@@ -73,18 +65,18 @@ static void show_route(session *ses, int a, routenode *r)
     char num[32];
     num2str(num, r->distance);
 
-    if (*r->cond)
+    if (!r->cond.empty())
         tintin_printf(ses, "~7~{%s~7~}->{%s~7~}: {%s~7~} d=%s if {%s~7~}",
             ses->locations[a].c_str(),
             ses->locations[r->dest].c_str(),
-            r->path,
+            r->path.c_str(),
             num,
-            r->cond);
+            r->cond.c_str());
     else
         tintin_printf(ses, "~7~{%s~7~}->{%s~7~}: {%s~7~} d=%s",
             ses->locations[a].c_str(),
             ses->locations[r->dest].c_str(),
-            r->path,
+            r->path.c_str(),
             num);
 }
 
@@ -267,7 +259,7 @@ void goto_command(const char *arg, session *ses)
     std::vector<num_t> d(n);
     std::vector<int> ok(n);
     std::vector<int> way(n);
-    std::vector<char*> path(n);
+    std::vector<std::string> path(n);
     std::vector<std::string> locs(n);
 
     arg=get_arg(arg, Astr, 0, ses);
@@ -319,9 +311,9 @@ void goto_command(const char *arg, session *ses)
         for (auto&& r : ses->routes[i])
             if (d[r.dest]>s+r.distance)
             {
-                if (!*(r.cond))
+                if (r.cond.empty())
                     goto good;
-                substitute_vars(r.cond, cond, ses);
+                substitute_vars(r.cond.c_str(), cond, ses);
                 if (eval_expression(cond, ses))
                 {
                 good:
@@ -338,7 +330,7 @@ void goto_command(const char *arg, session *ses)
         locs[i] = ses->locations[d[i]];
         for (auto&& r : ses->routes[d[i]])
             if (r.dest==d[i-1])
-                path[i]=mystrdup(r.path);
+                path[i] = r.path;
     }
 
     /*
@@ -350,10 +342,8 @@ void goto_command(const char *arg, session *ses)
     for (i=j;i>0;i--)
     {
         tintin_printf(MSG_GOTO, ses, "#going from %s to %s", locs[i].c_str(), locs[i-1].c_str());
-        parse_input(path[i], true, ses);
+        parse_input(path[i].c_str(), true, ses);
     }
-    for (i=j;i>0;i--)
-        SFREE(path[i]);
     set_variable("loc", Bstr, ses);
 }
 
@@ -417,9 +407,9 @@ session * dogoto_command(const char *arg, session *ses)
         for (auto&& r : ses->routes[i])
             if (d[r.dest] > s+r.distance)
             {
-                if (!*(r.cond))
+                if (r.cond.empty())
                     goto good;
-                substitute_vars(r.cond, cond, ses);
+                substitute_vars(r.cond.c_str(), cond, ses);
                 if (eval_expression(cond, ses))
                 {
                 good:
@@ -456,7 +446,7 @@ session * dogoto_command(const char *arg, session *ses)
                     pptr+=snprintf(pptr,
                         path-pptr+BUFFER_SIZE-1,
                         " {%s}",
-                        r.path);
+                        r.path.c_str());
                     if (pptr>=path+BUFFER_SIZE-2)
                     {
                         tintin_eprintf(ses, "#Path too long in #dogoto");
@@ -468,7 +458,7 @@ session * dogoto_command(const char *arg, session *ses)
                     tintin_printf(ses, "%-10s>%-10s {%s}",
                         ses->locations[d[i]].c_str(),
                         ses->locations[d[i-1]].c_str(),
-                        r.path);
+                        r.path.c_str());
                 }
             }
     }
