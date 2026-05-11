@@ -369,9 +369,10 @@ struct session
     int path_begin, path_length;
     int socket, last_term_type;
     sestype_t sestype;
-    bool naws, ga, gas;
-    int server_echo; /* 0=not negotiated, 1=we shouldn't echo, 2=we can echo */
+    bool naws, gas;
     bool more_coming;
+    unsigned char ga;
+    int server_echo; /* 0=not negotiated, 1=we shouldn't echo, 2=we can echo */
     char last_line[BUFFER_SIZE], telnet_buf[BUFFER_SIZE];
     int telnet_buflen;
     bool verbose, blank, echo, speedwalk, togglesubs, presub, verbatim;

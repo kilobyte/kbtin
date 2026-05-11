@@ -588,8 +588,16 @@ static void read_mud(session *ses)
             activesession = newactive_session();
         return;
     }
-    else if (!didget)
-        return; /* possible if only telnet protocol data was received */
+    else if (!didget) /* possible if only telnet protocol data was received */
+    {
+        if (ses->ga == 1)
+        {
+            user_strenghten_draft();
+            ses->ga = 2; // mark it as seen
+        }
+
+        return;
+    }
     if (ses->logfile)
     {
         if (ses->logtype)
@@ -752,6 +760,8 @@ static void do_one_line(char *text, int nl, session *ses)
                         strcat(line, ses->partial_line_marker);
                     user_textout_draft(line, isnb);
                 }
+                if (ses->ga == 1)
+                    ses->ga = 2; // mark it as seen
                 lastdraft=ses;
             }
         }

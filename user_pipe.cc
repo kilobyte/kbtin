@@ -111,6 +111,7 @@ void userpipe_initdriver(void)
     user_resume         = user_noop;
     user_textout        = userpipe_textout;
     user_textout_draft  = (void (*)(const char*, bool))user_noop;
+    user_strenghten_draft= (void (*)(void))user_noop;
     user_process_kbd    = userpipe_process_kbd;
     user_beep           = userpipe_beep;
     user_keypad         = (void (*)(bool))user_illegal;

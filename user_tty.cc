@@ -624,6 +624,12 @@ static void usertty_textout_draft(const char *txt, bool strong)
     o_strongdraft=strong;
 }
 
+static void usertty_strenghten_draft(void)
+{
+    if (o_draftlen)
+        o_strongdraft=true;
+}
+
 static void transpose_chars(void)
 {
     WC w1[3], w2[3], *l, *r;
@@ -1813,6 +1819,7 @@ void usertty_initdriver(void)
     user_resume         = usertty_resume;
     user_textout        = usertty_textout;
     user_textout_draft  = usertty_textout_draft;
+    user_strenghten_draft=usertty_strenghten_draft;
     user_process_kbd    = usertty_process_kbd;
     user_beep           = usertty_beep;
     user_keypad         = usertty_keypad;

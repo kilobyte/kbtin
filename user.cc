@@ -18,6 +18,7 @@ void (*user_pause)(void);
 void (*user_resume)(void);
 void (*user_textout)(const char*);
 void (*user_textout_draft)(const char*, bool);
+void (*user_strenghten_draft)(void);
 bool (*user_process_kbd)(session*, WC);
 void (*user_beep)(void);
 void (*user_done)(void);

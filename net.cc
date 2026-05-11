@@ -396,7 +396,7 @@ int read_buffer_mud(char *buffer, session *ses)
     ses->server_idle_since=current_time();
     ses->more_coming = (didget+=len) == INPUT_CHUNK;
     len=0;
-    ses->ga=false;
+    ses->ga=0;
 
     tmpbuf[didget]=0;
     cpsource = tmpbuf;
@@ -425,7 +425,7 @@ int read_buffer_mud(char *buffer, session *ses)
                 didget-=2;
                 cpsource+=2;
                 if (!i)
-                    ses->ga=true;
+                    ses->ga=1;
                 break;
             case -3:
                 i -= 2;
