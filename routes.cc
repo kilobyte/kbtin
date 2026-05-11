@@ -45,8 +45,8 @@ int count_routes(session *ses)
 {
     int num=0;
 
-    for (auto i : ses->locations)
-        for (auto&& r [[maybe_unused]] : ses->routes[*i])
+    for (int i = 0; i < ses->locations.size(); ++i)
+        for (auto&& r [[maybe_unused]] : ses->routes[i])
             num++;
     return num;
 }
@@ -64,11 +64,8 @@ static void kill_unused_locations(session *ses)
                 us[r.dest]=true;
         }
     for (unsigned i=0; i<n; i++)
-        if (ses->locations[i] && !us[i])
-        {
-            SFREE(ses->locations[i]);
-            ses->locations[i] = 0;
-        }
+        if ((!ses->locations[i].empty()) && !us[i])
+            ses->locations[i].clear();
 }
 
 static void show_route(session *ses, int a, routenode *r)
@@ -78,15 +75,15 @@ static void show_route(session *ses, int a, routenode *r)
 
     if (*r->cond)
         tintin_printf(ses, "~7~{%s~7~}->{%s~7~}: {%s~7~} d=%s if {%s~7~}",
-            ses->locations[a],
-            ses->locations[r->dest],
+            ses->locations[a].c_str(),
+            ses->locations[r->dest].c_str(),
             r->path,
             num,
             r->cond);
     else
         tintin_printf(ses, "~7~{%s~7~}->{%s~7~}: {%s~7~} d=%s",
-            ses->locations[a],
-            ses->locations[r->dest],
+            ses->locations[a].c_str(),
+            ses->locations[r->dest].c_str(),
             r->path,
             num);
 }
@@ -119,10 +116,10 @@ void route_command(const char *arg, session *ses)
         if (!*b)
             strcpy(b, "*");
         for (int i=0;i<n;i++)
-            if (ses->locations[i]&&match(a, ses->locations[i]))
+            if ((!ses->locations[i].empty()) && match(a, ses->locations[i].c_str()))
                 for (auto&& r : ses->routes[i])
-                    if (ses->locations[i]&&
-                          match(b, ses->locations[r.dest]))
+                    if ((!ses->locations[i].empty()) &&
+                          match(b, ses->locations[r.dest].c_str()))
                     {
                         if (first)
                         {
@@ -137,36 +134,36 @@ void route_command(const char *arg, session *ses)
     }
     int i;
     for (i=0;i<n;i++)
-        if (ses->locations[i]&&!strcmp(ses->locations[i], a))
+        if ((!ses->locations[i].empty()) && ses->locations[i] == a)
             goto found_i;
     if (i==n)
     {
         for (i=0;i<n;i++)
-            if (!ses->locations[i])
+            if (ses->locations[i].empty())
             {
-                ses->locations[i]=mystrdup(a);
+                ses->locations[i] = a;
                 goto found_i;
             }
 
-        ses->locations.emplace_back(mystrdup(a));
+        ses->locations.emplace_back(a);
         ses->routes.emplace_back();
         n++;
     }
 found_i:;
     int j;
     for (j=0;j<n;j++)
-        if (ses->locations[j]&&!strcmp(ses->locations[j], b))
+        if ((!ses->locations[j].empty()) && ses->locations[j] == b)
             goto found_j;
     if (j==n)
     {
         for (j=0;j<n;j++)
-            if (!ses->locations[j])
+            if (ses->locations[j].empty())
             {
-                ses->locations[j]=mystrdup(b);
+                ses->locations[j] = b;
                 goto found_j;
             }
 
-        ses->locations.emplace_back(mystrdup(b));
+        ses->locations.emplace_back(b);
         ses->routes.emplace_back();
         n++;
     }
@@ -194,15 +191,15 @@ found_j:
 
         if (*cond)
             tintin_printf(ses, "#Ok. Way from {%s} to {%s} is now set to {%s} (distance=%s) condition:{%s}",
-                ses->locations[i],
-                ses->locations[j],
+                ses->locations[i].c_str(),
+                ses->locations[j].c_str(),
                 way,
                 num,
                 cond);
         else
             tintin_printf(ses, "#Ok. Way from {%s} to {%s} is now set to {%s} (distance=%s)",
-                ses->locations[i],
-                ses->locations[j],
+                ses->locations[i].c_str(),
+                ses->locations[j].c_str(),
                 way,
                 num);
     }
@@ -229,20 +226,20 @@ void unroute_command(const char *arg, session *ses)
     int n = ses->locations.size();
     for (int i=0;i<n;i++)
     {
-        if (!ses->locations[i])
+        if (ses->locations[i].empty())
             continue;
-        bool is_a = match(a, ses->locations[i]);
+        bool is_a = match(a, ses->locations[i].c_str());
 
         if (is_a || !*b)
             ses->routes[i].remove_if([&](routenode &r)
             {
-                if (*b ? match(b, ses->locations[r.dest])
-                       : is_a || match(a, ses->locations[r.dest]))
+                if (*b ? match(b, ses->locations[r.dest].c_str())
+                       : is_a || match(a, ses->locations[r.dest].c_str()))
                 {
                     tintin_printf(MSG_ROUTE, ses,
                         "#Ok. There is no longer a route from {%s~-1~} to {%s~-1~}.",
-                        ses->locations[i],
-                        ses->locations[r.dest]);
+                        ses->locations[i].c_str(),
+                        ses->locations[r.dest].c_str());
                     found=true;
                     return true;
                 }
@@ -264,38 +261,41 @@ void unroute_command(const char *arg, session *ses)
 void goto_command(const char *arg, session *ses)
 {
     int n=ses->locations.size();
-    char A[BUFFER_SIZE], B[BUFFER_SIZE], cond[BUFFER_SIZE];
+    char Astr[BUFFER_SIZE], Bstr[BUFFER_SIZE], cond[BUFFER_SIZE];
     int a, b, i, j;
     num_t s;
     std::vector<num_t> d(n);
     std::vector<int> ok(n);
     std::vector<int> way(n);
     std::vector<char*> path(n);
-    std::vector<char*> locs(n);
+    std::vector<std::string> locs(n);
 
-    arg=get_arg(arg, A, 0, ses);
-    arg=get_arg(arg, B, 1, ses);
+    arg=get_arg(arg, Astr, 0, ses);
+    arg=get_arg(arg, Bstr, 1, ses);
 
-    if ((!*A)||(!*B))
+    if (!*Astr || !*Bstr)
     {
         tintin_eprintf(ses, "#SYNTAX: #goto <from> <to>");
         return;
     }
 
-    for (a=0;a<n;a++)
-        if (ses->locations[a]&&!strcmp(ses->locations[a], A))
+    const std::string A(Astr);
+    const std::string B(Bstr);
+
+    for (a = 0; a < n; a++)
+        if (ses->locations[a] == A)
             break;
-    if (a==n)
+    if (a == n)
     {
-        tintin_eprintf(ses, "#Location not found: [%s]", A);
+        tintin_eprintf(ses, "#Location not found: [%s]", Astr);
         return;
     }
-    for (b=0;b<n;b++)
-        if (ses->locations[b]&&!strcmp(ses->locations[b], B))
+    for (b = 0; b < n; b++)
+        if (ses->locations[b] == B)
             break;
-    if (b==n)
+    if (b == n)
     {
-        tintin_eprintf(ses, "#Location not found: [%s]", B);
+        tintin_eprintf(ses, "#Location not found: [%s]", Bstr);
         return;
     }
     for (i=0;i<n;i++)
@@ -312,7 +312,7 @@ void goto_command(const char *arg, session *ses)
                 s=d[i=j];
         if (s==INF)
         {
-            tintin_eprintf(ses, "#No route from %s to %s!", A, B);
+            tintin_eprintf(ses, "#No route from %s to %s!", Astr, Bstr);
             return;
         }
         ok[i]=1;
@@ -335,7 +335,7 @@ void goto_command(const char *arg, session *ses)
         d[j++]=i;
     for (d[i=j]=a;i>0;i--)
     {
-        locs[i]=mystrdup(ses->locations[d[i]]);
+        locs[i] = ses->locations[d[i]];
         for (auto&& r : ses->routes[d[i]])
             if (r.dest==d[i-1])
                 path[i]=mystrdup(r.path);
@@ -346,17 +346,15 @@ void goto_command(const char *arg, session *ses)
        because of ugly bad users who can use #unroute in the middle
        of a #go command
     */
-    locs[0]=mystrdup(ses->locations[b]);
+    locs[0] = B;
     for (i=j;i>0;i--)
     {
-        tintin_printf(MSG_GOTO, ses, "#going from %s to %s", locs[i], locs[i-1]);
+        tintin_printf(MSG_GOTO, ses, "#going from %s to %s", locs[i].c_str(), locs[i-1].c_str());
         parse_input(path[i], true, ses);
     }
-    for (i=j;i>=0;i--)
-        SFREE(locs[i]);
     for (i=j;i>0;i--)
         SFREE(path[i]);
-    set_variable("loc", B, ses);
+    set_variable("loc", Bstr, ses);
 }
 
 /************************/
@@ -365,7 +363,7 @@ void goto_command(const char *arg, session *ses)
 session * dogoto_command(const char *arg, session *ses)
 {
     int n=ses->locations.size();
-    char A[BUFFER_SIZE], B[BUFFER_SIZE],
+    char Astr[BUFFER_SIZE], Bstr[BUFFER_SIZE],
         distvar[BUFFER_SIZE], locvar[BUFFER_SIZE], pathvar[BUFFER_SIZE];
     char tmp[BUFFER_SIZE], cond[BUFFER_SIZE];
     int a, b, i, j;
@@ -375,28 +373,31 @@ session * dogoto_command(const char *arg, session *ses)
     std::vector<int> way(n);
     char path[BUFFER_SIZE], *pptr;
 
-    arg=get_arg(arg, A, 0, ses);
-    arg=get_arg(arg, B, 0, ses);
+    arg=get_arg(arg, Astr, 0, ses);
+    arg=get_arg(arg, Bstr, 0, ses);
     arg=get_arg(arg, distvar, 0, ses);
     arg=get_arg(arg, locvar, 0, ses);
     arg=get_arg(arg, pathvar, 0, ses);
 
-    if ((!*A)||(!*B))
+    if ((!*Astr) || (!*Bstr))
     {
         tintin_eprintf(ses, "#SYNTAX: #dogoto <from> <to> [<distvar> [<locvar> [<pathvar>]]] [#else ...]");
         return ses;
     }
     bool flag=*distvar||*locvar||*pathvar;
 
-    for (a=0;a<n;a++)
-        if (ses->locations[a]&&!strcmp(ses->locations[a], A))
+    std::string A(Astr);
+    std::string B(Bstr);
+
+    for (a = 0; a < n; a++)
+        if (ses->locations[a] == A)
             break;
-    if (a==n)
+    if (a == n)
         goto not_found;
-    for (b=0;b<n;b++)
-        if (ses->locations[b]&&!strcmp(ses->locations[b], B))
+    for (b = 0; b < n; b++)
+        if (ses->locations[b] == B)
             break;
-    if (b==n)
+    if (b == n)
         goto not_found;
     for (i=0;i<n;i++)
     {
@@ -435,9 +436,9 @@ session * dogoto_command(const char *arg, session *ses)
         d[j++]=i;
     d[j]=a;
     pptr=path;
-    for (i=j;i>=0;i--)
+    for (i = j; i >= 0; i--)
     {
-        pptr+=snprintf(pptr, path-pptr+BUFFER_SIZE-1, " %s", ses->locations[d[i]]);
+        pptr+=snprintf(pptr, path-pptr+BUFFER_SIZE-1, " %s", ses->locations[d[i]].c_str());
         if (pptr>=path+BUFFER_SIZE-2)
             break;
     }
@@ -465,8 +466,8 @@ session * dogoto_command(const char *arg, session *ses)
                 else
                 {
                     tintin_printf(ses, "%-10s>%-10s {%s}",
-                        ses->locations[d[i]],
-                        ses->locations[d[i-1]],
+                        ses->locations[d[i]].c_str(),
+                        ses->locations[d[i-1]].c_str(),
                         r.path);
                 }
             }
@@ -479,7 +480,7 @@ truncated_path:
 
 not_found:
     if (!flag)
-        tintin_printf(ses, "No paths from %s to %s found.", A, B);
+        tintin_printf(ses, "No paths from %s to %s found.", Astr, Bstr);
 
     return ifelse("dogoto", arg, ses);
 }

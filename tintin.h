@@ -364,7 +364,7 @@ struct session
     struct hashtable *aliases, *myvars, *pathdirs, *binds, *ratelimits;
     struct pair path[MAX_PATH_LENGTH];
     std::vector<std::list<routenode> > routes;
-    std::vector<char *> locations;
+    std::vector<std::string> locations;
     struct eventnode *events;
     int path_begin, path_length;
     int socket, last_term_type;

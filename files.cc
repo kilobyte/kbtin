@@ -781,8 +781,8 @@ void write_command(const char *filename, session *ses)
                     ?"%croute {%s} {%s} {%s} %s {%s}\n"
                     :"%croute {%s} {%s} {%s} %s\n",
                     tintin_char,
-                    ses->locations[nr],
-                    ses->locations[r.dest],
+                    ses->locations[nr].c_str(),
+                    ses->locations[r.dest].c_str(),
                     r.path,
                     num,
                     r.cond);
@@ -804,18 +804,18 @@ void write_command(const char *filename, session *ses)
 }
 
 
-static bool route_exists(const char *A, const char *B, const char *path, num_t dist, const char *cond, session *ses)
+static bool route_exists(const std::string &A, const std::string &B, const char *path, num_t dist, const char *cond, session *ses)
 {
     int a, b;
 
     int n = ses->locations.size();
     for (a=0; a<n; a++)
-        if (ses->locations[a]&&!strcmp(ses->locations[a], A))
+        if (ses->locations[a] == A)
             break;
     if (a == n)
         return false;
     for (b=0; b<n; b++)
-        if (ses->locations[b]&&!strcmp(ses->locations[b], B))
+        if (ses->locations[b] == B)
             break;
     if (b == n)
         return false;
@@ -963,8 +963,8 @@ void writesession_command(const char *filename, session *ses)
                         ?"%croute {%s} {%s} {%s} %s {%s}\n"
                         :"%croute {%s} {%s} {%s} %s\n",
                         tintin_char,
-                        ses->locations[nr],
-                        ses->locations[r.dest],
+                        ses->locations[nr].c_str(),
+                        ses->locations[r.dest].c_str(),
                         r.path,
                         num,
                         r.cond);
