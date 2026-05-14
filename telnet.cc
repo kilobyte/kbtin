@@ -138,7 +138,7 @@ static void telnet_send_naws(session *ses)
 
 static void telnet_send_ttype(session *ses)
 {
-    char nego[128];
+    char nego[128], mtts[16];
     const char *ttype;
 
     switch (ses->last_term_type++)
@@ -147,21 +147,17 @@ static void telnet_send_ttype(session *ses)
         ttype=TERM;
         break;
     case 1:
-        ttype="hardcopy";
+        ttype="KBtin-" VERSION;
         break;
     case 2:
-        ttype="unknown";
+        snprintf(mtts, sizeof mtts, "MTTS %d", 9 + ((ses->c_io.mode == CM_UTF8)? 4 : 0));
+        ttype=mtts;
         break;
-    /* contrary to what zMud does, we cannot claim we're "vt100" or "ansi", */
-    /* as we obviously lack an addressable cursor */
     default:
-        ses->last_term_type=0;
-    case 3:
-        ttype="KBtin-" VERSION;
+        ttype="hardcopy";
+        ses->last_term_type = 0;
     }
-    write_socket(ses, nego,
-        sprintf(nego, "%c%c%c%c%s%c%c", IAC, SB,
-            TERMINAL_TYPE, IS, ttype, IAC, SE));
+    write_socket(ses, nego, sprintf(nego, "%c%c%c%c%s%c%c", IAC, SB, TERMINAL_TYPE, IS, ttype, IAC, SE));
 #ifdef TELNET_DEBUG
     tintin_printf(ses, "~8~[telnet] sent: IAC SB TERMINAL-TYPE IS \"%s\" IAC SE~-1~", ttype);
 #endif
