@@ -300,7 +300,7 @@ static void redraw_status(void)
         goto end;
     while (*pos)
     {
-        if (getcolor(&pos, &color, 0))
+        if (getcolor(&pos, &color))
         {
             c=color;
             if (!(c&CBG_MASK))
@@ -344,7 +344,7 @@ static void draw_out(const char *pos)
     int c=7;
     while (*pos)
     {
-        if (getcolor(&pos, &c, 0))
+        if (getcolor(&pos, &c))
         {
             tbuf=ansicolor(tbuf, c);
             pos++;
@@ -1517,7 +1517,7 @@ static void b_resize(void)
     {
         int ncolor=color;
         const char *sp=src[i];
-        if (cont && *sp=='~' && getcolor(&sp, &ncolor, 0))
+        if (cont && *sp=='~' && getcolor(&sp, &ncolor))
         {
             /* don't insert extra color codes for continuations */
             if (color!=ncolor)
@@ -1737,7 +1737,7 @@ static bool fwrite_out(FILE *f, const char *pos)
     for (;*pos;pos++)
     {
         if (*pos=='~')
-            if (getcolor(&pos, &c, 0))
+            if (getcolor(&pos, &c))
             {
                 if (c==dump_color)
                     continue;

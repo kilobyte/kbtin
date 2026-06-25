@@ -31,7 +31,7 @@ static int getco(const char *restrict txt, const char **err)
     return -1U>>1;
 }
 
-int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_minus_token)
+int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_minus_token = false)
 {
     unsigned fg, bg, blink;
     const char *txt=*ptr;

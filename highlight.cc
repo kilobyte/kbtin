@@ -66,12 +66,12 @@ static bool get_high_num(const char *hig, int hn)
         sprintf(tmp, "~%.*s~", (int)(sl-hig), hig);
         sl=tmp;
         int c=7;
-        if (getcolor(&sl, &c, 0))
+        if (getcolor(&sl, &c))
         {
             int minc=0;
-            sl=tmp; getcolor(&sl, &minc, 0);
+            sl=tmp; getcolor(&sl, &minc);
             int maxc=C_MASK;
-            sl=tmp; getcolor(&sl, &maxc, 0);
+            sl=tmp; getcolor(&sl, &maxc);
             int mask = maxc &~ minc;
             highmask[hn] = mask;
             highpattern[hn] = c &~ mask;

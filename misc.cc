@@ -527,7 +527,7 @@ void inputcolors_command(const char *arg, session *ses)
     }
 
     int c = INPUT_COLOR;
-    if (!getcolor(&arg, &c, 0))
+    if (!getcolor(&arg, &c))
     {
         tintin_eprintf(ses, "#Invalid color code, see \"#help color\"");
         return;

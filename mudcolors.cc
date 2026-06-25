@@ -389,7 +389,7 @@ void do_out_MUD_colors(char *line, session *ses)
     for (char *pos=line;*pos;pos++)
     {
         if (*pos=='~')
-            if (getcolor((const char**)&pos, &c, 0))
+            if (getcolor((const char **)&pos, &c))
                 goto color;
         *txt++=*pos;
         continue;
