@@ -382,7 +382,7 @@ static int attributize_colors(char *restrict text, int *restrict attr, const cha
     atr=attr;
     for (pos=line;*pos;pos++)
     {
-        if (getcolor((const char**)&pos, &d, 1))
+        if (getcolor((const char**)&pos, &d))
             c=d;
         else
         {
