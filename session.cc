@@ -578,7 +578,7 @@ void cleanup_session(session *ses)
         user_textout_draft(0, 0);
         sprintf(buf, "%s\n", ses->last_line);
         convert(&ses->c_io, ses->last_line, buf, -1);
-        do_in_MUD_colors(ses->last_line, false, 0);
+        do_in_MUD_colors(ses->last_line, false, ses);
         user_textout(ses->last_line);
     }
     if (ses!=nullsession) /* valgrind cleans null */
