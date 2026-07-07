@@ -166,15 +166,18 @@ again:
                     if (*(txt-1)!='[')
                         nt++;
                     else
-                        ccolor=7;
+                        ccolor=16;
                     for (unsigned int i=0;i<nt;i++)
                         switch (tok[i])
                         {
                         case 0:
-                            ccolor=7;
+                            ccolor=16;
                             break;
                         case 1:
-                            ccolor|=8;
+                            if ((ccolor & CFG_MASK) < 16)
+                                ccolor|=8;
+                            else if ((ccolor & CFG_MASK) == 16)
+                                ccolor=(ccolor&~CFG_MASK)|8;
                             break;
                         case 2:
                             ccolor=(ccolor&~CFG_MASK)|8;
@@ -205,8 +208,8 @@ again:
                             if ((ccolor&CFG_MASK) < 16)
                             {
                                 ccolor&=~8;
-                                if (!(ccolor&CBG_MASK))
-                                    ccolor|=7;
+                                if (!(ccolor&CFG_MASK))
+                                    ccolor|=16;
                             }
                             break;
                         case 23:
@@ -233,6 +236,8 @@ again:
                                 {
                                     if (k < 16)
                                         k = (k&8) | rgbbgr(k&7);
+                                    else if (k == 16)
+                                        k = 0; // 16 is hijacked for default
                                     ccolor=(ccolor&~CFG_MASK) | k;
                                 }
                             }
@@ -280,15 +285,18 @@ again:
                             break;
                         case 39:
                             ccolor&=~CFG_MASK;
-                            ccolor|=7;
+                            ccolor|=16;
                             break;
                         case 49:
                             ccolor&=~CBG_MASK;
                             break;
+                        case 40:
+                            ccolor&=~CBG_MASK;
+                            ccolor|=16<<CBG_AT;
                         default:
                             if (tok[i]>=30 && tok[i]<38)
                                 ccolor=(ccolor&~0x07)|rgbbgr(tok[i]-30);
-                            else if (tok[i]>=40 && tok[i]<48)
+                            else if (tok[i]>=41 && tok[i]<48)
                                 ccolor=(ccolor&~CBG_MASK)|rgbbgr(tok[i]-40)<<CBG_AT;
                             else if (tok[i]>=90 && tok[i]<98)
                                 ccolor=(ccolor&~0x07)|8|rgbbgr(tok[i]-90);
@@ -412,7 +420,11 @@ color:
             txt=ansicolor(txt, c);
             break;
         case MUDC_ON:;
-            int k = rgb_to_16(rgb_from_256(c&CFG_MASK));
+            int k = c & CFG_MASK;
+            if (k == 16)
+                k = 7;
+            else
+                k = rgb_to_16(rgb_from_256(c&CFG_MASK));
             strcpy(txt, ses->MUDcolors[k]);
             txt+=strlen(ses->MUDcolors[k]);
         }

@@ -144,10 +144,10 @@ char* ansicolor(char *s, int c)
             *s++=';', *s++='9';
         *s++='0'+rgbbgr(k&7);
     }
-    else
+    else if (k > 16)
         s+=sprintf(s, ";38;5;%d", k);
     k = (c & CBG_MASK) >> CBG_AT;
-    if (k < 16)
+    if (k > 0 && k < 16)
     {
         if (k&8)
             *s++=';', *s++='1', *s++='0';
@@ -155,7 +155,9 @@ char* ansicolor(char *s, int c)
             *s++=';', *s++='4';
         *s++='0'+rgbbgr(k&7);
     }
-    else
+    else if (k == 16)
+        *s++=';', *s++='4', *s++='0';
+    else if (k > 16)
         s+=sprintf(s, ";48;5;%d", k);
     if (c>>=CFL_AT)
     {
