@@ -37,7 +37,7 @@ int count_routes(session *ses)
 {
     int num=0;
 
-    for (int i = 0; i < ses->locations.size(); ++i)
+    for (size_t i = 0; i < ses->locations.size(); ++i)
         for (auto&& r [[maybe_unused]] : ses->routes[i])
             num++;
     return num;
