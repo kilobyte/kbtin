@@ -1676,7 +1676,7 @@ static void usertty_init(void)
     tbuf+=sprintf(tbuf, "\033[1;1f\0337");
     tbuf+=sprintf(tbuf, "\033[>c"); /* query the terminal type */
 
-    sprintf(done_input, "~12~KB~3~tin ~7~%s by ~11~kilobyte@angband.pl~9~\n", VERSION);
+    sprintf(done_input, "~12~KB~3~tin ~7~%s~9~\n", VERSION);
     usertty_textout(done_input);
     for (int i=0;i<COLS;++i)
         done_input[i]='-';
