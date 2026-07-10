@@ -322,20 +322,20 @@ static void banner(void)
     ever wants to read -- that is what docs are for.
     */
     tintin_printf(0, "~2~╔════════════════════════════════════════════════════════╗");
-    tintin_printf(0, "║~7~               ~12~K B ~3~t i n~7~    v %-25s ~2~║", VERSION);
-    tintin_printf(0, "║                                                        ║");
-    tintin_printf(0, "║~7~ current developer: ~9~Adam Borowski (~9~kilobyte@angband.pl~7~) ~2~║");
-    tintin_printf(0, "║                                                        ║");
-    tintin_printf(0, "║~7~ based on ~12~tintin++~7~ v 2.1.9 by Peter Unold, Bill Reiss,  ~2~║");
-    tintin_printf(0, "║~7~   David A. Wagner, Joann Ellsworth, Jeremy C. Jack,    ~2~║");
-    tintin_printf(0, "║~7~          Ulan@GrimneMUD and Jakub Narębski             ~2~║");
-    tintin_printf(0, "╚════════════════════════════════════════════════════════╝~7~");
-    tintin_printf(0, "~15~#session <name> <host> <port> ~7~to connect to a remote server");
+    tintin_printf(0, "~2~║~-1~               ~12~K B ~3~t i n~7~    v %-25s ~2~║", VERSION);
+    tintin_printf(0, "~2~║                                                        ║");
+    tintin_printf(0, "~2~║~-1~ current developer: ~9~Adam Borowski (~9~kilobyte@angband.pl~7~) ~2~║");
+    tintin_printf(0, "~2~║                                                        ║");
+    tintin_printf(0, "~2~║~-1~ based on ~12~tintin++~7~ v 2.1.9 ~-1~by Peter Unold, Bill Reiss,  ~2~║");
+    tintin_printf(0, "~2~║~-1~   David A. Wagner, Joann Ellsworth, Jeremy C. Jack,    ~2~║");
+    tintin_printf(0, "~2~║~-1~          Ulan@GrimneMUD and Jakub Narębski             ~2~║");
+    tintin_printf(0, "~2~╚════════════════════════════════════════════════════════╝");
+    tintin_printf(0, "~15~#session <name> <host> <port> ~-1~to connect to a remote server");
     tintin_printf(0, "                              ~8~#ses t2t t2tmud.org 9999");
-    tintin_printf(0, "~15~#run <name> <command>         ~7~to run a local command");
+    tintin_printf(0, "~15~#run <name> <command>         ~-1~to run a local command");
     tintin_printf(0, "                              ~8~#run advent adventure");
     tintin_printf(0, "                              ~8~#run sql mysql");
-    tintin_printf(0, "~15~#help                         ~7~to get the help index");
+    tintin_printf(0, "~15~#help                         ~-1~to get the help index");
 }
 
 static void randomize(void)

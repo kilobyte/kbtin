@@ -30,7 +30,7 @@ static void userpipe_textout(const char *txt)
             if (getcolor(&a, &color, 1))
             {
                 if (color==-1)
-                    color=lastcolor;
+                    color=16;
                 if (tty)
                     b=ansicolor(b, color);
             }

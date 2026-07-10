@@ -524,7 +524,7 @@ static void b_textout(const char *txt)
             if (getcolor(&txt, &o_color, 1))
             {
                 if (o_color==-1)
-                    o_color=o_prevcolor;
+                    o_color = 16;
                 break;
             }
             /* fall through */
