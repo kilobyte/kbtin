@@ -293,6 +293,7 @@ again:
                         case 40:
                             ccolor&=~CBG_MASK;
                             ccolor|=16<<CBG_AT;
+                            break;
                         default:
                             if (tok[i]>=30 && tok[i]<38)
                                 ccolor=(ccolor&~0x07)|rgbbgr(tok[i]-30);
