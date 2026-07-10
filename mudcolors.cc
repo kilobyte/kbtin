@@ -165,8 +165,6 @@ again:
                 case 'm':
                     if (*(txt-1)!='[')
                         nt++;
-                    else
-                        ccolor=16;
                     for (unsigned int i=0;i<nt;i++)
                         switch (tok[i])
                         {
@@ -177,7 +175,7 @@ again:
                             if ((ccolor & CFG_MASK) < 16)
                                 ccolor|=8;
                             else if ((ccolor & CFG_MASK) == 16)
-                                ccolor=(ccolor&~CFG_MASK)|8;
+                                ccolor=(ccolor&~CFG_MASK)|15;
                             break;
                         case 2:
                             ccolor=(ccolor&~CFG_MASK)|8;
@@ -296,11 +294,17 @@ again:
                             break;
                         default:
                             if (tok[i]>=30 && tok[i]<38)
-                                ccolor=(ccolor&~0x07)|rgbbgr(tok[i]-30);
+                            {
+                                int k = ccolor&CFG_MASK;
+                                if (k < 16)
+                                    ccolor = (ccolor&~7)|rgbbgr(tok[i]-30);
+                                else
+                                    ccolor=(ccolor&~CFG_MASK)|rgbbgr(tok[i]-30);
+                            }
                             else if (tok[i]>=41 && tok[i]<48)
                                 ccolor=(ccolor&~CBG_MASK)|rgbbgr(tok[i]-40)<<CBG_AT;
                             else if (tok[i]>=90 && tok[i]<98)
-                                ccolor=(ccolor&~0x07)|8|rgbbgr(tok[i]-90);
+                                ccolor=(ccolor&~CFG_MASK)|8|rgbbgr(tok[i]-90);
                             else if (tok[i]>=100 && tok[i]<108)
                                 ccolor=(ccolor&~CBG_MASK)|(rgbbgr(tok[i]-100)|8)<<CBG_AT;
                             /* ignore unknown attributes */
