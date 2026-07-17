@@ -163,8 +163,7 @@ again:
                     tok[nt]=tok[nt]*10+*txt-'0';
                     goto again;
                 case 'm':
-                    if (*(txt-1)!='[')
-                        nt++;
+                    nt++;
                     for (unsigned int i=0;i<nt;i++)
                         switch (tok[i])
                         {
