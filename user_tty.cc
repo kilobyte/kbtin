@@ -366,7 +366,7 @@ static void b_scroll(int b_to)
 {
     if (b_screenb==(b_to=(b_to<b_first?b_first:(b_to>b_bottom?b_bottom:b_to))))
         return;
-    tbuf+=sprintf(tbuf, "\033[%d;%df\033[0;37;40m\033[1J", scr_len, COLS);
+    tbuf+=sprintf(tbuf, "\033[%d;%df\033[0m\033[1J", scr_len, COLS);
     term_commit();
     for (int y=b_to-LINES+(isstatus?3:2);y<=b_to;++y)
         if ((y>=1)&&(y>b_first))
