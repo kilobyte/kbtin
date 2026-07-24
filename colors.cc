@@ -50,6 +50,8 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
         fg=getco(txt, &err);
         if (fg > CFG_MASK)
             return 0;
+        if (fg == 232)
+            fg = 16;
         txt=err;
     }
     else if (*txt==':')
@@ -101,6 +103,8 @@ int getcolor(const char *restrict*restrict ptr, int *restrict color, bool allow_
 
 static int setco(char *txt, int c)
 {
+    if (c==-1)
+        return txt[0]='1', txt[1]='6', 2;
     if (c<10)
         return txt[0]=c+'0', 1;
     if (c<16)
@@ -120,7 +124,10 @@ int setcolor(char *txt, int c)
         return sprintf(txt, "~-1~");
     char *txt0 = txt;
     *txt++='~';
-    txt+=setco(txt, c&CFG_MASK);
+    if ((c&CFG_MASK) == 16)
+        txt+=setco(txt, -1);
+    else
+        txt+=setco(txt, c&CFG_MASK);
     if (c < 1<<CBG_AT)
         return *txt++='~', *txt=0, txt-txt0;
     *txt++=':';
