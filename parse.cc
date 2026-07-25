@@ -37,11 +37,11 @@ static struct hashtable *commands, *c_commands;
 
 bool inc_recursion(void)
 {
-    if (++recursion>=MAX_RECURSION)
+    if (++recursion >= MAX_RECURSION)
     {
-        if (recursion==MAX_RECURSION)
+        if (recursion == MAX_RECURSION)
             tintin_eprintf(0, "#TOO DEEP RECURSION.");
-        recursion=MAX_RECURSION*3;
+        recursion = MAX_RECURSION * 3;
         return true;
     }
 
@@ -58,7 +58,7 @@ session* parse_input(const char *input, bool override_verbatim, session *ses)
 
     if (inc_recursion())
     {
-        in_alias=false;
+        in_alias = false;
         return ses;
     }
 
@@ -67,7 +67,7 @@ session* parse_input(const char *input, bool override_verbatim, session *ses)
         term_echoing = true;
     if (!*input)
     {
-        if (ses!=nullsession)
+        if (ses != nullsession)
         {
             write_line_mud("", ses);
             debuglog(ses, "");
@@ -76,33 +76,33 @@ session* parse_input(const char *input, bool override_verbatim, session *ses)
             write_com_arg_mud("", "", 0, ses);
         return ses;
     }
-    if ((*input==tintin_char) && is_abrev(input + 1, "verbatim"))
+    if ((*input == tintin_char) && is_abrev(input + 1, "verbatim"))
     {
         verbatim_command("", ses);
         debuglog(ses, "%s", input);
         return ses;
     }
-    if (ses->verbatim && !override_verbatim && (ses!=nullsession))
+    if (ses->verbatim && !override_verbatim && (ses != nullsession))
     {
         write_line_mud(input, ses);
         debuglog(ses, "%s", input);
         return ses;
     }
-    if (*input==VERBATIM_CHAR && (ses!=nullsession))
+    if (*input == VERBATIM_CHAR && (ses != nullsession))
     {
         input++;
         write_line_mud(input, ses);
-        debuglog(ses, "%s", input-1);
+        debuglog(ses, "%s", input - 1);
         return ses;
     }
 
     while (*input)
     {
         while (*input == ';')
-            input=space_out(input+1);
+            input = space_out(input + 1);
         input = get_command(input, command);
         substitute_vars(command, command, ses);
-        nspaces=0;
+        nspaces = 0;
         while (isaspace(*input))
         {
             input++;
@@ -115,25 +115,25 @@ session* parse_input(const char *input, bool override_verbatim, session *ses)
         {
             if (!*input && *(*pvars)[0])
             {
-                if (strlen(arg)+1+strlen((*pvars)[0]) > BUFFER_SIZE-10)
+                if (strlen(arg) +1 + strlen((*pvars)[0]) > BUFFER_SIZE - 10)
                 {
                     if (!aborting)
                     {
                         tintin_eprintf(ses, "#ERROR: arguments too long in %s %s %s", command, arg, (*pvars)[0]);
-                        aborting=true;
+                        aborting = true;
                     }
                 }
                 if (*arg)
                     strcat(arg, " ");
                 strcat(arg, (*pvars)[0]);
             }
-            in_alias=false;
+            in_alias = false;
         }
-        if (recursion>MAX_RECURSION)
+        if (recursion > MAX_RECURSION)
             return ses;
         if (aborting)
         {
-            aborting=false;
+            aborting = false;
             recursion--;
             return ses;
         }
@@ -143,32 +143,32 @@ session* parse_input(const char *input, bool override_verbatim, session *ses)
             ses = parse_tintin_command(command + 1, arg, ses);
         else if ((al = get_hash(ses->aliases, command)))
         {
-            const char *cpsource=arg;
+            const char *cpsource = arg;
             pvars_t vars, *lastpvars;
 
             strcpy(vars[0], arg);
 
             for (int i = 1; i < 10; i++)
-                cpsource=get_arg_in_braces(cpsource, vars[i], 0);
-            in_alias=true;
-            lastpvars=pvars;
-            pvars=&vars;
+                cpsource = get_arg_in_braces(cpsource, vars[i], 0);
+            in_alias = true;
+            lastpvars = pvars;
+            pvars = &vars;
             strcpy(arg, al); /* alias can #unalias itself */
             ses = parse_input(arg, true, ses);
-            pvars=lastpvars;
+            pvars = lastpvars;
         }
         else if (ses->speedwalk && !*arg && is_speedwalk_dirs(command))
             do_speedwalk(command, ses);
         else
 #ifdef GOTO_CHAR
-            if ((*arg)||!do_goto(command, ses))
+            if ((*arg) || !do_goto(command, ses))
 #endif
             {
                 get_arg_with_spaces(arg, arg);
                 write_com_arg_mud(command, arg, nspaces, ses);
             }
     }
-    aborting=false;
+    aborting = false;
     recursion--;
     return ses;
 }
@@ -183,7 +183,7 @@ static inline bool is_speedwalk_dirs(const char *cp)
     while (*cp)
     {
         if (*cp != 'n' && *cp != 'e' && *cp != 's' && *cp != 'w' && *cp != 'u' && *cp != 'd' &&
-                !isadigit(*cp))
+            !isadigit(*cp))
             return false;
         if (!isadigit(*cp))
             res = true;
@@ -231,25 +231,25 @@ static bool do_goto(char *txt, session *ses)
 {
     char *ch;
 
-    if (!(ch=strchr(txt, GOTO_CHAR)))
+    if (!(ch = strchr(txt, GOTO_CHAR)))
         return false;
     if (!ch[1])
         return false;
-    if (ch!=txt)
+    if (ch != txt)
     {
-        *ch=' ';
+        *ch = ' ';
         goto_command(txt, ses);
     }
     else
     {
-        char tmp[BUFFER_SIZE+5]; // immediately cut again
+        char tmp[BUFFER_SIZE + 5]; // immediately cut again
 
-        if (!(ch=get_hash(ses->myvars, "loc"))||(!*ch))
+        if (!(ch = get_hash(ses->myvars, "loc")) || (!*ch))
         {
             tintin_eprintf(ses, "#Cannot goto from $loc, it is not set!");
             return true; // was syntactically correct
         }
-        snprintf(tmp, sizeof(tmp), "{%s} {%s}", ch, txt+1);
+        snprintf(tmp, sizeof(tmp), "{%s} {%s}", ch, txt + 1);
         goto_command(tmp, ses);
     }
     return true;
@@ -281,11 +281,11 @@ static session* parse_tintin_command(const char *command, const char *arg, sessi
             }
         }
 
-    a=command;
-    b=cmd;
+    a = command;
+    b = cmd;
     while (*a)
-        *b++=toalower(*a++);
-    *b=0;
+        *b++ = toalower(*a++);
+    *b = 0;
 
     if (isadigit(*command))
     {
@@ -301,9 +301,9 @@ static session* parse_tintin_command(const char *command, const char *arg, sessi
             tintin_eprintf(ses, "#Cannot repeat a command a non-positive number of times.");
         return ses;
     }
-    else if ((func=get_hash(c_commands, cmd)))
-        ses=((t_c_command)func)(arg, ses);
-    else if ((func=get_hash(commands, cmd)))
+    else if ((func = get_hash(c_commands, cmd)))
+        ses = ((t_c_command)func)(arg, ses);
+    else if ((func = get_hash(commands, cmd)))
         ((t_command)func)(arg, ses);
     else
         tintin_eprintf(ses, "#UNKNOWN TINTIN-COMMAND: [%c%s]", tintin_char, command);
@@ -319,11 +319,11 @@ static void add_Xcommand(struct hashtable *h, const char *command, void *func)
         fprintf(stderr, "Cannot add command: {%s}.\n", command);
         exit(1);
     }
-    for (char *end=stpcpy(cmd, command); end>cmd; end--)
+    for (char *end = stpcpy(cmd, command); end > cmd; end--)
     {
-        *end=0;
+        *end = 0;
         if (!get_hash(c_commands, cmd) && !get_hash(commands, cmd))
-            set_hash_nostring(h, cmd, (char*)func);
+            set_hash_nostring(h, cmd, (char * )func);
     }
 }
 
@@ -339,8 +339,8 @@ static void add_c_command(const char *command, t_c_command func)
 
 void init_parse(void)
 {
-    commands=init_hash();
-    c_commands=init_hash();
+    commands = init_hash();
+    c_commands = init_hash();
     set_hash_nostring(commands, "end", (char*)end_command);
     set_hash_nostring(commands, "unlink", (char*)unlink_command);
 #include "load_commands.h"
@@ -364,13 +364,13 @@ static const char* get_arg_all(const char *s, char *arg)
     while (*s)
     {
 
-        if (*s==CHAR_VERBATIM)     /* \ */
+        if (*s == CHAR_VERBATIM)   /* \ */
         {
             *arg++ = *s++;
             if (*s)
                 *arg++ = *s++;
         }
-        else if (nest<1 && (*s==CHAR_NEWLINE)) /* ; */
+        else if (nest < 1 && (*s == CHAR_NEWLINE)) /* ; */
         {
             break;
         }
@@ -402,7 +402,7 @@ const char* get_inline(const char *s, char *arg)
     s = space_out(s);
     while (*s)
     {
-        if (*s==CHAR_VERBATIM)     /* \ */
+        if (*s == CHAR_VERBATIM)   /* \ */
         {
             *arg++ = *s++;
             if (*s)
@@ -442,7 +442,7 @@ static inline const char* get_arg_with_spaces(const char *s, char *arg)
     while (*s)
     {
 
-        if (*s==CHAR_VERBATIM)     /* \ */
+        if (*s == CHAR_VERBATIM)   /* \ */
         {
             if (*++s)
                 *arg++ = *s++;
@@ -484,7 +484,7 @@ const char* get_arg_in_braces(const char *s, char *arg, bool allow_spaces)
     s++;
     while (*s && !(*s == BRACE_CLOSE && nest == 0))
     {
-        if (*s==CHAR_VERBATIM)     /* \ */
+        if (*s == CHAR_VERBATIM)   /* \ */
             ;
         else if (*s == BRACE_OPEN)
             nest++;
@@ -512,12 +512,12 @@ static inline const char* get_arg_stop_spaces(const char *s, char *arg)
 
     while (*s)
     {
-        if (*s==CHAR_VERBATIM)     /* \ */
+        if (*s == CHAR_VERBATIM)   /* \ */
         {
             if (*++s)
                 *arg++ = *s++;
         }
-        else if (*s==CHAR_QUOTE)   /* " */
+        else if (*s == CHAR_QUOTE) /* " */
         {
             s++;
             inside = !inside;
@@ -535,7 +535,7 @@ static inline const char* get_arg_stop_spaces(const char *s, char *arg)
 
 const char* get_arg(const char *s, char *arg, bool allow_spaces, session *ses)
 {
-    const char *cptr=get_arg_in_braces(s, arg, allow_spaces);
+    const char *cptr = get_arg_in_braces(s, arg, allow_spaces);
     substitute_vars(arg, arg, ses);
     return cptr;
 }
@@ -550,17 +550,17 @@ static const char* get_command(const char *s, char *arg)
 
     while (*s)
     {
-        if (*s==CHAR_VERBATIM)     /* \ */
+        if (*s == CHAR_VERBATIM)   /* \ */
         {
             if (*++s)
                 *arg++ = *s++;
         }
-        else if (*s==CHAR_QUOTE)   /* " */
+        else if (*s == CHAR_QUOTE) /* " */
         {
             s++;
             inside = !inside;
         }
-        else if (*s==CHAR_NEWLINE) /* ; */
+        else if (*s == CHAR_NEWLINE) /* ; */
         {
             if (inside)
                 *arg++ = *s++;
@@ -596,7 +596,7 @@ static void write_com_arg_mud(const char *command, const char *argument, int nsp
     char outtext[BUFFER_SIZE];
     int i;
 
-    if (ses==nullsession)
+    if (ses == nullsession)
     {
 #if 0
         tintin_eprintf(ses, "#NO SESSION ACTIVE. USE THE %cSESSION COMMAND TO START ONE.  (was: {%s} {%s})", tintin_char, command, argument);
@@ -607,12 +607,12 @@ static void write_com_arg_mud(const char *command, const char *argument, int nsp
     else
     {
         check_insert_path(command, ses);
-        i=strlcpy(outtext, command, BUFFER_SIZE);
+        i = strlcpy(outtext, command, BUFFER_SIZE);
         if (*argument)
         {
-            if (nsp<1)
-                nsp=1;
-            snprintf(outtext+i, BUFFER_SIZE-i, "%*s%s", nsp, "", argument);
+            if (nsp < 1)
+                nsp = 1;
+            snprintf(outtext + i, BUFFER_SIZE - i, "%*s%s", nsp, "", argument);
         }
         do_out_MUD_colors(outtext, ses);
         write_line_mud(outtext, ses);

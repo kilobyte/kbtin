@@ -38,18 +38,18 @@ static const char* afstr(int af)
 
     switch (af)
     {
-        case AF_INET:
-            return "IPv4";
-        case AF_INET6:
-            return "IPv6";
-        default:
-            /* No symbolic names for AF_UNIX, AF_IPX and the like.
-             * We would need separate autoconf checks just for them,
-             * and they don't support TCP anyway.  We probably should
-             * allow all SOCK_STREAM-capable transports, but I'm a bit
-             * unsure.  */
-            snprintf(msg, 19, "AF=%d", af);
-            return msg;
+    case AF_INET:
+        return "IPv4";
+    case AF_INET6:
+        return "IPv6";
+    default:
+        /* No symbolic names for AF_UNIX, AF_IPX and the like.
+         * We would need separate autoconf checks just for them,
+         * and they don't support TCP anyway.  We probably should
+         * allow all SOCK_STREAM-capable transports, but I'm a bit
+         * unsure.  */
+        snprintf(msg, 19, "AF=%d", af);
+        return msg;
     }
 }
 
@@ -73,14 +73,14 @@ int connect_mud(const char *host, const char *port, session *ses)
     int sock;
 
     ZERO(hints);
-    hints.ai_family=AF_UNSPEC;
-    hints.ai_socktype=SOCK_STREAM;
-    hints.ai_protocol=IPPROTO_TCP;
-    hints.ai_flags=AI_ADDRCONFIG;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags = AI_ADDRCONFIG;
 
-    if ((err=getaddrinfo(host, port, &hints, &ai)))
+    if ((err = getaddrinfo(host, port, &hints, &ai)))
     {
-        if (err==-2)
+        if (err == -2)
             tintin_eprintf(ses, "#Unknown host: {%s}", host);
         else
             tintin_eprintf(ses, "#ERROR: %s", gai_strerror(err));
@@ -90,45 +90,45 @@ int connect_mud(const char *host, const char *port, session *ses)
     if (signal(SIGALRM, alarm_func) == BADSIG)
         syserr("signal SIGALRM");
 
-    for (struct addrinfo *addr=ai; addr; addr=addr->ai_next)
+    for (struct addrinfo *addr = ai; addr; addr = addr->ai_next)
     {
         tintin_printf(ses, "#Trying to connect... (%s) (charset=%s)",
             afstr(addr->ai_family), ses->charset);
 
 fresh_sock:
-        if ((sock=socket(addr->ai_family, addr->ai_socktype,
+        if ((sock = socket(addr->ai_family, addr->ai_socktype,
 #ifdef IPPROTO_MPTCP
-            try_mptcp? IPPROTO_MPTCP :
+            try_mptcp ? IPPROTO_MPTCP :
 #endif
-            addr->ai_protocol))==-1)
+            addr->ai_protocol)) == -1)
         {
             if (try_mptcp)
             {
-                    //tintin_eprintf(ses, "#Kernel too old for MPTCP, disabling");
-                    try_mptcp = false;
-                    goto fresh_sock;
+                //tintin_eprintf(ses, "#Kernel too old for MPTCP, disabling");
+                try_mptcp = false;
+                goto fresh_sock;
             }
             tintin_eprintf(ses, "#ERROR: %s", strerror(errno));
             continue;
         }
 
-        val=IPTOS_LOWDELAY;
+        val = IPTOS_LOWDELAY;
         if (setsockopt(sock, IPPROTO_IP, IP_TOS, &val, sizeof(val)))
         {
             /*tintin_eprintf(ses, "#setsockopt: %s", strerror(errno))*/
             /* FIXME: BSD doesn't like this on IPv6 */
         }
 
-        val=1;
+        val = 1;
         setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
 #ifdef TCP_KEEPIDLE
-        val=30; /* in seconds */
+        val = 30; /* in seconds */
         setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
 #endif
 
-        abort_connect=false;
+        abort_connect = false;
         alarm(15);
-    intr:
+intr:
         if ((connect(sock, addr->ai_addr, addr->ai_addrlen)))
         {
             switch (errno)
@@ -166,7 +166,7 @@ fresh_sock:
 /*****************/
 static void alarm_func(int k)
 {
-    abort_connect=true;
+    abort_connect = true;
 }
 
 /********************************************************************/
@@ -178,7 +178,7 @@ void write_line_mud(const char *line, session *ses)
     convert(&ses->c_io, rstr, line, 1);
 
     if (*line)
-        ses->idle_since=current_time();
+        ses->idle_since = current_time();
     switch (ses->sestype)
     {
     case SES_NULL:
@@ -189,7 +189,7 @@ void write_line_mud(const char *line, session *ses)
         {
             setsockopt(ses->socket, IPPROTO_TCP, TCP_NODELAY, &ses->nagle,
                 sizeof(ses->nagle));
-            ses->nagle=1;
+            ses->nagle = 1;
         }
         telnet_write_line(rstr, ses, true);
         break;
@@ -208,28 +208,28 @@ void write_line_mud(const char *line, session *ses)
 /******************************************/
 void write_raw_mud(const char *line, int len, session *ses)
 {
-    const char *lp=line;
+    const char *lp = line;
     char *rp, rstr[BUFFER_SIZE];
-    int ret=0;
+    int ret = 0;
 
     /* not updating $IDLETIME, it's most likely not a command */
-    if (ses->sestype==SES_SOCKET && !ses->nagle)
+    if (ses->sestype == SES_SOCKET && !ses->nagle)
     {
         setsockopt(ses->socket, IPPROTO_TCP, TCP_NODELAY, &ses->nagle,
             sizeof(ses->nagle));
-        ses->nagle=1;
+        ses->nagle = 1;
     }
 
-    assert(line[len]==0);
+    assert(line[len] == 0);
     /* convert a string with zero bytes, guaranteed zero past len */
-    while (lp < line+len)
+    while (lp < line + len)
     {
         if (*lp)
         {
             convert(&ses->c_io, rstr, lp, 1);
             while (*lp)
                 lp++;
-            rp=rstr;
+            rp = rstr;
             while (*rp)
                 rp++;
 
@@ -238,22 +238,22 @@ void write_raw_mud(const char *line, int len, session *ses)
             case SES_NULL:
                 break;
             case SES_SOCKET:
-                *rp=0;
+                *rp = 0;
                 telnet_write_line(rstr, ses, false);
                 break;
             case SES_PTY:
-                ret=write(ses->socket, rstr, rp-rstr);
+                ret = write(ses->socket, rstr, rp - rstr);
                 break;
             case SES_SELFPIPE:
-                ret=write(ses->nagle, rstr, rp-rstr);
+                ret = write(ses->nagle, rstr, rp - rstr);
             }
         }
         else
         {
             lp++;
-            ret=write((ses->sestype!=SES_SELFPIPE)? ses->socket : ses->nagle, "", 1);
+            ret = write((ses->sestype != SES_SELFPIPE) ? ses->socket : ses->nagle, "", 1);
         }
-        if (ret<0)
+        if (ret < 0)
             tintin_eprintf(ses, "#error writing to session: %s", strerror(errno));
     }
 }
@@ -262,7 +262,7 @@ void flush_socket(session *ses)
 {
     setsockopt(ses->socket, IPPROTO_TCP, TCP_NODELAY, &ses->nagle,
         sizeof(ses->nagle));
-    ses->nagle=0;
+    ses->nagle = 0;
 }
 
 /***************************************************/
@@ -277,8 +277,8 @@ static int read_socket(session *ses, char *buffer, int len)
     {
         do
         {
-            ret=gnutls_record_recv(ses->ssl, buffer, len);
-        } while (ret==GNUTLS_E_INTERRUPTED || ret==GNUTLS_E_AGAIN);
+            ret = gnutls_record_recv(ses->ssl, buffer, len);
+        } while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN);
 
         if (ret < 0)
             tintin_eprintf(ses, "#%s", gnutls_strerror(ret));
@@ -299,9 +299,9 @@ int write_socket(session *ses, char *buffer, int len)
 
     if (ses->ssl)
     {
-        ret=gnutls_record_send(ses->ssl, buffer, len);
-        while (ret==GNUTLS_E_INTERRUPTED || ret==GNUTLS_E_AGAIN)
-            ret=gnutls_record_send(ses->ssl, 0, 0);
+        ret = gnutls_record_send(ses->ssl, buffer, len);
+        while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN)
+            ret = gnutls_record_send(ses->ssl, 0, 0);
 
         if (ret < 0)
             tintin_eprintf(ses, "#%s", gnutls_strerror(ret));
@@ -328,12 +328,12 @@ int read_buffer_mud(char *buffer, session *ses)
 
     if (ses->sestype != SES_SOCKET)
     {
-        didget=read(ses->socket, buffer, INPUT_CHUNK);
-        if (didget<=0)
+        didget = read(ses->socket, buffer, INPUT_CHUNK);
+        if (didget <= 0)
             return -1;
-        ses->server_idle_since=current_time();
-        ses->more_coming=(didget==INPUT_CHUNK);
-        buffer[didget]=0;
+        ses->server_idle_since = current_time();
+        ses->more_coming = (didget == INPUT_CHUNK);
+        buffer[didget] = 0;
         return didget;
     }
 
@@ -343,62 +343,62 @@ int read_buffer_mud(char *buffer, session *ses)
         if (!ses->mccp_more)
         {
             didget = read_socket(ses, ses->mccp_buf, INPUT_CHUNK);
-            if (didget<=0)
+            if (didget <= 0)
             {
-                ses->mccp_more=false;
+                ses->mccp_more = false;
                 return -1;
             }
             ses->mccp->next_in = (Bytef*)ses->mccp_buf;
             ses->mccp->avail_in = didget;
         }
-        ses->mccp->next_out = (Bytef*)(tmpbuf+len);
-        ses->mccp->avail_out = INPUT_CHUNK-len;
-        switch (i=inflate(ses->mccp, Z_SYNC_FLUSH))
+        ses->mccp->next_out = (Bytef*)(tmpbuf + len);
+        ses->mccp->avail_out = INPUT_CHUNK - len;
+        switch (i = inflate(ses->mccp, Z_SYNC_FLUSH))
         {
         case Z_OK:
-            didget=INPUT_CHUNK-len-ses->mccp->avail_out;
+            didget = INPUT_CHUNK - len - ses->mccp->avail_out;
             ses->mccp_more = !ses->mccp->avail_out;
             break;
         case Z_STREAM_END:
 #ifdef TELNET_DEBUG
             tintin_printf(ses, "#COMPRESSION END, DISABLING MCCP.");
 #endif
-            didget=INPUT_CHUNK-len-ses->mccp->avail_out;
+            didget = INPUT_CHUNK - len - ses->mccp->avail_out;
             inflateEnd(ses->mccp);
             TFREE(ses->mccp, z_stream);
-            ses->mccp=0;
+            ses->mccp = 0;
             break;
         case Z_BUF_ERROR:
-            didget=0;
-            ses->mccp_more=0;
+            didget = 0;
+            ses->mccp_more = 0;
             break;
         default:
             debuglog(ses, "COMPRESSION ERROR: %d", i);
             tintin_eprintf(ses, "#COMPRESSION ERROR");
-            ses->mccp_more=0;
+            ses->mccp_more = 0;
             return -1;
         }
     }
     else
 #endif
     {
-        didget = read_socket(ses, tmpbuf+len, INPUT_CHUNK-len);
+        didget = read_socket(ses, tmpbuf + len, INPUT_CHUNK - len);
 
         if (didget <= 0)
             return -1;
     }
 
-    *(tmpbuf+len+didget)=0;
+    *(tmpbuf + len + didget) = 0;
 #if 0
     tintin_printf(ses, "~8~text:[%s]~-1~", tmpbuf);
 #endif
 
-    ses->server_idle_since=current_time();
-    ses->more_coming = (didget+=len) == INPUT_CHUNK;
-    len=0;
-    ses->ga=0;
+    ses->server_idle_since = current_time();
+    ses->more_coming = (didget += len) == INPUT_CHUNK;
+    len = 0;
+    ses->ga = 0;
 
-    tmpbuf[didget]=0;
+    tmpbuf[didget] = 0;
     cpsource = tmpbuf;
     cpdest = buffer;
     i = didget;
@@ -412,33 +412,33 @@ int read_buffer_mud(char *buffer, session *ses)
             cpsource++;
             break;
         case 255:
-            b=do_telnet_protocol(cpsource, i, ses);
+            b = do_telnet_protocol(cpsource, i, ses);
             switch (b)
             {
             case -1:
-                len=i;
+                len = i;
                 memmove(tmpbuf, cpsource, i);
-                *cpdest=0;
-                return didget-len;
+                *cpdest = 0;
+                return didget - len;
             case -2:
-                i-=2;
-                didget-=2;
-                cpsource+=2;
+                i -= 2;
+                didget -= 2;
+                cpsource += 2;
                 if (!i)
-                    ses->ga=1;
+                    ses->ga = 1;
                 break;
             case -3:
                 i -= 2;
-                didget-=1;
-                *cpdest++=(char)255;
-                cpsource+=2;
+                didget -= 1;
+                *cpdest++ = (char)255;
+                cpsource += 2;
                 break;
 #ifdef HAVE_ZLIB
             case -4:
-                didget-=i;
-                i-=5;
-                cpsource+=5;
-                if (init_mccp(ses, i, cpsource)<0)
+                didget -= i;
+                i -= 5;
+                cpsource += 5;
+                if (init_mccp(ses, i, cpsource) < 0)
                     return -1;
                 *cpdest = 0;
                 return didget;
@@ -446,7 +446,7 @@ int read_buffer_mud(char *buffer, session *ses)
 #endif
             default:
                 i -= b;
-                didget-=b;
+                didget -= b;
                 cpsource += b;
             }
             break;
@@ -468,9 +468,9 @@ static int init_mccp(session *ses, int cplen, const char *cpsrc)
     ses->mccp = TALLOC(z_stream);
 
     ses->mccp->data_type = Z_ASCII;
-    ses->mccp->zalloc    = 0;
-    ses->mccp->zfree     = 0;
-    ses->mccp->opaque    = NULL;
+    ses->mccp->zalloc = 0;
+    ses->mccp->zfree = 0;
+    ses->mccp->opaque = NULL;
 
     if (inflateInit(ses->mccp) != Z_OK)
     {

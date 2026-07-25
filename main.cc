@@ -35,7 +35,7 @@ typedef void (*sighandler_t)(int);
 extern void end_command(const char *arg, session *ses);
 
 static void echo_input(const char *txt);
-static bool eofinput=false;
+static bool eofinput = false;
 static char prev_command[BUFFER_SIZE];
 static void tintin(void);
 static void read_mud(session *ses);
@@ -51,7 +51,7 @@ static void tstphandler(int sig)
 
 static void sigchild(void)
 {
-    while (waitpid(-1, 0, WNOHANG)>0);
+    while (waitpid(-1, 0, WNOHANG) > 0);
 }
 
 static void sigcont(void)
@@ -84,7 +84,7 @@ static void sighup(void)
 
 static void sigwinch(void)
 {
-    need_resize=true;
+    need_resize = true;
 }
 
 
@@ -100,7 +100,7 @@ static void setup_signals(void)
 {
     struct sigaction act;
     sigemptyset(&act.sa_mask);
-    act.sa_flags=SA_RESTART;
+    act.sa_flags = SA_RESTART;
 
     if (signal(SIGTERM, (sighandler_t)myquitsig) == SIG_ERR)
         syserr("signal SIGTERM");
@@ -110,16 +110,16 @@ static void setup_signals(void)
         syserr("signal SIGINT");
     if (signal(SIGHUP, (sighandler_t)sighup) == SIG_ERR)
         syserr("signal SIGHUP");
-    act.sa_handler=(sighandler_t)tstphandler;
+    act.sa_handler = (sighandler_t)tstphandler;
     if (sigaction(SIGTSTP, &act, 0))
         syserr("sigaction SIGTSTP");
 
     if (ui_own_output)
     {
-        act.sa_handler=(sighandler_t)sigcont;
+        act.sa_handler = (sighandler_t)sigcont;
         if (sigaction(SIGCONT, &act, 0))
             syserr("sigaction SIGCONT");
-        act.sa_handler=(sighandler_t)sigwinch;
+        act.sa_handler = (sighandler_t)sigwinch;
         if (sigaction(SIGWINCH, &act, 0))
             syserr("sigaction SIGWINCH");
     }
@@ -132,7 +132,7 @@ static void setup_signals(void)
             syserr("signal SIGFPE");
     }
 
-    act.sa_handler=(sighandler_t)sigchild;
+    act.sa_handler = (sighandler_t)sigchild;
     if (sigaction(SIGCHLD, &act, 0))
         syserr("sigaction SIGCHLD");
     if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
@@ -148,14 +148,14 @@ static void setup_ulimit(void)
 
     if (getrlimit(RLIMIT_STACK, &rlim))
         return;
-    if ((unsigned int)rlim.rlim_cur>=STACK_LIMIT)
+    if ((unsigned int)rlim.rlim_cur >= STACK_LIMIT)
         return;
-    if (rlim.rlim_cur==rlim.rlim_max)
+    if (rlim.rlim_cur == rlim.rlim_max)
         return;
-    if ((unsigned int)rlim.rlim_max<STACK_LIMIT)
-        rlim.rlim_cur=rlim.rlim_max;
+    if ((unsigned int)rlim.rlim_max < STACK_LIMIT)
+        rlim.rlim_cur = rlim.rlim_max;
     else
-        rlim.rlim_cur=STACK_LIMIT;
+        rlim.rlim_cur = STACK_LIMIT;
     setrlimit(RLIMIT_STACK, &rlim);
 }
 
@@ -170,68 +170,70 @@ static void opterror(const char *msg, ...)
     exit(1);
 }
 
-typedef struct { const char *left, *right, *pr; } opt_t;
+typedef struct {
+    const char *left, *right, *pr;
+} opt_t;
 static opt_t *options;
 
 static void parse_options(int argc, char **argv)
 {
-    bool noargs=false;
+    bool noargs = false;
 
     options = new opt_t[argc];
     opt_t *o = options;
 
-    for (int arg=1;arg<argc;arg++)
+    for (int arg = 1; arg < argc; arg++)
     {
-        if (*argv[arg]!='-' || noargs)
-            o->left=" ", o++->right=argv[arg];
+        if (*argv[arg] != '-' || noargs)
+            o->left = " ", o++->right = argv[arg];
         else if (!strcmp(argv[arg], "--"))
-            noargs=true;
+            noargs = true;
         else if (!strcmp(argv[arg], "--version")) /* make autotest happy */
         {
             printf("KBtin version " VERSION "\n");
             exit(0);
         }
         else if (!strcmp(argv[arg], "-v"))
-            o++->left="#verbose 1";
+            o++->left = "#verbose 1";
         else if (!strcmp(argv[arg], "-q"))
-            o++->left="#verbose 0";
+            o++->left = "#verbose 0";
         else if (!strcmp(argv[arg], "-p"))
             user_setdriver(0);
         else if (!strcmp(argv[arg], "-i"))
             user_setdriver(1);
         else if (!strcmp(argv[arg], "-c"))
         {
-            if (++arg==argc)
+            if (++arg == argc)
                 opterror("Invalid option: bare -c");
             else
-                o->left="c", o++->right=argv[arg];
+                o->left = "c", o++->right = argv[arg];
         }
         else if (!strcmp(argv[arg], "-r"))
         {
-            if (++arg==argc)
+            if (++arg == argc)
                 opterror("Invalid option: bare -r");
             else
-                o->left="r", o++->right=argv[arg];
+                o->left = "r", o++->right = argv[arg];
         }
         else if (!strcasecmp(argv[arg], "-s"))
         {
-            if (++arg==argc)
+            if (++arg == argc)
                 opterror("Invalid option: bare %s", argv[arg]);
-            else if (++arg==argc)
+            else if (++arg == argc)
                 opterror("Bad option: -s needs both an address and a port number!");
             else
-                o->left=argv[arg-2]+1, o->right=argv[arg-1], o++->pr=argv[arg];
+                o->left = argv[arg - 2] + 1, o->right = argv[arg - 1], o++->pr = argv[arg];
         }
         else if (!strcmp(argv[arg], "--no-simd"))
 #ifdef HAVE_SIMD
-            simd=false;
+            simd = false;
 #else
             ;
 #endif
         else
             opterror("Invalid option: {%s}", argv[arg]);
     }
-    o->left=0;
+    o->left = 0;
 }
 
 static void apply_options(void)
@@ -242,13 +244,13 @@ static void apply_options(void)
 # define DO_INPUT(str,iv) local_to_utf8(ustr, str, BUFFER_SIZE, 0);\
                           activesession=parse_input(ustr, iv, activesession);
 
-    for (opt_t *opt=options; opt->left; opt++)
+    for (opt_t *opt = options; opt->left; opt++)
     {
         switch (*opt->left)
         {
         case '#':
-            snprintf(ustr, sizeof(ustr), "%c%s", tintin_char, opt->left+1);
-            activesession=parse_input(opt->left, true, activesession);
+            snprintf(ustr, sizeof(ustr), "%c%s", tintin_char, opt->left + 1);
+            activesession = parse_input(opt->left, true, activesession);
             break;
         case 'c':
             DO_INPUT(opt->right, false);
@@ -276,7 +278,7 @@ static void apply_options(void)
             break;
         case ' ':
             local_to_utf8(ustr, opt->right, BUFFER_SIZE, 0);
-            if ((f=fopen(opt->right, "r")))
+            if ((f = fopen(opt->right, "r")))
             {
                 if (activesession->verbose || !real_quiet)
                     tintin_printf(activesession, "#READING {%s}", ustr);
@@ -344,7 +346,7 @@ static void randomize(void)
 #ifdef HAVE_GETENTROPY
     if (getentropy(&seed, sizeof seed))
 #endif
-        seed = (((unsigned)getpid())*0x10001)^start_time^(start_time>>32);
+        seed = (((unsigned)getpid()) * 0x10001)^start_time ^ (start_time >> 32);
     srand(seed);
 }
 
@@ -353,22 +355,22 @@ static void randomize(void)
 /**************************************************************************/
 int main(int argc, char **argv)
 {
-    tintin_exec=argv[0];
+    tintin_exec = argv[0];
     init_locale();
-    user_setdriver(isatty(0)?1:0);
+    user_setdriver(isatty(0) ? 1 : 0);
     parse_options(argc, argv);
 #ifdef HAVE_SIMD
     if (simd && hs_valid_platform())
-        simd=false;
+        simd = false;
 #endif
     init_bind();
-    hist_num=-1;
+    hist_num = -1;
     init_parse();
     strcpy(status, EMPTY_LINE);
     user_init();
     /*  read_complete();            no tab-completion */
     randomize();
-    lastdraft=0;
+    lastdraft = 0;
 
     if (ui_own_output || tty)
         banner();
@@ -393,7 +395,7 @@ static timens_t check_events(void)
 
     curr_time = current_time();
 restart:
-    any_closed=false;
+    any_closed = false;
     for (session *sp = sessionlist; sp; sp = sp->next)
     {
         tt = check_event(curr_time, sp);
@@ -417,11 +419,11 @@ static void tintin(void)
     struct timeval tv;
     fd_set readfdmask;
 #ifdef XTERM_TITLE
-    session *lastsession=0;
+    session *lastsession = 0;
 #endif
     char kbdbuf[BUFFER_SIZE];
     WC ch;
-    int inbuf=0;
+    int inbuf = 0;
     mbstate_t instate;
 
     ZERO(instate);
@@ -429,10 +431,10 @@ static void tintin(void)
     for (;;)
     {
 #ifdef XTERM_TITLE
-        if (ui_own_output && activesession!=lastsession)
+        if (ui_own_output && activesession != lastsession)
         {
-            lastsession=activesession;
-            if (activesession==nullsession)
+            lastsession = activesession;
+            if (activesession == nullsession)
                 user_title(XTERM_TITLE, "(no session)");
             else
                 user_title(XTERM_TITLE, activesession->name);
@@ -440,26 +442,26 @@ static void tintin(void)
 #endif
 
         timens_t ev = check_events();
-        tv.tv_sec = ev/NANO;
-        tv.tv_usec = ev%NANO/1000;
+        tv.tv_sec = ev / NANO;
+        tv.tv_usec = ev % NANO / 1000;
 
-        maxfd=0;
+        maxfd = 0;
         FD_ZERO(&readfdmask);
         if (!eofinput)
             FD_SET(0, &readfdmask);
-        else if (activesession==nullsession)
+        else if (activesession == nullsession)
             end_command(0, activesession);
         for (session *ses = sessionlist; ses; ses = ses->next)
         {
-            if (ses==nullsession)
+            if (ses == nullsession)
                 continue;
-            if (ses->sestype==SES_SOCKET && ses->nagle)
+            if (ses->sestype == SES_SOCKET && ses->nagle)
                 flush_socket(ses);
             FD_SET(ses->socket, &readfdmask);
-            if (ses->socket>maxfd)
-                maxfd=ses->socket;
+            if (ses->socket > maxfd)
+                maxfd = ses->socket;
         }
-        result = select(maxfd+1, &readfdmask, 0, 0, &tv);
+        result = select(maxfd + 1, &readfdmask, 0, 0, &tv);
 
         if (need_resize)
         {
@@ -480,39 +482,39 @@ static void tintin(void)
         if (FD_ISSET(0, &readfdmask))
         {
             idle_since = current_time();
-            result=read(0, kbdbuf+inbuf, BUFFER_SIZE-inbuf);
-            if (result==-1)
+            result = read(0, kbdbuf + inbuf, BUFFER_SIZE - inbuf);
+            if (result == -1)
                 myquitsig(0);
-            if (result==0 && !isatty(0))
-                eofinput=true;
-            inbuf+=result;
+            if (result == 0 && !isatty(0))
+                eofinput = true;
+            inbuf += result;
 
-            i=0;
-            while (i<inbuf)
+            i = 0;
+            while (i < inbuf)
             {
-                result=mbrtowc(&ch, kbdbuf+i, inbuf-i, &instate);
-                if (result==-2)         /* incomplete but valid sequence */
+                result = mbrtowc(&ch, kbdbuf + i, inbuf - i, &instate);
+                if (result == -2)       /* incomplete but valid sequence */
                 {
-                    memmove(kbdbuf, kbdbuf+i, inbuf-i);
-                    inbuf-=i;
+                    memmove(kbdbuf, kbdbuf + i, inbuf - i);
+                    inbuf -= i;
                     goto partial;
                 }
-                else if (result==-1)    /* invalid sequence */
+                else if (result == -1)  /* invalid sequence */
                 {
-                    ch=0xFFFD;
+                    ch = 0xFFFD;
                     i++;
-                    errno=0;
+                    errno = 0;
                     /* Shift by 1 byte.  We can use a more intelligent shift,
                      * but staying charset-agnostic makes the code simpler.
                      */
                 }
-                else if (result==0)     /* literal 0 */
+                else if (result == 0)   /* literal 0 */
                     i++; /* oops... bad ISO/ANSI, bad */
                 else
-                    i+=result;
+                    i += result;
                 if (user_process_kbd(activesession, ch))
                 {
-                    hist_num=-1;
+                    hist_num = -1;
 
                     if (term_echoing || (got_more_kludge && done_input[0]))
                         /* got_more_kludge: echo any non-empty line */
@@ -528,45 +530,46 @@ static void tintin(void)
                     }
                     if (*done_input)
                         strcpy(prev_command, done_input);
-                    aborting=false;
+                    aborting = false;
                     activesession = parse_input(done_input, false, activesession);
-                    recursion=0;
+                    recursion = 0;
                 }
             }
-            inbuf=0;
-        partial:;
+            inbuf = 0;
+partial:;
         }
         for (session *ses = sessionlist; ses; ses = ses->next)
         {
             if (ses->socket && FD_ISSET(ses->socket, &readfdmask))
             {
-                aborting=false;
-                any_closed=false;
+                aborting = false;
+                any_closed = false;
                 do
                 {
                     read_mud(ses);
                     if (any_closed)
                     {
-                        any_closed=false;
+                        any_closed = false;
                         goto after_read;
                         /* The remaining sessions will be done after select() */
                     }
 #ifdef HAVE_ZLIB
                 } while (ses->mccp_more);
 #else
-                } while (0);
+                }
+                while (0);
 #endif
             }
         }
-    after_read:
+after_read:
         if (activesession->server_echo
-            && (2-activesession->server_echo != gotpassword))
+            && (2 - activesession->server_echo != gotpassword))
         {
-            gotpassword= 2-activesession->server_echo;
+            gotpassword = 2 - activesession->server_echo;
             if (!gotpassword)
-                got_more_kludge=false;
+                got_more_kludge = false;
             user_passwd(gotpassword && !got_more_kludge);
-            term_echoing=!gotpassword;
+            term_echoing = !gotpassword;
         }
     }
 }
@@ -581,7 +584,7 @@ static void read_mud(session *ses)
     char temp[BUFFER_SIZE];
     int didget, count;
 
-    if ((didget = read_buffer_mud(buffer, ses))==-1)
+    if ((didget = read_buffer_mud(buffer, ses)) == -1)
     {
         cleanup_session(ses);
         if (ses == activesession)
@@ -602,28 +605,28 @@ static void read_mud(session *ses)
     {
         if (ses->logtype)
         {
-            count=0;
+            count = 0;
 
             if (ses->halfcr_log)
             {
-                ses->halfcr_log=false;
-                if (buffer[0]!='\n')
-                    temp[count++]='\r';
+                ses->halfcr_log = false;
+                if (buffer[0] != '\n')
+                    temp[count++] = '\r';
             }
 
             for (int n = 0; n < didget; n++)
                 if (buffer[n] != '\r')
                     temp[count++] = buffer[n];
-                else if (n+1==didget)
-                    ses->halfcr_log=true;
-                else if (buffer[n+1]!='\n')
-                    temp[count++]='\r';
-            temp[count]=0;      /* didget<BUFFER_SIZE, so no overflow */
+                else if (n + 1 == didget)
+                    ses->halfcr_log = true;
+                else if (buffer[n + 1] != '\n')
+                    temp[count++] = '\r';
+            temp[count] = 0;    /* didget<BUFFER_SIZE, so no overflow */
             write_log(ses, temp, count);
         }
         else
         {
-            buffer[didget]=0;
+            buffer[didget] = 0;
             write_log(ses, buffer, didget);
         }
     }
@@ -633,59 +636,59 @@ static void read_mud(session *ses)
 
     if (ses->halfcr_in)
     {
-        ses->halfcr_in=false;
+        ses->halfcr_in = false;
         goto halfcr;
     }
     while (*cpsource)
-    {       /*cut out each of the lines and process */
+    {   /*cut out each of the lines and process */
         if (*cpsource == '\n')
         {
             *cpdest = '\0';
             do_one_line(linebuffer, 1, ses);
-            ses->lastintitle=0;
-            ses->drafted=false;
+            ses->lastintitle = 0;
+            ses->drafted = false;
 
             cpsource++;
-            cpdest=linebuffer;
+            cpdest = linebuffer;
         }
-        else if (*cpsource=='\r')
+        else if (*cpsource == '\r')
         {
             cpsource++;
-        halfcr:
-            if (*cpsource=='\n')
+halfcr:
+            if (*cpsource == '\n')
                 continue;
             if (!*cpsource)
             {
-                ses->halfcr_in=true;
+                ses->halfcr_in = true;
                 break;
             }
-            *cpdest=0;
-            if (cpdest!=linebuffer)
+            *cpdest = 0;
+            if (cpdest != linebuffer)
             {
                 do_one_line(linebuffer, 0, ses);
-                ses->lastintitle=0;
-                ses->drafted=false; /* abandoned */
+                ses->lastintitle = 0;
+                ses->drafted = false; /* abandoned */
             }
-            cpdest=linebuffer;
+            cpdest = linebuffer;
         }
         else
             *cpdest++ = *cpsource++;
     }
-    if (cpdest-linebuffer>INPUT_CHUNK) /* let's split too long lines */
+    if (cpdest - linebuffer > INPUT_CHUNK) /* let's split too long lines */
     {
-        *cpdest=0;
+        *cpdest = 0;
         do_one_line(linebuffer, 1, ses);
-        ses->lastintitle=0;
-        ses->drafted=false;
-        cpdest=linebuffer;
+        ses->lastintitle = 0;
+        ses->drafted = false;
+        cpdest = linebuffer;
     }
     *cpdest = '\0';
     strcpy(ses->last_line, linebuffer);
     if (!ses->more_coming)
-        if (cpdest!=linebuffer)
+        if (cpdest != linebuffer)
         {
             do_one_line(linebuffer, 0, ses);
-            ses->drafted=true;
+            ses->drafted = true;
         }
 }
 
@@ -696,7 +699,7 @@ static void do_one_line(char *text, int nl, session *ses)
 {
     bool isnb;
     char line[BUFFER_SIZE];
-    timens_t t=0;
+    timens_t t = 0;
 
     if (nl)
         t = current_time();
@@ -708,48 +711,48 @@ static void do_one_line(char *text, int nl, session *ses)
     case 0:
         if ((match(PROMPT_FOR_PW_TEXT, line)
             || match(PROMPT_FOR_PW_TEXT2, line))
-           && !gotpassword)
+            && !gotpassword)
         {
-            gotpassword=1;
+            gotpassword = 1;
             user_passwd(true);
-            term_echoing=false;
+            term_echoing = false;
         }
         break;
     case 1:
         if (match(PROMPT_FOR_MORE_TEXT, line))
         {
             user_passwd(false);
-            got_more_kludge=true;
+            got_more_kludge = true;
         }
     }
-    _=line;
+    _ = line;
     do_in_MUD_colors(line, false, ses);
-    isnb=isnotblank(line, false);
-    if (!ses->ignore && (nl||isnb))
+    isnb = isnotblank(line, false);
+    if (!ses->ignore && (nl || isnb))
         check_all_promptactions(line, ses);
     if (nl && !ses->presub && !ses->ignore)
         check_all_actions(line, ses);
-    if (!ses->togglesubs && (nl||isnb) && !do_one_antisub(line, ses))
+    if (!ses->togglesubs && (nl || isnb) && !do_one_antisub(line, ses))
         do_all_sub(line, ses);
     if (nl && ses->presub && !ses->ignore)
         check_all_actions(line, ses);
-    if (isnb&&!ses->togglesubs)
+    if (isnb && !ses->togglesubs)
         do_all_high(line, ses);
     if (isnotblank(line, ses->blank))
     {
-        if (ses==activesession)
+        if (ses == activesession)
         {
             if (nl)
             {
                 if (!activesession->server_echo)
                 {
                     user_passwd(false);
-                    gotpassword=0;
+                    gotpassword = 0;
                 }
                 strcat(line, "\n");
                 user_textout_draft(0, 0);
                 user_textout(line);
-                lastdraft=0;
+                lastdraft = 0;
             }
             else
             {
@@ -762,13 +765,13 @@ static void do_one_line(char *text, int nl, session *ses)
                 }
                 if (ses->ga == 1)
                     ses->ga = 2; // mark it as seen
-                lastdraft=ses;
+                lastdraft = ses;
             }
         }
         else if (ses->snoopstatus)
             snoop(line, ses);
     }
-    _=0;
+    _ = 0;
 
     if (nl)
     {
@@ -777,10 +780,10 @@ static void do_one_line(char *text, int nl, session *ses)
         {
             /* A dragged average: every new line counts for 1% of the value.
               The weight of any old line decays with half-life around 69. */
-            ses->line_time=(ses->line_time*99+t)/100;
+            ses->line_time = (ses->line_time * 99 + t) / 100;
         }
         else
-            ses->line_time=t;
+            ses->line_time = t;
     }
 }
 
@@ -796,31 +799,31 @@ static void echo_input(const char *txt)
 {
     const char *cptr;
     char out[BUFFER_SIZE], *optr;
-    static int c=7;
+    static int c = 7;
 
     if (ui_own_output)
     {
         user_textout("");
-        c=lastcolor;
+        c = lastcolor;
     }
 
-    optr=out;
+    optr = out;
     if (ui_own_output)
-        optr+=sprintf(optr, ECHO_COLOR);
-    cptr=txt;
+        optr += sprintf(optr, ECHO_COLOR);
+    cptr = txt;
     while (*cptr)
     {
-        if ((*optr++=*cptr++)=='~')
-            optr+=sprintf(optr, "~:~");
-        if (optr-out > BUFFER_SIZE-10)
+        if ((*optr++ = *cptr++) == '~')
+            optr += sprintf(optr, "~:~");
+        if (optr - out > BUFFER_SIZE - 10)
             break;
     }
     if (ui_own_output)
-        optr+=sprintf(optr, "~%d~\n", c);
+        optr += sprintf(optr, "~%d~\n", c);
     else
     {
-        *optr++='\n';
-        *optr=0;
+        *optr++ = '\n';
+        *optr = 0;
     }
     user_textout(out);
 }
@@ -831,16 +834,16 @@ static void echo_input(const char *txt)
 static void myquitsig(int sig)
 {
     session *t;
-    int err=errno;
+    int err = errno;
 
     for (session *ses = sessionlist; ses; ses = t)
     {
         t = ses->next;
-        if (ses!=nullsession && !ses->closing)
+        if (ses != nullsession && !ses->closing)
         {
-            ses->closing=1;
+            ses->closing = 1;
             do_hook(ses, HOOK_ZAP, 0, true);
-            ses->closing=0;
+            ses->closing = 0;
             cleanup_session(ses);
         }
     }

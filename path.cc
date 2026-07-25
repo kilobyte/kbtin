@@ -36,7 +36,7 @@ void map_command(const char *arg, session *ses)
 
 void savepath_command(const char *arg, session *ses)
 {
-    char alias[BUFFER_SIZE], result[BUFFER_SIZE], *r=result;
+    char alias[BUFFER_SIZE], result[BUFFER_SIZE], *r = result;
     get_arg_in_braces(arg, alias, 1);
     if (!*arg)
         return tintin_eprintf(ses, "#Syntax: savepath <alias>");
@@ -47,20 +47,20 @@ void savepath_command(const char *arg, session *ses)
         return;
     }
 
-    r+=snprintf(r, BUFFER_SIZE, "%calias {%s} {", tintin_char, alias);
-    for (int i=0; i<ses->path_length; i++)
+    r += snprintf(r, BUFFER_SIZE, "%calias {%s} {", tintin_char, alias);
+    for (int i = 0; i < ses->path_length; i++)
     {
         struct pair *ln = PATHP(i);
         int dirlen = strlen(ln->left);
-        if (r-result + dirlen >= BUFFER_SIZE - 10)
+        if (r - result + dirlen >= BUFFER_SIZE - 10)
         {
             tintin_eprintf(ses, "#Error - buffer too small to contain alias");
             break;
         }
         else
-            r += sprintf(r, "%s%s", ln->left, (i==ses->path_length-1)?";":"");
+            r += sprintf(r, "%s%s", ln->left, (i == ses->path_length - 1) ? ";" : "");
     }
-    *r++='}', *r=0;
+    *r++ = '}', *r = 0;
     parse_input(result, true, ses);
 }
 
@@ -72,28 +72,28 @@ void path2var(char *var, session *ses)
 
     if (!ses->path_length)
     {
-        *var=0;
+        *var = 0;
         return;
     }
 
     len = 0;
-    r=var;
+    r = var;
 
-    for (int i=0; i<ses->path_length; i++)
+    for (int i = 0; i < ses->path_length; i++)
     {
         struct pair *ln = PATHP(i);
         dirlen = strlen(ln->left);
         if (dirlen + len < BUFFER_SIZE - 10)
         {
-            r+=sprintf(r, isatom(ln->left)? "%s" : "{%s}" , ln->left);
+            r += sprintf(r, isatom(ln->left) ? "%s" : "{%s}", ln->left);
             len += dirlen + 1;
-            if (i<ses->path_length-1)
-                *r++=' ';
+            if (i < ses->path_length - 1)
+                *r++ = ' ';
         }
         else
         {
             tintin_eprintf(ses, "#Error - buffer too small to contain alias");
-            *r++=0;
+            *r++ = 0;
             break;
         }
     }
@@ -104,20 +104,20 @@ void path_command(const char *arg, session *ses)
 {
     char mypath[BUFFER_SIZE];
 
-    char *r=mypath+sprintf(mypath, "#Path:  ");
-    for (int i=0; i<ses->path_length; i++)
+    char *r = mypath + sprintf(mypath, "#Path:  ");
+    for (int i = 0; i < ses->path_length; i++)
     {
         struct pair *ln = PATHP(i);
         int dirlen = strlen(ln->left);
-        if (r-mypath + dirlen > (COLS?COLS:BUFFER_SIZE)-10)
+        if (r - mypath + dirlen > (COLS ? COLS : BUFFER_SIZE) -10)
         {
-            r[-1]=0;
+            r[-1] = 0;
             tintin_printf(ses, "%s", mypath);
-            r=mypath+sprintf(mypath, "#Path:  ");
+            r = mypath + sprintf(mypath, "#Path:  ");
         }
-        r+=sprintf(r, "%s;", ln->left);
+        r += sprintf(r, "%s;", ln->left);
     }
-    r[-1]=0;
+    r[-1] = 0;
     tintin_printf(ses, "%s", mypath);
 }
 
@@ -132,13 +132,13 @@ void return_command(const char *arg, session *ses)
         return tintin_eprintf(ses, "#No place to return from!");
 
     if (!*how)
-        n=1;
+        n = 1;
     else if (!strcmp(how, "all") || !strcmp(how, "ALL"))
-        n=ses->path_length;
+        n = ses->path_length;
     else
     {
-        n=strtol(how, &err, 10);
-        if (*err || n<0)
+        n = strtol(how, &err, 10);
+        if (*err || n < 0)
             return tintin_eprintf(ses, "#return [<num>|all], got {%s}", how);
         if (!n)     /* silently ignore "#return 0" */
             return;
@@ -172,18 +172,18 @@ void check_insert_path(const char *command, session *ses)
     if (!return_flag)
         return;
 
-    char *ret=get_hash(ses->pathdirs, command);
+    char *ret = get_hash(ses->pathdirs, command);
     if (!ret)
         return;
     if (ses->path_length != MAX_PATH_LENGTH)
         ses->path_length++;
     else
         ses->path_begin++;
-    struct pair *p = PATHP(ses->path_length-1);
+    struct pair *p = PATHP(ses->path_length - 1);
     free((char*)p->left);
     free((char*)p->right);
-    p->left =mystrdup(command);
-    p->right=mystrdup(ret);
+    p->left = mystrdup(command);
+    p->right = mystrdup(ret);
 }
 
 void pathdir_command(const char *arg, session *ses)
@@ -213,6 +213,6 @@ void unpathdir_command(const char *arg, session *ses)
     arg = get_arg_in_braces(arg, left, 1);
     substitute_vars(left, left, ses);
     delete_hashlist(ses, ses->pathdirs, left,
-        ses->mesvar[MSG_PATH]? "#Ok. $%s is no longer recognized as a pathdir." : 0,
-        ses->mesvar[MSG_PATH]? "#THAT PATHDIR (%s) IS NOT DEFINED." : 0);
+        ses->mesvar[MSG_PATH] ? "#Ok. $%s is no longer recognized as a pathdir." : 0,
+        ses->mesvar[MSG_PATH] ? "#THAT PATHDIR (%s) IS NOT DEFINED." : 0);
 }

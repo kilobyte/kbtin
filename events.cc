@@ -12,10 +12,10 @@
 
 int msec(timens_t t)
 {
-    t%=NANO;
-    if (t<0)
-        t+=NANO;
-    return t/1000000;
+    t %= NANO;
+    if (t < 0)
+        t += NANO;
+    return t / 1000000;
 }
 
 /* remove ev->next from list */
@@ -25,21 +25,21 @@ static void remove_event(struct eventnode **ev)
     SFREE((*ev)->event);
     SFREE((*ev)->label);
     TFREE(*ev, struct eventnode);
-    *ev=tmp;
+    *ev = tmp;
 }
 
 static void schedule_event(session *ses, struct eventnode *restrict ev1)
 {
     const char *l1, *l2;
 
-    if ((l1=ev1->label))
+    if ((l1 = ev1->label))
     {
         struct eventnode **ev2 = &(ses->events);
         while (*ev2)
-            if (((l2=(*ev2)->label)) && !strcmp(l1, l2))
+            if (((l2 = (*ev2)->label)) && !strcmp(l1, l2))
                 remove_event(ev2);
             else
-                ev2=&(*ev2)->next;
+                ev2 = &(*ev2)->next;
     }
 
     timens_t t1 = ev1->time;
@@ -53,10 +53,10 @@ static void schedule_event(session *ses, struct eventnode *restrict ev1)
 
 static void execute_event(struct eventnode *ev, session *ses)
 {
-    if (activesession==ses)
+    if (activesession == ses)
         tintin_printf(MSG_EVENT, ses, "[EVENT: %s]", ev->event);
     parse_input(ev->event, true, ses);
-    recursion=0;
+    recursion = 0;
 }
 
 /* execute due events, abort and return 1 if any_closed */
@@ -64,9 +64,9 @@ bool do_events(session *ses, timens_t now)
 {
     struct eventnode *ev;
 
-    while ((ev=ses->events) && (ev->time<=now))
+    while ((ev = ses->events) && (ev->time <= now))
     {
-        ses->events=ev->next;
+        ses->events = ev->next;
         execute_event(ev, ses);
 
         if (ev->period >= 0)
@@ -75,7 +75,7 @@ bool do_events(session *ses, timens_t now)
             timens_t old = ev->time - now;
             timens_t del = ev->period;
             timens_t nxt = old + del;
-            timens_t cap = del/2;
+            timens_t cap = del / 2;
             if (nxt < cap)
                 nxt = cap;
             if (nxt <= 0)
@@ -101,10 +101,10 @@ static void show_event(session *ses, struct eventnode *ev, timens_t ct)
 
     if (ev->period >= 0)
         sprintf(times, "(%lld.%03d, %lld.%03d)\t",
-            (ev->time-ct)/NANO, msec(ev->time-ct),
-            (ev->period)/NANO, msec(ev->period));
+            (ev->time - ct) / NANO, msec(ev->time - ct),
+            (ev->period) / NANO, msec(ev->period));
     else
-        sprintf(times, "(%lld.%03d)\t\t", (ev->time-ct)/NANO, msec(ev->time-ct));
+        sprintf(times, "(%lld.%03d)\t\t", (ev->time - ct) / NANO, msec(ev->time - ct));
 
     if (ev->label)
         tintin_printf(ses, "%s {%s} {%s}", times, ev->event, ev->label);
@@ -166,14 +166,14 @@ void delay_command(const char *arg, session *ses)
         *slash = 0;
 
     timens_t delay = time2secs(left, ses);
-    if (delay==INVALID_TIME || delay<0)
+    if (delay == INVALID_TIME || delay < 0)
         return tintin_eprintf(ses, "#EVENT IGNORED (DELAY={%s}), INVALID DELAY", left);
 
     if (slash)
     {
         slash++;
         period = time2secs(slash, ses);
-        if (period==INVALID_TIME || period<0)
+        if (period == INVALID_TIME || period < 0)
             return tintin_eprintf(ses, "#EVENT IGNORED (PERIOD={%s}), INVALID PERIOD", slash);
     }
 
@@ -181,7 +181,7 @@ void delay_command(const char *arg, session *ses)
     ev->time = current_time() + delay;
     ev->period = period;
     ev->event = mystrdup(right);
-    ev->label = label[0]? mystrdup(label) : 0;
+    ev->label = label[0] ? mystrdup(label) : 0;
 
     schedule_event(ses, ev);
 }
@@ -211,16 +211,16 @@ void undelay_command(const char *arg, session *ses)
         const char *label2;
 
         if ((!*left || match(left, (*ev)->event))
-         && (!*label || (((label2=(*ev)->label)) && match(label, label2))))
+            && (!*label || (((label2 = (*ev)->label)) && match(label, label2))))
         {
-            flag=true;
-            if (ses==activesession)
+            flag = true;
+            if (ses == activesession)
                 tintin_printf(MSG_EVENT, ses, "#Ok. Event {%s} at %lld.%03d won't be executed.",
-                    (*ev)->event, ((*ev)->time-ct)/NANO, msec((*ev)->time-ct));
+                    (*ev)->event, ((*ev)->time - ct) / NANO, msec((*ev)->time - ct));
             remove_event(ev);
         }
         else
-            ev=&((*ev)->next);
+            ev = &((*ev)->next);
     }
 
     if (!flag)
@@ -262,25 +262,25 @@ void findevents_command(const char *arg, session *ses)
 
     timens_t ct = current_time();
 
-    char buf[BUFFER_SIZE], *b=buf;
-    *buf=0;
+    char buf[BUFFER_SIZE], *b = buf;
+    *buf = 0;
     struct eventnode *ev = ses->events;
     while (ev)
     {
         if (match(right, ev->event))
         {
-            char time[BUFFER_SIZE], item[BUFFER_SIZE+10];
+            char time[BUFFER_SIZE], item[BUFFER_SIZE + 10];
             // lie that overdue events are due right now
-            nsecstr(time, (ev->time>ct)? ev->time-ct : 0);
+            nsecstr(time, (ev->time > ct) ? ev->time - ct : 0);
             if (isatom(ev->event))
                 snprintf(item, sizeof item, "{%s %s}", time, ev->event);
             else
                 snprintf(item, sizeof item, "{%s {%s}}", time, ev->event);
 
-            if (b!=buf)
-                *b++=' ';
-            b+=snprintf(b, buf-b+sizeof(buf), "%s", item);
-            if (b >= buf+BUFFER_SIZE-10)
+            if (b != buf)
+                *b++ = ' ';
+            b += snprintf(b, buf - b + sizeof(buf), "%s", item);
+            if (b >= buf + BUFFER_SIZE - 10)
             {
                 tintin_eprintf(ses, "#Too many events to store.");
                 break;

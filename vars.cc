@@ -16,14 +16,14 @@
 /*****************************************/
 static int defang_var(char *result, const char *var)
 {
-    int obraces=0, level=0;
+    int obraces = 0, level = 0;
 
-    for (const char *p=var; *p; p++)
+    for (const char *p = var; *p; p++)
     {
         if (*p == '{')
             obraces++, level++;
         else if (*p == '}')
-            if (level>0)
+            if (level > 0)
                 level--;
     }
 
@@ -31,13 +31,13 @@ static int defang_var(char *result, const char *var)
     level = 0;
 
     char *r = result;
-    for (const char *p=var; *p; p++)
+    for (const char *p = var; *p; p++)
     {
         if (*p == ';')
             ; /* no replacement */
         else if (*p == '{')
         {
-            *r++ = (obraces-->0)? '{' : '(';
+            *r++ = (obraces-->0) ? '{' : '(';
             level++;
         }
         else if (*p == '}')
@@ -62,8 +62,8 @@ static void substitute_ivars(const char *arg, char *result)
 {
     int nest = 0;
     int numands, n;
-    const char *ARG=arg;
-    int valuelen, len=strlen(arg);
+    const char *ARG = arg;
+    int valuelen, len = strlen(arg);
 
     if (!pvars)
     {
@@ -73,21 +73,21 @@ static void substitute_ivars(const char *arg, char *result)
     while (*arg)
     {
         if (*arg == '%')
-        {               /* substitute variable */
+        {   /* substitute variable */
             numands = 1;        /* at least one */
             while (*(arg + numands) == '%')
                 numands++;
             if (isadigit(*(arg + numands)) && numands == (nest + 1))
             {
                 n = *(arg + numands) - '0';
-                valuelen=strlen((*pvars)[n]);
-                if ((len+=valuelen-numands-1) > BUFFER_SIZE-10)
+                valuelen = strlen((*pvars)[n]);
+                if ((len += valuelen - numands - 1) > BUFFER_SIZE - 10)
                 {
-                    len-=valuelen-numands-1;
+                    len -= valuelen - numands - 1;
                     if (!aborting)
                     {
                         tintin_eprintf(0, "#ERROR: command+vars too long in {%s}.", ARG);
-                        aborting=true;
+                        aborting = true;
                     }
                     goto novar1;
                 }
@@ -102,24 +102,24 @@ novar1:
                 arg += numands + 1;
                 result += numands + 1;
             }
-            in_alias=false; /* not a simple alias */
+            in_alias = false; /* not a simple alias */
         }
         else if (*arg == '$')
-        {               /* substitute variable */
+        {   /* substitute variable */
             numands = 1;        /* at least one */
             while (*(arg + numands) == '$')
                 numands++;
             if (isadigit(*(arg + numands)) && numands == (nest + 1))
             {
                 n = *(arg + numands) - '0';
-                valuelen=strlen((*pvars)[n]);
-                if ((len+=valuelen-numands-1) > BUFFER_SIZE-10)
+                valuelen = strlen((*pvars)[n]);
+                if ((len += valuelen - numands - 1) > BUFFER_SIZE - 10)
                 {
-                    len-=valuelen-numands-1;
+                    len -= valuelen - numands - 1;
                     if (!aborting)
                     {
                         tintin_eprintf(0, "#ERROR: command+vars too long in {%s}.", ARG);
-                        aborting=true;
+                        aborting = true;
                     }
                     goto novar2;
                 }
@@ -133,7 +133,7 @@ novar2:
                 arg += numands;
                 result += numands;
             }
-            in_alias=false; /* not a simple alias */
+            in_alias = false; /* not a simple alias */
         }
         else if (*arg == BRACE_OPEN)
         {
@@ -174,11 +174,11 @@ void set_variable(const char *left, const char *right, session *ses)
 static int builtin_var(const char *varname, char *value, session *ses)
 {
     if (!strcmp(varname, "secstotick"))
-        sprintf(value, "%lld", timetilltick(ses)/NANO);
+        sprintf(value, "%lld", timetilltick(ses) / NANO);
     else if (!strcmp(varname, "TIMETOTICK"))
     {
         timens_t tt = timetilltick(ses);
-        sprintf(value, "%lld.%09ld", tt/NANO, labs(tt%NANO));
+        sprintf(value, "%lld.%09ld", tt / NANO, labs(tt % NANO));
     }
     else if (!strcmp(varname, "LINES"))
         sprintf(value, "%d", LINES);
@@ -187,15 +187,15 @@ static int builtin_var(const char *varname, char *value, session *ses)
     else if (!strcmp(varname, "PATH"))
         path2var(value, ses);
     else if (!strcmp(varname, "IDLETIME"))
-        nsecstr(value, current_time()-ses->idle_since);
+        nsecstr(value, current_time() - ses->idle_since);
     else if (!strcmp(varname, "SERVERIDLE"))
-        nsecstr(value, current_time()-ses->server_idle_since);
+        nsecstr(value, current_time() - ses->server_idle_since);
     else if (!strcmp(varname, "USERIDLE"))
-        nsecstr(value, current_time()-idle_since);
+        nsecstr(value, current_time() - idle_since);
     else if (!strcmp(varname, "LINENUM"))
         sprintf(value, "%llu", ses->linenum);
     else if (_ && (!strcmp(varname, "LINE")
-                   || !strcmp(varname, "_")))
+        || !strcmp(varname, "_")))
         strcpy(value, _);
     else if (!strcmp(varname, "SESSION"))
         strcpy(value, ses->name);
@@ -204,35 +204,35 @@ static int builtin_var(const char *varname, char *value, session *ses)
     else if (!strcmp(varname, "ASESSION"))
         strcpy(value, activesession->name);
     else if (!strcmp(varname, "LOGFILE"))
-        strcpy(value, ses->logfile?ses->logname:"");
+        strcpy(value, ses->logfile ? ses->logname : "");
     else if (!strcmp(varname, "RANDOM") || !strcmp(varname, "_random"))
         sprintf(value, "%d", rand());
     else if (!strcmp(varname, "_time"))
     {
         timens_t age = current_time() - start_time;
-        sprintf(value, "%lld", age/NANO);
+        sprintf(value, "%lld", age / NANO);
     }
     else if (!strcmp(varname, "STARTTIME"))
-        sprintf(value, "%lld.%09lld", start_time/NANO, start_time%NANO);
+        sprintf(value, "%lld.%09lld", start_time / NANO, start_time % NANO);
     else if (!strcmp(varname, "TIME"))
     {
         timens_t ct = current_time();
-        sprintf(value, "%lld.%09lld", ct/NANO, ct%NANO);
+        sprintf(value, "%lld.%09lld", ct / NANO, ct % NANO);
     }
     else if (!strcmp(varname, "_clock"))
         sprintf(value, "%ld", (long int)time(0));
     else if (!strcmp(varname, "_msec"))
     {
         timens_t age = current_time() - start_time;
-        sprintf(value, "%lld", age / (NANO/1000));
+        sprintf(value, "%lld", age / (NANO / 1000));
     }
     else if (!strcmp(varname, "HOME"))
     {
-        const char *v=getenv("HOME");
+        const char *v = getenv("HOME");
         if (v)
             snprintf(value, BUFFER_SIZE, "%s", v);
         else
-            *value=0;
+            *value = 0;
     }
     else
         return 0;
@@ -243,28 +243,28 @@ void substitute_myvars(const char *arg, char *result, session *ses, int recur)
 {
     char varname[BUFFER_SIZE], value[BUFFER_SIZE];
     int nest = 0;
-    int len=strlen(arg);
+    int len = strlen(arg);
 
     while (*arg)
     {
         if (*arg == '$')
-        {                           /* substitute variable */
+        {   /* substitute variable */
             bool specvar;
             int counter = 0, varlen = 0;
             while (*(arg + counter) == '$')
                 counter++;
 
             /* ${name} code added by Sverre Normann */
-            if (*(arg+counter) != BRACE_OPEN)
+            if (*(arg + counter) != BRACE_OPEN)
             {
                 /* ordinary variable whose name contains no spaces and special characters  */
                 specvar = false;
-                while (is7alpha(*(arg+varlen+counter))||
-                       (*(arg+varlen+counter)=='_')||
-                       isadigit(*(arg+varlen+counter)))
+                while (is7alpha(*(arg + varlen + counter)) ||
+                    (*(arg + varlen + counter) == '_') ||
+                    isadigit(*(arg + varlen + counter)))
                     varlen++;
-                if (varlen>0)
-                    memcpy(varname, arg+counter, varlen);
+                if (varlen > 0)
+                    memcpy(varname, arg + counter, varlen);
                 *(varname + varlen) = '\0';
             }
             else
@@ -272,7 +272,7 @@ void substitute_myvars(const char *arg, char *result, session *ses, int recur)
                 /* variable with name containing non-alpha characters e.g ${a b} */
                 specvar = true;
                 get_arg_in_braces(arg + counter, varname, 0);
-                varlen=strlen(varname);
+                varlen = strlen(varname);
                 if (recur < 8)
                 {
                     substitute_ivars(varname, value);
@@ -295,15 +295,15 @@ void substitute_myvars(const char *arg, char *result, session *ses, int recur)
             if (v)
             {
                 int valuelen = strlen(v);
-                if ((len+=valuelen-counter-varlen) > BUFFER_SIZE-10)
+                if ((len += valuelen - counter - varlen) > BUFFER_SIZE - 10)
                 {
                     if (!aborting)
                     {
                         tintin_eprintf(ses, "#ERROR: command+variables too long while substituting $%s%s%s.",
-                            specvar?"{":"", varname, specvar?"}":"");
-                        aborting=true;
+                            specvar ? "{" : "", varname, specvar ? "}" : "");
+                        aborting = true;
                     }
-                    len-=valuelen-counter-varlen;
+                    len -= valuelen - counter - varlen;
                     v = 0;
                 }
                 else

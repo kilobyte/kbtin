@@ -31,7 +31,7 @@ void variable_command(const char *arg, session *ses)
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
     arg = get_arg(arg, left, 0, ses);
-    bool r=*space_out(arg);
+    bool r = *space_out(arg);
     arg = get_arg(arg, right, 1, ses);
     if (*left && r)
     {
@@ -54,8 +54,8 @@ void unvariable_command(const char *arg, session *ses)
     {
         arg = get_arg(arg, left, 0, ses);
         delete_hashlist(ses, ses->myvars, left,
-            ses->mesvar[MSG_VARIABLE]? "#Ok. $%s is no longer a variable." : 0,
-            ses->mesvar[MSG_VARIABLE]? "#THAT VARIABLE (%s) IS NOT DEFINED." : 0);
+            ses->mesvar[MSG_VARIABLE] ? "#Ok. $%s is no longer a variable." : 0,
+            ses->mesvar[MSG_VARIABLE] ? "#THAT VARIABLE (%s) IS NOT DEFINED." : 0);
     } while (*arg);
 }
 
@@ -114,7 +114,7 @@ void firstupper_command(const char *arg, session *ses)
         return tintin_eprintf(ses, "#Syntax: #firstupper <var> <text>");
 
     TO_WC(txt, right);
-    *txt=towupper(*txt);
+    *txt = towupper(*txt);
     WRAP_WC(right, txt);
     set_variable(left, right, ses);
 }
@@ -133,7 +133,7 @@ void firstlower_command(const char *arg, session *ses)
         return tintin_eprintf(ses, "#Syntax: #firstlower <var> <text>");
 
     TO_WC(txt, right);
-    *txt=towlower(*txt);
+    *txt = towlower(*txt);
     WRAP_WC(right, txt);
     set_variable(left, right, ses);
 }
@@ -168,10 +168,10 @@ int strlen_inline(const char *arg, session *ses)
 static int cwidth(char *s)
 {
     WC txt[BUFFER_SIZE], *dum;
-    int color=7;
+    int color = 7;
 
-    utf8_to_wc(txt, s, BUFFER_SIZE-1);
-    return cutws(txt, BUFFER_SIZE-1, &dum, &color);
+    utf8_to_wc(txt, s, BUFFER_SIZE - 1);
+    return cutws(txt, BUFFER_SIZE - 1, &dum, &color);
 }
 
 /*************************/
@@ -308,34 +308,35 @@ int random_inline(const char *arg, session *ses)
 /************************************************************************************/
 static int cutws(WC *str, int len, WC **rstr, int *color)
 {
-    char cbuf[BUFFER_SIZE], *cp=cbuf;
-    for (WC *sp=str; *sp; sp++)
-        *cp++ = (*sp>'~')? 'x' : *sp; // only color codes count
-    cp=cbuf;
+    char cbuf[BUFFER_SIZE], *cp = cbuf;
+    for (WC *sp = str; *sp; sp++)
+        *cp++ = (*sp > '~') ? 'x' : *sp; // only color codes count
+    cp = cbuf;
 
-    int s=0;
+    int s = 0;
     while (*str)
     {
-        if (*str=='~')
+        if (*str == '~')
         {
             const char *cend = cp;
             if (getcolor(&cend, color, true))
             {
-                str+=(cend-cp)+1;
-                cp+=(cend-cp)+1;
+                str += (cend - cp) +1;
+                cp += (cend - cp) +1;
                 continue;
             }
         }
 
-        int w=wcwidth(*str);
-        if (w<0)
-            w=0;
-        if (w && s+w>len)
+        int w = wcwidth(*str);
+        if (w < 0)
+            w = 0;
+        if (w && s + w > len)
             break;
-        str++; cp++;
-        s+=w;
+        str++;
+        cp++;
+        s += w;
     }
-    *rstr=str;
+    *rstr = str;
     return s;
 }
 
@@ -350,7 +351,7 @@ void postpad_command(const char *arg, session *ses)
 {
     char destvar[BUFFER_SIZE], lengthstr[BUFFER_SIZE], astr[BUFFER_SIZE], *aptr;
     WC bstr[BUFFER_SIZE], *bptr;
-    int len, length, dummy=-1;
+    int len, length, dummy = -1;
 
     arg = get_arg(arg, destvar, 0, ses);
     arg = get_arg(arg, lengthstr, 0, ses);
@@ -359,15 +360,15 @@ void postpad_command(const char *arg, session *ses)
     if (!*lengthstr)
         return tintin_eprintf(ses, "#Error - Syntax: #postpad {dest var} {length} {text}");
 
-    if (!sscanf(lengthstr, "%d", &length) || (length < 1) || (length > BUFFER_SIZE-10))
+    if (!sscanf(lengthstr, "%d", &length) || (length < 1) || (length > BUFFER_SIZE - 10))
         return tintin_eprintf(ses, "#Error in #postpad - length has to be a positive number >0, got {%s}.", lengthstr);
 
     TO_WC(bstr, astr);
-    len=cutws(bstr, length, &bptr, &dummy);
-    aptr=astr+wc_to_utf8(astr, bstr, bptr-bstr, BUFFER_SIZE-3);
-    while (len<length)
-        len++, *aptr++=' ';
-    *aptr=0;
+    len = cutws(bstr, length, &bptr, &dummy);
+    aptr = astr + wc_to_utf8(astr, bstr, bptr - bstr, BUFFER_SIZE - 3);
+    while (len < length)
+        len++, *aptr++ = ' ';
+    *aptr = 0;
     set_variable(destvar, astr, ses);
 }
 
@@ -385,7 +386,7 @@ void prepad_command(const char *arg, session *ses)
 {
     char destvar[BUFFER_SIZE], astr[BUFFER_SIZE], lengthstr[BUFFER_SIZE], *aptr;
     WC bstr[BUFFER_SIZE], *bptr;
-    int len, length, dummy=-1;
+    int len, length, dummy = -1;
 
     arg = get_arg(arg, destvar, 0, ses);
     arg = get_arg(arg, lengthstr, 0, ses);
@@ -394,16 +395,16 @@ void prepad_command(const char *arg, session *ses)
     if (!*lengthstr)
         return tintin_eprintf(ses, "#Error - Syntax: #prepad {dest var} {length} {text}");
 
-    if (!sscanf(lengthstr, "%d", &length) || (length < 1) || (length>BUFFER_SIZE-10))
+    if (!sscanf(lengthstr, "%d", &length) || (length < 1) || (length > BUFFER_SIZE - 10))
         return tintin_eprintf(ses, "#Error in #prepad - length has to be a positive number >0, got {%s}.", lengthstr);
 
     TO_WC(bstr, astr);
-    len=cutws(bstr, length, &bptr, &dummy);
-    aptr=astr;
-    while (len<length)
-        len++, *aptr++=' ';
-    aptr+=wc_to_utf8(aptr, bstr, bptr-bstr, BUFFER_SIZE-3);
-    *aptr=0;
+    len = cutws(bstr, length, &bptr, &dummy);
+    aptr = astr;
+    while (len < length)
+        len++, *aptr++ = ' ';
+    aptr += wc_to_utf8(aptr, bstr, bptr - bstr, BUFFER_SIZE - 3);
+    *aptr = 0;
     set_variable(destvar, astr, ses);
 }
 
@@ -420,29 +421,29 @@ void substring_command(const char *arg, session *ses)
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, mid, 0, ses);
     arg = get_arg(arg, right, 1, ses);
-    l=strtol(mid, &p, 10);
-    if (*p==',')
-        r=strtol(p+1, &p, 10);
+    l = strtol(mid, &p, 10);
+    if (*p == ',')
+        r = strtol(p + 1, &p, 10);
     else
-        r=l;
-    if (l<1)
-        l=1;
+        r = l;
+    if (l < 1)
+        l = 1;
 
-    if (!*left || (p==mid) || (*p) || (r<0))
+    if (!*left || (p == mid) || (*p) || (r < 0))
         return tintin_eprintf(ses, "#SYNTAX: substr <var> <l>[,<r>] <string>");
 
-    p=mid;
+    p = mid;
     TO_WC(buf, right);
-    WC *lb=buf;
-    int color=-1;
-    if (l>1)
+    WC *lb = buf;
+    int color = -1;
+    if (l > 1)
     {
-        int lw=cutws(buf, l-1, &lb, &color);
-        if (color!=-1)
-            p+=setcolor(p, color);
-        if (lw==l-2 && *lb) /* 1 column short and not end of string → half of a CJK char */
+        int lw = cutws(buf, l - 1, &lb, &color);
+        if (color != -1)
+            p += setcolor(p, color);
+        if (lw == l - 2 && *lb) /* 1 column short and not end of string → half of a CJK char */
         {
-            *p++=' ';
+            *p++ = ' ';
             l++;
             lb++;
             while (*lb && !wcwidth(*lb)) /* eat combining chars as well */
@@ -451,10 +452,10 @@ void substring_command(const char *arg, session *ses)
     }
 
     WC *rb;
-    int rw=cutws(lb, r+1-l, &rb, &color);
-    p+=wc_to_utf8(p, lb, rb-lb, mid+BUFFER_SIZE-3-p);
-    if (rw==r-l && *rb) /* half of a CJK char */
-        *p++=' ', *p=0;
+    int rw = cutws(lb, r + 1 - l, &rb, &color);
+    p += wc_to_utf8(p, lb, rb - lb, mid + BUFFER_SIZE - 3 - p);
+    if (rw == r - l && *rb) /* half of a CJK char */
+        *p++ = ' ', *p = 0;
     set_variable(left, mid, ses);
 }
 
@@ -533,8 +534,8 @@ void ctoi_command(const char* arg, session* ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    arg=get_arg(arg, left, 0, ses);
-    arg=get_arg(arg, right, 1, ses);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
 
     if (!*left || !*right)
         return tintin_eprintf(ses, "#Syntax: #ctoi <var> <text>");
@@ -550,8 +551,8 @@ void initvariable_command(const char* arg, session* ses)
 {
     char left[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    arg=get_arg(arg, left, 0, ses);
-    arg=get_arg(arg, right, 1, ses);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
 
     if (!*left)
         tintin_eprintf(ses, "#Syntax: #initvar <var> <value>");
@@ -576,10 +577,10 @@ void trim_command(const char *arg, session *ses)
     s = str;
     while (isaspace(*s))
         s++;
-    for (p=e=s; *p; p++)
+    for (p = e = s; *p; p++)
         if (!isaspace(*p))
-            e = p+1;
-    *e=0;
+            e = p + 1;
+    *e = 0;
     set_variable(destvar, s, ses);
 }
 
@@ -588,7 +589,7 @@ void trim_command(const char *arg, session *ses)
 /************************************************************/
 timens_t time2secs(const char *tt, session *ses)
 {
-    timens_t w, t=0;
+    timens_t w, t = 0;
 
     if (!*tt)
     {
@@ -597,45 +598,45 @@ bad:
         tintin_eprintf(ses, "#got: {%s}.", tt);
         return INVALID_TIME;
     }
-    t=0;
+    t = 0;
     for (;;)
     {
         char *err;
         w = str2timens(tt, &err);
-        if (tt==err)
+        if (tt == err)
             goto bad;
-        tt=err;
+        tt = err;
         while (isaspace(*tt))
             tt++;
         switch (toalower(*tt))
         {
         case 'w':
-            w*=7;
+            w *= 7;
             goto day;
         case 'y':
-            w*=365;
-        day:
+            w *= 365;
+day:
         case 'd':
-            w*=24;
+            w *= 24;
         case 'h':
-            w*=60;
+            w *= 60;
         case 'm':
-            w*=60;
+            w *= 60;
         case 's':
             while (is7alpha(*tt))
                 tt++;
         case 0:
-            t+=w;
+            t += w;
             break;
         default:
             goto bad;
         }
-        if (*tt==',')
+        if (*tt == ',')
             tt++;
         while (isaspace(*tt))
             tt++;
         if (!strncmp(tt, "and", 3))
-            tt+=3;
+            tt += 3;
         if (!*tt)
             break;
     }
@@ -654,7 +655,7 @@ void ctime_command(const char *arg, session *ses)
     arg = get_arg(arg, arg2, 1, ses);
     if (!*arg2)
         tt = current_time();
-    else if ((tt=time2secs(arg2, ses))==INVALID_TIME)
+    else if ((tt = time2secs(arg2, ses)) == INVALID_TIME)
         return;
     const time_t t = tt / NANO;
     p = ct = ctime_r(&t, arg2);
@@ -685,8 +686,8 @@ void time_command(const char *arg, session *ses)
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        t=time2secs(ct, ses);
-        if (t==INVALID_TIME)
+        t = time2secs(ct, ses);
+        if (t == INVALID_TIME)
             return;
     }
     else
@@ -711,19 +712,19 @@ void localtime_command(const char *arg, session *ses)
     arg = get_arg(arg, ct, 1, ses);
     if (*ct)
     {
-        timens_t tt=time2secs(ct, ses);
-        if (tt==INVALID_TIME)
+        timens_t tt = time2secs(ct, ses);
+        if (tt == INVALID_TIME)
             return;
-        t = tt/NANO;
+        t = tt / NANO;
         sprintf(ct, "%lld", (long long)(t));
     }
     else
-        t=time(0);
+        t = time(0);
     localtime_r(&t, &ts);
     sprintf(ct, "%02d %02d %02d  %02d %02d %04d  %d %d %d",
-                    ts.tm_sec, ts.tm_min, ts.tm_hour,
-                    ts.tm_mday, ts.tm_mon+1, ts.tm_year+1900,
-                    ts.tm_wday, ts.tm_yday+1, ts.tm_isdst);
+        ts.tm_sec, ts.tm_min, ts.tm_hour,
+        ts.tm_mday, ts.tm_mon + 1, ts.tm_year + 1900,
+        ts.tm_wday, ts.tm_yday + 1, ts.tm_isdst);
     if (!*left)
         tintin_printf(ses, "#%s.", ct);
     else
@@ -744,18 +745,18 @@ void gmtime_command(const char *arg, session *ses)
     if (*ct)
     {
         timens_t tt = time2secs(ct, ses);
-        if (tt==INVALID_TIME)
+        if (tt == INVALID_TIME)
             return;
-        t = tt/NANO;
+        t = tt / NANO;
         sprintf(ct, "%ld", (long)t);
     }
     else
-        t=time(0);
+        t = time(0);
     gmtime_r(&t, &ts);
     sprintf(ct, "%02d %02d %02d  %02d %02d %04d  %d %d %d",
-                    ts.tm_sec, ts.tm_min, ts.tm_hour,
-                    ts.tm_mday, ts.tm_mon+1, ts.tm_year+1900,
-                    ts.tm_wday, ts.tm_yday+1, ts.tm_isdst);
+        ts.tm_sec, ts.tm_min, ts.tm_hour,
+        ts.tm_mday, ts.tm_mon + 1, ts.tm_year + 1900,
+        ts.tm_wday, ts.tm_yday + 1, ts.tm_isdst);
     if (!*left)
         tintin_printf(ses, "#%s.", ct);
     else
@@ -782,7 +783,7 @@ num_t angle_inline(const char *line, session *ses)
 
     num_t a = atan2(y, x) * 180 * M_1_PI * DENOM;
     if (a < 0)
-        a += 360*DENOM;
+        a += 360 * DENOM;
     return a;
 }
 
@@ -882,6 +883,6 @@ num_t round_inline(const char *line, session *ses)
 
     num_t x = eval_expression(arg, ses);
     // round away from 0
-    x += (x >= 0)? DENOM/2 : -DENOM/2;
+    x += (x >= 0) ? DENOM / 2 : -DENOM / 2;
     return x / DENOM * DENOM;
 }

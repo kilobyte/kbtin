@@ -18,7 +18,7 @@ static bool check_regexp(char *line, char *action, pvars_t *vars, session *ses)
         tintin_eprintf(ses, "#invalid regular expression: {%s}", action);
         return false;
     }
-    if (regexec(&preg, line, vars?10:0, pmatch, 0))
+    if (regexec(&preg, line, vars ? 10 : 0, pmatch, 0))
     {
         regfree(&preg);
         return false;
@@ -28,12 +28,12 @@ static bool check_regexp(char *line, char *action, pvars_t *vars, session *ses)
         {
             if (pmatch[i].rm_so != -1)
             {
-                memcpy((*vars)[i], line+pmatch[i].rm_so,
-                                   pmatch[i].rm_eo-pmatch[i].rm_so);
-                *((*vars)[i] + pmatch[i].rm_eo-pmatch[i].rm_so) = '\0';
+                memcpy((*vars)[i], line + pmatch[i].rm_so,
+                    pmatch[i].rm_eo - pmatch[i].rm_so);
+                *((*vars)[i] + pmatch[i].rm_eo - pmatch[i].rm_so) = '\0';
             }
             else
-                (*vars)[i][0]=0;
+                (*vars)[i][0] = 0;
         }
     regfree(&preg);
     return true;
@@ -47,9 +47,9 @@ session *grep_command(const char *arg, session *ses)
     pvars_t vars, *lastpvars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    arg=get_arg(arg, left, 0, ses);
-    arg=get_arg(arg, line, 0, ses);
-    arg=get_arg_in_braces(arg, right, 0);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, line, 0, ses);
+    arg = get_arg_in_braces(arg, right, 0);
 
     if (!*left || !*right)
     {
@@ -77,8 +77,8 @@ int grep_inline(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], line[BUFFER_SIZE];
 
-    arg=get_arg(arg, left, 0, ses);
-    arg=get_arg(arg, line, 1, ses);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, line, 1, ses);
 
     if (!*left)
     {

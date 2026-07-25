@@ -16,11 +16,11 @@
 static FILE* check_file(const char *filestring)
 {
 #if COMPRESSED_HELP
-    char sysfile[BUFFER_SIZE+8];
+    char sysfile[BUFFER_SIZE + 8];
     int f;
 
     sprintf(sysfile, "%s%s", filestring, COMPRESSION_EXT);
-    if ((f=open(sysfile, O_RDONLY|O_BINARY))==-1)
+    if ((f = open(sysfile, O_RDONLY | O_BINARY)) == -1)
         return 0;
     return mypopen(UNCOMPRESS_CMD, false, f);
 #else
@@ -30,7 +30,7 @@ static FILE* check_file(const char *filestring)
 
 void help_command(const char *arg, session *ses)
 {
-    FILE *myfile=NULL;
+    FILE *myfile = NULL;
     char text[BUFFER_SIZE], line[BUFFER_SIZE], filestring[BUFFER_SIZE];
 
     if (strcmp(DEFAULT_FILE_DIR, "HOME"))
@@ -77,18 +77,18 @@ void help_command(const char *arg, session *ses)
     {
         while (fgets(line, sizeof(line), myfile))
         {
-            if (line[0]=='~' && line[1]=='~')
+            if (line[0] == '~' && line[1] == '~')
                 break;
-            char *eol=strchr(line, '\n');
+            char *eol = strchr(line, '\n');
             if (eol)
-                *eol=0;
+                *eol = 0;
             tintin_printf(0, "%s", line);
         }
         fclose(myfile);
         return;
     }
 
-    if (*arg==tintin_char)
+    if (*arg == tintin_char)
         arg++;
     sprintf(text, "~%s", arg);
     while (fgets(line, sizeof(line), myfile))
@@ -97,11 +97,11 @@ void help_command(const char *arg, session *ses)
             continue;
         while (fgets(line, sizeof(line), myfile))
         {
-            if (line[0]=='~' && line[1]=='~')
+            if (line[0] == '~' && line[1] == '~')
                 break;
-            char *eol=strchr(line, '\n');
+            char *eol = strchr(line, '\n');
             if (eol)
-                *eol=0;
+                *eol = 0;
             tintin_printf(0, "%s", line);
         }
         fclose(myfile);

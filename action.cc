@@ -25,7 +25,7 @@ static bool check_a_action(const char *line, const char *action, bool inside);
 
 static bool delete_acts(Acts &l, const char *pat, const char *msg, session *ses)
 {
-    return std::erase_if(l, [&](const auto& i)
+    return std::erase_if(l, [&](const auto &i)
     {
         if (match(pat, i.first.second.c_str()))
         {
@@ -157,11 +157,11 @@ void unpromptaction_command(const char *arg, session *ses)
 #ifdef HAVE_SIMD
 char *action_to_regex(const char *pat)
 {
-    char buf[BUFFER_SIZE*2+3], *b=buf;
+    char buf[BUFFER_SIZE * 2 + 3], *b = buf;
 
     assert(*pat);
-    if (*pat=='^')
-        *b++='^', pat++;
+    if (*pat == '^')
+        *b++ = '^', pat++;
     for (; *pat; pat++)
         switch (*pat)
         {
@@ -169,9 +169,9 @@ char *action_to_regex(const char *pat)
             if (isadigit(pat[1]))
             {
                 pat++;
-                *b++='.';
-                *b++='*';
-                while (pat[1]=='%' && isadigit(pat[2]))
+                *b++ = '.';
+                *b++ = '*';
+                while (pat[1] == '%' && isadigit(pat[2]))
                     pat++; // eat multiple *s
                 break;
             }
@@ -185,18 +185,18 @@ char *action_to_regex(const char *pat)
         case '(':
         case ')':
         case '|':
-            *b++='\\';
+            *b++ = '\\';
         default:
-            *b++=*pat;
-        break;
+            *b++ = *pat;
+            break;
         case '$':
             if (pat[1])
-                *b++='\\';
-            *b++='$';
+                *b++ = '\\';
+            *b++ = '$';
         }
-    *b=0;
+    *b = 0;
 
-    int len=b-buf+1;
+    int len = b - buf + 1;
     char *txt = static_cast<char*>(malloc(len));
     memcpy(txt, buf, len);
     return txt;
@@ -230,11 +230,11 @@ static void check_all_act_serially(const char *line, session *ses, Acts &acts, b
                 char buffer[BUFFER_SIZE];
 
                 substitute_vars(a.second, buffer, ses);
-                tintin_printf(ses, "[%sACTION: %s]", act? "":"PROMPT", buffer);
+                tintin_printf(ses, "[%sACTION: %s]", act ? "" : "PROMPT", buffer);
             }
-            debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line, a.second);
+            debuglog(ses, "%sACTION: {%s}->{%s}", act ? "" : "PROMPT", line, a.second);
             parse_input(a.second, true, ses);
-            recursion=0;
+            recursion = 0;
             pvars = lastpvars;
         }
 
@@ -246,12 +246,12 @@ static void check_all_act_serially(const char *line, session *ses, Acts &acts, b
 #ifdef HAVE_SIMD
 static void build_act_hs(Acts &acts, session *ses, bool act)
 {
-    debuglog(ses, "SIMD: building %sactions", act?"":"prompt");
+    debuglog(ses, "SIMD: building %sactions", act ? "" : "prompt");
     hs_free_database(ses->acts_hs[act]);
-    ses->acts_hs[act]=0;
-    ses->act_dirty[act]=false;
+    ses->acts_hs[act] = 0;
+    ses->act_dirty[act] = false;
     delete[] ses->acts_data[act];
-    ses->acts_data[act]=0;
+    ses->acts_data[act] = 0;
 
     int n = acts.size();
     auto pat = new const char *[n];
@@ -262,12 +262,12 @@ static void build_act_hs(Acts &acts, session *ses, bool act)
     if (!pat || !flags || !ids || !data)
         die("out of memory");
 
-    unsigned int j=0;
+    unsigned int j = 0;
     for (const auto &a : acts)
     {
-        pat[j]=action_to_regex(a.first.second.c_str());
-        flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH|HS_FLAG_ALLOWEMPTY;
-        ids[j]=j;
+        pat[j] = action_to_regex(a.first.second.c_str());
+        flags[j] = HS_FLAG_DOTALL | HS_FLAG_SINGLEMATCH | HS_FLAG_ALLOWEMPTY;
+        ids[j] = j;
         const_cast<const char*&>(data[j].first) = a.first.second.c_str();
         data[j].second = a.second.c_str();
         j++;
@@ -278,29 +278,29 @@ static void build_act_hs(Acts &acts, session *ses, bool act)
     if (hs_compile_multi(pat, flags, ids, j, HS_MODE_BLOCK, 0, &ses->acts_hs[act], &error))
     {
         tintin_eprintf(ses, "#Error: hyperscan compilation failed for %s: %s",
-            act? "actions" : "promptactions", error->message);
-        if (error->expression>=0)
+            act ? "actions" : "promptactions", error->message);
+        if (error->expression >= 0)
             tintin_eprintf(ses, "#Converted bad expression was: %s",
-                           pat[error->expression]);
+                pat[error->expression]);
         hs_free_compile_error(error);
     }
     else if (hs_alloc_scratch(ses->acts_hs[act], &hs_scratch))
         die("out of memory");
 
-    ses->acts_data[act]=data;
-    for (int i=0; i<n; i++)
+    ses->acts_data[act] = data;
+    for (int i = 0; i < n; i++)
         SFREE(pat[i]);
     delete[] ids;
     delete[] flags;
     delete[] pat;
-    debuglog(ses, "SIMD: rebuilt %sactions", act?"":"prompt");
+    debuglog(ses, "SIMD: rebuilt %sactions", act ? "" : "prompt");
 }
 
 static int act_match(unsigned int id, unsigned long long from,
     unsigned long long to, unsigned int flags, void *context)
 {
     auto nid = static_cast<unsigned **>(context);
-    *(*nid)++=id;
+    *(*nid)++ = id;
     return 0;
 }
 
@@ -308,7 +308,7 @@ static int uintcmp(const void *a, const void *b)
 {
     unsigned A = *(const unsigned*)a;
     unsigned B = *(const unsigned*)b;
-    return A>B? 1 : A<B? -1 : 0;
+    return A > B ? 1 : A < B ? -1 : 0;
 }
 
 static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool act)
@@ -321,8 +321,8 @@ static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool 
     pvars = &vars;
 
     auto ids = new unsigned[acts.size()];
-    unsigned *nid=ids;
-    hs_error_t err=hs_scan(ses->acts_hs[act], line, strlen(line), 0, hs_scratch,
+    unsigned *nid = ids;
+    hs_error_t err = hs_scan(ses->acts_hs[act], line, strlen(line), 0, hs_scratch,
         act_match, &nid);
     if (err)
     {
@@ -332,7 +332,7 @@ static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool 
         return;
     }
 
-    int n = nid-ids;
+    int n = nid - ids;
     // Ensure a consistent ordering of actions.  While we don't guarantee
     // any order, in practice the order stays the same unless for a small
     // chance to change when the set of defined actions changes.
@@ -342,7 +342,7 @@ static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool 
     // Copy all triggered actions, in case of a mutation.
     const Cstrpair *data = ses->acts_data[act];
     const auto trig = new Cstrpair[n];
-    for (int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         const Strpair& t = data[ids[i]];
         const_cast<const char*&>(trig[i].first) = mystrdup(t.first);
@@ -350,10 +350,10 @@ static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool 
     }
     delete[] ids;
 
-    for (int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         const auto& t = trig[i];
-        const char *left  = t.first;
+        const char *left = t.first;
         const char *right = t.second;
 
         if (check_one_action(line, left, &vars, false))
@@ -363,14 +363,14 @@ static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool 
                 char buffer[BUFFER_SIZE];
 
                 substitute_vars(right, buffer, ses);
-                tintin_printf(ses, "[%sACTION: %s]", act? "":"PROMPT", buffer);
+                tintin_printf(ses, "[%sACTION: %s]", act ? "" : "PROMPT", buffer);
             }
-            debuglog(ses, "%sACTION: {%s}->{%s}", act? "":"PROMPT", line, right);
+            debuglog(ses, "%sACTION: {%s}->{%s}", act ? "" : "PROMPT", line, right);
             parse_input(right, true, ses);
-            recursion=0;
+            recursion = 0;
         }
     }
-    for (int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         SFREE(trig[i].first);
         SFREE(trig[i].second);
@@ -382,7 +382,7 @@ static void check_all_act_simd(const char *line, session *ses, Acts &acts, bool 
 
 static void check_all_act(const char *line, session *ses, bool act)
 {
-    Acts &acts = act? ses->actions : ses->prompts;
+    Acts &acts = act ? ses->actions : ses->prompts;
     if (acts.empty())
         return;
 
@@ -391,7 +391,7 @@ static void check_all_act(const char *line, session *ses, bool act)
         check_all_act_simd(line, ses, acts, act);
     else
 #endif
-    check_all_act_serially(line, ses, acts, act);
+        check_all_act_serially(line, ses, acts, act);
 }
 
 void check_all_actions(const char *line, session *ses)
@@ -413,9 +413,9 @@ session *match_command(const char *arg, session *ses)
     pvars_t vars, *lastpvars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE], right[BUFFER_SIZE];
 
-    arg=get_arg_in_braces(arg, left, 0);
-    arg=get_arg(arg, line, 0, ses);
-    arg=get_arg_in_braces(arg, right, 0);
+    arg = get_arg_in_braces(arg, left, 0);
+    arg = get_arg(arg, line, 0, ses);
+    arg = get_arg_in_braces(arg, right, 0);
 
     if (!*left || !*right)
     {
@@ -444,9 +444,9 @@ int match_inline(const char *arg, session *ses)
     pvars_t vars;
     char left[BUFFER_SIZE], line[BUFFER_SIZE];
 
-    arg=get_arg(arg, line, 0, ses);
+    arg = get_arg(arg, line, 0, ses);
     substitute_myvars(line, left, ses, 0); // no ivars
-    arg=get_arg(arg, line, 1, ses);
+    arg = get_arg(arg, line, 1, ses);
 
     if (!*left)
     {
@@ -487,7 +487,7 @@ bool check_one_action(const char *line, const char *action, pvars_t *vars, bool 
             *((*vars)[i] + var_len[i]) = '\0';
         }
         else
-            (*vars)[i][0]=0;
+            (*vars)[i][0] = 0;
     }
     return true;
 }
@@ -517,7 +517,7 @@ static bool check_a_action(const char *line, const char *action, bool inside)
     {
         if ((len = match_a_string(lptr, tptr)) == -1)
             return false;
-        match_start=lptr;
+        match_start = lptr;
         lptr += len;
         tptr += len;
     }
@@ -532,7 +532,7 @@ static bool check_a_action(const char *line, const char *action, bool inside)
         while (*lptr);
         if (len != -1)
         {
-            match_start=lptr;
+            match_start = lptr;
             lptr += len;
             tptr += len;
         }
@@ -542,11 +542,11 @@ static bool check_a_action(const char *line, const char *action, bool inside)
     while (*lptr && *tptr)
     {
         temp2 = tptr + 2;
-        if (!*temp2 || *temp2=='$')
+        if (!*temp2 || *temp2 == '$')
         {
             var_len[*(tptr + 1) - 48] = strlen(lptr);
             var_ptr[*(tptr + 1) - 48] = lptr;
-            match_end=""; /* NOTE: to use (match_end-line) change this line */
+            match_end = ""; /* NOTE: to use (match_end-line) change this line */
             return true;
         }
         lptr2 = lptr;
@@ -568,15 +568,15 @@ static bool check_a_action(const char *line, const char *action, bool inside)
         else
             return false;
     }
-    if ((*tptr=='%')&&isadigit(*(tptr+1)))
+    if ((*tptr == '%') && isadigit(*(tptr + 1)))
     {
-        var_len[*(tptr+1)-48]=0;
-        var_ptr[*(tptr+1)-48]=lptr;
-        tptr+=2;
+        var_len[*(tptr + 1) -48] = 0;
+        var_ptr[*(tptr + 1) -48] = lptr;
+        tptr += 2;
     }
     if (!*lptr && *tptr == '$' && !tptr[1])
         tptr++;
-    match_end=lptr;
+    match_end = lptr;
     return !*tptr;
 }
 

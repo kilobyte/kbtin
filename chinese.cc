@@ -1,55 +1,55 @@
 #include "tintin.h"
 
 static const char* cdigit[] = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九",
-                                "十", "百", "千", "万", "兩", "萬",
-                              };
-static const int nod = sizeof(cdigit)/sizeof(char*);
+        "十", "百", "千", "万", "兩", "萬",
+    };
+static const int nod = sizeof(cdigit) / sizeof(char*);
 
 void ctoi(char* input)
 {
     char result[BUFFER_SIZE];
-    int lastunit, lastdigit=0;
+    int lastunit, lastdigit = 0;
     char* tmp;
     int j = 0;
     tmp = input;
-    while (*tmp&&*(tmp+1))
+    while (*tmp && *(tmp + 1))
     {
-        for (int i=0;i<nod;i++)
+        for (int i = 0; i < nod; i++)
             if (!strncmp(tmp, cdigit[i], 3))
             {
-                if (i==14)      /* synonyms */
-                    i=2;
-                else if (i==15)
-                    i=13;
-                result[j]=i;
+                if (i == 14)    /* synonyms */
+                    i = 2;
+                else if (i == 15)
+                    i = 13;
+                result[j] = i;
                 goto ok;
             }
         break;
-    ok:
+ok:
         j++;
-        tmp+=3;
+        tmp += 3;
     }
-    result[j]=0; /*just sth != 10, chitchat*/
+    result[j] = 0; /*just sth != 10, chitchat*/
     int num = j;
     lastunit = 0;
-    j=0;
-    for (int i=0;i<num;i++)
+    j = 0;
+    for (int i = 0; i < num; i++)
     {
-        if (result[i]==0)
+        if (result[i] == 0)
         {
-            if (result[i+1]!=10) continue;
-            else result[i]=1; /*for 一千零十, change to 一千一十, chitchat*/
+            if (result[i + 1] != 10) continue;
+            else result[i] = 1; /*for 一千零十, change to 一千一十, chitchat*/
         }
-        if (i==0&&result[0]==10)
+        if (i == 0 && result[0] == 10)
         {
             lastunit = 10;
             input[j] = '1';
             j++;
             lastdigit = 0;
         }
-        else if (result[i]<10)
+        else if (result[i] < 10)
         {
-            if (lastunit<=10)
+            if (lastunit <= 10)
             {
                 input[j] = '0' + result[i];
                 j++;
@@ -58,10 +58,10 @@ void ctoi(char* input)
             else
                 lastdigit = result[i];
         }
-        else if (result[i]<13)
+        else if (result[i] < 13)
         {
-            if (lastunit>result[i]+1)
-                for (int k=0;k<lastunit-result[i]-1;k++)
+            if (lastunit > result[i] + 1)
+                for (int k = 0; k < lastunit - result[i] - 1; k++)
                 {
                     input[j] = '0';
                     j++;
@@ -74,10 +74,10 @@ void ctoi(char* input)
             lastunit = result[i];
             lastdigit = 0;
         }
-        else if (result[i]==13)
+        else if (result[i] == 13)
         {
-            if (lastunit>=10)
-                for (int k=0;k<lastunit-9;k++)
+            if (lastunit >= 10)
+                for (int k = 0; k < lastunit - 9; k++)
                 {
                     input[j] = '0';
                     j++;
@@ -86,16 +86,16 @@ void ctoi(char* input)
             lastdigit = 0;
         }
     }
-    if (lastunit>=10)
+    if (lastunit >= 10)
     {
-        for (int k=0;k<lastunit-9;k++)
+        for (int k = 0; k < lastunit - 9; k++)
         {
             input[j] = '0';
             j++;
         }
-        if (lastdigit) input[j-1]='0'+lastdigit;
+        if (lastdigit) input[j - 1] = '0' + lastdigit;
     }
     if (!j)
-        input[j++]='0'; //handle #ctoi x {零}, chit, 7/10/2000
+        input[j++] = '0'; //handle #ctoi x {零}, chit, 7/10/2000
     input[j] = '\0';
 }

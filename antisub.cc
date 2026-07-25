@@ -37,7 +37,7 @@ void antisubstitute_command(const char *arg, session *ses)
         antisubnum++;
         tintin_printf(MSG_SUBSTITUTE, ses, "Ok. Any line with {%s} will not be subbed.", left);
 #ifdef HAVE_SIMD
-        ses->antisubs_dirty=true;
+        ses->antisubs_dirty = true;
 #endif
     }
 }
@@ -76,7 +76,7 @@ void unantisubstitute_command(const char *arg, session *ses)
 
 #ifdef HAVE_SIMD
     if (had_any)
-        ses->antisubs_dirty=true;
+        ses->antisubs_dirty = true;
 #endif
     if (!had_any)
         tintin_printf(MSG_SUBSTITUTE, ses, "#THAT ANTISUBSTITUTE (%s) IS NOT DEFINED.", left);
@@ -87,8 +87,8 @@ void unantisubstitute_command(const char *arg, session *ses)
 static void build_antisubs_hs(session *ses)
 {
     hs_free_database(ses->antisubs_hs);
-    ses->antisubs_hs=0;
-    ses->antisubs_dirty=false;
+    ses->antisubs_hs = 0;
+    ses->antisubs_dirty = false;
 
     int n = ses->antisubs.size();
     auto pat = new const char *[n];
@@ -96,11 +96,11 @@ static void build_antisubs_hs(session *ses)
     if (!pat || !flags)
         die("out of memory");
 
-    int j=0;
+    int j = 0;
     for (auto p : ses->antisubs)
     {
-        pat[j]=action_to_regex(p);
-        flags[j]=HS_FLAG_DOTALL|HS_FLAG_SINGLEMATCH;
+        pat[j] = action_to_regex(p);
+        flags[j] = HS_FLAG_DOTALL | HS_FLAG_SINGLEMATCH;
         j++;
     }
 
@@ -110,14 +110,14 @@ static void build_antisubs_hs(session *ses)
     {
         tintin_eprintf(ses, "#Error: hyperscan compilation failed for antisubs: %s",
             error->message);
-        if (error->expression>=0)
+        if (error->expression >= 0)
             tintin_eprintf(ses, "#Converted bad expression was: %s",
-                           pat[error->expression]);
+                pat[error->expression]);
         hs_free_compile_error(error);
     }
 
-    for (int i=0; i<n; i++)
-        SFREE((char*)pat[i]);
+    for (int i = 0; i < n; i++)
+        SFREE((char * )pat[i]);
     delete[] flags;
     delete[] pat;
 
@@ -144,8 +144,8 @@ bool do_one_antisub(const char *line, session *ses)
 
     if (simd)
     {
-        hs_error_t err=hs_scan(ses->antisubs_hs, line, strlen(line), 0,
-                               hs_scratch, anti_match, ses);
+        hs_error_t err = hs_scan(ses->antisubs_hs, line, strlen(line), 0,
+            hs_scratch, anti_match, ses);
         if (err == HS_SCAN_TERMINATED)
             return true;
         if (!err)

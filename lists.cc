@@ -21,7 +21,7 @@
 void listlength_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE],
-    temp[BUFFER_SIZE];
+         temp[BUFFER_SIZE];
 
     arg = get_arg(arg, left, 0, ses);
     if (!*left)
@@ -29,7 +29,7 @@ void listlength_command(const char *arg, session *ses)
 
     get_arg(arg, list, 1, ses);
     arg = list;
-    int i=0;
+    int i = 0;
     do
     {
         if (*arg) i++;
@@ -46,9 +46,9 @@ int listlength_inline(const char *arg, session *ses)
 {
     char list[BUFFER_SIZE], temp[BUFFER_SIZE];
 
-    arg=get_arg(arg, list, 0, ses);
+    arg = get_arg(arg, list, 0, ses);
     arg = list;
-    int i=0;
+    int i = 0;
     do {
         if (*arg) i++;
         arg = get_arg_in_braces(arg, temp, 0);
@@ -61,7 +61,7 @@ static int find_item(const char *item, const char *list)
 {
     char temp[BUFFER_SIZE];
 
-    int i=0;
+    int i = 0;
     do {
         i++;
         list = get_arg_in_braces(list, temp, 0);
@@ -115,7 +115,7 @@ int finditem_inline(const char *arg, session *ses)
 void getitem_command(const char *arg, session *ses)
 {
     char destvar[BUFFER_SIZE], itemnrtxt[BUFFER_SIZE],
-    list[BUFFER_SIZE], temp1[BUFFER_SIZE];
+         list[BUFFER_SIZE], temp1[BUFFER_SIZE];
     int itemnr;
 
     arg = get_arg(arg, destvar, 0, ses);
@@ -127,16 +127,16 @@ void getitem_command(const char *arg, session *ses)
     if (sscanf(itemnrtxt, "%d", &itemnr) != 1)
         return tintin_eprintf(ses, "#Error in #getitem - expected a _number_ as item number, got {%s}.", itemnrtxt);
 
-    if (itemnr<=0)
+    if (itemnr <= 0)
         return tintin_eprintf(ses, "#Error getitem: index must be >0, got %d", itemnr);
 
     get_arg(arg, list, 1, ses);
     arg = list;
-    int i=0;
+    int i = 0;
     do {
         arg = get_arg_in_braces(arg, temp1, 0);
         i++;
-    } while (i!=itemnr);
+    } while (i != itemnr);
 
     if (*temp1)
         set_variable(destvar, temp1, ses);
@@ -172,8 +172,8 @@ void getitem_command(const char *arg, session *ses)
 bool isatom(const char *arg)
 {
     int last = strlen(arg);
-    if ((arg[0]    == BRACE_OPEN) &&
-            (arg[last] == BRACE_CLOSE))
+    if ((arg[0] == BRACE_OPEN) &&
+        (arg[last] == BRACE_CLOSE))
         /* one element list = '{elem}' */
         return false;
 
@@ -181,8 +181,8 @@ bool isatom(const char *arg)
         if (isaspace(*arg))
             return false;
     return true;
-        /* argument contains spaces i.e. = 'elem1 elem2' */
-        /* this is incompatible with supposed " behaviour */
+    /* argument contains spaces i.e. = 'elem1 elem2' */
+    /* this is incompatible with supposed " behaviour */
 }
 
 /***********************/
@@ -257,7 +257,7 @@ static char* get_split_pos(char *list, int head_length)
         return list;
 
     if (head_length > 0)
-    { /* modified #getitemnr code */
+    {   /* modified #getitemnr code */
         do {
             list = (char*)get_arg_in_braces(list, temp, 0);
             i++;
@@ -288,12 +288,12 @@ static bool is_braced_atom_2(const char *beg, const char *end, session *ses)
     if (AT_END(beg, end)) /* string is empty */
         return false;
 
-    if (*beg!=BRACE_OPEN)
+    if (*beg != BRACE_OPEN)
         return false;
 
     while (NOT_AT_END(beg, end) && !(*beg == BRACE_CLOSE && nest == 0))
     {
-        if (*beg=='\\') /* next element is taken verbatim i.e. as is */
+        if (*beg == '\\') /* next element is taken verbatim i.e. as is */
             beg++;
         else if (*beg == BRACE_OPEN)
             nest++;
@@ -345,7 +345,7 @@ static void simplify_list(char **beg, char **end, bool flag, session *ses)
 
 #ifdef REMOVE_ONEELEM_BRACES
     /* removing unnecessary braces (one pair at most) */
-    if (flag&&is_braced_atom_2((*beg), (*end), ses))
+    if (flag && is_braced_atom_2((*beg), (*end), ses))
     {
         (*beg)++;
         (*end)--;
@@ -420,7 +420,7 @@ void splitlist_command(const char *arg, session *ses)
 
     if (!*headvar && !*tailvar)
         return tintin_eprintf(ses, "#Error - Syntax: #splitlist {head variable} {tail variable} "
-                     "{list} [{head size}]");
+                "{list} [{head size}]");
 
     arg = get_arg(arg, list, 1, ses);
     arg = get_arg(arg, headlengthtxt, 1, ses);
@@ -428,7 +428,8 @@ void splitlist_command(const char *arg, session *ses)
     if (!*headlengthtxt)
     {
         /* defaults number of elements in head to 1 if no value given */
-        headlengthtxt[0] = '1'; headlengthtxt[1] = '\0';
+        headlengthtxt[0] = '1';
+        headlengthtxt[1] = '\0';
         head_length = 1;
     }
     else
@@ -455,43 +456,43 @@ void splitlist_command(const char *arg, session *ses)
 void deleteitems_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], list[BUFFER_SIZE], item[BUFFER_SIZE],
-        pat[BUFFER_SIZE], right[BUFFER_SIZE], *lpos, *rpos;
+         pat[BUFFER_SIZE], right[BUFFER_SIZE], *lpos, *rpos;
 
     arg = get_arg(arg, left, 0, ses);
     if (!*left)
         return tintin_eprintf(ses, "#Error - Syntax: #deleteitem {dest. variable} {list} {item} [{item} ...]");
 
-    arg=get_arg(arg, list, 0, ses);
+    arg = get_arg(arg, list, 0, ses);
 
     do
     {
-        arg=get_arg(arg, pat, 0, ses);
+        arg = get_arg(arg, pat, 0, ses);
 
         const char *it = list;
-        rpos=right;
+        rpos = right;
         while (*it)
         {
             it = get_arg_in_braces(it, item, 0);
             if (!match(pat, item))
             {
-                if (rpos!=right)
-                    *rpos++=' ';
-                lpos=item;
+                if (rpos != right)
+                    *rpos++ = ' ';
+                lpos = item;
                 if (isatom(item))
                     while (*lpos)
-                        *rpos++=*lpos++;
+                        *rpos++ = *lpos++;
                 else
                 {
-                    *rpos++=BRACE_OPEN;
+                    *rpos++ = BRACE_OPEN;
                     while (*lpos)
-                        *rpos++=*lpos++;
-                    *rpos++=BRACE_CLOSE;
+                        *rpos++ = *lpos++;
+                    *rpos++ = BRACE_CLOSE;
                 }
             }
         }
-        *rpos=0;
+        *rpos = 0;
         strcpy(list, right);
-    } while (*(arg=space_out(arg)));
+    } while (*(arg = space_out(arg)));
 
     set_variable(left, right, ses);
 }
@@ -505,26 +506,26 @@ session *foreach_command(const char *arg, session *ses)
     const char *p, *list;
     pvars_t vars, *lastvars;
 
-    arg=get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, left, 0, ses);
     get_arg_in_braces(arg, right, 1);
     if (!*right)
     {
         tintin_eprintf(ses, "#SYNTAX: foreach {list} command");
         return ses;
     }
-    lastvars=pvars;
-    pvars=&vars;
+    lastvars = pvars;
+    pvars = &vars;
     list = left;
     while (*list)
     {
         list = get_arg_in_braces(list, temp, 0);
-        strcpy(vars[0], p=temp);
-        for (int i=1;i<10;i++)
-            p=get_arg_in_braces(p, vars[i], 0);
-        in_alias=true;
-        ses=parse_input(right, true, ses);
+        strcpy(vars[0], p = temp);
+        for (int i = 1; i < 10; i++)
+            p = get_arg_in_braces(p, vars[i], 0);
+        in_alias = true;
+        ses = parse_input(right, true, ses);
     }
-    pvars=lastvars;
+    pvars = lastvars;
     return ses;
 }
 
@@ -546,30 +547,30 @@ void sortlist_command(const char *arg, session *ses)
     char *list, temp[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
     char *tab[BUFFER_SIZE];
 
-    arg=get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, left, 0, ses);
     get_arg(arg, right, 1, ses);
     if (!*left)
         return tintin_eprintf(ses, "#SYNTAX: sortlist var {list}");
 
-    int n=0;
+    int n = 0;
     arg = right;
     while (*arg)
     {
         arg = get_arg_in_braces(arg, temp, 0);
-        tab[n++]=mystrdup(temp);
+        tab[n++] = mystrdup(temp);
     }
     qsort(tab, n, sizeof(char*), compar);
-    list=temp;
-    for (int i=0;i<n;i++)
+    list = temp;
+    for (int i = 0; i < n; i++)
     {
-        if (list!=temp)
-            *list++=' ';
-        if (*tab[i]&&isatom(tab[i]))
-            list+=sprintf(list, "%s", tab[i]);
+        if (list != temp)
+            *list++ = ' ';
+        if (*tab[i] && isatom(tab[i]))
+            list += sprintf(list, "%s", tab[i]);
         else
-            list+=sprintf(list, "{%s}", tab[i]);
+            list += sprintf(list, "{%s}", tab[i]);
     }
-    *list=0;
+    *list = 0;
     set_variable(left, temp, ses);
 }
 
@@ -581,7 +582,7 @@ void explode_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE], del[BUFFER_SIZE], right[BUFFER_SIZE],
          *p, *n, *r,
-         res[3*BUFFER_SIZE]; /* worst case is ",,,,," -> "{} {} {} {} {} {}" */
+         res[3 * BUFFER_SIZE]; /* worst case is ",,,,," -> "{} {} {} {} {} {}" */
 
     arg = get_arg(arg, left, 0, ses);
     arg = get_arg(arg, del, 0, ses);
@@ -589,30 +590,30 @@ void explode_command(const char *arg, session *ses)
     if (!*left || !*del)
         return tintin_eprintf(ses, "#Syntax: #explode <var> <delimiter> <text>");
 
-    r=res;
-    p=right;
-    while ((n=strstr(p, del)))
+    r = res;
+    p = right;
+    while ((n = strstr(p, del)))
     {
-        *n=0;
-        if (p!=right)
-            *r++=' ';
-        if (*p&&isatom(p))
-            r+=sprintf(r, "%s", p);
+        *n = 0;
+        if (p != right)
+            *r++ = ' ';
+        if (*p && isatom(p))
+            r += sprintf(r, "%s", p);
         else
-            r+=sprintf(r, "{%s}", p);
-        p=n+strlen(del);
+            r += sprintf(r, "{%s}", p);
+        p = n + strlen(del);
     }
-    if (p!=right)
-        *r++=' ';
-    if (*p&&isatom(p))
-        r+=sprintf(r, "%s", p);
+    if (p != right)
+        *r++ = ' ';
+    if (*p && isatom(p))
+        r += sprintf(r, "%s", p);
     else
-        r+=sprintf(r, "{%s}", p);
+        r += sprintf(r, "{%s}", p);
 
-    if (strlen(res)>BUFFER_SIZE-10)
+    if (strlen(res) > BUFFER_SIZE - 10)
     {
         tintin_eprintf(ses, "#ERROR: exploded line too long in #explode {%s} {%s} {%s}", left, del, right);
-        res[BUFFER_SIZE-10]=0;
+        res[BUFFER_SIZE - 10] = 0;
     }
     set_variable(left, res, ses);
 }
@@ -633,14 +634,14 @@ void implode_command(const char *arg, session *ses)
     if (!*left || !*del)
         return tintin_eprintf(ses, "#Syntax: #implode <var> <delimiter> <list>");
 
-    int dellen=strlen(del);
+    int dellen = strlen(del);
     p = get_arg_in_braces(right, res, 0);
-    int len=strlen(res);
-    char *r = res+len;
+    int len = strlen(res);
+    char *r = res + len;
     while (*p)
     {
         p = get_arg_in_braces(p, temp, 0);
-        if ((len+=strlen(temp)+dellen) > BUFFER_SIZE-10)
+        if ((len += strlen(temp) + dellen) > BUFFER_SIZE - 10)
         {
             tintin_eprintf(ses, "#ERROR: imploded line too long in #implode {%s} {%s} {%s}", left, del, right);
             break;
@@ -666,18 +667,18 @@ void collate_command(const char *arg, session *ses)
         return tintin_eprintf(ses, "#Error - Syntax: #collate {dest var} {list}");
 
     strcpy(last, "#X~4~~2~~12~[This is a sentinel!]~7~X");
-    *(outptr=out)=0;
+    *(outptr = out) = 0;
     get_arg(arg, list, 1, ses);
     arg = list;
-    int i=0;
+    int i = 0;
     while (*arg)
     {
         int j;
-        arg=space_out(arg);
+        arg = space_out(arg);
         if (isadigit(*arg))
-            j=strtol(arg, &err, 10), arg=err;
+            j = strtol(arg, &err, 10), arg = err;
         else
-            j=1;
+            j = 1;
         if (!*arg || isaspace(*arg))
             continue;
         arg = get_arg_in_braces(arg, cur, 0);
@@ -685,20 +686,20 @@ void collate_command(const char *arg, session *ses)
             continue;
         if (strcmp(cur, last))
         {
-            if (i>1)
-                outptr+=sprintf(outptr, "%d", i);
+            if (i > 1)
+                outptr += sprintf(outptr, "%d", i);
             if (i)
-                outptr+=sprintf(outptr, isatom(last)?"%s ":"{%s} ", last);
+                outptr += sprintf(outptr, isatom(last) ? "%s " : "{%s} ", last);
             strcpy(last, cur);
-            i=j;
+            i = j;
         }
         else
-            i+=j;
+            i += j;
     }
-    if (i>1)
-        outptr+=sprintf(outptr, "%d", i);
+    if (i > 1)
+        outptr += sprintf(outptr, "%d", i);
     if (i)
-        outptr+=sprintf(outptr, isatom(last)?"%s":"{%s}", last);
+        outptr += sprintf(outptr, isatom(last) ? "%s" : "{%s}", last);
     set_variable(left, out, ses);
 }
 
@@ -716,32 +717,32 @@ void expand_command(const char *arg, session *ses)
     if (!*left)
         return tintin_eprintf(ses, "#Error - Syntax: #expand {dest var} {list}");
 
-    *(outptr=out)=0;
+    *(outptr = out) = 0;
     get_arg(arg, list, 1, ses);
     arg = list;
     while (*arg)
     {
-        arg=space_out(arg);
+        arg = space_out(arg);
         if (isadigit(*arg))
-            j=strtol(arg, &err, 10), arg=err;
+            j = strtol(arg, &err, 10), arg = err;
         else
-            j=1;
+            j = 1;
         if (!*arg || isaspace(*arg))
             continue;
         arg = get_arg_in_braces(arg, cur, 0);
-        if (j>BUFFER_SIZE/2)
-                j=BUFFER_SIZE/2;
-        for (int i=0;i<j;i++)
+        if (j > BUFFER_SIZE / 2)
+            j = BUFFER_SIZE / 2;
+        for (int i = 0; i < j; i++)
         {
             if (isatom(cur))
-                outptr+=snprintf(outptr, out+BUFFER_SIZE-outptr, " %s", cur);
+                outptr += snprintf(outptr, out + BUFFER_SIZE - outptr, " %s", cur);
             else
-                outptr+=snprintf(outptr, out+BUFFER_SIZE-outptr, " {%s}", cur);
-            if (outptr>=out+BUFFER_SIZE-1)
+                outptr += snprintf(outptr, out + BUFFER_SIZE - outptr, " {%s}", cur);
+            if (outptr >= out + BUFFER_SIZE - 1)
                 return tintin_eprintf(ses, "#ERROR: expanded line too long in {%s}", list);
         }
     }
-    set_variable(left, (*out)?out+1:out, ses);
+    set_variable(left, (*out) ? out + 1 : out, ses);
 }
 
 
@@ -753,31 +754,31 @@ void reverselist_command(const char *arg, session *ses)
     char temp[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
     char *tab[BUFFER_SIZE];
 
-    arg=get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, left, 0, ses);
     get_arg(arg, right, 1, ses);
     if (!*left)
         return tintin_eprintf(ses, "#SYNTAX: reverselist var {list}");
 
-    int n=0;
+    int n = 0;
     arg = right;
     while (*arg)
     {
         arg = get_arg_in_braces(arg, temp, 0);
-        tab[n++]=mystrdup(temp);
+        tab[n++] = mystrdup(temp);
     }
 
-    char *list=temp;
-    for (int i=n-1;i>=0;i--)
+    char *list = temp;
+    for (int i = n - 1; i >= 0; i--)
     {
-        if (list!=temp)
-            *list++=' ';
-        if (*tab[i]&&isatom(tab[i]))
-            list+=sprintf(list, "%s", tab[i]);
+        if (list != temp)
+            *list++ = ' ';
+        if (*tab[i] && isatom(tab[i]))
+            list += sprintf(list, "%s", tab[i]);
         else
-            list+=sprintf(list, "{%s}", tab[i]);
+            list += sprintf(list, "{%s}", tab[i]);
         free(tab[i]);
     }
-    *list=0;
+    *list = 0;
     set_variable(left, temp, ses);
 }
 
@@ -810,20 +811,20 @@ void findvariables_command(const char *arg, session *ses)
     }
     // Otherwise, need to scan the whole hash.
 
-    char buf[BUFFER_SIZE], *b=buf;
-    *buf=0;
+    char buf[BUFFER_SIZE], *b = buf;
+    *buf = 0;
 
     struct pairlist *pl = hash2list(ses->myvars, right);
     struct pair *end = &pl->pairs[0] + pl->size;
-    for (struct pair *nptr = &pl->pairs[0]; nptr<end; nptr++)
+    for (struct pair *nptr = &pl->pairs[0]; nptr < end; nptr++)
     {
-        if (b!=buf)
-            *b++=' ';
+        if (b != buf)
+            *b++ = ' ';
         if (isatom(nptr->left))
-            b+=snprintf(b, buf-b+sizeof(buf), "%s", nptr->left);
+            b += snprintf(b, buf - b + sizeof(buf), "%s", nptr->left);
         else
-            b+=snprintf(b, buf-b+sizeof(buf), "{%s}", nptr->left);
-        if (b >= buf+BUFFER_SIZE-10)
+            b += snprintf(b, buf - b + sizeof(buf), "{%s}", nptr->left);
+        if (b >= buf + BUFFER_SIZE - 10)
         {
             tintin_eprintf(ses, "#Too many variables to store.");
             break;
@@ -845,22 +846,22 @@ void shift_command(const char *arg, session *ses)
 
     char left[BUFFER_SIZE];
     get_arg(arg, left, 1, ses);
-    int n = (*left)? atoi(left) : 1;
-    if (n<1)
+    int n = (*left) ? atoi(left) : 1;
+    if (n < 1)
         return tintin_eprintf(ses, "#Error: #shift takes a positive number, got {%s}", left);
-    if (n>9)
-        n=9;
-    for (int i=1; i<10; i++)
-        if (i+n<10)
-            strcpy((*pvars)[i], (*pvars)[i+n]);
+    if (n > 9)
+        n = 9;
+    for (int i = 1; i < 10; i++)
+        if (i + n < 10)
+            strcpy((*pvars)[i], (*pvars)[i + n]);
         else
-            *(*pvars)[i]=0;
+            *(*pvars)[i] = 0;
 
     // update $0
     const char *sec = (*pvars)[0];
-    for (; n>0; n--)
+    for (; n > 0; n--)
         sec = space_out(get_arg_in_braces(sec, left, 0));
-    memmove((*pvars)[0], sec, strlen(sec)+1);
+    memmove((*pvars)[0], sec, strlen(sec) +1);
 }
 
 /************************/
@@ -869,11 +870,11 @@ void shift_command(const char *arg, session *ses)
 void stretch_command(const char *arg, session *ses)
 {
     char var[BUFFER_SIZE], left[BUFFER_SIZE], right[BUFFER_SIZE];
-    char *tab[BUFFER_SIZE/2];
+    char *tab[BUFFER_SIZE / 2];
 
-    arg=get_arg(arg, var, 0, ses);
-    arg=get_arg(arg, left, 0, ses);
-    arg=get_arg(arg, right, 1, ses);
+    arg = get_arg(arg, var, 0, ses);
+    arg = get_arg(arg, left, 0, ses);
+    arg = get_arg(arg, right, 1, ses);
 
     if (!*var || !*left)
         return tintin_eprintf(ses, "#Syntax: #stretch var length {list}");
@@ -897,7 +898,7 @@ empty:
     while (*arg)
     {
         arg = get_arg_in_braces(arg, left, 0);
-        tab[m++]=mystrdup(left);
+        tab[m++] = mystrdup(left);
     }
 
     if (!m)
@@ -908,18 +909,18 @@ empty:
     // have longer repeats on the left which is more consistent with what people
     // tend to make manually.  Ie, aaabbcc not aabbbcc (most "evenest") or
     // aabbccc.
-    int d = (n>m)? n-1 : 0;
+    int d = (n > m) ? n - 1 : 0;
     int j = 0;
-    for (int i=0; i<m; i++)
+    for (int i = 0; i < m; i++)
     {
         while (d >= 0)
         {
             d -= m;
             j++;
-            if (out!=left)
-                *out++=' ';
+            if (out != left)
+                *out++ = ' ';
             int len = strlen(tab[i]);
-            if (out+len >= left+BUFFER_SIZE-4)
+            if (out + len >= left + BUFFER_SIZE - 4)
             {
                 tintin_eprintf(ses, "#Error: stretched list too long");
                 goto abort;
@@ -936,8 +937,8 @@ empty:
     assert(j = n);
 
 abort:
-    for (int i=0; i<m; i++)
+    for (int i = 0; i < m; i++)
         free(tab[i]);
-    *out=0;
+    *out = 0;
     set_variable(var, left, ses);
 }

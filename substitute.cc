@@ -33,14 +33,14 @@ static void list_subs(const char *left, bool gag, session *ses)
                 if (!any)
                     tintin_printf(ses, "#THESE GAGS HAVE BEEN DEFINED:");
                 tintin_printf(ses, "{%s~7~}", s.first);
-                any=true;
+                any = true;
             }
         }
         else
         {
             if (!any)
                 tintin_printf(ses, "#THESE SUBSTITUTES HAVE BEEN DEFINED:");
-            any=true;
+            any = true;
             tintin_printf(ses, "~7~{%s~7~}={%s~7~}", s.first, s.second);
         }
     }
@@ -49,18 +49,18 @@ static void list_subs(const char *left, bool gag, session *ses)
         return;
 
     if (strcmp(left, "*"))
-        tintin_printf(ses, "#THAT %s IS NOT DEFINED.", gag? "GAG":"SUBSTITUTE");
+        tintin_printf(ses, "#THAT %s IS NOT DEFINED.", gag ? "GAG" : "SUBSTITUTE");
     else
-        tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag? "GAG":"SUBSTITUTE");
+        tintin_printf(ses, "#NO %sS HAVE BEEN DEFINED.", gag ? "GAG" : "SUBSTITUTE");
 }
 
-static void parse_sub(const char *left_, const char *right,  bool gag, session *ses)
+static void parse_sub(const char *left_, const char *right, bool gag, session *ses)
 {
     char left[BUFFER_SIZE];
     substitute_myvars(left_, left, ses, 0);
 
     if (!*right)
-        return list_subs(*left? left : "*", gag, ses);
+        return list_subs(*left ? left : "*", gag, ses);
 
     char *a = mystrdup(left);
     char *b = mystrdup(right);
@@ -74,7 +74,7 @@ static void parse_sub(const char *left_, const char *right,  bool gag, session *
     }
     subnum++;
 #ifdef HAVE_SIMD
-    ses->subs_dirty=true;
+    ses->subs_dirty = true;
 #endif
 
     if (gag)
@@ -122,7 +122,7 @@ static bool delete_subs(const char *pat, const char *msg, bool gag, session *ses
         return true;
     }
 
-    return erase_if(ses->subs, [&](const auto& i)
+    return erase_if(ses->subs, [&](const auto &i)
     {
         if (pat && !match(pat, i.first))
             return false;
@@ -138,15 +138,15 @@ static void unsub(const char *arg, bool gag, session *ses)
 {
     char left[BUFFER_SIZE];
     arg = get_arg_in_braces(arg, left, 1);
-    const char *msg = ses->mesvar[MSG_SUBSTITUTE]?
-        gag? "#Ok. {%s} is no longer gagged." :
+    const char *msg = ses->mesvar[MSG_SUBSTITUTE] ?
+        gag ? "#Ok. {%s} is no longer gagged." :
         "#Ok. {%s} is no longer substituted." : 0;
 
     if (!delete_subs(left, msg, gag, ses))
         tintin_printf(MSG_SUBSTITUTE, ses, "#THAT SUBSTITUTE (%s) IS NOT DEFINED.", left);
 
 #ifdef HAVE_SIMD
-    ses->subs_dirty=true;
+    ses->subs_dirty = true;
 #endif
 }
 
@@ -181,53 +181,53 @@ static bool do_one_sub(char *line, const char* const left, const char *right, se
         return true;
     }
     substitute_vars(right, tmp, ses);
-    rlen=match_start-line;
+    rlen = match_start - line;
     memcpy(result, line, rlen);
-    len=strlen(tmp);
+    len = strlen(tmp);
     APPEND(tmp);
     while (*match_end)
-        if (check_one_action(l=match_end, left, pvars, true))
+        if (check_one_action(l = match_end, left, pvars, true))
         {
             /* no gags possible here */
-            len=match_start-l;
+            len = match_start - l;
             APPEND(l);
             substitute_vars(right, tmp, ses);
-            len=strlen(tmp);
+            len = strlen(tmp);
             APPEND(tmp);
         }
         else
         {
-            len=strlen(l);
+            len = strlen(l);
             APPEND(l);
             break;
         }
     memcpy(line, result, rlen);
-    line[rlen]=0;
+    line[rlen] = 0;
     return false;
 }
 
 static void do_all_sub_serially(char *line, session *ses)
 {
     pvars_t vars, *lastpvars;
-    lastpvars=pvars;
-    pvars=&vars;
+    lastpvars = pvars;
+    pvars = &vars;
 
     for (auto& s : ses->subs)
         if (do_one_sub(line, s.first, s.second, ses))
             break;
 
-    pvars=lastpvars;
+    pvars = lastpvars;
 }
 
 #ifdef HAVE_SIMD
 // Hyperscan disallows patterns that match an empty buffer, we do them by hand.
 static bool is_omni_regex(const char *pat)
 {
-    if (*pat=='^')
+    if (*pat == '^')
         pat++;
-    if (pat[0]=='.' && pat[1]=='*') // we merge .* so there may be only one
-        pat+=2;
-    if (*pat=='$')
+    if (pat[0] == '.' && pat[1] == '*') // we merge .* so there may be only one
+        pat += 2;
+    if (*pat == '$')
         pat++;
     return !*pat;
 }
@@ -236,12 +236,12 @@ static void build_subs_hs(session *ses)
 {
     debuglog(ses, "SIMD: building subs");
     hs_free_database(ses->subs_hs);
-    ses->subs_hs=0;
-    ses->subs_dirty=false;
+    ses->subs_hs = 0;
+    ses->subs_dirty = false;
     free(ses->subs_data);
-    ses->subs_data=0;
+    ses->subs_data = 0;
     free(ses->subs_markers);
-    ses->subs_markers=0;
+    ses->subs_markers = 0;
 
     int n = ses->subs.size();
     auto pat = new const char*[n];
@@ -255,24 +255,24 @@ static void build_subs_hs(session *ses)
 
     ses->subs_omni_last = ses->subs_omni_first = n;
 
-    unsigned int j=0;
+    unsigned int j = 0;
     for (auto& s : ses->subs)
     {
-        pat[j]=action_to_regex(s.first);
+        pat[j] = action_to_regex(s.first);
         if (is_omni_regex(pat[j]))
         {
             pat[--ses->subs_omni_first] = pat[j];
             data[ses->subs_omni_first] = &s;
             continue;
         }
-        flags[j] = HS_FLAG_DOTALL|HS_FLAG_SOM_LEFTMOST;
-        ids[j]   = j;
-        data[j]  = &s;
+        flags[j] = HS_FLAG_DOTALL | HS_FLAG_SOM_LEFTMOST;
+        ids[j] = j;
+        data[j] = &s;
         j++;
     }
-    ses->subs_data=data;
-    bzero(markers, n*sizeof(uintptr_t));
-    ses->subs_markers=markers;
+    ses->subs_data = data;
+    bzero(markers, n * sizeof(uintptr_t));
+    ses->subs_markers = markers;
 
     if (!ses->subs_omni_first)
         goto done;
@@ -284,16 +284,16 @@ static void build_subs_hs(session *ses)
     {
         tintin_eprintf(ses, "#Error: hyperscan compilation failed for substitutes: %s",
             error->message);
-        if (error->expression>=0)
+        if (error->expression >= 0)
             tintin_eprintf(ses, "#Converted bad expression was: %s",
-                           pat[error->expression]);
+                pat[error->expression]);
         hs_free_compile_error(error);
     }
 
 done:
     debuglog(ses, "SIMD: rebuilt subs");
-    for (int i=0; i<n; i++)
-        SFREE((char*)pat[i]);
+    for (int i = 0; i < n; i++)
+        SFREE((char * )pat[i]);
     delete[] ids;
     delete[] flags;
     delete[] pat;
@@ -308,10 +308,10 @@ static unsigned int longest_id[BUFFER_SIZE];
 static int sub_match(unsigned int id, unsigned long long from,
     unsigned long long to, unsigned int flags, void *context)
 {
-    if (from<BUFFER_SIZE && from<to)
-        if (longest_len[from] < to-from)
+    if (from < BUFFER_SIZE && from < to)
+        if (longest_len[from] < to - from)
         {
-            longest_len[from] = to-from;
+            longest_len[from] = to - from;
             longest_id[from] = id;
         }
     return 0;
@@ -328,24 +328,24 @@ static void do_all_sub_simd(char *line, session *ses)
     unsigned len = strlen(line);
     assert(len < ARRAYSZ(longest_len));
     static_assert(ARRAYSZ(longest_len) == ARRAYSZ(longest_id));
-    for (unsigned i=0; i<len; i++)
-        longest_len[i]=0;
-    for (unsigned i=0; i<len; i++)
-        longest_id[i]=0;
+    for (unsigned i = 0; i < len; i++)
+        longest_len[i] = 0;
+    for (unsigned i = 0; i < len; i++)
+        longest_id[i] = 0;
 
-    hs_error_t err=hs_scan(ses->subs_hs, line, len, 0, hs_scratch,
-                           sub_match, ses);
+    hs_error_t err = hs_scan(ses->subs_hs, line, len, 0, hs_scratch,
+            sub_match, ses);
     if (err)
         return tintin_eprintf(ses, "#Error in hs_scan: %d", err);
 
     pvars_t vars, *lastpvars;
-    lastpvars=pvars;
-    pvars=&vars;
+    lastpvars = pvars;
+    pvars = &vars;
 
     static uintptr_t marker;
     marker++;
 
-    for (unsigned i=0; i<len; i++)
+    for (unsigned i = 0; i < len; i++)
     {
         if (!longest_len[i])
             continue;
@@ -357,12 +357,12 @@ static void do_all_sub_simd(char *line, session *ses)
         ses->subs_markers[longest_id[i]] = marker;
     }
 
-    for (int i=ses->subs_omni_first; i<ses->subs_omni_last; i++)
+    for (int i = ses->subs_omni_first; i < ses->subs_omni_last; i++)
         if (do_one_sub(line, ses->subs_data[i]->first, ses->subs_data[i]->second, ses))
             goto gagged;
 gagged:
 
-    pvars=lastpvars;
+    pvars = lastpvars;
 }
 #endif
 

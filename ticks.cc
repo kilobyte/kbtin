@@ -23,7 +23,7 @@ void tick_command(const char *arg, session *ses)
 {
     timens_t to_tick = ses->tick_size - (current_time() - ses->time0) % ses->tick_size;
     tintin_printf(ses, "THERE'S NOW %lld.%03d SECONDS TO NEXT TICK.",
-        to_tick/NANO, msec(to_tick));
+        to_tick / NANO, msec(to_tick));
 }
 
 /************************/
@@ -41,7 +41,7 @@ void tickoff_command(const char *arg, session *ses)
 void tickon_command(const char *arg, session *ses)
 {
     char left[BUFFER_SIZE];
-    timens_t x=0;
+    timens_t x = 0;
 
     timens_t ct = current_time();
 
@@ -106,20 +106,20 @@ void pretick_command(const char *arg, session *ses)
 
     get_arg(arg, left, 1, ses);
     if (!*left)
-        x=ses->pretick? 0 : 10 * NANO;
+        x = ses->pretick ? 0 : 10 * NANO;
     else
     {
         x = time2secs(left, ses);
         if (x == INVALID_TIME || x < 0)
             return tintin_eprintf(ses, "#INVALID PRETICK DELAY");
     }
-    if (x>=ses->tick_size)
+    if (x >= ses->tick_size)
     {
         char right[32];
         usecstr(left, x);
         usecstr(right, ses->tick_size);
         tintin_eprintf(ses, "#PRETICK (%s) has to be smaller than #TICKSIZE (%s)",
-                left, right);
+            left, right);
         return;
     }
     ses->pretick = x;
@@ -179,8 +179,8 @@ timens_t check_event(timens_t time, session *ses)
         ses->time0 = time - (time - ses->time0) % ses->tick_size;
         tt = ses->time0 + ses->tick_size;
     }
-    else if (ses->tickstatus && tt-ses->pretick<=time
-            && ses->tick_size>ses->pretick && ses->time10<ses->time0)
+    else if (ses->tickstatus && tt - ses->pretick <= time
+        && ses->tick_size > ses->pretick && ses->time10 < ses->time0)
     {
         if (do_hook(ses, HOOK_PRETICK, 0, false) == ses
             && ses->mesvar[MSG_TICK])
@@ -195,8 +195,8 @@ timens_t check_event(timens_t time, session *ses)
         ses->time10 = ses->time0;
     }
 
-    if (ses->tickstatus && ses->tick_size>ses->pretick && tt-time>ses->pretick)
-        tt-=ses->pretick;
+    if (ses->tickstatus && ses->tick_size > ses->pretick && tt - time > ses->pretick)
+        tt -= ses->pretick;
 
-    return (et<tt && et) ? et : tt;
+    return (et < tt && et) ? et : tt;
 }

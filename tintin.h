@@ -56,7 +56,7 @@
 #define LOG_INPUT_SUFFIX ""
 #define RESET_RAW       /* reset pseudo-terminals to raw mode every write */
 #define GOTO_CHAR '>'   /* be>mt -> #goto be mt */
-                        /*Comment last line out to disable this behavior */
+/*Comment last line out to disable this behavior */
 #define DEFAULT_LOGTYPE LOG_LF    /* LOG_RAW: cr/lf or what server sends, LOG_LF: lf, LOG_TTYREC */
 #define BRACE_OPEN '{' /*character that starts an argument */
 #define BRACE_CLOSE '}' /*character that ends an argument */
@@ -87,8 +87,8 @@
 #define DEFAULT_ECHO_NOSEPINPUT false     /* echo when input is not managed */
 #define DEFAULT_IGNORE false              /* ignore */
 #define DEFAULT_SPEEDWALK false           /* speedwalk */
-        /* note: classic speedwalks are possible only on some primitive
-           MUDs with only 4 basic directions (w,e,n,s)                   */
+/* note: classic speedwalks are possible only on some primitive
+   MUDs with only 4 basic directions (w,e,n,s)                   */
 #define DEFAULT_PRESUB false              /* presub before actions */
 #define DEFAULT_TOGGLESUBS false          /* turn subs on and off FALSE=ON*/
 #define DEFAULT_KEYPAD false              /* start in standard keypad mode */
@@ -421,27 +421,37 @@ typedef char pvars_t[10][BUFFER_SIZE];
                            (x))
 
 /* Chinese rod numerals are _not_ digits for our purposes. */
-static inline bool isadigit(WC x) { return x>='0' && x<='9'; }
+static inline bool isadigit(WC x) {
+    return x >= '0' && x <= '9';
+}
 /* Solaris is buggy for high-bit chars in UTF-8. */
-static inline bool isaspace(WC x) { return x==' ' || x=='\t' || x=='\n' || x==12 || x=='\v'; }
+static inline bool isaspace(WC x) {
+    return x == ' ' || x == '\t' || x == '\n' || x == 12 || x == '\v';
+}
 #define iswadigit(x) isadigit(x)
 static inline bool isw2width(WC x)
 {
-    return x>=0x1100  && (x<=0x11ff ||
-           x==0x2329 || x==0x232a   ||
-           x>=0x2e80) && x!=0x303f
-                      && (x<=0xa4cf ||
-           x>=0xac00) && (x<=0xd7ff ||
-           x>=0xf900) && (x<=0xfaff ||
-           x>=0xfe30) && (x<=0xfe6f ||
-           x>=0xff00) && (x<=0xff60 ||
-           x>=0xffe0) && (x<=0xffe6 ||
-           x>=0x20000) && x<=0x3ffff;
+    return x >= 0x1100 && (x <= 0x11ff ||
+            x == 0x2329 || x == 0x232a ||
+            x >= 0x2e80) && x != 0x303f
+        && (x <= 0xa4cf ||
+            x >= 0xac00) && (x <= 0xd7ff ||
+            x >= 0xf900) && (x <= 0xfaff ||
+            x >= 0xfe30) && (x <= 0xfe6f ||
+            x >= 0xff00) && (x <= 0xff60 ||
+            x >= 0xffe0) && (x <= 0xffe6 ||
+            x >= 0x20000) && x <= 0x3ffff;
 }
 
-static inline bool is7alpha(WC x) { return (x>='A'&&x<='Z') || (x>='a'&&x<='z'); }
-static inline bool is7alnum(WC x) { return (x>='0'&&x<='9') || is7alpha(x); }
-static inline char toalower(char x) { return (x>='A' && x<='Z') ? x+32 : x; }
+static inline bool is7alpha(WC x) {
+    return (x >= 'A' && x <= 'Z') || (x >= 'a' && x <= 'z');
+}
+static inline bool is7alnum(WC x) {
+    return (x >= '0' && x <= '9') || is7alpha(x);
+}
+static inline char toalower(char x) {
+    return (x >= 'A' && x <= 'Z') ? x + 32 : x;
+}
 #define EMPTY_CHAR 0xffff
 #define VALID_TIN_CHARS "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 #define is7punct(x) strchr(VALID_TIN_CHARS, (x))
@@ -459,7 +469,7 @@ static inline void stracpy(char *restrict dst, const char *restrict src, size_t 
 
 static inline int rgbbgr(int x)
 {
-    return ((x&1) << 2) | (x&2) | ((x&4) >> 2);
+    return ((x & 1) << 2) | (x&2) | ((x&4) >> 2);
 }
 
 #ifdef HAVE_SIMD

@@ -29,11 +29,11 @@ void do_history(char *buffer, session *ses)
     char temp[BUFFER_SIZE];
     const char *cptr;
 
-    if (!ses->verbatim && *(cptr=space_out(buffer)) && *cptr=='!')
+    if (!ses->verbatim && *(cptr = space_out(buffer)) && *cptr == '!')
     {
         if (*(cptr + 1) == '!' && history[0])
         {
-            strcpy(temp, cptr+2);
+            strcpy(temp, cptr + 2);
             snprintf(buffer, BUFFER_SIZE, "%s%s", history[0], temp);
         }
         else if (isadigit(*(cptr + 1)))
@@ -42,7 +42,7 @@ void do_history(char *buffer, session *ses)
 
             if (i >= 0 && i < HISTORY_SIZE && history[i])
             {
-                strcpy(temp, cptr+2);
+                strcpy(temp, cptr + 2);
                 snprintf(buffer, BUFFER_SIZE, "%s%s", history[i], temp);
             }
         }

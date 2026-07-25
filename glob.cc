@@ -38,7 +38,7 @@ bool match(const char *regex, const char *string)
                     return false;
                 break;
             }
-            /* else FALL THROUGH to match a backslash */
+        /* else FALL THROUGH to match a backslash */
         default:                       /* normal character */
             if (ch != *sp++)
                 return false;
@@ -65,20 +65,20 @@ bool find(const char *text, const char *pattern, int *from, int *to)
     char *a, *b, *pat, m1[BUFFER_SIZE], m2[BUFFER_SIZE];
     int i;
 
-    txt=text;
-    if (*pattern=='^')
+    txt = text;
+    if (*pattern == '^')
     {
-        for (pattern++;(*pattern)&&(*pattern!='*');)
-            if (*(pattern++)!=*(txt++))
+        for (pattern++; (*pattern) && (*pattern != '*');)
+            if (*(pattern++) != *(txt++))
                 return false;
         if (!*pattern)
         {
-            *from=0;
-            *to=txt-text;
+            *from = 0;
+            *to = txt - text;
             return true;
         }
         strcpy(m1, pattern);
-        pat=m1;
+        pat = m1;
     }
     else
     {
@@ -98,54 +98,54 @@ bool find(const char *text, const char *pattern, int *from, int *to)
 
         i = star - pattern;
         strcpy(m1, pattern);
-        m1[i]=0;
-        pat=m1;
-        txt=strstr(txt, pat);
+        m1[i] = 0;
+        pat = m1;
+        txt = strstr(txt, pat);
         if (!txt)
             return false;
-        *from=txt-text;
-        txt+=i;
-        pat+=i+1;
-        while (*pat=='*')
+        *from = txt - text;
+        txt += i;
+        pat += i + 1;
+        while (*pat == '*')
             pat++;
     }
 
-    i=strlen(pat);
+    i = strlen(pat);
     if (!*pat)
     {
-        *to=strlen(text);
+        *to = strlen(text);
         return true;
     }
-    a=pat;
-    b=pat+i-1;
-    while (a<b)
+    a = pat;
+    b = pat + i - 1;
+    while (a < b)
     {
-        char c=*a;
-        *a++=*b;
-        *b--=c;
+        char c = *a;
+        *a++ = *b;
+        *b-- = c;
     }
-    i=strlen(txt);
-    for (a=m2+i-1;*txt;)
-        *a--=*txt++;
-    m2[i]=0;
-    txt=m2;
-    *to=0;
+    i = strlen(txt);
+    for (a = m2 + i - 1; *txt;)
+        *a-- = *txt++;
+    m2[i] = 0;
+    txt = m2;
+    *to = 0;
     do
     {
-        b=strchr(pat, '*');
+        b = strchr(pat, '*');
         if (b)
-            *b=0;
-        a=const_cast<char*>(strstr(txt, pat));
+            *b = 0;
+        a = const_cast<char*>(strstr(txt, pat));
         if (!a)
             return false;
         if (!*to)
-            *to = strlen(text)-(a-txt);
-        int len=strlen(pat);
-        txt=a+len;
+            *to = strlen(text) - (a - txt);
+        int len = strlen(pat);
+        txt = a + len;
         if (b)
-            pat=b;
+            pat = b;
         else
-            pat+=len;
+            pat += len;
     } while (*pat);
     return true;
 }

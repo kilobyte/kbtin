@@ -5,11 +5,11 @@
 
 bool tty;
 
-bool ui_sep_input=false;
-bool ui_con_buffer=false;
-bool ui_keyboard=false;
-bool ui_own_output=false;
-bool ui_drafts=false;
+bool ui_sep_input = false;
+bool ui_con_buffer = false;
+bool ui_keyboard = false;
+bool ui_own_output = false;
+bool ui_drafts = false;
 char done_input[BUFFER_SIZE];
 int color, lastcolor;
 

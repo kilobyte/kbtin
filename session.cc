@@ -50,30 +50,31 @@ void make_name(char *str, const char *basis)
     char *t;
     int i, j;
 
-    for (const char *b=basis; (*b=='/')||is7alnum(*b)||(*b=='_'); b++)
-        if (*b=='/')
-            basis=b+1;
+    for (const char *b = basis; (*b == '/') || is7alnum(*b) || (*b == '_'); b++)
+        if (*b == '/')
+            basis = b + 1;
     if (!is7alpha(*basis))
         goto noname;
     strlcpy(str, basis, MAX_SESNAME_LENGTH);
-    for (t=str; is7alnum(*t)||(*t=='_'); t++);
-    *t=0;
+    for (t = str; is7alnum(*t) || (*t == '_'); t++);
+    *t = 0;
     if (!session_exists(str))
         return;
-    i=2;
-    do sprintf(t, "%d", i++); while (session_exists(str));
+    i = 2;
+    do sprintf(t, "%d", i++);
+    while (session_exists(str));
     return;
 
 noname:
     // Generates: a b c ... z aa ab ac ... ba bb ... zz aaa aab ...
-    for (i=1; ; i++)
+    for (i = 1; ; i++)
     {
-        j=i;
-        *(t=str+10)=0;
+        j = i;
+        *(t = str + 10) = 0;
         do
         {
-            *--t='a'+(j-1)%('z'+1-'a');
-            j=(j-1)/('z'+1-'a');
+            *--t = 'a' + (j - 1) % ('z' + 1 - 'a');
+            j = (j - 1) / ('z' + 1 - 'a');
         } while (j);
         if (!session_exists(t))
         {
@@ -92,7 +93,7 @@ static void list_sessions(session *ses, const char *left)
     {
         tintin_printf(ses, "#THESE SESSIONS HAVE BEEN DEFINED:");
         for (sesptr = sessionlist; sesptr; sesptr = sesptr->next)
-            if (sesptr!=nullsession)
+            if (sesptr != nullsession)
                 show_session(sesptr);
         return;
     }
@@ -137,7 +138,7 @@ static session *socket_session(const char *arg, session *ses, bool ssl)
 #ifdef HAVE_GNUTLS
     gnutls_session_t sslses = 0;
 #else
-    #define sslses 0
+#define sslses 0
 #endif
 
     arg = get_arg(arg, left, 0, ses);
@@ -166,7 +167,7 @@ static session *socket_session(const char *arg, session *ses, bool ssl)
         return ses;
 
 #ifdef HAVE_GNUTLS
-    if (ssl && !(sslses=ssl_negotiate(sock, host, extra, ses)))
+    if (ssl && !(sslses = ssl_negotiate(sock, host, extra, ses)))
     {
         close(sock);
         return ses;
@@ -224,7 +225,7 @@ session *run_command(const char *arg, session *ses)
     }
 
     utf8_to_local(ustr, right);
-    if ((sock=run(ustr, COLS, LINES-1, TERM)) == -1)
+    if ((sock = run(ustr, COLS, LINES - 1, TERM)) == -1)
     {
         tintin_eprintf(ses, "#forkpty() FAILED: %s", strerror(errno));
         return ses;
@@ -240,9 +241,9 @@ session *run_command(const char *arg, session *ses)
 static void show_session(session *ses)
 {
     tintin_printf(0, "%-10s{%s}%s%s%s", ses->name, ses->address,
-        ses == activesession ? " (active)":"",
-        ses->snoopstatus ? " (snooped)":"",
-        ses->logfile ? " (logging)":"");
+        ses == activesession ? " (active)" : "",
+        ses->snoopstatus ? " (snooped)" : "",
+        ses->logfile ? " (logging)" : "");
 }
 
 /**********************************/
@@ -250,8 +251,8 @@ static void show_session(session *ses)
 /**********************************/
 session* newactive_session(void)
 {
-    if ((activesession=sessionlist)==nullsession)
-        activesession=activesession->next;
+    if ((activesession = sessionlist) == nullsession)
+        activesession = activesession->next;
     if (activesession)
     {
         char buf[BUFFER_SIZE];
@@ -262,7 +263,7 @@ session* newactive_session(void)
     }
     else
     {
-        activesession=nullsession;
+        activesession = nullsession;
         tintin_puts1("#THERE'S NO ACTIVE SESSION NOW.", activesession);
         return do_hook(activesession, HOOK_ACTIVATE, 0, false);
     }
@@ -278,13 +279,13 @@ void kill_all(session *ses, bool no_reinit)
     ses->actions.clear();
     ses->prompts.clear();
     kill_hash(ses->myvars);
-    erase_if(ses->highs, [](const auto& i)
+    erase_if(ses->highs, [](const auto &i)
     {
         SFREE(i.first);
         SFREE(i.second);
         return true;
     });
-    erase_if(ses->subs, [](const auto& i)
+    erase_if(ses->subs, [](const auto &i)
     {
         SFREE(i.first);
         SFREE(i.second);
@@ -293,8 +294,8 @@ void kill_all(session *ses, bool no_reinit)
     for (auto s : ses->antisubs)
         SFREE(s);
     ses->antisubs.clear();
-    for (int i=0; i<MAX_PATH_LENGTH; i++)
-        free((char*)ses->path[i].left), free((char*)ses->path[i].right);
+    for (int i = 0; i < MAX_PATH_LENGTH; i++)
+        free((char * )ses->path[i].left), free((char * )ses->path[i].right);
     kill_hash(ses->pathdirs);
     kill_hash(ses->binds);
     kill_hash(ses->ratelimits);
@@ -325,21 +326,21 @@ void init_nullses(void)
     start_time = idle_since = current_time();
 
     nullsession = new session;
-    nullsession->name=mystrdup("main");
-    nullsession->address=0;
+    nullsession->name = mystrdup("main");
+    nullsession->address = 0;
     nullsession->tickstatus = false;
-    nullsession->tick_size = DEFAULT_TICK_SIZE*NANO;
-    nullsession->pretick = DEFAULT_PRETICK*NANO;
+    nullsession->tick_size = DEFAULT_TICK_SIZE * NANO;
+    nullsession->pretick = DEFAULT_PRETICK * NANO;
     nullsession->time0 = 0;
     nullsession->snoopstatus = true;
     nullsession->logfile = 0;
     nullsession->logname = 0;
     nullsession->logtype = DEFAULT_LOGTYPE;
-    nullsession->loginputprefix=mystrdup(LOG_INPUT_PREFIX);
-    nullsession->loginputsuffix=mystrdup(LOG_INPUT_SUFFIX);
+    nullsession->loginputprefix = mystrdup(LOG_INPUT_PREFIX);
+    nullsession->loginputsuffix = mystrdup(LOG_INPUT_SUFFIX);
     nullsession->blank = DEFAULT_DISPLAY_BLANK;
-    nullsession->echo = ui_sep_input?DEFAULT_ECHO_SEPINPUT
-                                    :DEFAULT_ECHO_NOSEPINPUT;
+    nullsession->echo = ui_sep_input ? DEFAULT_ECHO_SEPINPUT
+        : DEFAULT_ECHO_NOSEPINPUT;
     nullsession->speedwalk = DEFAULT_SPEEDWALK;
     nullsession->togglesubs = DEFAULT_TOGGLESUBS;
     nullsession->presub = DEFAULT_PRESUB;
@@ -357,34 +358,34 @@ void init_nullses(void)
     nullsession->mccp = 0;
     nullsession->mccp_more = false;
 #endif
-    nullsession->last_term_type=0;
+    nullsession->last_term_type = 0;
     nullsession->server_echo = 0;
     nullsession->nagle = false;
     nullsession->binds = init_hash();
     nullsession->ratelimits = init_hash();
     nullsession->next = 0;
     nullsession->sessionstart = nullsession->idle_since =
-        nullsession->server_idle_since = start_time;
-    nullsession->debuglogfile=0;
-    nullsession->debuglogname=0;
-    for (int i=0;i<HISTORY_SIZE;i++)
-        history[i]=0;
-    for (int i=0;i<NHOOKS;i++)
-        nullsession->hooks[i]=0;
+            nullsession->server_idle_since = start_time;
+    nullsession->debuglogfile = 0;
+    nullsession->debuglogname = 0;
+    for (int i = 0; i < HISTORY_SIZE; i++)
+        history[i] = 0;
+    for (int i = 0; i < NHOOKS; i++)
+        nullsession->hooks[i] = 0;
     nullsession->path_begin = 0;
     nullsession->path_length = 0;
     ZERO(nullsession->path);
     nullsession->last_line[0] = 0;
     nullsession->linenum = 0;
     nullsession->events = NULL;
-    nullsession->verbose=false;
-    nullsession->closing=false;
-    nullsession->drafted=false;
-    nullsession->mudcolors=MUDC_NULL_WARN;
+    nullsession->verbose = false;
+    nullsession->closing = false;
+    nullsession->drafted = false;
+    nullsession->mudcolors = MUDC_NULL_WARN;
     ZERO(nullsession->MUDcolors);
     sessionlist = nullsession;
     activesession = nullsession;
-    pvars=0;
+    pvars = 0;
 
     nullsession->mesvar[MSG_ALIAS] = DEFAULT_ALIAS_MESS;
     nullsession->mesvar[MSG_ACTION] = DEFAULT_ACTION_MESS;
@@ -396,34 +397,34 @@ void init_nullses(void)
     nullsession->mesvar[MSG_GOTO] = DEFAULT_GOTO_MESS;
     nullsession->mesvar[MSG_BIND] = DEFAULT_BIND_MESS;
     nullsession->mesvar[MSG_SYSTEM] = DEFAULT_SYSTEM_MESS;
-    nullsession->mesvar[MSG_PATH]= DEFAULT_PATH_MESS;
-    nullsession->mesvar[MSG_ERROR]= DEFAULT_ERROR_MESS;
-    nullsession->mesvar[MSG_HOOK]= DEFAULT_HOOK_MESS;
-    nullsession->mesvar[MSG_LOG]= DEFAULT_LOG_MESS;
-    nullsession->mesvar[MSG_TICK]= DEFAULT_TICK_MESS;
-    nullsession->mesvar[MSG_RATELIMIT]= DEFAULT_RATELIMIT_MESS;
-    nullsession->charset=mystrdup(DEFAULT_CHARSET);
-    nullsession->logcharset=logcs_is_special(DEFAULT_LOGCHARSET) ?
-                              DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
+    nullsession->mesvar[MSG_PATH] = DEFAULT_PATH_MESS;
+    nullsession->mesvar[MSG_ERROR] = DEFAULT_ERROR_MESS;
+    nullsession->mesvar[MSG_HOOK] = DEFAULT_HOOK_MESS;
+    nullsession->mesvar[MSG_LOG] = DEFAULT_LOG_MESS;
+    nullsession->mesvar[MSG_TICK] = DEFAULT_TICK_MESS;
+    nullsession->mesvar[MSG_RATELIMIT] = DEFAULT_RATELIMIT_MESS;
+    nullsession->charset = mystrdup(DEFAULT_CHARSET);
+    nullsession->logcharset = logcs_is_special(DEFAULT_LOGCHARSET) ?
+        DEFAULT_LOGCHARSET : mystrdup(DEFAULT_LOGCHARSET);
     nullify_conv(&nullsession->c_io);
     nullify_conv(&nullsession->c_log);
-    nullsession->line_time=0;
+    nullsession->line_time = 0;
 #ifdef HAVE_GNUTLS
-    nullsession->ssl=0;
+    nullsession->ssl = 0;
 #endif
 #ifdef HAVE_SIMD
-    nullsession->highs_dirty=false;
-    nullsession->act_dirty[0]=nullsession->act_dirty[1]=false;
-    nullsession->subs_dirty=false;
-    nullsession->antisubs_dirty=false;
-    nullsession->highs_hs=0;
-    nullsession->acts_hs[0]=nullsession->acts_hs[1]=0;
-    nullsession->subs_hs=0;
-    nullsession->antisubs_hs=0;
-    nullsession->highs_cols=0;
-    nullsession->subs_data=0;
-    nullsession->subs_markers=0;
-    nullsession->acts_data[0]=nullsession->acts_data[1]=0;
+    nullsession->highs_dirty = false;
+    nullsession->act_dirty[0] = nullsession->act_dirty[1] = false;
+    nullsession->subs_dirty = false;
+    nullsession->antisubs_dirty = false;
+    nullsession->highs_hs = 0;
+    nullsession->acts_hs[0] = nullsession->acts_hs[1] = 0;
+    nullsession->subs_hs = 0;
+    nullsession->antisubs_hs = 0;
+    nullsession->highs_cols = 0;
+    nullsession->subs_data = 0;
+    nullsession->subs_markers = 0;
+    nullsession->acts_data[0] = nullsession->acts_data[1] = 0;
 #endif
 }
 
@@ -489,54 +490,54 @@ static session *new_session(const char *name, const char *address, int sock, ses
     newsession->togglesubs = ses->togglesubs;
     newsession->presub = ses->presub;
     newsession->verbatim = ses->verbatim;
-    newsession->sessionstart=newsession->idle_since=
-        newsession->server_idle_since=current_time();
-    newsession->nagle=false;
-    newsession->halfcr_in=false;
-    newsession->halfcr_log=false;
-    newsession->lastintitle=0;
-    newsession->debuglogfile=0;
-    newsession->debuglogname=0;
-    newsession->linenum=0;
-    newsession->drafted=false;
+    newsession->sessionstart = newsession->idle_since =
+            newsession->server_idle_since = current_time();
+    newsession->nagle = false;
+    newsession->halfcr_in = false;
+    newsession->halfcr_log = false;
+    newsession->lastintitle = 0;
+    newsession->debuglogfile = 0;
+    newsession->debuglogname = 0;
+    newsession->linenum = 0;
+    newsession->drafted = false;
     newsession->partial_line_marker = mystrdup(ses->partial_line_marker);
-    for (int i=0;i<MAX_MESVAR;i++)
+    for (int i = 0; i < MAX_MESVAR; i++)
         newsession->mesvar[i] = ses->mesvar[i];
     newsession->locations = ses->locations;
     newsession->routes = ses->routes;
-    newsession->last_line[0]=0;
-    for (int i=0;i<NHOOKS;i++)
+    newsession->last_line[0] = 0;
+    for (int i = 0; i < NHOOKS; i++)
         if (ses->hooks[i])
-            newsession->hooks[i]=mystrdup(ses->hooks[i]);
+            newsession->hooks[i] = mystrdup(ses->hooks[i]);
         else
-            newsession->hooks[i]=0;
-    newsession->closing=0;
+            newsession->hooks[i] = 0;
+    newsession->closing = 0;
     newsession->mudcolors = ses->mudcolors;
-    for (int i=0;i<(int)ARRAYSZ(ses->MUDcolors);i++)
+    for (int i = 0; i < (int)ARRAYSZ(ses->MUDcolors); i++)
         newsession->MUDcolors[i] = mystrdup(ses->MUDcolors[i]);
-    newsession->charset = mystrdup(sestype==SES_SOCKET ? ses->charset : user_charset_name);
+    newsession->charset = mystrdup(sestype == SES_SOCKET ? ses->charset : user_charset_name);
     newsession->logcharset = logcs_is_special(ses->logcharset) ?
-                              ses->logcharset : mystrdup(ses->logcharset);
+        ses->logcharset : mystrdup(ses->logcharset);
     if (!new_conv(&newsession->c_io, newsession->charset, 0))
         tintin_eprintf(0, "#Warning: can't open charset: %s", newsession->charset);
     nullify_conv(&newsession->c_log);
-    newsession->line_time=0;
+    newsession->line_time = 0;
 #ifdef HAVE_GNUTLS
-    newsession->ssl=ssl;
+    newsession->ssl = ssl;
 #endif
 #ifdef HAVE_SIMD
-    newsession->highs_dirty=true;
-    newsession->act_dirty[0]=newsession->act_dirty[1]=true;
-    newsession->subs_dirty=true;
-    newsession->antisubs_dirty=true;
-    newsession->highs_hs=0;
-    newsession->acts_hs[0]=newsession->acts_hs[1]=0;
-    newsession->subs_hs=0;
-    newsession->antisubs_hs=0;
-    newsession->highs_cols=0;
-    newsession->subs_data=0;
-    newsession->subs_markers=0;
-    newsession->acts_data[0]=newsession->acts_data[1]=0;
+    newsession->highs_dirty = true;
+    newsession->act_dirty[0] = newsession->act_dirty[1] = true;
+    newsession->subs_dirty = true;
+    newsession->antisubs_dirty = true;
+    newsession->highs_hs = 0;
+    newsession->acts_hs[0] = newsession->acts_hs[1] = 0;
+    newsession->subs_hs = 0;
+    newsession->antisubs_hs = 0;
+    newsession->highs_cols = 0;
+    newsession->subs_data = 0;
+    newsession->subs_markers = 0;
+    newsession->acts_data[0] = newsession->acts_data[1] = 0;
 #endif
     sessionlist = newsession;
     activesession = newsession;
@@ -550,15 +551,15 @@ static session *new_session(const char *name, const char *address, int sock, ses
 /*****************************************************************************/
 void cleanup_session(session *ses)
 {
-    char buf[BUFFER_SIZE+1];
+    char buf[BUFFER_SIZE + 1];
     session *sesptr, *act;
 
     if (ses->closing)
         return;
-    any_closed=true;
-    ses->closing=2;
-    if (ses!=nullsession) /* valgrind cleans null */
-        do_hook(act=ses, HOOK_CLOSE, 0, true);
+    any_closed = true;
+    ses->closing = 2;
+    if (ses != nullsession) /* valgrind cleans null */
+        do_hook(act = ses, HOOK_CLOSE, 0, true);
 
     if (ses->logfile)
         log_off(ses);
@@ -573,7 +574,7 @@ void cleanup_session(session *ses)
         for (sesptr = sessionlist; sesptr->next != ses; sesptr = sesptr->next) ;
         sesptr->next = ses->next;
     }
-    if (ses==activesession && ses!=nullsession)
+    if (ses == activesession && ses != nullsession)
     {
         user_textout_draft(0, 0);
         sprintf(buf, "%s\n", ses->last_line);
@@ -581,13 +582,13 @@ void cleanup_session(session *ses)
         do_in_MUD_colors(ses->last_line, false, ses);
         user_textout(ses->last_line);
     }
-    if (ses!=nullsession) /* valgrind cleans null */
+    if (ses != nullsession) /* valgrind cleans null */
         tintin_printf(0, "#SESSION '%s' DIED.", ses->name);
     if (ses->socket && close(ses->socket) == -1)
         syserr("close in cleanup");
     SFREE(ses->loginputprefix);
     SFREE(ses->loginputsuffix);
-    for (int i=0;i<NHOOKS;i++)
+    for (int i = 0; i < NHOOKS; i++)
         SFREE(ses->hooks[i]);
     SFREE(ses->name);
     SFREE(ses->address);
@@ -625,25 +626,25 @@ void cleanup_session(session *ses)
 
 void seslist(char *result)
 {
-    bool flag=false;
-    char *r0=result;
+    bool flag = false;
+    char *r0 = result;
 
-    if (sessionlist==nullsession && !nullsession->next)
+    if (sessionlist == nullsession && !nullsession->next)
         return;
 
     for (session *sesptr = sessionlist; sesptr; sesptr = sesptr->next)
-        if (sesptr!=nullsession)
+        if (sesptr != nullsession)
         {
             if (flag)
-                *result++=' ';
+                *result++ = ' ';
             else
-                flag=true;
-            int slen = snprintf(result, BUFFER_SIZE-5+r0-result,
-                isatom(sesptr->name) ? "%s" : "{%s}", sesptr->name);
+                flag = true;
+            int slen = snprintf(result, BUFFER_SIZE - 5 + r0 - result,
+                    isatom(sesptr->name) ? "%s" : "{%s}", sesptr->name);
             if (slen <= 0)
                 return;
             result += slen;
-            if (result-r0 > BUFFER_SIZE-10)
+            if (result - r0 > BUFFER_SIZE - 10)
                 return; /* pathological session names */
         }
 }

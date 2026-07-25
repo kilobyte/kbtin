@@ -25,9 +25,9 @@ session *ratelimit_command(const char *arg, session *ses)
     timens_t tip = 0, period = 0;
     num_t limit = 0;
 
-    if ((old=get_hash(ses->ratelimits, left)))
+    if ((old = get_hash(ses->ratelimits, left)))
     {
-        if (sscanf(old, "%" SCNd64" %" SCNd64" %" SCNd64, &tip, &limit, &period)!=3)
+        if (sscanf(old, "%" SCNd64" %" SCNd64" %" SCNd64, &tip, &limit, &period) != 3)
             tintin_eprintf(ses, "#Internal error: ratelimit accounting mangled");
         // try to continue
     }
@@ -114,7 +114,7 @@ void unratelimit_command(const char *arg, session *ses)
     {
         arg = get_arg(arg, left, 0, ses);
         delete_hashlist(ses, ses->ratelimits, left,
-            ses->mesvar[MSG_RATELIMIT]? "#Ok. Cleared ratelimit for %s." : 0,
-            ses->mesvar[MSG_RATELIMIT]? "#THAT RATELIMIT (%s) IS NOT DEFINED." : 0);
+            ses->mesvar[MSG_RATELIMIT] ? "#Ok. Cleared ratelimit for %s." : 0,
+            ses->mesvar[MSG_RATELIMIT] ? "#THAT RATELIMIT (%s) IS NOT DEFINED." : 0);
     } while (*arg);
 }

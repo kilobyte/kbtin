@@ -21,14 +21,14 @@ void show_hashlist(session *ses, struct hashtable *h, const char *pat, const cha
     if (!*pat)
     {
         tintin_printf(ses, msg_all);
-        pl=hash2list(h, 0);
+        pl = hash2list(h, 0);
     }
     else
-        pl=hash2list(h, pat);
+        pl = hash2list(h, pat);
     if (pl->size)
     {
         struct pair *end = &pl->pairs[0] + pl->size;
-        for (struct pair *n = &pl->pairs[0]; n<end; n++)
+        for (struct pair *n = &pl->pairs[0]; n < end; n++)
             tintin_printf(ses, "~7~{%s~7~}={%s~7~}", n->left, n->right);
     }
     else if (*pat)
@@ -54,7 +54,7 @@ void delete_hashlist(session *ses, struct hashtable *h, const char *pat, const c
     }
     struct pairlist *pl = hash2list(h, pat);
     struct pair *end = &pl->pairs[0] + pl->size;
-    for (struct pair *ln = &pl->pairs[0]; ln<end; ln++)
+    for (struct pair *ln = &pl->pairs[0]; ln < end; ln++)
     {
         if (msg_ok)
             tintin_printf(ses, msg_ok, ln->left);
@@ -78,12 +78,12 @@ void alias_command(const char *arg, session *ses)
 
     if (*left && *right)
     {
-        if ((ch=strchr(left, ' ')))
+        if ((ch = strchr(left, ' ')))
         {
             tintin_eprintf(ses, "#ERROR: aliases cannot contain spaces! Bad alias: {%s}", left);
-            if (ch==left)
+            if (ch == left)
                 return;
-            *ch=0;
+            *ch = 0;
             tintin_eprintf(ses, "#Converted offending alias to {%s}.", left);
         }
         set_hash(ses->aliases, left, right);
@@ -105,8 +105,8 @@ void unalias_command(const char *arg, session *ses)
 
     arg = get_arg_in_braces(arg, left, 1);
     delete_hashlist(ses, ses->aliases, left,
-        ses->mesvar[MSG_ALIAS]? "#Ok. {%s} is no longer an alias." : 0,
-        ses->mesvar[MSG_ALIAS]? "#No match(es) found for {%s}" : 0);
+        ses->mesvar[MSG_ALIAS] ? "#Ok. {%s} is no longer an alias." : 0,
+        ses->mesvar[MSG_ALIAS] ? "#No match(es) found for {%s}" : 0);
 }
 
 /******************************/

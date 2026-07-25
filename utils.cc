@@ -29,7 +29,7 @@ char* mystrdup(const char *s)
     if (!s)
         return 0;
     int len = strlen(s) + 1;
-    if (!(dup = static_cast<char*>(malloc(len))))
+    if (!(dup = static_cast<char * >(malloc(len))))
         die("Not enough memory for strdup.");
     memcpy(dup, s, len);
     return dup;
@@ -40,7 +40,7 @@ char* mystrdup(const std::string &s)
     char *dup;
 
     int len = s.size() + 1;
-    if (!(dup = static_cast<char*>(malloc(len))))
+    if (!(dup = static_cast<char * >(malloc(len))))
         die("Not enough memory for strdup.");
     memcpy(dup, s.c_str(), len);
     return dup;
@@ -109,14 +109,15 @@ void syserr(const char *msg, ...)
 
 void write_stdout(const char *restrict x, int len)
 {
-again:;
+again:
+    ;
     int r = write(1, x, len);
     if (r == len)
         return;
     if (r > 0)
     {
-        x+=r;
-        len-=r;
+        x += r;
+        len -= r;
         goto again;
     }
     errno = r;
@@ -127,5 +128,5 @@ timens_t current_time(void)
 {
     struct timespec cts;
     clock_gettime(CLOCK_REALTIME, &cts);
-    return cts.tv_sec*NANO + cts.tv_nsec;
+    return cts.tv_sec * NANO + cts.tv_nsec;
 }

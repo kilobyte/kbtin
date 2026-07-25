@@ -12,41 +12,41 @@ static char *i_pos;
 
 static void userpipe_init(void)
 {
-    tty=isatty(1);
-    color=lastcolor=7;
-    i_pos=done_input;
+    tty = isatty(1);
+    color = lastcolor = 7;
+    i_pos = done_input;
     ZERO(outstate);
 }
 
 static void userpipe_textout(const char *txt)
 {
-    char buf[BUFFER_SIZE+64], *b=buf;
+    char buf[BUFFER_SIZE + 64], *b = buf;
 
-    for (const char *a=txt; *a; )
+    for (const char *a = txt; *a; )
     {
         switch (*a)
         {
         case '~':
             if (getcolor(&a, &color, 1))
             {
-                if (color==-1)
-                    color=16;
+                if (color == -1)
+                    color = 16;
                 if (tty)
-                    b=ansicolor(b, color);
+                    b = ansicolor(b, color);
             }
             else
-                *b++='~';
+                *b++ = '~';
             a++;
             break;
         case '\n':
-            lastcolor=color;
+            lastcolor = color;
         default:
             one_utf8_to_mb(&b, &a, &outstate);
         }
-        if (b>buf+BUFFER_SIZE)
-            write_stdout(buf, b-buf), b=buf;
+        if (b > buf + BUFFER_SIZE)
+            write_stdout(buf, b - buf), b = buf;
     }
-    write_stdout(buf, b-buf);
+    write_stdout(buf, b - buf);
 }
 
 static bool userpipe_process_kbd(session *ses, WC ch)
@@ -55,17 +55,17 @@ static bool userpipe_process_kbd(session *ses, WC ch)
     switch (ch)
     {
     case '\n':
-        *i_pos=0;
-        i_pos=done_input;
+        *i_pos = 0;
+        i_pos = done_input;
         return true;
     case 8:
-        if (i_pos!=done_input)
+        if (i_pos != done_input)
             i_pos--;
         return false;
     default:
-        if (i_pos-done_input>=BUFFER_SIZE-8)
+        if (i_pos - done_input >= BUFFER_SIZE - 8)
             return false;
-        i_pos+=wc_to_utf8(i_pos, &ch, 1, BUFFER_SIZE-(i_pos-done_input));
+        i_pos += wc_to_utf8(i_pos, &ch, 1, BUFFER_SIZE - (i_pos - done_input));
     case 0:
         ;
     }
@@ -85,7 +85,7 @@ static void userpipe_passwd(bool x)
 
 static void userpipe_resize(void)
 {
-    need_resize=false;
+    need_resize = false;
 }
 
 static void user_illegal(void)
@@ -103,28 +103,28 @@ static void user_noop_textout_draft(const char*, bool)
 
 void userpipe_initdriver(void)
 {
-    ui_sep_input=false;
-    ui_con_buffer=false;
-    ui_keyboard=false;
-    ui_own_output=false;
-    ui_drafts=false;
+    ui_sep_input = false;
+    ui_con_buffer = false;
+    ui_keyboard = false;
+    ui_own_output = false;
+    ui_drafts = false;
 
-    user_init           = userpipe_init;
-    user_done           = user_noop;
-    user_pause          = user_noop;
-    user_resume         = user_noop;
-    user_textout        = userpipe_textout;
-    user_textout_draft  = user_noop_textout_draft;
-    user_strenghten_draft= user_noop;
-    user_process_kbd    = userpipe_process_kbd;
-    user_beep           = userpipe_beep;
-    user_keypad         = (void (*)(bool))user_illegal;
-    user_retain         = user_illegal;
-    user_passwd         = userpipe_passwd;
-    user_condump        = (void (*)(FILE *))user_illegal;
-    user_title          = (void (*)(const char*, ...))user_illegal;
-    user_resize         = userpipe_resize;
-    user_show_status    = user_illegal;
-    user_mark_greeting  = user_noop;
-    user_input_color    = (void (*)(int))user_illegal;
+    user_init = userpipe_init;
+    user_done = user_noop;
+    user_pause = user_noop;
+    user_resume = user_noop;
+    user_textout = userpipe_textout;
+    user_textout_draft = user_noop_textout_draft;
+    user_strenghten_draft = user_noop;
+    user_process_kbd = userpipe_process_kbd;
+    user_beep = userpipe_beep;
+    user_keypad = (void (*)(bool))user_illegal;
+    user_retain = user_illegal;
+    user_passwd = userpipe_passwd;
+    user_condump = (void (*)(FILE *))user_illegal;
+    user_title = (void (*)(const char*, ...))user_illegal;
+    user_resize = userpipe_resize;
+    user_show_status = user_illegal;
+    user_mark_greeting = user_noop;
+    user_input_color = (void (*)(int))user_illegal;
 }

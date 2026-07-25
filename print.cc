@@ -19,7 +19,7 @@ void tintin_puts1(const char *cptr, session *ses)
     char line[BUFFER_SIZE];
     stracpy(line, cptr, sizeof line);
 
-    _=line;
+    _ = line;
     if (!ses->presub && !ses->ignore)
         check_all_actions(line, ses);
     if (!ses->togglesubs)
@@ -30,16 +30,16 @@ void tintin_puts1(const char *cptr, session *ses)
     if (!ses->togglesubs)
         do_all_high(line, ses);
     if (isnotblank(line, ses->blank))
-        if (ses==activesession)
+        if (ses == activesession)
         {
-            char *cp=strchr(line, 0);
-            if (cp-line>=BUFFER_SIZE-2)
-                cp=line+BUFFER_SIZE-2;
-            cp[0]='\n';
-            cp[1]=0;
+            char *cp = strchr(line, 0);
+            if (cp - line >= BUFFER_SIZE - 2)
+                cp = line + BUFFER_SIZE - 2;
+            cp[0] = '\n';
+            cp[1] = 0;
             user_textout(line);
         }
-    _=0;
+    _ = 0;
 }
 
 // In these two functions, ses=0 means a message whose context is not
@@ -48,18 +48,18 @@ void tintin_puts1(const char *cptr, session *ses)
 void tintin_printf(session *ses, const char *format, ...)
 {
     va_list ap;
-    char buf[BUFFER_SIZE+16], *bp;
+    char buf[BUFFER_SIZE + 16], *bp;
 
     if ((ses != activesession && ses != nullsession && ses) || !puts_echoing)
         return;
 
     bp = stpcpy(buf, "~-1~");
     va_start(ap, format);
-    int n=vsnprintf(bp, BUFFER_SIZE-1, format, ap);
-    if (n>BUFFER_SIZE-2)
+    int n = vsnprintf(bp, BUFFER_SIZE - 1, format, ap);
+    if (n > BUFFER_SIZE - 2)
     {
-        bp[BUFFER_SIZE-3]='>';
-        n=BUFFER_SIZE-2;
+        bp[BUFFER_SIZE - 3] = '>';
+        n = BUFFER_SIZE - 2;
     }
     bp += n;
     va_end(ap);
@@ -72,7 +72,7 @@ void tintin_printf(session *ses, const char *format, ...)
 void tintin_printf(msg_t msgt, session *ses, const char *format, ...)
 {
     va_list ap;
-    char buf[BUFFER_SIZE+16], *bp;
+    char buf[BUFFER_SIZE + 16], *bp;
 
     if (!ses->mesvar[msgt])
         return;
@@ -81,11 +81,11 @@ void tintin_printf(msg_t msgt, session *ses, const char *format, ...)
 
     bp = stpcpy(buf, "~-1~");
     va_start(ap, format);
-    int n=vsnprintf(bp, BUFFER_SIZE-1, format, ap);
-    if (n>BUFFER_SIZE-2)
+    int n = vsnprintf(bp, BUFFER_SIZE - 1, format, ap);
+    if (n > BUFFER_SIZE - 2)
     {
-        bp[BUFFER_SIZE-3]='>';
-        n=BUFFER_SIZE-2;
+        bp[BUFFER_SIZE - 3] = '>';
+        n = BUFFER_SIZE - 2;
     }
     bp += n;
     va_end(ap);
@@ -106,28 +106,28 @@ void tintin_eprintf(session *ses, const char *format, ...)
         return; // disabled and not in "show errors" mode
 
     va_start(ap, format);
-    int n=vsnprintf(buf, BUFFER_SIZE-1, format, ap);
-    if (n>BUFFER_SIZE-2)
+    int n = vsnprintf(buf, BUFFER_SIZE - 1, format, ap);
+    if (n > BUFFER_SIZE - 2)
     {
-        buf[BUFFER_SIZE-3]='>';
-        n=BUFFER_SIZE-2;
+        buf[BUFFER_SIZE - 3] = '>';
+        n = BUFFER_SIZE - 2;
     }
     va_end(ap);
-    strcpy(buf+n, "\n");
+    strcpy(buf + n, "\n");
 
-    char out[BUFFER_SIZE+16];
-    char *cptr=buf, *optr;
+    char out[BUFFER_SIZE + 16];
+    char *cptr = buf, *optr;
 
     optr = stpcpy(out, "~-1~");
     while (*cptr)
     {
-        if ((*optr++=*cptr++)=='~')
-            *optr++='~', *optr++=':', *optr++='~';
-        if (optr-out > BUFFER_SIZE-1)
+        if ((*optr++ = *cptr++) == '~')
+            * optr++ = '~', *optr++ = ':', *optr++ = '~';
+        if (optr - out > BUFFER_SIZE - 1)
             break;
     }
-    optr+=setcolor(optr, color);
-    *optr=0;
+    optr += setcolor(optr, color);
+    *optr = 0;
 
     user_textout(out);
 }

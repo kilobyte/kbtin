@@ -11,24 +11,24 @@ static int prioritycmp(const char *a, const char *b)
     int res;
 
 not_numeric:
-    while (*a && *a==*b && !isadigit(*a))
+    while (*a && *a == *b && !isadigit(*a))
     {
         a++;
         b++;
     }
     if (!isadigit(*a) || !isadigit(*b))
-        return (*a<*b)? -1 : (*a>*b)? 1 : 0;
-    while (*a=='0')
+        return (*a < *b) ? -1 : (*a > *b) ? 1 : 0;
+    while (*a == '0')
         a++;
-    while (*b=='0')
+    while (*b == '0')
         b++;
-    res=0;
+    res = 0;
     while (isadigit(*a))
     {
         if (!isadigit(*b))
             return 1;
-        if (*a!=*b && !res)
-            res=(*a<*b)? -1 : 1;
+        if (*a != *b && !res)
+            res = (*a < *b) ? -1 : 1;
         a++;
         b++;
     }
@@ -46,14 +46,14 @@ static int strlongercmp(const char *a, const char *b)
 {
 next:
     if (!*a)
-        return *b? 1 : 0;
-    if (*a==*b)
+        return *b ? 1 : 0;
+    if (*a == *b)
     {
         a++;
         b++;
         goto next;
     }
-    if (!*b || ((unsigned char)*a) < ((unsigned char)*b))
+    if (!*b || ((unsigned char) * a) < ((unsigned char) * b))
         return -1;
     return 1;
 }

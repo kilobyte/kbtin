@@ -57,7 +57,7 @@ static int openpty(int *amaster, int *aslave, char *dummy, struct termios *termp
     int filedes[2];
     char *line;
 
-    line = _getpty(&filedes[0], O_RDWR|O_NDELAY, 0600, 0);
+    line = _getpty(&filedes[0], O_RDWR | O_NDELAY, 0600, 0);
     if (0 == line)
         return -1;
     if (0 > (filedes[1] = open(line, O_RDWR)))
@@ -65,8 +65,8 @@ static int openpty(int *amaster, int *aslave, char *dummy, struct termios *termp
         close(filedes[0]);
         return -1;
     }
-    master=filedes[0];
-    slave=filedes[1];
+    master = filedes[0];
+    slave = filedes[1];
 #elif defined(HAVE_GRANTPT) && (defined(HAVE_GETPT) || defined(HAVE_DEV_PTMX) || defined(HAVE_POSIX_OPENPT))
 # ifdef HAVE_PTSNAME
     char *name;
@@ -75,35 +75,35 @@ static int openpty(int *amaster, int *aslave, char *dummy, struct termios *termp
 # endif
 
 # ifdef HAVE_GETPT
-    master=getpt();
+    master = getpt();
 # elif defined(HAVE_DEV_PTMX)
-    master=open("/dev/ptmx", O_RDWR);
+    master = open("/dev/ptmx", O_RDWR);
 # else
-    master=posix_openpt(O_RDWR);
+    master = posix_openpt(O_RDWR);
 # endif
 
-    if (master<0)
+    if (master < 0)
         return -1;
 
-    if (grantpt(master)<0||unlockpt(master)<0)
+    if (grantpt(master) < 0 || unlockpt(master) < 0)
         goto close_master;
 
 # ifdef HAVE_PTSNAME
-    if (!(name=ptsname(master)))
+    if (!(name = ptsname(master)))
         goto close_master;
 # else
     if (ptsname_r(master, name, 80))
         goto close_master;
 # endif
 
-    slave=open(name, O_RDWR);
-    if (slave==-1)
+    slave = open(name, O_RDWR);
+    if (slave == -1)
         goto close_master;
 
 # ifdef HAVE_STROPTS_H
     if (isastream(slave))
-        if (ioctl(slave, I_PUSH, "ptem")<0
-                ||ioctl(slave, I_PUSH, "ldterm")<0)
+        if (ioctl(slave, I_PUSH, "ptem") < 0
+            || ioctl(slave, I_PUSH, "ldterm") < 0)
             goto close_slave;
 # endif
 
@@ -140,7 +140,7 @@ ok:
                 close(master);
                 continue;
             }
-            if ((slave=open(TtyName, O_RDWR|O_NOCTTY))==-1)
+            if ((slave = open(TtyName, O_RDWR | O_NOCTTY)) == -1)
             {
                 close(master);
                 continue;
@@ -149,7 +149,7 @@ ok:
         }
     }
     return -1;
-    ok:
+ok:
 #endif
 
     if (termp)
@@ -158,8 +158,8 @@ ok:
         ioctl(master, TIOCSWINSZ, wp);
     /* let's ignore errors on these ioctls silently */
 
-    *amaster=master;
-    *aslave=slave;
+    *amaster = master;
+    *aslave = slave;
     return 0;
 }
 
@@ -171,7 +171,7 @@ ok:
     if (openpty(&master, &slave, 0, termp, wp))
         return -1;
 
-    pid=fork();
+    pid = fork();
     switch (pid)
     {
     case -1:
@@ -188,7 +188,7 @@ ok:
         return 0;
     default:
         close(slave);
-        *amaster=master;
+        *amaster = master;
         return pid;
     }
 }
@@ -197,14 +197,14 @@ ok:
 #ifndef HAVE_CFMAKERAW
 /*C*/ void cfmakeraw(struct termios *ta)
 {
-    ta->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP
-                    |INLCR|IGNCR|ICRNL|IXON);
+    ta->c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP
+            | INLCR | IGNCR | ICRNL | IXON);
     ta->c_oflag &= ~OPOST;
-    ta->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-    ta->c_cflag &= ~(CSIZE|PARENB);
+    ta->c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    ta->c_cflag &= ~(CSIZE | PARENB);
     ta->c_cflag |= CS8;
 
-    ta->c_cc[VMIN]=1;
-    ta->c_cc[VTIME]=0;
+    ta->c_cc[VMIN] = 1;
+    ta->c_cc[VTIME] = 0;
 }
 #endif
