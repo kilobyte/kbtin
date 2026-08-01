@@ -281,7 +281,12 @@ static int read_socket(session *ses, char *buffer, int len)
         } while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN);
 
         if (ret < 0)
-            tintin_eprintf(ses, "#%s", gnutls_strerror(ret));
+        {
+            if (ret == GNUTLS_E_PREMATURE_TERMINATION)
+                tintin_eprintf(ses, "#Connection terminated by remote host.");
+            else
+                tintin_eprintf(ses, "#%s", gnutls_strerror(ret));
+        }
         return ret;
     }
 #endif
